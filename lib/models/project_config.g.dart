@@ -17,6 +17,9 @@ ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
       ?.map((e) => e as String)
       .toList(),
   multiple: json['multiple'] as bool?,
+  subFields: (json['sub_fields'] as List<dynamic>?)
+      ?.map((e) => ConfigField.fromJson(e as Map<String, dynamic>))
+      .toList(),
 );
 
 Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
@@ -29,6 +32,7 @@ Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
       'validation': instance.validation,
       'options': instance.options,
       'multiple': instance.multiple,
+      'sub_fields': instance.subFields?.map((e) => e.toJson()).toList(),
     };
 
 ProjectConfig _$ProjectConfigFromJson(Map<String, dynamic> json) =>

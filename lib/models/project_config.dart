@@ -12,6 +12,8 @@ class ConfigField {
   final Map<String, dynamic>? validation;
   final List<String>? options;
   final bool? multiple;
+  @JsonKey(name: 'sub_fields')
+  final List<ConfigField>? subFields;
 
   ConfigField({
     required this.fieldId,
@@ -22,6 +24,7 @@ class ConfigField {
     this.validation,
     this.options,
     this.multiple,
+    this.subFields,
   });
 
   factory ConfigField.fromJson(Map<String, dynamic> json) => _$ConfigFieldFromJson(json);
