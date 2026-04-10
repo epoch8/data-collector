@@ -1,13 +1,11 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
+import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
-import 'dart:convert';
-import 'package:data_collector/core/storage/database.dart';
-import 'package:data_collector/core/storage/database_provider.dart';
+import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 
 import '../providers/wizard_state_provider.dart';
 
@@ -85,10 +83,13 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
     final answers = ref.watch(wizardStateProvider(widget.projectId));
 
     return Scaffold(
+      backgroundColor: Epoch8Theme.bgDeep,
       appBar: AppBar(
-        title: Text('${project.name} - Data Collection'),
+        title: Text(project.name, maxLines: 1, overflow: TextOverflow.ellipsis),
       ),
-      body: SingleChildScrollView(
+      body: Container(
+        decoration: Epoch8Theme.screenGradient(),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: _fields.asMap().entries.map((entry) {
@@ -100,37 +101,22 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
             );
           }).toList(),
         ),
+        ),
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: ElevatedButton(
-            style: ElevatedButton.styleFrom(
+          child: FilledButton(
+            style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
-              backgroundColor: Theme.of(context).colorScheme.primaryContainer,
             ),
             onPressed: () async {
-              final db = ref.read(databaseProvider);
-              final String packageId = 'pkg_${DateTime.now().millisecondsSinceEpoch}';
-
-              await db.into(db.packages).insert(
-                PackagesCompanion.insert(
-                  id: packageId,
-                  projectId: widget.projectId,
-                  status: 'completed',
-                  createdAt: DateTime.now(),
-                  dataJson: jsonEncode(answers),
-                )
+              await submitLocalPackage(
+                ref: ref,
+                context: context,
+                projectId: widget.projectId,
+                answers: answers,
               );
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Package securely saved to local database!'),
-                  behavior: SnackBarBehavior.floating,
-                )
-              );
-
-              context.go('/dashboard');
             },
             child: const Text('Submit Package', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
@@ -146,12 +132,14 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: hasFocus ? Theme.of(context).colorScheme.primary.withOpacity(0.05) : Colors.transparent,
+        color: hasFocus
+            ? Epoch8Theme.accent.withValues(alpha: 0.08)
+            : Epoch8Theme.card.withValues(alpha: 0.35),
         border: Border.all(
-          color: hasFocus ? Theme.of(context).colorScheme.primary : Colors.grey.shade300,
+          color: hasFocus ? Epoch8Theme.accent : Epoch8Theme.border,
           width: hasFocus ? 2 : 1,
         ),
-        borderRadius: BorderRadius.circular(12)
+        borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,16 +178,16 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                 constraints: const BoxConstraints(minHeight: 200),
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey.shade400, width: 1),
+                  color: Epoch8Theme.bgElevated,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Epoch8Theme.border, width: 1),
                 ),
                 child: Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.camera_alt),
+                      FilledButton.icon(
+                        icon: const Icon(Icons.camera_alt_outlined),
                         onPressed: () async {
                           final picker = ImagePicker();
                           final XFile? photo = await picker.pickImage(
@@ -222,7 +210,10 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                       if (answers[field.fieldId] != null) ...[
                         const SizedBox(height: 16),
                         if (field.multiple == true) ...[
-                          Text('${(answers[field.fieldId] as List).length} Photos Captured', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                          Text(
+                            '${(answers[field.fieldId] as List).length} Photos Captured',
+                            style: const TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold),
+                          ),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 4,
@@ -255,8 +246,8 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                        child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                        decoration: const BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
+                                        child: const Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
                                       ),
                                     ),
                                   )
@@ -265,7 +256,7 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                             }).toList(),
                           )
                         ] else ...[
-                          const Text('Photo Saved ✓', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold)),
+                          const Text('Photo Saved ✓', style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Stack(
                             children: [
@@ -287,8 +278,8 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(2),
-                                    decoration: const BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                    child: const Icon(Icons.close, size: 16, color: Colors.white),
+                                    decoration: const BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
+                                    child: const Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
                                   ),
                                 ),
                               )
@@ -348,7 +339,7 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                         title: Text(itemMap['comment']?.toString() ?? 'No Comment'),
                         subtitle: Text(DateTime.fromMillisecondsSinceEpoch(itemMap['timestamp'] as int).toString().split('.')[0]),
                         trailing: IconButton(
-                          icon: const Icon(Icons.delete, color: Colors.red),
+                          icon: const Icon(Icons.delete_outline, color: Epoch8Theme.danger),
                           onPressed: () {
                              final currentList = List<Map<String, dynamic>>.from(answers[field.fieldId] as List);
                              currentList.removeWhere((e) => e['item_id'] == itemId);
@@ -378,14 +369,14 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
               ]
             )
           else
-            Text('Unknown config field type: ${field.type}', style: const TextStyle(color: Colors.red)),
+            Text('Unknown config field type: ${field.type}', style: const TextStyle(color: Epoch8Theme.danger)),
           
           if (hasFocus)
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
               child: Align(
                 alignment: Alignment.centerRight,
-                child: ElevatedButton.icon(
+                child: FilledButton.icon(
                   onPressed: () => _focusNext(index),
                   icon: const Icon(Icons.check),
                   label: Text(index == _fields.length - 1 ? 'Finish Focus' : 'Save & Next'),
@@ -435,14 +426,17 @@ class InlineCollectionFormState extends State<InlineCollectionForm> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          color: Epoch8Theme.bgElevated,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 1),
+          border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25), width: 1),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(_draft.containsKey('item_id') ? 'Edit Item' : 'Draft New Item', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).colorScheme.primary)),
+            Text(
+              _draft.containsKey('item_id') ? 'Edit Item' : 'Draft New Item',
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Epoch8Theme.accent),
+            ),
             const SizedBox(height: 16),
             ...itemFields.map((subF) {
               return Padding(
@@ -460,15 +454,15 @@ class InlineCollectionFormState extends State<InlineCollectionForm> {
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           isDense: true,
-                          fillColor: Theme.of(context).colorScheme.surface,
+                          fillColor: Epoch8Theme.card,
                           filled: true,
                         ),
                       )
                     else if (subF.type == 'camera_photo')
                       Row(
                         children: [
-                          ElevatedButton.icon(
-                            icon: const Icon(Icons.camera_alt),
+                          FilledButton.icon(
+                            icon: const Icon(Icons.camera_alt_outlined),
                             onPressed: () async {
                               final picker = ImagePicker();
                               final source = (Platform.isAndroid || Platform.isIOS) ? ImageSource.camera : ImageSource.gallery;

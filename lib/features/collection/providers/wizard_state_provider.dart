@@ -12,4 +12,8 @@ class WizardState extends _$WizardState {
   void updateField(String fieldId, dynamic value) {
     state = {...state, fieldId: value};
   }
+
+  void reset() {
+    state = <String, dynamic>{};
+  }
 }

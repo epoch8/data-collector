@@ -1,0 +1,299 @@
+import 'dart:io';
+
+import 'package:data_collector/core/device/device_camera_channel.dart';
+import 'package:data_collector/features/collection/presentation/korovas/korovas_keys.dart';
+import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
+import 'package:device_info_plus/device_info_plus.dart';
+import 'package:exif/exif.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Collects phone model, native camera intrinsics, per-image EXIF, and derived focal estimates.
+class CameraMetadataCollector {
+  CameraMetadataCollector._();
+
+  static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
+
+  /// Call after each successful camera capture; merges into [KorovasKeys.cameraContext].
+  static Future<void> attachPoseMetadata({
+    required WidgetRef ref,
+    required String projectId,
+    required int poseIndex1Based,
+    required String imagePath,
+  }) async {
+    if (kIsWeb) return;
+
+    final notifier = ref.read(wizardStateProvider(projectId).notifier);
+    final state = ref.read(wizardStateProvider(projectId));
+    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+
+    await _ensureDevice(ctx);
+    await _ensureNativeCamera(ctx);
+
+    final exifMap = await _readExifSubset(imagePath);
+    final derived = _deriveIntrinsics(
+      native: ctx['native_back_camera'] as Map<String, dynamic>?,
+      exif: exifMap,
+    );
+
+    ctx['poses'] ??= <String, dynamic>{};
+    final poses = ctx['poses'] as Map<String, dynamic>;
+    final key = '$poseIndex1Based';
+    final existing = poses[key];
+    final prev = existing is Map<String, dynamic> ? Map<String, dynamic>.from(existing) : <String, dynamic>{};
+    final shots = List<Map<String, dynamic>>.from(
+      (prev['shots'] as List?)?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)) ?? const [],
+    );
+    if (shots.isEmpty && prev['image_path'] != null) {
+      shots.add(<String, dynamic>{
+        'image_path': prev['image_path'],
+        'exif': prev['exif'],
+        'derived': prev['derived'],
+        'collected_at': prev['collected_at'],
+      });
+    }
+    shots.add(<String, dynamic>{
+      'image_path': imagePath,
+      'exif': exifMap,
+      'derived': derived,
+      'collected_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    poses[key] = <String, dynamic>{'shots': shots};
+
+    notifier.updateField(KorovasKeys.cameraContext, ctx);
+  }
+
+  /// Удалить один кадр из метаданных по пути файла.
+  static void removePoseShotByPath({
+    required WidgetRef ref,
+    required String projectId,
+    required int poseIndex1Based,
+    required String imagePath,
+  }) {
+    final notifier = ref.read(wizardStateProvider(projectId).notifier);
+    final state = ref.read(wizardStateProvider(projectId));
+    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+    final poses = ctx['poses'];
+    if (poses is! Map<String, dynamic>) {
+      notifier.updateField(KorovasKeys.cameraContext, ctx);
+      return;
+    }
+    final key = '$poseIndex1Based';
+    final pe = poses[key];
+    if (pe is! Map<String, dynamic>) return;
+    final shots = List<Map<String, dynamic>>.from(
+      (pe['shots'] as List?)?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)) ?? const [],
+    );
+    shots.removeWhere((s) => s['image_path']?.toString() == imagePath);
+    if (shots.isEmpty) {
+      poses.remove(key);
+    } else {
+      poses[key] = <String, dynamic>{'shots': shots};
+    }
+    notifier.updateField(KorovasKeys.cameraContext, ctx);
+  }
+
+  /// Remove pose entry when user deletes all frames for a pose.
+  static void removePoseMetadata({
+    required WidgetRef ref,
+    required String projectId,
+    required int poseIndex1Based,
+  }) {
+    final notifier = ref.read(wizardStateProvider(projectId).notifier);
+    final state = ref.read(wizardStateProvider(projectId));
+    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+    final poses = ctx['poses'];
+    if (poses is Map<String, dynamic>) {
+      poses.remove('$poseIndex1Based');
+    }
+    notifier.updateField(KorovasKeys.cameraContext, ctx);
+  }
+
+  static Map<String, dynamic> _cloneContext(dynamic raw) {
+    if (raw is Map<String, dynamic>) {
+      return Map<String, dynamic>.from(raw);
+    }
+    return <String, dynamic>{};
+  }
+
+  static Future<void> _ensureDevice(Map<String, dynamic> ctx) async {
+    if (ctx.containsKey('device')) return;
+    if (kIsWeb) {
+      ctx['device'] = <String, dynamic>{'platform': 'web'};
+      return;
+    }
+    if (Platform.isAndroid) {
+      final a = await _deviceInfo.androidInfo;
+      ctx['device'] = <String, dynamic>{
+        'platform': 'android',
+        'model': a.model,
+        'brand': a.brand,
+        'manufacturer': a.manufacturer,
+        'device': a.device,
+        'product': a.product,
+        'hardware': a.hardware,
+        'sdk_int': a.version.sdkInt,
+        'release': a.version.release,
+      };
+      return;
+    }
+    if (Platform.isIOS) {
+      final i = await _deviceInfo.iosInfo;
+      ctx['device'] = <String, dynamic>{
+        'platform': 'ios',
+        'model': i.model,
+        'machine': i.utsname.machine,
+        'name': i.name,
+        'system_version': i.systemVersion,
+      };
+    }
+  }
+
+  static Future<void> _ensureNativeCamera(Map<String, dynamic> ctx) async {
+    if (ctx.containsKey('native_back_camera')) return;
+    final native = await DeviceCameraChannel.getBackCameraIntrinsics();
+    ctx['native_back_camera'] = native;
+  }
+
+  static Future<Map<String, dynamic>> _readExifSubset(String path) async {
+    final out = <String, dynamic>{};
+    try {
+      final bytes = await File(path).readAsBytes();
+      final data = await readExifFromBytes(bytes);
+      if (data.isEmpty) return out;
+
+      bool wantKey(String key) {
+        final k = key.toUpperCase();
+        return k.contains('FOCAL') ||
+            k.contains('LENS') ||
+            k.contains('MAKE') ||
+            k.contains('MODEL') ||
+            k.contains('DATETIME') ||
+            k.contains('EXPOSURE') ||
+            k.contains('FNUMBER') ||
+            k.contains('ISO') ||
+            k.contains('EXIFIMAGEWIDTH') ||
+            k.contains('EXIFIMAGELENGTH') ||
+            k.contains('IMAGE WIDTH') ||
+            k.contains('IMAGE LENGTH') ||
+            k.contains('ZOOM');
+      }
+
+      for (final e in data.entries) {
+        final key = e.key.toString();
+        if (!wantKey(key)) continue;
+        final tag = e.value;
+        try {
+          out[key] = tag.printable;
+        } catch (_) {
+          out[key] = tag.toString();
+        }
+      }
+    } catch (_) {
+      // ignore corrupt / missing exif
+    }
+    return out;
+  }
+
+  /// Combines native sensor + lens data with EXIF when native is incomplete.
+  static Map<String, dynamic> _deriveIntrinsics({
+    required Map<String, dynamic>? native,
+    required Map<String, dynamic> exif,
+  }) {
+    final d = <String, dynamic>{};
+
+    double? focalMm;
+    double? focal35;
+    int? imgW;
+    int? imgH;
+    for (final e in exif.entries) {
+      final k = e.key.toString();
+      final ku = k.toUpperCase();
+      if (focalMm == null && ku.contains('FOCALLENGTH') && !ku.contains('35')) {
+        focalMm = _parseRational(e.value);
+      }
+      if (focal35 == null && ku.contains('FOCALLENGTH') && ku.contains('35')) {
+        focal35 = _parseInt(e.value)?.toDouble();
+      }
+      if (imgW == null && (ku.contains('EXIFIMAGEWIDTH') || ku == 'IMAGE WIDTH')) {
+        imgW = _parseInt(e.value);
+      }
+      if (imgH == null && (ku.contains('EXIFIMAGELENGTH') || ku == 'IMAGE LENGTH')) {
+        imgH = _parseInt(e.value);
+      }
+    }
+
+    final sensorWmm = _asDouble(native?['sensor_physical_width_mm']);
+    final sensorHmm = _asDouble(native?['sensor_physical_height_mm']);
+    final pxW = _asInt(native?['sensor_pixel_array_width']);
+    final pxH = _asInt(native?['sensor_pixel_array_height']);
+
+    final nativeFx = _asDouble(native?['estimated_fx_px']);
+    final nativeFy = _asDouble(native?['estimated_fy_px']);
+
+    if (nativeFx != null) d['fx_px_from_native_mm'] = nativeFx;
+    if (nativeFy != null) d['fy_px_from_native_mm'] = nativeFy;
+
+    // Pinhole: fx_px = f_mm / sensor_width_mm * image_width_px (full sensor; EXIF size may differ)
+    if (focalMm != null && sensorWmm != null && sensorWmm > 0 && imgW != null) {
+      d['fx_px_from_exif_focal_and_native_sensor'] = (focalMm / sensorWmm) * imgW;
+    }
+
+    // Classic 35mm equivalent scaling (when sensor intrinsics missing in EXIF)
+    if (focal35 != null && focal35 > 0 && imgW != null) {
+      d['fx_px_from_35mm_equiv'] = (imgW / 36.0) * focal35;
+    }
+
+    // If native gave pixel array but EXIF focal + sensor width — prefer combined label
+    if (d.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
+      d['preferred_fx_px_estimate'] = d['fx_px_from_exif_focal_and_native_sensor'];
+    } else if (d.containsKey('fx_px_from_native_mm')) {
+      d['preferred_fx_px_estimate'] = d['fx_px_from_native_mm'];
+    } else if (d.containsKey('fx_px_from_35mm_equiv')) {
+      d['preferred_fx_px_estimate'] = d['fx_px_from_35mm_equiv'];
+    }
+
+    d['notes'] = <String, dynamic>{
+      'image_width_exif': imgW,
+      'image_height_exif': imgH,
+      'sensor_width_mm_native': sensorWmm,
+      'sensor_height_mm_native': sensorHmm,
+      'pixel_array_native': (pxW != null && pxH != null) ? '${pxW}x$pxH' : null,
+      'focal_length_mm_exif': focalMm,
+      'focal_length_35mm_equiv_exif': focal35,
+    };
+
+    return d;
+  }
+
+  static double? _asDouble(dynamic v) {
+    if (v == null) return null;
+    if (v is double) return v;
+    if (v is int) return v.toDouble();
+    if (v is num) return v.toDouble();
+    return double.tryParse(v.toString());
+  }
+
+  static int? _asInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is double) return v.round();
+    return int.tryParse(v.toString());
+  }
+
+  static double? _parseRational(dynamic v) {
+    if (v == null) return null;
+    final s = v.toString();
+    if (s.contains('/')) {
+      final parts = s.split('/');
+      if (parts.length == 2) {
+        final a = double.tryParse(parts[0].trim());
+        final b = double.tryParse(parts[1].trim());
+        if (a != null && b != null && b != 0) return a / b;
+      }
+    }
+    return double.tryParse(s);
+  }
+
+  static int? _parseInt(dynamic v) => _asInt(v);
+}
