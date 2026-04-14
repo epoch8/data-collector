@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:data_collector/core/device/camera_metadata_collector.dart';
+import 'package:data_collector/core/quality/image_quality_analyzer.dart';
+import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/korovas/korovas_keys.dart';
 import 'package:data_collector/features/collection/presentation/korovas/korovas_shooting_guide.dart';
@@ -9,6 +11,7 @@ import 'package:data_collector/features/collection/providers/wizard_state_provid
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -231,6 +234,7 @@ class _KorovasFormScan extends ConsumerStatefulWidget {
 
 class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
   late DateTime _scanTime;
+  late final TextEditingController _cowId;
   late final TextEditingController _age;
   late final TextEditingController _weight;
   late final TextEditingController _breed;
@@ -240,6 +244,7 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
     super.initState();
     final s = ref.read(wizardStateProvider(widget.projectId));
     _scanTime = _parseScanTime(s[KorovasKeys.scanTime]) ?? DateTime.now();
+    _cowId = TextEditingController(text: s[KorovasKeys.cowId]?.toString() ?? '');
     _age = TextEditingController(text: s[KorovasKeys.cowAge]?.toString() ?? '');
     _weight = TextEditingController(text: s[KorovasKeys.cowWeight]?.toString() ?? '');
     _breed = TextEditingController(text: s[KorovasKeys.cowBreed]?.toString() ?? '');
@@ -254,6 +259,7 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
 
   @override
   void dispose() {
+    _cowId.dispose();
     _age.dispose();
     _weight.dispose();
     _breed.dispose();
@@ -279,7 +285,8 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
   }
 
   bool get _formValid {
-    return _age.text.trim().isNotEmpty &&
+    return _cowId.text.trim().isNotEmpty &&
+        _age.text.trim().isNotEmpty &&
         _weight.text.trim().isNotEmpty &&
         _breed.text.trim().isNotEmpty;
   }
@@ -287,13 +294,64 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
   void _saveToState() {
     final n = ref.read(wizardStateProvider(widget.projectId).notifier);
     n.updateField(KorovasKeys.scanTime, _scanTime.toIso8601String());
+    n.updateField(KorovasKeys.cowId, _cowId.text.trim());
     n.updateField(KorovasKeys.cowAge, _age.text.trim());
     n.updateField(KorovasKeys.cowWeight, _weight.text.trim());
     n.updateField(KorovasKeys.cowBreed, _breed.text.trim());
   }
 
+  Map<String, dynamic> _decodePackageData(String rawJson) {
+    try {
+      final data = jsonDecode(rawJson);
+      if (data is Map<String, dynamic>) return data;
+    } catch (_) {
+      // ignore malformed rows in local db
+    }
+    return <String, dynamic>{};
+  }
+
+  void _prefillFrom(Map<String, dynamic> data) {
+    setState(() {
+      _age.text = data[KorovasKeys.cowAge]?.toString() ?? _age.text;
+      _weight.text = data[KorovasKeys.cowWeight]?.toString() ?? _weight.text;
+      _breed.text = data[KorovasKeys.cowBreed]?.toString() ?? _breed.text;
+      final parsedTime = _parseScanTime(data[KorovasKeys.scanTime]);
+      if (parsedTime != null) {
+        _scanTime = parsedTime;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final packages = ref.watch(packagesStreamProvider).asData?.value ?? const [];
+    final typedCowId = _cowId.text.trim();
+    final typedLower = typedCowId.toLowerCase();
+    final matchedIds = <String>{};
+    DateTime? exactCreatedAt;
+    Map<String, dynamic>? exactData;
+
+    if (typedLower.isNotEmpty) {
+      for (final pkg in packages) {
+        final payload = _decodePackageData(pkg.dataJson);
+        final existingCowId = payload[KorovasKeys.cowId]?.toString().trim() ?? '';
+        if (existingCowId.isEmpty) continue;
+        final existingLower = existingCowId.toLowerCase();
+        if (existingLower.contains(typedLower)) {
+          matchedIds.add(existingCowId);
+        }
+        if (existingLower == typedLower) {
+          if (exactCreatedAt == null || pkg.createdAt.isAfter(exactCreatedAt)) {
+            exactCreatedAt = pkg.createdAt;
+            exactData = payload;
+          }
+        }
+      }
+    }
+
+    final hasAnyMatches = matchedIds.isNotEmpty;
+    final hasExactMatch = exactData != null;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 28),
       child: Column(
@@ -340,6 +398,76 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 14),
+                TextField(
+                  controller: _cowId,
+                  decoration: InputDecoration(
+                    labelText: 'ID коровы',
+                    hintText: 'Например: COW-00124',
+                    helperText: typedCowId.isEmpty
+                        ? null
+                        : hasExactMatch
+                            ? 'ID найден в локальной истории'
+                            : hasAnyMatches
+                                ? 'Есть похожие ID в истории'
+                                : 'Новый ID (в истории не найден)',
+                    helperStyle: TextStyle(
+                      color: hasExactMatch
+                          ? Epoch8Theme.success
+                          : hasAnyMatches
+                              ? Epoch8Theme.accent
+                              : Epoch8Theme.textMuted,
+                    ),
+                    suffixIcon: typedCowId.isEmpty
+                        ? null
+                        : Icon(
+                            hasExactMatch ? Icons.verified_outlined : (hasAnyMatches ? Icons.search : Icons.add_circle_outline),
+                            color: hasExactMatch
+                                ? Epoch8Theme.success
+                                : (hasAnyMatches ? Epoch8Theme.accent : Epoch8Theme.textMuted),
+                          ),
+                  ),
+                  onChanged: (_) => setState(() {}),
+                ),
+                if (typedCowId.isNotEmpty && hasAnyMatches) ...[
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: matchedIds.take(6).map((id) {
+                      final isExact = id.toLowerCase() == typedLower;
+                      return ActionChip(
+                        label: Text(id),
+                        backgroundColor: isExact
+                            ? Epoch8Theme.success.withValues(alpha: 0.18)
+                            : Epoch8Theme.bgElevated,
+                        side: BorderSide(
+                          color: isExact
+                              ? Epoch8Theme.success.withValues(alpha: 0.6)
+                              : Epoch8Theme.border,
+                        ),
+                        onPressed: () {
+                          _cowId.text = id;
+                          _cowId.selection = TextSelection.fromPosition(
+                            TextPosition(offset: _cowId.text.length),
+                          );
+                          setState(() {});
+                        },
+                      );
+                    }).toList(),
+                  ),
+                ],
+                if (hasExactMatch) ...[
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton.icon(
+                      onPressed: () => _prefillFrom(exactData!),
+                      icon: const Icon(Icons.auto_fix_high_outlined, size: 18),
+                      label: const Text('Предзаполнить поля из последней записи'),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
                 TextField(
                   controller: _age,
                   decoration: const InputDecoration(
@@ -421,8 +549,36 @@ class _KorovasPoseStepState extends ConsumerState<_KorovasPoseStep> {
   String get _key => KorovasKeys.pose(widget.poseIndex);
 
   Future<void> _pickImage(ImageSource source) async {
-    final x = await _picker.pickImage(source: source, imageQuality: 88);
+    // Keep original quality for new captures; preview scaling is done only in UI.
+    final x = await _picker.pickImage(source: source);
     if (x == null || !mounted) return;
+
+    if (!kIsWeb) {
+      final quality = await analyzeCaptureQuality(x.path);
+      if (!mounted) return;
+      if (!quality.isAcceptable) {
+        final useAnyway = await showDialog<bool>(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Проверка качества кадра'),
+            content: SingleChildScrollView(child: Text(quality.userMessage)),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Всё равно использовать'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Переснять'),
+              ),
+            ],
+          ),
+        );
+        if (useAnyway != true) return;
+      }
+    }
+
     await CameraMetadataCollector.attachPoseMetadata(
       ref: ref,
       projectId: widget.projectId,

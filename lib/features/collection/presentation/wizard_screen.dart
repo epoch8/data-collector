@@ -192,7 +192,6 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
                           final picker = ImagePicker();
                           final XFile? photo = await picker.pickImage(
                             source: (Platform.isAndroid || Platform.isIOS) ? ImageSource.camera : ImageSource.gallery,
-                            imageQuality: 85,
                             preferredCameraDevice: CameraDevice.rear,
                           );
                           if (photo == null) return;

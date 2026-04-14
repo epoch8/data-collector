@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
+import 'dart:io';
 import 'features/projects/providers/project_providers.dart';
 import 'features/collection/presentation/korovas/korovas_collection_screen.dart';
 import 'features/collection/presentation/wizard_screen.dart';
+import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
@@ -33,6 +35,14 @@ final _router = GoRouter(
         }
         return CollectionWizardScreen(projectId: id);
       },
+    ),
+    GoRoute(
+      path: '/history/cow/:cowId',
+      builder: (context, state) => CowHistoryScreen(cowId: Uri.decodeComponent(state.pathParameters['cowId']!)),
+    ),
+    GoRoute(
+      path: '/history/package/:packageId',
+      builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
     ),
   ],
 );
@@ -73,43 +83,27 @@ class LoginScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const SizedBox(height: 24),
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 160,
-                            height: 160,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              gradient: RadialGradient(
-                                colors: [
-                                  Epoch8Theme.accent.withValues(alpha: 0.22),
-                                  Epoch8Theme.accent.withValues(alpha: 0.0),
-                                ],
-                              ),
+                      Container(
+                        width: 190,
+                        height: 190,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(32),
+                          color: Epoch8Theme.card.withValues(alpha: 0.9),
+                          border: Border.all(color: Epoch8Theme.border),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              blurRadius: 32,
+                              offset: const Offset(0, 16),
                             ),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.all(28),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Epoch8Theme.card.withValues(alpha: 0.85),
-                              border: Border.all(color: Epoch8Theme.border),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  blurRadius: 32,
-                                  offset: const Offset(0, 16),
-                                ),
-                              ],
-                            ),
-                            child: Icon(
-                              Icons.hub_outlined,
-                              size: 56,
-                              color: Epoch8Theme.accent.withValues(alpha: 0.95),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        clipBehavior: Clip.antiAlias,
+                        padding: const EdgeInsets.all(16),
+                        child: Image.asset(
+                          'e8_logo.png',
+                          fit: BoxFit.contain,
+                        ),
                       ),
                       const SizedBox(height: 28),
                       Text(
@@ -261,24 +255,26 @@ class DashboardScreen extends ConsumerWidget {
                       },
                     ),
               packagesAsync.when(
-                data: (packages) => packages.isEmpty
-                    ? const Epoch8EmptyState(
-                        icon: Icons.cloud_outlined,
-                        title: 'История пуста',
-                        subtitle: 'Отправленные пакеты появятся здесь.',
-                      )
-                    : ListView.separated(
+                data: (packages) {
+                  final groups = _groupPackagesByCow(packages);
+                  if (packages.isEmpty) {
+                    return const Epoch8EmptyState(
+                      icon: Icons.cloud_outlined,
+                      title: 'История пуста',
+                      subtitle: 'Отправленные пакеты появятся здесь.',
+                    );
+                  }
+                  return ListView.separated(
                         padding: const EdgeInsets.fromLTRB(
                           Epoch8Layout.pagePadding,
                           12,
                           Epoch8Layout.pagePadding,
                           24,
                         ),
-                        itemCount: packages.length,
+                        itemCount: groups.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final pkg = packages[index];
-                          final rawMap = jsonDecode(pkg.dataJson) as Map<String, dynamic>;
+                          final group = groups[index];
                           return Epoch8Card(
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
@@ -287,27 +283,29 @@ class DashboardScreen extends ConsumerWidget {
                                 height: 48,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(12),
-                                  color: Epoch8Theme.success.withValues(alpha: 0.12),
-                                  border: Border.all(color: Epoch8Theme.success.withValues(alpha: 0.25)),
+                                  color: Epoch8Theme.accent.withValues(alpha: 0.12),
+                                  border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                                 ),
-                                child: const Icon(Icons.cloud_done_rounded, color: Epoch8Theme.success, size: 24),
+                                child: const Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
                               ),
                               title: Text(
-                                'Проект ${pkg.projectId}',
+                                'Корова ${group.cowId}',
                                 style: const TextStyle(fontWeight: FontWeight.w600),
                               ),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text(
-                                  'Полей в пакете: ${rawMap.length}\n${pkg.createdAt.toString().split('.')[0]}',
+                                  'Пакетов: ${group.packages.length} • Фото: ${group.totalPhotos}',
                                   style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ),
-                              isThreeLine: true,
+                              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                              onTap: () => context.push('/history/cow/${Uri.encodeComponent(group.cowId)}'),
                             ),
                           );
                         },
-                      ),
+                      );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, st) => Center(
                   child: Padding(
@@ -322,4 +320,338 @@ class DashboardScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+class CowHistoryScreen extends ConsumerWidget {
+  const CowHistoryScreen({super.key, required this.cowId});
+
+  final String cowId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final packagesAsync = ref.watch(packagesStreamProvider);
+    return Scaffold(
+      backgroundColor: Epoch8Theme.bgDeep,
+      appBar: AppBar(title: Text('Корова $cowId')),
+      body: packagesAsync.when(
+        data: (packages) {
+          final filtered = packages.where((p) => _extractCowIdFromPackage(p) == cowId).toList()
+            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          if (filtered.isEmpty) {
+            return const Epoch8EmptyState(
+              icon: Icons.cloud_off_outlined,
+              title: 'Пакеты не найдены',
+              subtitle: 'Для этой коровы пока нет сохранённых пакетов.',
+            );
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+            itemCount: filtered.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (context, index) {
+              final pkg = filtered[index];
+              final photoCount = _extractImagePaths(pkg).length;
+              return Epoch8Card(
+                child: ListTile(
+                  title: Text(
+                    'Пакет ${pkg.id}',
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: Text(
+                    '${pkg.createdAt.toString().split('.').first}\nФото: $photoCount • Проект: ${pkg.projectId}',
+                  ),
+                  isThreeLine: true,
+                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                  onTap: () => context.push('/history/package/${pkg.id}'),
+                ),
+              );
+            },
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class PackageHistoryScreen extends ConsumerWidget {
+  const PackageHistoryScreen({super.key, required this.packageId});
+
+  final String packageId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final packagesAsync = ref.watch(packagesStreamProvider);
+    return Scaffold(
+      backgroundColor: Epoch8Theme.bgDeep,
+      appBar: AppBar(title: Text('Пакет $packageId')),
+      body: packagesAsync.when(
+        data: (packages) {
+          Package? pkg;
+          for (final item in packages) {
+            if (item.id == packageId) {
+              pkg = item;
+              break;
+            }
+          }
+          if (pkg == null) {
+            return const Epoch8EmptyState(
+              icon: Icons.error_outline,
+              title: 'Пакет не найден',
+              subtitle: 'Возможно, он был удалён или база обновилась.',
+            );
+          }
+          final raw = _decodePackageData(pkg);
+          final photos = _extractImagePaths(pkg);
+          final metadataByPath = _extractPoseMetadataByPath(raw);
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+            children: [
+              Epoch8Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Корова: ${_extractCowId(raw)}', style: Theme.of(context).textTheme.titleSmall),
+                    const SizedBox(height: 8),
+                    Text('Проект: ${pkg.projectId}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (photos.isEmpty)
+                const Epoch8EmptyState(
+                  icon: Icons.photo_library_outlined,
+                  title: 'В пакете нет фото',
+                  subtitle: 'Сохранены только поля формы.',
+                )
+              else
+                ...photos.map((path) {
+                  final meta = metadataByPath[path];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Epoch8Card(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(12),
+                            child: File(path).existsSync()
+                                ? InkWell(
+                                    onTap: () => _showFullPhoto(context, path),
+                                    child: Stack(
+                                      children: [
+                                        Image.file(File(path), height: 180, width: double.infinity, fit: BoxFit.cover),
+                                        Positioned(
+                                          right: 8,
+                                          bottom: 8,
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                            decoration: BoxDecoration(
+                                              color: Colors.black.withValues(alpha: 0.55),
+                                              borderRadius: BorderRadius.circular(8),
+                                            ),
+                                            child: const Text(
+                                              'Открыть',
+                                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : Container(
+                                    height: 120,
+                                    color: Epoch8Theme.bgElevated,
+                                    alignment: Alignment.center,
+                                    child: const Text('Файл не найден на устройстве'),
+                                  ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Путь: $path',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                          ),
+                          if (meta != null) ...[
+                            const SizedBox(height: 8),
+                            Theme(
+                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                              child: ExpansionTile(
+                                tilePadding: EdgeInsets.zero,
+                                childrenPadding: EdgeInsets.zero,
+                                iconColor: Epoch8Theme.textMuted,
+                                collapsedIconColor: Epoch8Theme.textMuted,
+                                title: Text(
+                                  'Параметры кадра и камеры',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                                ),
+                                children: [
+                                  SelectableText(
+                                    const JsonEncoder.withIndent('  ').convert(meta),
+                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                }),
+            ],
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, st) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CowGroup {
+  const _CowGroup({required this.cowId, required this.packages, required this.totalPhotos});
+
+  final String cowId;
+  final List<Package> packages;
+  final int totalPhotos;
+}
+
+List<_CowGroup> _groupPackagesByCow(List<Package> packages) {
+  final byCow = <String, List<Package>>{};
+  for (final pkg in packages) {
+    final cowId = _extractCowIdFromPackage(pkg);
+    byCow.putIfAbsent(cowId, () => <Package>[]).add(pkg);
+  }
+
+  final groups = byCow.entries
+      .map(
+        (entry) => _CowGroup(
+          cowId: entry.key,
+          packages: entry.value..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+          totalPhotos: entry.value.fold<int>(0, (sum, pkg) => sum + _extractImagePaths(pkg).length),
+        ),
+      )
+      .toList()
+    ..sort((a, b) {
+      final aDate = a.packages.isNotEmpty ? a.packages.first.createdAt : DateTime.fromMillisecondsSinceEpoch(0);
+      final bDate = b.packages.isNotEmpty ? b.packages.first.createdAt : DateTime.fromMillisecondsSinceEpoch(0);
+      return bDate.compareTo(aDate);
+    });
+  return groups;
+}
+
+String _extractCowIdFromPackage(Package pkg) => _extractCowId(_decodePackageData(pkg));
+
+Map<String, dynamic> _decodePackageData(Package pkg) {
+  try {
+    final json = jsonDecode(pkg.dataJson);
+    if (json is Map<String, dynamic>) return json;
+  } catch (_) {
+    // ignore malformed payload
+  }
+  return <String, dynamic>{};
+}
+
+String _extractCowId(Map<String, dynamic> data) {
+  const keys = ['cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
+  for (final k in keys) {
+    final value = data[k]?.toString().trim();
+    if (value != null && value.isNotEmpty) return value;
+  }
+  return 'без-id';
+}
+
+List<String> _extractImagePaths(Package pkg) {
+  final data = _decodePackageData(pkg);
+  final out = <String>{};
+  for (final entry in data.entries) {
+    final key = entry.key.toLowerCase();
+    final value = entry.value;
+    if (value is String && value.isNotEmpty && (key.contains('photo') || key.contains('image') || key.contains('pose_'))) {
+      out.add(value);
+    }
+    if (value is List) {
+      for (final item in value) {
+        final path = item?.toString() ?? '';
+        if (path.isNotEmpty) out.add(path);
+      }
+    }
+  }
+  return out.toList();
+}
+
+Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data) {
+  final out = <String, Map<String, dynamic>>{};
+  final ctx = data['korovas_camera_context'];
+  if (ctx is! Map) return out;
+  final poses = ctx['poses'];
+  if (poses is! Map) return out;
+
+  for (final poseEntry in poses.entries) {
+    final poseValue = poseEntry.value;
+    if (poseValue is! Map) continue;
+    final shots = poseValue['shots'];
+    if (shots is! List) continue;
+    for (final shot in shots) {
+      if (shot is! Map) continue;
+      final imagePath = shot['image_path']?.toString();
+      if (imagePath == null || imagePath.isEmpty) continue;
+      final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
+      for (final key in ['collected_at', 'exif', 'derived']) {
+        payload[key] = shot[key];
+      }
+      out[imagePath] = payload;
+    }
+  }
+  return out;
+}
+
+Future<void> _showFullPhoto(BuildContext context, String path) async {
+  await showDialog<void>(
+    context: context,
+    builder: (context) {
+      final file = File(path);
+      return Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: const EdgeInsets.all(10),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: file.existsSync()
+                  ? InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 6,
+                      child: Center(child: Image.file(file, fit: BoxFit.contain)),
+                    )
+                  : const Center(child: Text('Файл не найден', style: TextStyle(color: Colors.white70))),
+            ),
+            Positioned(
+              right: 8,
+              top: 8,
+              child: IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.close, color: Colors.white),
+                tooltip: 'Закрыть',
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 }
