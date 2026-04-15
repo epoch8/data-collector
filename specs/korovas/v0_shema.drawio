@@ -1,10 +1,10 @@
 <mxfile host="65bd71144e">
     <diagram id="korovas-full" name="Korovas — поток и пакет">
-        <mxGraphModel dx="1406" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="1320" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="954" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="1320" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="t1" value="Korovas — стрелки по шагам, что пишется в state, итоговый пакет в SQLite" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                <mxCell id="t1" value="DataCollector&lt;br&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="40" y="14" width="1440" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="2" value="/login&#10;мок" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
@@ -103,17 +103,19 @@
                     <mxGeometry x="130" y="390" width="268" height="138" as="geometry"/>
                 </mxCell>
                 <mxCell id="sqlite" value="SQLite — таблица packages (Drift)&lt;br&gt;&lt;br&gt;┌─ id (PK) ─────────── pkg_&amp;lt;ms&amp;gt;&lt;br&gt;├─ project_id ──────── korovas-2026&lt;br&gt;├─ status ──────────── completed&lt;br&gt;├─ created_at ──────── DateTime при insert&lt;br&gt;└─ data_json ─────────&amp;nbsp;jsonEncode(конверта)&lt;br&gt;       = содержимое payload.json" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fillColor=#1e2438;strokeColor=#5B8DEF;fontSize=9;fontColor=#C8D4F0;fontFamily=Courier New;" vertex="1" parent="1">
-                    <mxGeometry x="500" y="400" width="270" height="108" as="geometry"/>
+                    <mxGeometry x="520" y="400" width="270" height="98" as="geometry"/>
                 </mxCell>
                 <mxCell id="payloadjson" value="payload.json / data_json — поля конверта&lt;br&gt;&lt;br&gt;{&lt;br&gt;  &quot;package_id&quot;: &quot;pkg_…&quot;,&lt;br&gt;  &quot;project_id&quot;: &quot;korovas-2026&quot;,&lt;br&gt;  &quot;created_at&quot;: &quot;&amp;lt;UTC ISO-8601 UTC&amp;gt;&quot;,&lt;br&gt;  &quot;data&quot;: {&lt;br&gt;    &quot;scan_time&quot;, &quot;cow_id&quot;, &quot;cow_age&quot;,&lt;br&gt;    &quot;cow_weight&quot;, &quot;cow_breed&quot;,&lt;br&gt;    &quot;pose_1&quot;: [&quot;blobs/img_0001.jpg&quot;, …],&lt;br&gt;    &quot;pose_2&quot;: […], &quot;pose_3&quot;: […],&lt;br&gt;    &quot;korovas_camera_context&quot;: {&lt;br&gt;      device, native_back_camera,&lt;br&gt;      &quot;1&quot;|&quot;2&quot;|&quot;3&quot; → { shots: [&lt;br&gt;        image_path, exif, derived, collected_at ] } }&lt;br&gt;  }&lt;br&gt;}&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#8B9DC6;fontSize=8;fontColor=#D1D5DB;fontFamily=Courier New;" vertex="1" parent="1">
-                    <mxGeometry x="820" y="348" width="270" height="180" as="geometry"/>
+                    <mxGeometry x="370" y="540" width="270" height="180" as="geometry"/>
                 </mxCell>
                 <mxCell id="e-merge" value="materialize" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3DCC85;fontColor=#8FD9B0;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p5" target="disk">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="668" y="350"/>
+                            <mxPoint x="670" y="320"/>
+                            <mxPoint x="670" y="350"/>
                             <mxPoint x="265" y="350"/>
                             <mxPoint x="265" y="382"/>
+                            <mxPoint x="264" y="382"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>

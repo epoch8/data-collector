@@ -5,13 +5,18 @@ import 'dart:convert';
 import 'dart:io';
 import 'features/projects/providers/project_providers.dart';
 import 'features/collection/presentation/korovas/korovas_collection_screen.dart';
+import 'features/collection/presentation/korovas/korovas_keys.dart';
 import 'features/collection/presentation/wizard_screen.dart';
 import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
+import 'core/package/package_paths.dart';
+import 'features/collection/logic/package_payload_codec.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await PackagePaths.init();
   runApp(const ProviderScope(child: DataCollectorApp()));
 }
 
@@ -409,7 +414,7 @@ class PackageHistoryScreen extends ConsumerWidget {
           }
           final raw = _decodePackageData(pkg);
           final photos = _extractImagePaths(pkg);
-          final metadataByPath = _extractPoseMetadataByPath(raw);
+          final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
           return ListView(
             padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
             children: [
@@ -422,6 +427,24 @@ class PackageHistoryScreen extends ConsumerWidget {
                     Text('Проект: ${pkg.projectId}', style: Theme.of(context).textTheme.bodyMedium),
                     Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
                     Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Epoch8Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Данные анкеты',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 12),
+                    _packageHistoryFieldRow(context, 'ID коровы', raw[KorovasKeys.cowId]?.toString()),
+                    _packageHistoryFieldRow(context, 'Время скана', _formatPackageScanTime(raw[KorovasKeys.scanTime])),
+                    _packageHistoryFieldRow(context, 'Возраст', raw[KorovasKeys.cowAge]?.toString()),
+                    _packageHistoryFieldRow(context, 'Вес', raw[KorovasKeys.cowWeight]?.toString()),
+                    _packageHistoryFieldRow(context, 'Порода', raw[KorovasKeys.cowBreed]?.toString()),
                   ],
                 ),
               ),
@@ -555,17 +578,36 @@ List<_CowGroup> _groupPackagesByCow(List<Package> packages) {
   return groups;
 }
 
+String _formatPackageScanTime(dynamic v) {
+  if (v == null) return '—';
+  final s = v.toString().trim();
+  if (s.isEmpty) return '—';
+  final d = DateTime.tryParse(s)?.toLocal();
+  if (d == null) return s;
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
+}
+
+Widget _packageHistoryFieldRow(BuildContext context, String label, String? value) {
+  final v = (value == null || value.trim().isEmpty) ? '—' : value.trim();
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 120,
+          child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13)),
+        ),
+        Expanded(child: Text(v, style: Theme.of(context).textTheme.bodyMedium)),
+      ],
+    ),
+  );
+}
+
 String _extractCowIdFromPackage(Package pkg) => _extractCowId(_decodePackageData(pkg));
 
-Map<String, dynamic> _decodePackageData(Package pkg) {
-  try {
-    final json = jsonDecode(pkg.dataJson);
-    if (json is Map<String, dynamic>) return json;
-  } catch (_) {
-    // ignore malformed payload
-  }
-  return <String, dynamic>{};
-}
+Map<String, dynamic> _decodePackageData(Package pkg) => unpackPackageFormData(pkg.dataJson);
 
 String _extractCowId(Map<String, dynamic> data) {
   const keys = ['cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
@@ -583,19 +625,21 @@ List<String> _extractImagePaths(Package pkg) {
     final key = entry.key.toLowerCase();
     final value = entry.value;
     if (value is String && value.isNotEmpty && (key.contains('photo') || key.contains('image') || key.contains('pose_'))) {
-      out.add(value);
+      out.add(PackagePaths.resolveMediaReference(value, pkg.id));
     }
     if (value is List) {
       for (final item in value) {
         final path = item?.toString() ?? '';
-        if (path.isNotEmpty) out.add(path);
+        if (path.isNotEmpty) {
+          out.add(PackagePaths.resolveMediaReference(path, pkg.id));
+        }
       }
     }
   }
   return out.toList();
 }
 
-Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data) {
+Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data, String packageId) {
   final out = <String, Map<String, dynamic>>{};
   final ctx = data['korovas_camera_context'];
   if (ctx is! Map) return out;
@@ -611,11 +655,12 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
       if (shot is! Map) continue;
       final imagePath = shot['image_path']?.toString();
       if (imagePath == null || imagePath.isEmpty) continue;
+      final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
       final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
       for (final key in ['collected_at', 'exif', 'derived']) {
         payload[key] = shot[key];
       }
-      out[imagePath] = payload;
+      out[resolved] = payload;
     }
   }
   return out;

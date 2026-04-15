@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:data_collector/core/device/camera_metadata_collector.dart';
 import 'package:data_collector/core/quality/image_quality_analyzer.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
+import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/korovas/korovas_keys.dart';
 import 'package:data_collector/features/collection/presentation/korovas/korovas_shooting_guide.dart';
@@ -300,16 +301,6 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
     n.updateField(KorovasKeys.cowBreed, _breed.text.trim());
   }
 
-  Map<String, dynamic> _decodePackageData(String rawJson) {
-    try {
-      final data = jsonDecode(rawJson);
-      if (data is Map<String, dynamic>) return data;
-    } catch (_) {
-      // ignore malformed rows in local db
-    }
-    return <String, dynamic>{};
-  }
-
   void _prefillFrom(Map<String, dynamic> data) {
     setState(() {
       _age.text = data[KorovasKeys.cowAge]?.toString() ?? _age.text;
@@ -333,7 +324,7 @@ class _KorovasFormScanState extends ConsumerState<_KorovasFormScan> {
 
     if (typedLower.isNotEmpty) {
       for (final pkg in packages) {
-        final payload = _decodePackageData(pkg.dataJson);
+        final payload = unpackPackageFormData(pkg.dataJson);
         final existingCowId = payload[KorovasKeys.cowId]?.toString().trim() ?? '';
         if (existingCowId.isEmpty) continue;
         final existingLower = existingCowId.toLowerCase();
