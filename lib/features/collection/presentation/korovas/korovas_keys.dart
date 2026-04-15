@@ -1,7 +1,8 @@
 /// JSON keys for Korovas scan payload (korova_data + timestamp + pictures paths).
 abstract final class KorovasKeys {
   static const scanTime = 'scan_time';
-  static const cowId = 'cow_id';
+  /// Spec 02: `cow_identifier`; старые пакеты могут содержать `cow_id` (см. разбор в истории).
+  static const cowId = 'cow_identifier';
   static const cowAge = 'cow_age';
   static const cowWeight = 'cow_weight';
   static const cowBreed = 'cow_breed';

@@ -1,0 +1,84 @@
+{
+  "id": "korovas-2026",
+  "name": "Korovas",
+  "version": "1.0",
+  "config": {
+    "collection_flow": "korovas",
+    "fields": [
+      {
+        "field_id": "scan_time",
+        "priority": 10,
+        "type": "datetime",
+        "title": "Время скана",
+        "instructions": "Подставляется с устройства; при необходимости измените.",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "cow_identifier",
+        "priority": 20,
+        "type": "text_input",
+        "title": "ID коровы",
+        "instructions": "Уникальный идентификатор животного.",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "cow_age",
+        "priority": 30,
+        "type": "text_input",
+        "title": "Возраст коровы",
+        "instructions": "Например: 3 года",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "cow_weight",
+        "priority": 40,
+        "type": "text_input",
+        "title": "Вес коровы",
+        "instructions": "Например: 450 кг",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "cow_breed",
+        "priority": 50,
+        "type": "text_input",
+        "title": "Порода коровы",
+        "instructions": "Например: Голштинская",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "shooting_briefing",
+        "priority": 110,
+        "type": "instruction",
+        "title": "Справка по съёмке",
+        "instructions": "Перед съёмкой ознакомьтесь с ракурсами и требованиями к кадру."
+      },
+      {
+        "field_id": "pose_1",
+        "priority": 200,
+        "type": "camera_photo",
+        "title": "Ракурс 1",
+        "instructions": "Первый ракурс; можно несколько кадров.",
+        "multiple": true,
+        "validation": { "required": true, "min_items": 1 }
+      },
+      {
+        "field_id": "pose_2",
+        "priority": 210,
+        "type": "camera_photo",
+        "title": "Ракурс 2",
+        "instructions": "Второй ракурс; можно несколько кадров.",
+        "multiple": true,
+        "validation": { "required": true, "min_items": 1 }
+      },
+      {
+        "field_id": "pose_3",
+        "priority": 220,
+        "type": "camera_photo",
+        "title": "Ракурс 3",
+        "instructions": "Третий ракурс; можно несколько кадров.",
+        "multiple": true,
+        "validation": { "required": true, "min_items": 1 }
+      }
+    ]
+  }
+}

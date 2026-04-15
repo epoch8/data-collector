@@ -6,15 +6,34 @@
   "id": "proj_123",
   "name": "Korovas RGB-D Capture",
   "version": "1.0",
-  "config": { /* See Config Collection Schema */ }
+  "config": {
+    "collection_flow": "korovas",
+    "fields": [ /* See §2; omit collection_flow for a single-scroll wizard */ ]
+  }
 }
 ```
+
+- **`collection_flow`** (optional): приложение выбирает сценарий UI. Значение `korovas` — пошаговый поток (анкета → справка → N ракурсов `camera_photo` → проверка), при этом поля по-прежнему задаются в `fields` с приоритетами (см. §2.2).
 
 ## 2. Config Collection Schema (Draft)
 The `config` defines a declarative list of fields that must be collected. The order and display (e.g., a wizard versus an open "to-do list") are orchestrated by the App based on the field's `priority`. This supports both strict sequential guided flows and flexible, out-of-order data collection scenarios.
 
 ### 2.1 Basic Fields & Collections (Sub-Datas)
 Fields can either be basic types (text, numbers, generic photos) or complex `collection` types that define an array of complex objects requiring their own `sub_fields`.
+
+**JSON keys** в конфиге: `field_id`, `sub_fields`, `collection_flow` (snake_case), остальные поля — как в примерах ниже.
+
+### 2.2 Korovas flow & extra types (app)
+Для `collection_flow: "korovas"` приложение интерпретирует:
+
+| `type` | `priority` (типично) | Назначение |
+|--------|----------------------|------------|
+| `datetime` | 1–99 | Дата/время скана |
+| `text_input` | 1–99 | Текстовые поля анкеты |
+| `instruction` | 100–199 | Экран справки (без записи в payload) |
+| `camera_photo` | 200–399 | Ракурс съёмки; значение в state — массив путей к файлам |
+
+Порядок шагов съёмки = сортировка `camera_photo` по `priority`. Имена полей в сохранённом `data` совпадают с `field_id` (например `cow_identifier`, `pose_1`).
 
 ```json
 {

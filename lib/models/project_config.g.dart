@@ -7,7 +7,7 @@ part of 'project_config.dart';
 // **************************************************************************
 
 ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
-  fieldId: json['fieldId'] as String,
+  fieldId: json['field_id'] as String,
   priority: (json['priority'] as num).toInt(),
   type: json['type'] as String,
   title: json['title'] as String,
@@ -24,7 +24,7 @@ ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
 
 Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
     <String, dynamic>{
-      'fieldId': instance.fieldId,
+      'field_id': instance.fieldId,
       'priority': instance.priority,
       'type': instance.type,
       'title': instance.title,
@@ -40,10 +40,12 @@ ProjectConfig _$ProjectConfigFromJson(Map<String, dynamic> json) =>
       fields: (json['fields'] as List<dynamic>)
           .map((e) => ConfigField.fromJson(e as Map<String, dynamic>))
           .toList(),
+      collectionFlow: json['collection_flow'] as String?,
     );
 
 Map<String, dynamic> _$ProjectConfigToJson(ProjectConfig instance) =>
     <String, dynamic>{
+      'collection_flow': instance.collectionFlow,
       'fields': instance.fields.map((e) => e.toJson()).toList(),
     };
 

@@ -9,16 +9,52 @@ import 'package:data_collector/features/collection/logic/submit_local_package.da
 
 import '../providers/wizard_state_provider.dart';
 
-class CollectionWizardScreen extends ConsumerStatefulWidget {
-  final String projectId;
-
+/// Один длинный экран: все поля из [Project.config] (spec 02), порядок по `priority`.
+class CollectionWizardScreen extends ConsumerWidget {
   const CollectionWizardScreen({super.key, required this.projectId});
 
+  final String projectId;
+
   @override
-  ConsumerState<CollectionWizardScreen> createState() => _CollectionWizardScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(projectsProvider);
+    return async.when(
+      data: (projects) {
+        late Project project;
+        try {
+          project = projects.firstWhere((p) => p.id == projectId);
+        } catch (_) {
+          return Scaffold(
+            backgroundColor: Epoch8Theme.bgDeep,
+            appBar: AppBar(title: const Text('Проект')),
+            body: const Center(child: Text('Проект не найден.')),
+          );
+        }
+        return _CollectionWizardLoaded(projectId: projectId, project: project);
+      },
+      loading: () => const Scaffold(
+        backgroundColor: Epoch8Theme.bgDeep,
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, _) => Scaffold(
+        backgroundColor: Epoch8Theme.bgDeep,
+        body: Center(child: Text('Ошибка: $e')),
+      ),
+    );
+  }
 }
 
-class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen> {
+class _CollectionWizardLoaded extends ConsumerStatefulWidget {
+  const _CollectionWizardLoaded({required this.projectId, required this.project});
+
+  final String projectId;
+  final Project project;
+
+  @override
+  ConsumerState<_CollectionWizardLoaded> createState() => _CollectionWizardLoadedState();
+}
+
+class _CollectionWizardLoadedState extends ConsumerState<_CollectionWizardLoaded> {
   late final List<ConfigField> _fields;
   late final List<FocusNode> _focusNodes;
   final Set<String> _editingItemIds = {};
@@ -26,14 +62,7 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
   @override
   void initState() {
     super.initState();
-    
-    // We grab the project once assuming it's static for this view
-    final projects = ref.read(mockProjectsProvider);
-    final project = projects.firstWhere(
-      (p) => p.id == widget.projectId, 
-      orElse: () => throw Exception('Project Not Found'),
-    );
-    _fields = project.config.fields.toList()..sort((a, b) => a.priority.compareTo(b.priority));
+    _fields = widget.project.config.fields.toList()..sort((a, b) => a.priority.compareTo(b.priority));
     
     _focusNodes = List.generate(_fields.length, (index) {
       final node = FocusNode();
@@ -78,8 +107,7 @@ class _CollectionWizardScreenState extends ConsumerState<CollectionWizardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final projects = ref.watch(mockProjectsProvider);
-    final project = projects.firstWhere((p) => p.id == widget.projectId);
+    final project = widget.project;
     final answers = ref.watch(wizardStateProvider(widget.projectId));
 
     return Scaffold(

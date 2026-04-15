@@ -2,8 +2,11 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'project_config.g.dart';
 
+/// Matches [specs/02-data-models-schema.md](specs/02-data-models-schema.md).\
+/// Extended `type` values understood by the app: `datetime`, `instruction`, `camera_photo`.
 @JsonSerializable(explicitToJson: true)
 class ConfigField {
+  @JsonKey(name: 'field_id')
   final String fieldId;
   final int priority;
   final String type;
@@ -33,9 +36,16 @@ class ConfigField {
 
 @JsonSerializable(explicitToJson: true)
 class ProjectConfig {
+  /// When `korovas`, the app uses the multi-step Korovas flow; otherwise a single-scroll config wizard.
+  @JsonKey(name: 'collection_flow')
+  final String? collectionFlow;
+
   final List<ConfigField> fields;
 
-  ProjectConfig({required this.fields});
+  ProjectConfig({
+    required this.fields,
+    this.collectionFlow,
+  });
 
   factory ProjectConfig.fromJson(Map<String, dynamic> json) => _$ProjectConfigFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectConfigToJson(this);

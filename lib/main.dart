@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'features/projects/providers/project_providers.dart';
+import 'models/project_config.dart';
 import 'features/collection/presentation/korovas/korovas_collection_screen.dart';
 import 'features/collection/presentation/korovas/korovas_keys.dart';
 import 'features/collection/presentation/wizard_screen.dart';
@@ -11,6 +12,7 @@ import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'core/package/package_paths.dart';
 import 'features/collection/logic/package_payload_codec.dart';
+import 'features/collection/logic/project_config_korovas.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 
@@ -35,15 +37,45 @@ final _router = GoRouter(
       path: '/project/:id/wizard',
       builder: (context, state) {
         final id = state.pathParameters['id']!;
-        if (id == 'korovas-2026') {
-          return KorovasCollectionScreen(projectId: id);
-        }
-        return CollectionWizardScreen(projectId: id);
+        return Consumer(
+          builder: (context, ref, _) {
+            final async = ref.watch(projectsProvider);
+            return async.when(
+              data: (projects) {
+                final Project project;
+                try {
+                  project = projects.firstWhere((p) => p.id == id);
+                } catch (_) {
+                  return Scaffold(
+                    backgroundColor: Epoch8Theme.bgDeep,
+                    appBar: AppBar(title: const Text('Проект')),
+                    body: const Center(child: Text('Проект не найден в конфигурации.')),
+                  );
+                }
+                if (project.config.collectionFlow == 'korovas') {
+                  return KorovasCollectionScreen(projectId: id);
+                }
+                return CollectionWizardScreen(projectId: id);
+              },
+              loading: () => const Scaffold(
+                backgroundColor: Epoch8Theme.bgDeep,
+                body: Center(child: CircularProgressIndicator()),
+              ),
+              error: (e, _) => Scaffold(
+                backgroundColor: Epoch8Theme.bgDeep,
+                body: Center(child: Text('Ошибка: $e')),
+              ),
+            );
+          },
+        );
       },
     ),
     GoRoute(
-      path: '/history/cow/:cowId',
-      builder: (context, state) => CowHistoryScreen(cowId: Uri.decodeComponent(state.pathParameters['cowId']!)),
+      path: '/history/project/:projectId/cow/:cowId',
+      builder: (context, state) => CowHistoryScreen(
+        projectId: state.pathParameters['projectId']!,
+        cowId: Uri.decodeComponent(state.pathParameters['cowId']!),
+      ),
     ),
     GoRoute(
       path: '/history/package/:packageId',
@@ -158,7 +190,7 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final projects = ref.watch(mockProjectsProvider);
+    final projectsAsync = ref.watch(projectsProvider);
     final packagesAsync = ref.watch(packagesStreamProvider);
 
     return DefaultTabController(
@@ -202,123 +234,68 @@ class DashboardScreen extends ConsumerWidget {
         body: Epoch8ScreenBody(
           child: TabBarView(
             children: [
-              projects.isEmpty
-                  ? const Epoch8EmptyState(
-                      icon: Icons.folder_open_outlined,
-                      title: 'Пока нет проектов',
-                      subtitle: 'Когда проекты появятся в конфигурации, они отобразятся здесь.',
-                    )
-                  : ListView.separated(
-                      padding: const EdgeInsets.fromLTRB(
-                        Epoch8Layout.pagePadding,
-                        12,
-                        Epoch8Layout.pagePadding,
-                        24,
-                      ),
-                      itemCount: projects.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
-                      itemBuilder: (context, index) {
-                        final project = projects[index];
-                        return Epoch8Card(
-                          accentBorder: project.id == 'korovas-2026',
-                          child: ListTile(
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                            leading: Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                color: Epoch8Theme.accent.withValues(alpha: 0.12),
-                                border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
-                              ),
-                              child: const Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
-                            ),
-                            title: Text(
-                              project.name,
-                              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                            ),
-                            subtitle: Padding(
-                              padding: const EdgeInsets.only(top: 6),
-                              child: Text(
-                                project.config.fields.isEmpty
-                                    ? 'Версия ${project.version} • анкета → справка → 3 ракурса → проверка'
-                                    : 'Версия ${project.version} • шагов: ${project.config.fields.length}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
-                              ),
-                            ),
-                            trailing: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Epoch8Theme.bgElevated,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
-                            ),
-                            onTap: () => context.go('/project/${project.id}/wizard'),
-                          ),
-                        );
-                      },
-                    ),
-              packagesAsync.when(
-                data: (packages) {
-                  final groups = _groupPackagesByCow(packages);
-                  if (packages.isEmpty) {
-                    return const Epoch8EmptyState(
-                      icon: Icons.cloud_outlined,
-                      title: 'История пуста',
-                      subtitle: 'Отправленные пакеты появятся здесь.',
-                    );
-                  }
-                  return ListView.separated(
+              projectsAsync.when(
+                data: (projects) => projects.isEmpty
+                    ? const Epoch8EmptyState(
+                        icon: Icons.folder_open_outlined,
+                        title: 'Пока нет проектов',
+                        subtitle: 'Добавьте проекты в assets/config/projects.json.',
+                      )
+                    : ListView.separated(
                         padding: const EdgeInsets.fromLTRB(
                           Epoch8Layout.pagePadding,
                           12,
                           Epoch8Layout.pagePadding,
                           24,
                         ),
-                        itemCount: groups.length,
+                        itemCount: projects.length,
                         separatorBuilder: (_, __) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
-                          final group = groups[index];
+                          final project = projects[index];
                           return Epoch8Card(
+                            accentBorder: project.id == 'korovas-2026',
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                               leading: Container(
-                                width: 48,
-                                height: 48,
+                                width: 52,
+                                height: 52,
                                 decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
                                   color: Epoch8Theme.accent.withValues(alpha: 0.12),
                                   border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                                 ),
-                                child: const Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
+                                child: const Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
                               ),
                               title: Text(
-                                'Корова ${group.cowId}',
-                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                project.name,
+                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                               ),
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text(
-                                  'Пакетов: ${group.packages.length} • Фото: ${group.totalPhotos}',
-                                  style: Theme.of(context).textTheme.bodySmall,
+                                  project.config.collectionFlow == 'korovas'
+                                      ? 'Версия ${project.version} • анкета → справка → ${project.korovasCameraFields.length} ракурса → проверка'
+                                      : 'Версия ${project.version} • полей: ${project.config.fields.length}',
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
                                 ),
                               ),
-                              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
-                              onTap: () => context.push('/history/cow/${Uri.encodeComponent(group.cowId)}'),
+                              trailing: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Epoch8Theme.bgElevated,
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                              ),
+                              onTap: () => context.go('/project/${project.id}/wizard'),
                             ),
                           );
                         },
-                      );
-                },
+                      ),
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, st) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
-                  ),
-                ),
+                error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
               ),
+              _historyTabBody(context, ref, projectsAsync, packagesAsync),
             ],
           ),
         ),
@@ -328,8 +305,9 @@ class DashboardScreen extends ConsumerWidget {
 }
 
 class CowHistoryScreen extends ConsumerWidget {
-  const CowHistoryScreen({super.key, required this.cowId});
+  const CowHistoryScreen({super.key, required this.projectId, required this.cowId});
 
+  final String projectId;
   final String cowId;
 
   @override
@@ -340,7 +318,9 @@ class CowHistoryScreen extends ConsumerWidget {
       appBar: AppBar(title: Text('Корова $cowId')),
       body: packagesAsync.when(
         data: (packages) {
-          final filtered = packages.where((p) => _extractCowIdFromPackage(p) == cowId).toList()
+          final filtered = packages
+              .where((p) => p.projectId == projectId && _extractCowIdFromPackage(p) == cowId)
+              .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           if (filtered.isEmpty) {
             return const Epoch8EmptyState(
@@ -415,6 +395,12 @@ class PackageHistoryScreen extends ConsumerWidget {
           final raw = _decodePackageData(pkg);
           final photos = _extractImagePaths(pkg);
           final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
+          final projectsList = ref.watch(projectsProvider).maybeWhen(
+                data: (v) => v,
+                orElse: () => null,
+              );
+          final projMeta = _projectById(projectsList, pkg.projectId);
+          final isKorovas = projMeta?.config.collectionFlow == 'korovas';
           return ListView(
             padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
             children: [
@@ -422,9 +408,16 @@ class PackageHistoryScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Корова: ${_extractCowId(raw)}', style: Theme.of(context).textTheme.titleSmall),
+                    Text(
+                      projMeta != null ? 'Проект: ${projMeta.name}' : 'Проект: ${pkg.projectId}',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (isKorovas) ...[
+                      const SizedBox(height: 8),
+                      Text('Корова: ${_extractCowId(raw)}', style: Theme.of(context).textTheme.titleSmall),
+                    ],
                     const SizedBox(height: 8),
-                    Text('Проект: ${pkg.projectId}', style: Theme.of(context).textTheme.bodyMedium),
+                    Text('Идентификатор: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
                     Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
                     Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
                   ],
@@ -440,11 +433,7 @@ class PackageHistoryScreen extends ConsumerWidget {
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
-                    _packageHistoryFieldRow(context, 'ID коровы', raw[KorovasKeys.cowId]?.toString()),
-                    _packageHistoryFieldRow(context, 'Время скана', _formatPackageScanTime(raw[KorovasKeys.scanTime])),
-                    _packageHistoryFieldRow(context, 'Возраст', raw[KorovasKeys.cowAge]?.toString()),
-                    _packageHistoryFieldRow(context, 'Вес', raw[KorovasKeys.cowWeight]?.toString()),
-                    _packageHistoryFieldRow(context, 'Порода', raw[KorovasKeys.cowBreed]?.toString()),
+                    ..._packageFormSummaryRows(context, ref, pkg, raw),
                   ],
                 ),
               ),
@@ -546,6 +535,236 @@ class PackageHistoryScreen extends ConsumerWidget {
   }
 }
 
+Widget _historyTabBody(
+  BuildContext context,
+  WidgetRef ref,
+  AsyncValue<List<Project>> projectsAsync,
+  AsyncValue<List<Package>> packagesAsync,
+) {
+  return projectsAsync.when(
+    data: (projects) {
+      return packagesAsync.when(
+        data: (packages) {
+          if (packages.isEmpty) {
+            return const Epoch8EmptyState(
+              icon: Icons.cloud_outlined,
+              title: 'История пуста',
+              subtitle: 'Отправленные пакеты появятся здесь.',
+            );
+          }
+          final byProject = <String, List<Package>>{};
+          for (final p in packages) {
+            byProject.putIfAbsent(p.projectId, () => []).add(p);
+          }
+          final knownIds = projects.map((p) => p.id).toSet();
+          final sections = <Widget>[];
+          for (final proj in projects) {
+            final pkgs = byProject[proj.id];
+            if (pkgs == null || pkgs.isEmpty) continue;
+            sections.add(_historyProjectSection(context, proj, pkgs));
+          }
+          for (final entry in byProject.entries) {
+            if (knownIds.contains(entry.key)) continue;
+            sections.add(_historyOrphanProjectSection(context, entry.key, entry.value));
+          }
+          return ListView(
+            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+            children: sections,
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(child: Text('Ошибка: $e')),
+      );
+    },
+    loading: () => const Center(child: CircularProgressIndicator()),
+    error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
+  );
+}
+
+Widget _historyProjectSection(BuildContext context, Project proj, List<Package> packages) {
+  final isKorovas = proj.config.collectionFlow == 'korovas';
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8, top: 4),
+        child: Row(
+          children: [
+            Icon(isKorovas ? Icons.pets_outlined : Icons.folder_outlined, size: 20, color: Epoch8Theme.accent),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                proj.name,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: Epoch8Theme.accent,
+                    ),
+              ),
+            ),
+            Text(
+              '${packages.length} пак.',
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Epoch8Theme.textMuted),
+            ),
+          ],
+        ),
+      ),
+      if (isKorovas) ...[
+        for (final g in _groupPackagesByCow(packages)) ...[
+          Epoch8Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Epoch8Theme.accent.withValues(alpha: 0.12),
+                  border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
+                ),
+                child: const Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
+              ),
+              title: Text('Корова ${g.cowId}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  'Пакетов: ${g.packages.length} • Фото: ${g.totalPhotos}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+              onTap: () => context.push('/history/project/${proj.id}/cow/${Uri.encodeComponent(g.cowId)}'),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ] else ...[
+        for (final pkg in (packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))) ...[
+          Epoch8Card(
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              leading: Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Epoch8Theme.card,
+                  border: Border.all(color: Epoch8Theme.border),
+                ),
+                child: const Icon(Icons.photo_library_outlined, color: Epoch8Theme.textMuted, size: 24),
+              ),
+              title: Text(
+                pkg.id,
+                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              subtitle: Padding(
+                padding: const EdgeInsets.only(top: 6),
+                child: Text(
+                  '${pkg.createdAt.toString().split('.').first} • фото: ${_extractImagePaths(pkg).length}\n${_historyPackageSubtitle(pkg)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              isThreeLine: true,
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+              onTap: () => context.push('/history/package/${pkg.id}'),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+      ],
+      const SizedBox(height: 8),
+    ],
+  );
+}
+
+String _historyPackageSubtitle(Package pkg) {
+  final raw = unpackPackageFormData(pkg.dataJson);
+  final n = raw['session_note']?.toString().trim() ?? '';
+  if (n.isEmpty) return '';
+  return n.length > 80 ? '${n.substring(0, 80)}…' : n;
+}
+
+Widget _historyOrphanProjectSection(BuildContext context, String projectId, List<Package> packages) {
+  final sorted = packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.only(bottom: 8, top: 4),
+        child: Text(
+          'Проект $projectId (нет в конфиге)',
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.textMuted, fontWeight: FontWeight.w600),
+        ),
+      ),
+      for (final pkg in sorted) ...[
+        Epoch8Card(
+          child: ListTile(
+            title: Text(pkg.id, style: const TextStyle(fontWeight: FontWeight.w600)),
+            subtitle: Text(pkg.createdAt.toString().split('.').first),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+            onTap: () => context.push('/history/package/${pkg.id}'),
+          ),
+        ),
+        const SizedBox(height: 12),
+      ],
+    ],
+  );
+}
+
+Project? _projectById(List<Project>? projects, String id) {
+  if (projects == null) return null;
+  for (final p in projects) {
+    if (p.id == id) return p;
+  }
+  return null;
+}
+
+List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Package pkg, Map<String, dynamic> raw) {
+  final projects = ref.watch(projectsProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => null,
+      );
+  final proj = _projectById(projects, pkg.projectId);
+  if (proj?.config.collectionFlow == 'korovas') {
+    return [
+      _packageHistoryFieldRow(context, 'ID коровы', raw[KorovasKeys.cowId]?.toString()),
+      _packageHistoryFieldRow(context, 'Время скана', _formatPackageScanTime(raw[KorovasKeys.scanTime])),
+      _packageHistoryFieldRow(context, 'Возраст', raw[KorovasKeys.cowAge]?.toString()),
+      _packageHistoryFieldRow(context, 'Вес', raw[KorovasKeys.cowWeight]?.toString()),
+      _packageHistoryFieldRow(context, 'Порода', raw[KorovasKeys.cowBreed]?.toString()),
+    ];
+  }
+  return _genericPayloadFieldRows(context, raw);
+}
+
+List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic> raw) {
+  const skip = {'korovas_camera_context'};
+  final out = <Widget>[];
+  final keys = raw.keys.where((k) => !skip.contains(k)).toList()..sort();
+  for (final k in keys) {
+    final v = raw[k];
+    String display;
+    if (v == null) {
+      display = '—';
+    } else if (v is List) {
+      if (v.isEmpty) {
+        display = '—';
+      } else if (v.every((x) => x is String && (x.contains('/') || x.contains('\\') || x.startsWith('blobs/')))) {
+        display = '${v.length} файл(ов)';
+      } else {
+        display = v.map((x) => x.toString()).join(', ');
+      }
+    } else if (v is Map) {
+      display = '{…}';
+    } else {
+      display = v.toString();
+    }
+    out.add(_packageHistoryFieldRow(context, k, display));
+  }
+  return out;
+}
+
 class _CowGroup {
   const _CowGroup({required this.cowId, required this.packages, required this.totalPhotos});
 
@@ -610,7 +829,7 @@ String _extractCowIdFromPackage(Package pkg) => _extractCowId(_decodePackageData
 Map<String, dynamic> _decodePackageData(Package pkg) => unpackPackageFormData(pkg.dataJson);
 
 String _extractCowId(Map<String, dynamic> data) {
-  const keys = ['cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
+  const keys = ['cow_identifier', 'cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
   for (final k in keys) {
     final value = data[k]?.toString().trim();
     if (value != null && value.isNotEmpty) return value;

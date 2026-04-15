@@ -1,0 +1,26 @@
+{
+  "id": "simple-photo-2026",
+  "name": "Заметка + фото",
+  "version": "1.0",
+  "config": {
+    "fields": [
+      {
+        "field_id": "session_note",
+        "priority": 10,
+        "type": "text_input",
+        "title": "Описание",
+        "instructions": "Кратко опишите, что снимаете или что нужно зафиксировать.",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "photos",
+        "priority": 20,
+        "type": "camera_photo",
+        "title": "Фотографии",
+        "instructions": "Добавьте один или несколько снимков (камера или галерея).",
+        "multiple": true,
+        "validation": { "required": false }
+      }
+    ]
+  }
+}
