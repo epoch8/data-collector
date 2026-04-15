@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="korovas-full" name="Korovas — поток и пакет">
-        <mxGraphModel dx="1614" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="1180" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1406" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="1320" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -8,13 +8,13 @@
                     <mxGeometry x="40" y="14" width="1440" height="26" as="geometry"/>
                 </mxCell>
                 <mxCell id="2" value="/login&#10;мок" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="68" width="100" height="64" as="geometry"/>
+                    <mxGeometry x="40" y="60" width="100" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="3" value="/dashboard&#10;Проекты | История" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="160" y="68" width="160" height="64" as="geometry"/>
+                    <mxGeometry x="170" y="60" width="160" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="w0" value="wizard&#10;korovas-2026" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontStyle=1;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="340" y="68" width="130" height="64" as="geometry"/>
+                    <mxGeometry x="352" y="60" width="130" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="2" target="3" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -69,16 +69,16 @@
                 <mxCell id="p1" value="В state:&#10;(пусто)&#10;только UI,&#10;полей нет" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#5a5a68;fontSize=9;fontColor=#9CA3AF;fontFamily=Courier New;fontStyle=2" vertex="1" parent="1">
                     <mxGeometry x="158" y="212" width="88" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="p2" value="В state:&#10;• pose_1 [paths]&#10;• korovas_camera_context*&#10;  device (1×)&#10;  native_back_camera&#10;  poses[&amp;quot;1&amp;quot;].shots[]&#10;*каждый кадр, не web" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                <mxCell id="p2" value="В state:&lt;br&gt;• pose_1 [abs paths]&lt;br&gt;• camera_context*" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
                     <mxGeometry x="264" y="212" width="100" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="p3" value="В state:&#10;• pose_2 [paths]&#10;• context.poses[2]&#10;  .shots[] +&#10;  exif + derived" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                <mxCell id="p3" value="В state:&lt;br&gt;• pose_2&lt;br&gt;• camera_context" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
                     <mxGeometry x="382" y="212" width="100" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="p4" value="В state:&#10;• pose_3 [paths]&#10;• context.poses[3]&#10;  .shots[] +&#10;  exif + derived" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                <mxCell id="p4" value="В state:&lt;br&gt;• pose_3&lt;br&gt;• camera_context" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
                     <mxGeometry x="500" y="212" width="100" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="p5" value="Новых полей&#10;нет — сводка&#10;и кнопка&#10;«Отправить»&#10;→ insert" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#14261f;strokeColor=#3DCC85;fontSize=9;fontColor=#B8E8D0;fontFamily=Courier New;" vertex="1" parent="1">
+                <mxCell id="p5" value="Новых полей&#10;нет — сводка&#10;и кнопка&#10;«Отправить»&#10;→ materialize" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#14261f;strokeColor=#3DCC85;fontSize=9;fontColor=#B8E8D0;fontFamily=Courier New;" vertex="1" parent="1">
                     <mxGeometry x="618" y="212" width="100" height="108" as="geometry"/>
                 </mxCell>
                 <mxCell id="ep0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s0" target="p0">
@@ -99,19 +99,26 @@
                 <mxCell id="ep5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#3DCC85;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s5" target="p5">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="lbl-merge" value="Ниже — одна строка БД: колонки + полный JSON в data_json (как jsonEncode всего wizardState)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#ADB5C4;fontStyle=1" vertex="1" parent="1">
-                    <mxGeometry x="40" y="332" width="900" height="22" as="geometry"/>
+                <mxCell id="disk" value="LOCAL APP — Documents&lt;br&gt;(path_provider)&lt;br&gt;&lt;br&gt;packages/&amp;lt;package_id&amp;gt;/&lt;br&gt;├── payload.json&lt;br&gt;│&amp;nbsp;&lt;br&gt;└── blobs/&lt;br&gt;      ├── img_0001.jpg  ← копии снимков&lt;br&gt;      └── …&lt;br&gt;&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fillColor=#1a2d24;strokeColor=#3DCC85;fontSize=9;fontColor=#D1F0E0;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="130" y="390" width="268" height="138" as="geometry"/>
                 </mxCell>
-                <mxCell id="fullpkg" value="ИТОГ: таблица packages (SQLite / Drift)&#10;&#10;┌─ id (PK) ───────────────── pkg_&amp;lt;ms&amp;gt;&#10;├─ project_id ─────────────── korovas-2026&#10;├─ status ─────────────────── completed&#10;├─ created_at ─────────────── DateTime.now() при insert (не scan_time!)&#10;└─ data_json (TEXT) ───────── JSON ниже целиком&#10;&#10;────────── содержимое data_json (объект) ──────────&#10;scan_time ............... string ISO-8601&#10;cow_id .................. string&#10;cow_age ................. string&#10;cow_weight .............. string&#10;cow_breed ............... string&#10;pose_1 .................. string[] путей (или одна string, legacy)&#10;pose_2 .................. string[]&#10;pose_3 .................. string[]&#10;korovas_camera_context .. object | отсутствует (web — обычно нет)&#10;  ├─ device ............ platform + поля модели (android/ios/web)&#10;  ├─ native_back_camera .. map с нативными intrinsics или {}&#10;  └─ poses .............. &amp;quot;1&amp;quot;|&amp;quot;2&amp;quot;|&amp;quot;3&amp;quot; → { shots: [&#10;         { image_path, collected_at UTC, exif{…}, derived{ fx_px…, preferred_fx…, notes{…} } }, … ] }" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5B8DEF;fontSize=10;fontColor=#D1D5DB;fontFamily=Courier New;" vertex="1" parent="1">
-                    <mxGeometry x="40" y="358" width="1440" height="340" as="geometry"/>
+                <mxCell id="sqlite" value="SQLite — таблица packages (Drift)&lt;br&gt;&lt;br&gt;┌─ id (PK) ─────────── pkg_&amp;lt;ms&amp;gt;&lt;br&gt;├─ project_id ──────── korovas-2026&lt;br&gt;├─ status ──────────── completed&lt;br&gt;├─ created_at ──────── DateTime при insert&lt;br&gt;└─ data_json ─────────&amp;nbsp;jsonEncode(конверта)&lt;br&gt;       = содержимое payload.json" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;fillColor=#1e2438;strokeColor=#5B8DEF;fontSize=9;fontColor=#C8D4F0;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="400" width="270" height="108" as="geometry"/>
                 </mxCell>
-                <mxCell id="e-merge" value="все поля state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3DCC85;fontColor=#8FD9B0;endArrow=classic;dashed=0;exitX=0.5;exitY=1;entryX=0.92;entryY=0;" edge="1" parent="1" source="p5" target="fullpkg">
+                <mxCell id="payloadjson" value="payload.json / data_json — поля конверта&lt;br&gt;&lt;br&gt;{&lt;br&gt;  &quot;package_id&quot;: &quot;pkg_…&quot;,&lt;br&gt;  &quot;project_id&quot;: &quot;korovas-2026&quot;,&lt;br&gt;  &quot;created_at&quot;: &quot;&amp;lt;UTC ISO-8601 UTC&amp;gt;&quot;,&lt;br&gt;  &quot;data&quot;: {&lt;br&gt;    &quot;scan_time&quot;, &quot;cow_id&quot;, &quot;cow_age&quot;,&lt;br&gt;    &quot;cow_weight&quot;, &quot;cow_breed&quot;,&lt;br&gt;    &quot;pose_1&quot;: [&quot;blobs/img_0001.jpg&quot;, …],&lt;br&gt;    &quot;pose_2&quot;: […], &quot;pose_3&quot;: […],&lt;br&gt;    &quot;korovas_camera_context&quot;: {&lt;br&gt;      device, native_back_camera,&lt;br&gt;      &quot;1&quot;|&quot;2&quot;|&quot;3&quot; → { shots: [&lt;br&gt;        image_path, exif, derived, collected_at ] } }&lt;br&gt;  }&lt;br&gt;}&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#8B9DC6;fontSize=8;fontColor=#D1D5DB;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="820" y="348" width="270" height="180" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-merge" value="materialize" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3DCC85;fontColor=#8FD9B0;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="p5" target="disk">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="668" y="345"/>
-                            <mxPoint x="1365" y="345"/>
+                            <mxPoint x="668" y="350"/>
+                            <mxPoint x="265" y="350"/>
+                            <mxPoint x="265" y="382"/>
                         </Array>
                     </mxGeometry>
+                </mxCell>
+                <mxCell id="e-disk-sqlite" value="тот же JSON" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B9BD1;fontColor=#9BB8E8;endArrow=classic;exitX=1;exitY=0.35;entryX=0;entryY=0.35;" edge="1" parent="1" source="disk" target="sqlite">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
