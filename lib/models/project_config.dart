@@ -34,17 +34,61 @@ class ConfigField {
   Map<String, dynamic> toJson() => _$ConfigFieldToJson(this);
 }
 
+/// One screen in `config.flow.steps` — drives routing and widgets, not field definitions.
+@JsonSerializable(explicitToJson: true)
+class CollectionFlowStepDecl {
+  final String id;
+  final String screen;
+  @JsonKey(name: 'field_ids')
+  final List<String>? fieldIds;
+  @JsonKey(name: 'field_id')
+  final String? fieldId;
+  /// When true on a `form` step: suggest values from previous packages (see [cowIdFieldId]).
+  @JsonKey(name: 'cow_id_hints')
+  final bool? cowIdHints;
+  /// `field_id` of the text field used for cow/subject matching; defaults to first `text_input` in the step.
+  @JsonKey(name: 'cow_id_field_id')
+  final String? cowIdFieldId;
+
+  CollectionFlowStepDecl({
+    required this.id,
+    required this.screen,
+    this.fieldIds,
+    this.fieldId,
+    this.cowIdHints,
+    this.cowIdFieldId,
+  });
+
+  factory CollectionFlowStepDecl.fromJson(Map<String, dynamic> json) =>
+      _$CollectionFlowStepDeclFromJson(json);
+  Map<String, dynamic> toJson() => _$CollectionFlowStepDeclToJson(this);
+}
+
+@JsonSerializable(explicitToJson: true)
+class CollectionFlowDecl {
+  final List<CollectionFlowStepDecl> steps;
+
+  CollectionFlowDecl({required this.steps});
+
+  factory CollectionFlowDecl.fromJson(Map<String, dynamic> json) =>
+      _$CollectionFlowDeclFromJson(json);
+  Map<String, dynamic> toJson() => _$CollectionFlowDeclToJson(this);
+}
+
 @JsonSerializable(explicitToJson: true)
 class ProjectConfig {
-  /// When `korovas`, the app uses the multi-step Korovas flow; otherwise a single-scroll config wizard.
-  @JsonKey(name: 'collection_flow')
-  final String? collectionFlow;
-
   final List<ConfigField> fields;
+
+  /// Required: defines every screen (scroll or multi-step). The app does not infer flows from priorities.
+  final CollectionFlowDecl flow;
+
+  /// Optional nested strings / templates for flow UI and shooting guide (`ProjectUi`).
+  final Map<String, dynamic>? ui;
 
   ProjectConfig({
     required this.fields,
-    this.collectionFlow,
+    required this.flow,
+    this.ui,
   });
 
   factory ProjectConfig.fromJson(Map<String, dynamic> json) => _$ProjectConfigFromJson(json);
@@ -68,3 +112,5 @@ class Project {
   factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectToJson(this);
 }
+
+bool configFieldRequired(ConfigField f) => f.validation?['required'] == true;

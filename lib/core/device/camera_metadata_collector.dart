@@ -1,7 +1,7 @@
 import 'dart:io';
 
 import 'package:data_collector/core/device/device_camera_channel.dart';
-import 'package:data_collector/features/collection/presentation/korovas/korovas_keys.dart';
+import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:exif/exif.dart';
@@ -14,7 +14,7 @@ class CameraMetadataCollector {
 
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
 
-  /// Call after each successful camera capture; merges into [KorovasKeys.cameraContext].
+  /// Call after each successful camera capture; merges into [PackagePayloadKeys.cameraCaptureContext].
   static Future<void> attachPoseMetadata({
     required WidgetRef ref,
     required String projectId,
@@ -25,7 +25,7 @@ class CameraMetadataCollector {
 
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
-    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+    final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
 
     await _ensureDevice(ctx);
     await _ensureNativeCamera(ctx);
@@ -60,7 +60,7 @@ class CameraMetadataCollector {
     });
     poses[key] = <String, dynamic>{'shots': shots};
 
-    notifier.updateField(KorovasKeys.cameraContext, ctx);
+    notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 
   /// Удалить один кадр из метаданных по пути файла.
@@ -72,10 +72,10 @@ class CameraMetadataCollector {
   }) {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
-    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+    final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
     final poses = ctx['poses'];
     if (poses is! Map<String, dynamic>) {
-      notifier.updateField(KorovasKeys.cameraContext, ctx);
+      notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
       return;
     }
     final key = '$poseIndex1Based';
@@ -90,7 +90,7 @@ class CameraMetadataCollector {
     } else {
       poses[key] = <String, dynamic>{'shots': shots};
     }
-    notifier.updateField(KorovasKeys.cameraContext, ctx);
+    notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 
   /// Remove pose entry when user deletes all frames for a pose.
@@ -101,12 +101,12 @@ class CameraMetadataCollector {
   }) {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
-    final ctx = _cloneContext(state[KorovasKeys.cameraContext]);
+    final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
     final poses = ctx['poses'];
     if (poses is Map<String, dynamic>) {
       poses.remove('$poseIndex1Based');
     }
-    notifier.updateField(KorovasKeys.cameraContext, ctx);
+    notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 
   static Map<String, dynamic> _cloneContext(dynamic raw) {

@@ -1,0 +1,198 @@
+{
+  "id": "product-shelf-shoot-2026",
+  "name": "Съёмка продуктов",
+  "version": "1.0",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "form",
+          "screen": "form",
+          "field_ids": ["store_name", "extra_info"]
+        },
+        {
+          "id": "photo_full_counter",
+          "screen": "camera_pose",
+          "field_id": "photo_full_counter"
+        },
+        {
+          "id": "photo_shelves",
+          "screen": "camera_pose",
+          "field_id": "photo_shelves"
+        },
+        {
+          "id": "photo_product",
+          "screen": "camera_pose",
+          "field_id": "photo_product"
+        },
+        { "id": "review", "screen": "review" }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "store_name",
+        "priority": 10,
+        "type": "text_input",
+        "title": "Магазин",
+        "instructions": "Название или адрес торговой точки.",
+        "validation": { "required": true }
+      },
+      {
+        "field_id": "extra_info",
+        "priority": 20,
+        "type": "text_input",
+        "title": "Дополнительная информация",
+        "instructions": "Например: отдел, заметки по задаче, контакт ответственного.",
+        "validation": { "required": false }
+      },
+      {
+        "field_id": "photo_full_counter",
+        "priority": 100,
+        "type": "camera_photo",
+        "title": "Прилавок целиком",
+        "instructions": "Снимите весь прилавок одним или несколькими кадрами так, чтобы был виден весь витринный ряд.",
+        "multiple": true,
+        "validation": { "required": true, "min_items": 1 }
+      },
+      {
+        "field_id": "photo_shelves",
+        "priority": 110,
+        "type": "camera_photo",
+        "title": "Полки по отдельности",
+        "instructions": "Число полок заранее не фиксируется: добавьте отдельный снимок на каждую интересующую полку (кнопки «Камера» / «Галерея» или «Добавить ещё»). Порядок кадров сохраняется.",
+        "multiple": true,
+        "validation": { "required": true, "min_items": 1 }
+      },
+      {
+        "field_id": "photo_product",
+        "priority": 120,
+        "type": "camera_photo",
+        "title": "Конкретный товар (по желанию)",
+        "instructions": "Этот шаг необязателен: при необходимости сделайте крупный план выбранного товара. Можно пропустить и сразу перейти к проверке.",
+        "multiple": true,
+        "validation": { "required": false }
+      }
+    ],
+    "ui": {
+      "flow": {
+        "continue": {
+          "next": "Далее",
+          "to_briefing": "Далее",
+          "to_capture": "Далее: съёмка"
+        },
+        "app_bar": {
+          "shooting_help_tooltip": "Подсказки по съёмке"
+        },
+        "ribbon": {
+          "pose_counter_sep": "·",
+          "shooting": "Съёмка",
+          "instruction_fallback": "Инструкция",
+          "review": "Проверка и отправка",
+          "form": "Данные точки"
+        },
+        "form": {
+          "step_overline": "Шаг 1",
+          "scan_section_title": "Сессия",
+          "form_section_title_fallback": "Форма",
+          "datetime_change": "Изменить",
+          "fields_heading_cow": "Поля",
+          "fields_heading_default": "Поля",
+          "prefill_button": "Предзаполнить из последней записи"
+        },
+        "camera_pose": {
+          "quality_dialog": {
+            "title": "Проверка качества кадра",
+            "use_anyway": "Всё равно использовать",
+            "retake": "Переснять"
+          },
+          "example_heading": "Ориентир по кадру",
+          "help_button": "Подсказки",
+          "example_asset_missing": "Пример изображения не задан",
+          "your_shots_heading": "Ваши кадры ({count})",
+          "empty_hint": "Добавьте кадры камерой или из галереи",
+          "add_more": "Добавить ещё (ещё одна полка / ещё один кадр)",
+          "camera": "Камера",
+          "gallery": "Галерея",
+          "clear_all_poses": "Удалить все кадры этого шага",
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "review": {
+          "header_overline": "Готово",
+          "header_title": "Проверка и отправка",
+          "header_subtitle": "Проверьте текстовые поля и фото. При необходимости вернитесь к любому шагу съёмки.",
+          "form_card_title": "Данные точки",
+          "edit": "Изменить",
+          "photos_section_title": "Фотографии по шагам",
+          "no_frames": "Нет кадров",
+          "submit": "Отправить",
+          "empty_value": "—"
+        },
+        "camera_meta": {
+          "fx_estimate": "fₓ≈{value} px",
+          "expand_hint": "Нажмите, чтобы развернуть",
+          "empty_notice": "Мета-параметры камеры появятся после съёмки.",
+          "tile_title": "Мета-параметры камеры",
+          "section_device": "Устройство",
+          "section_native": "Нативная камера (задняя)",
+          "json_section": "Полный JSON (копирование)",
+          "dash": "—",
+          "native_empty": "Нет данных с нативного API",
+          "pose_shot_title": "Шаг {idx} — кадр {shot}",
+          "pose_derived_title": "Шаг {idx} — оценки",
+          "label_fx_exif": "fx_px (EXIF focal × сенсор)",
+          "label_fx_35mm": "fx_px (35mm equiv)",
+          "label_fx_native": "fx_px (натив)",
+          "exif_heading": "Фрагмент EXIF",
+          "exif_more": "… ещё {n} полей"
+        }
+      },
+      "shooting_guide": {
+        "section_overline": "Чек-лист",
+        "section_title": "Съёмка витрины",
+        "section_subtitle": "Сначала общий план, затем полки по одной; товар крупным планом — по желанию.",
+        "general_tips_heading": "Общие советы",
+        "general_tips": [
+          "Держите телефон ровно, без сильного наклона.",
+          "Следите за резкостью и бликами на стекле витрины.",
+          "Для полок: один кадр — одна полка, чтобы на сервере было понятно соответствие."
+        ],
+        "asset_missing_hint": "Нет иллюстрации",
+        "no_asset_placeholder": "—",
+        "start_button": "Понятно",
+        "pose_cards": [
+          {
+            "index_1based": 1,
+            "title": "Прилавок целиком",
+            "short_label": "1",
+            "description_lines": [
+              "В кадре должен быть весь прилавок / витринный ряд целиком.",
+              "При необходимости сделайте второй кадр с другого ракурса."
+            ],
+            "example_asset_path": "e8_logo.png"
+          },
+          {
+            "index_1based": 2,
+            "title": "Полки по отдельности",
+            "short_label": "2",
+            "description_lines": [
+              "Каждая полка — отдельный снимок. Сколько полок — столько кадров (кнопка «Добавить ещё»).",
+              "Снимайте в стабильном порядке, например слева направо."
+            ],
+            "example_asset_path": "e8_logo.png"
+          },
+          {
+            "index_1based": 3,
+            "title": "Конкретный товар (по желанию)",
+            "short_label": "3",
+            "description_lines": [
+              "Шаг можно пропустить, если детальный план товара не нужен.",
+              "Если снимаете — крупный план, читаемая этикетка."
+            ],
+            "example_asset_path": "e8_logo.png"
+          }
+        ]
+      }
+    }
+  }
+}

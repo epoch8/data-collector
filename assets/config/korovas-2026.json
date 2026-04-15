@@ -3,7 +3,156 @@
   "name": "Korovas",
   "version": "1.0",
   "config": {
-    "collection_flow": "korovas",
+    "flow": {
+      "steps": [
+        {
+          "id": "form",
+          "screen": "form",
+          "cow_id_hints": true,
+          "cow_id_field_id": "cow_identifier",
+          "field_ids": [
+            "scan_time",
+            "cow_identifier",
+            "cow_age",
+            "cow_weight",
+            "cow_breed"
+          ]
+        },
+        {
+          "id": "briefing",
+          "screen": "instruction",
+          "field_id": "shooting_briefing"
+        },
+        { "id": "pose_1", "screen": "camera_pose", "field_id": "pose_1" },
+        { "id": "pose_2", "screen": "camera_pose", "field_id": "pose_2" },
+        { "id": "pose_3", "screen": "camera_pose", "field_id": "pose_3" },
+        { "id": "review", "screen": "review" }
+      ]
+    },
+    "ui": {
+      "flow": {
+        "continue": {
+          "next": "Далее",
+          "to_briefing": "Далее: справка по съёмке",
+          "to_capture": "Далее: съёмка"
+        },
+        "app_bar": {
+          "shooting_help_tooltip": "Справка по съёмке"
+        },
+        "ribbon": {
+          "pose_counter_sep": "·",
+          "shooting": "Съёмка",
+          "instruction_fallback": "Справка перед съёмкой",
+          "review": "Проверка и отправка",
+          "form": "Анкета"
+        },
+        "form": {
+          "step_overline": "Шаг 1",
+          "scan_section_title": "Данные скана",
+          "form_section_title_fallback": "Анкета",
+          "datetime_change": "Изменить",
+          "fields_heading_cow": "Параметры коровы",
+          "fields_heading_default": "Поля",
+          "cow_hint_exact": "ID найден в локальной истории",
+          "cow_hint_similar": "Есть похожие ID в истории",
+          "cow_hint_new": "Новый ID (в истории не найден)",
+          "prefill_button": "Предзаполнить поля из последней записи"
+        },
+        "camera_pose": {
+          "quality_dialog": {
+            "title": "Проверка качества кадра",
+            "use_anyway": "Всё равно использовать",
+            "retake": "Переснять"
+          },
+          "example_heading": "Пример ракурса",
+          "help_button": "Справка",
+          "example_asset_missing": "Изображение-пример не найдено в сборке",
+          "your_shots_heading": "Ваши кадры ({count})",
+          "empty_hint": "Добавьте кадры камерой или из галереи",
+          "add_more": "Добавить ещё",
+          "camera": "Камера",
+          "gallery": "Галерея",
+          "clear_all_poses": "Удалить все кадры этого ракурса",
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "review": {
+          "header_overline": "Финиш",
+          "header_title": "Проверка и отправка",
+          "header_subtitle": "Проверьте данные. Можно вернуться к анкете или к любому ракурсу — снимки сохраняются, их можно заменить.",
+          "form_card_title": "Анкета",
+          "edit": "Изменить",
+          "photos_section_title": "Фотографии по ракурсам",
+          "no_frames": "Нет кадров",
+          "submit": "Отправить данные",
+          "empty_value": "—"
+        },
+        "camera_meta": {
+          "fx_estimate": "fₓ≈{value} px",
+          "expand_hint": "Нажмите, чтобы развернуть",
+          "empty_notice": "Мета-параметры камеры появятся после съёмки поз.",
+          "tile_title": "Мета-параметры камеры",
+          "section_device": "Устройство",
+          "section_native": "Нативная камера (задняя)",
+          "json_section": "Полный JSON (копирование)",
+          "dash": "—",
+          "native_empty": "Нет данных с нативного API",
+          "pose_shot_title": "Ракурс {idx} — кадр {shot}",
+          "pose_derived_title": "Ракурс {idx} — оценки",
+          "label_fx_exif": "fx_px (EXIF focal × сенсор)",
+          "label_fx_35mm": "fx_px (35mm equiv)",
+          "label_fx_native": "fx_px (натив)",
+          "exif_heading": "Фрагмент EXIF",
+          "exif_more": "… ещё {n} полей"
+        }
+      },
+      "shooting_guide": {
+        "section_overline": "Обучение",
+        "section_title": "Съёмка",
+        "section_subtitle": "Перед съёмкой ознакомьтесь с ракурсами и требованиями к кадру.",
+        "general_tips_heading": "Общие рекомендации",
+        "general_tips": [
+          "Держите телефон горизонтально, на уровне спины коровы.",
+          "Избегайте жёсткой контровой засветки; при необходимости смените ракурс.",
+          "Кадр должен быть резким; при смазе переснимите."
+        ],
+        "asset_missing_hint": "Нет примера изображения",
+        "no_asset_placeholder": "—",
+        "start_button": "Понятно, начать съёмку",
+        "pose_cards": [
+          {
+            "index_1based": 1,
+            "title": "Ракурс 1",
+            "short_label": "1",
+            "description_lines": [
+              "Корова в профиль, вся в кадре.",
+              "Голова и зад — в кадре, без обрезки копыт."
+            ],
+            "example_asset_path": "assets/korovas/example_pose_placeholder.jpg"
+          },
+          {
+            "index_1based": 2,
+            "title": "Ракурс 2",
+            "short_label": "2",
+            "description_lines": [
+              "Второй ракурс по методике проекта.",
+              "Несколько кадров допускаются для выбора лучшего."
+            ],
+            "example_asset_path": "assets/korovas/example_pose_placeholder.jpg"
+          },
+          {
+            "index_1based": 3,
+            "title": "Ракурс 3",
+            "short_label": "3",
+            "description_lines": [
+              "Третий ракурс по методике проекта.",
+              "Проверьте резкость и освещённость перед сохранением."
+            ],
+            "example_asset_path": "assets/korovas/example_pose_placeholder.jpg"
+          }
+        ]
+      }
+    },
     "fields": [
       {
         "field_id": "scan_time",

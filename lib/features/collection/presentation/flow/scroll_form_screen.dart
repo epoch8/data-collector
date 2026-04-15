@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 
-import '../providers/wizard_state_provider.dart';
+import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 
-/// Один длинный экран: все поля из [Project.config] (spec 02), порядок по `priority`.
-class CollectionWizardScreen extends ConsumerWidget {
-  const CollectionWizardScreen({super.key, required this.projectId});
+/// Шаг `scroll_form`: все поля из [Project.config.fields], порядок по `priority`.
+class ScrollFormCollectionScreen extends ConsumerWidget {
+  const ScrollFormCollectionScreen({super.key, required this.projectId});
 
   final String projectId;
 
@@ -30,7 +30,7 @@ class CollectionWizardScreen extends ConsumerWidget {
             body: const Center(child: Text('Проект не найден.')),
           );
         }
-        return _CollectionWizardLoaded(projectId: projectId, project: project);
+        return _ScrollFormLoaded(projectId: projectId, project: project);
       },
       loading: () => const Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
@@ -44,17 +44,17 @@ class CollectionWizardScreen extends ConsumerWidget {
   }
 }
 
-class _CollectionWizardLoaded extends ConsumerStatefulWidget {
-  const _CollectionWizardLoaded({required this.projectId, required this.project});
+class _ScrollFormLoaded extends ConsumerStatefulWidget {
+  const _ScrollFormLoaded({required this.projectId, required this.project});
 
   final String projectId;
   final Project project;
 
   @override
-  ConsumerState<_CollectionWizardLoaded> createState() => _CollectionWizardLoadedState();
+  ConsumerState<_ScrollFormLoaded> createState() => _ScrollFormLoadedState();
 }
 
-class _CollectionWizardLoadedState extends ConsumerState<_CollectionWizardLoaded> {
+class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
   late final List<ConfigField> _fields;
   late final List<FocusNode> _focusNodes;
   final Set<String> _editingItemIds = {};

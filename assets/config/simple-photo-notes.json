@@ -3,6 +3,11 @@
   "name": "Заметка + фото",
   "version": "1.0",
   "config": {
+    "flow": {
+      "steps": [
+        { "id": "main", "screen": "scroll_form" }
+      ]
+    },
     "fields": [
       {
         "field_id": "session_note",

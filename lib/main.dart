@@ -5,14 +5,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'features/projects/providers/project_providers.dart';
 import 'models/project_config.dart';
-import 'features/collection/presentation/korovas/korovas_collection_screen.dart';
-import 'features/collection/presentation/korovas/korovas_keys.dart';
-import 'features/collection/presentation/wizard_screen.dart';
+import 'features/collection/logic/collection_flow_resolver.dart';
+import 'features/collection/presentation/flow/collection_flow_screen.dart';
 import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'core/package/package_paths.dart';
 import 'features/collection/logic/package_payload_codec.dart';
-import 'features/collection/logic/project_config_korovas.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 
@@ -42,9 +40,8 @@ final _router = GoRouter(
             final async = ref.watch(projectsProvider);
             return async.when(
               data: (projects) {
-                final Project project;
                 try {
-                  project = projects.firstWhere((p) => p.id == id);
+                  projects.firstWhere((p) => p.id == id);
                 } catch (_) {
                   return Scaffold(
                     backgroundColor: Epoch8Theme.bgDeep,
@@ -52,10 +49,7 @@ final _router = GoRouter(
                     body: const Center(child: Text('Проект не найден в конфигурации.')),
                   );
                 }
-                if (project.config.collectionFlow == 'korovas') {
-                  return KorovasCollectionScreen(projectId: id);
-                }
-                return CollectionWizardScreen(projectId: id);
+                return CollectionFlowScreen(projectId: id);
               },
               loading: () => const Scaffold(
                 backgroundColor: Epoch8Theme.bgDeep,
@@ -74,7 +68,9 @@ final _router = GoRouter(
       path: '/history/project/:projectId/cow/:cowId',
       builder: (context, state) => CowHistoryScreen(
         projectId: state.pathParameters['projectId']!,
-        cowId: Uri.decodeComponent(state.pathParameters['cowId']!),
+        // go_router already percent-decodes path parameters; decoding again
+        // throws on ids that contain '%' (e.g. "12%3" after one decode).
+        cowId: state.pathParameters['cowId']!,
       ),
     ),
     GoRoute(
@@ -253,7 +249,7 @@ class DashboardScreen extends ConsumerWidget {
                         itemBuilder: (context, index) {
                           final project = projects[index];
                           return Epoch8Card(
-                            accentBorder: project.id == 'korovas-2026',
+                            accentBorder: resolveCollectionFlow(project).shouldGroupHistoryBySubject,
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                               leading: Container(
@@ -273,9 +269,21 @@ class DashboardScreen extends ConsumerWidget {
                               subtitle: Padding(
                                 padding: const EdgeInsets.only(top: 6),
                                 child: Text(
-                                  project.config.collectionFlow == 'korovas'
-                                      ? 'Версия ${project.version} • анкета → справка → ${project.korovasCameraFields.length} ракурса → проверка'
-                                      : 'Версия ${project.version} • полей: ${project.config.fields.length}',
+                                  () {
+                                    final flow = resolveCollectionFlow(project);
+                                    if (flow.isSingleScrollOnly) {
+                                      return 'Версия ${project.version} • полей: ${project.config.fields.length}';
+                                    }
+                                    final nCam = flow.cameraPoseCount;
+                                    final hasInstr = flow.steps.any((s) => s.kind == CollectionScreenKind.instruction);
+                                    final hasForm = flow.steps.any((s) => s.kind == CollectionScreenKind.form);
+                                    final bits = <String>['Версия ${project.version}'];
+                                    if (hasForm) bits.add('анкета');
+                                    if (hasInstr) bits.add('справка');
+                                    if (nCam > 0) bits.add('$nCam ракурса');
+                                    if (flow.reviewStepIndex != null) bits.add('проверка');
+                                    return bits.join(' • ');
+                                  }(),
                                   style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
                                 ),
                               ),
@@ -400,7 +408,8 @@ class PackageHistoryScreen extends ConsumerWidget {
                 orElse: () => null,
               );
           final projMeta = _projectById(projectsList, pkg.projectId);
-          final isKorovas = projMeta?.config.collectionFlow == 'korovas';
+          final groupSubject = projMeta != null && resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
+          final subjectLabel = _extractCowId(raw);
           return ListView(
             padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
             children: [
@@ -412,9 +421,9 @@ class PackageHistoryScreen extends ConsumerWidget {
                       projMeta != null ? 'Проект: ${projMeta.name}' : 'Проект: ${pkg.projectId}',
                       style: Theme.of(context).textTheme.titleSmall,
                     ),
-                    if (isKorovas) ...[
+                    if (groupSubject && subjectLabel != 'без-id') ...[
                       const SizedBox(height: 8),
-                      Text('Корова: ${_extractCowId(raw)}', style: Theme.of(context).textTheme.titleSmall),
+                      Text('Объект: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
                     ],
                     const SizedBox(height: 8),
                     Text('Идентификатор: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
@@ -582,7 +591,8 @@ Widget _historyTabBody(
 }
 
 Widget _historyProjectSection(BuildContext context, Project proj, List<Package> packages) {
-  final isKorovas = proj.config.collectionFlow == 'korovas';
+  final flow = resolveCollectionFlow(proj);
+  final bySubject = flow.shouldGroupHistoryBySubject;
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -590,7 +600,7 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
         padding: const EdgeInsets.only(bottom: 8, top: 4),
         child: Row(
           children: [
-            Icon(isKorovas ? Icons.pets_outlined : Icons.folder_outlined, size: 20, color: Epoch8Theme.accent),
+            Icon(bySubject ? Icons.pets_outlined : Icons.folder_outlined, size: 20, color: Epoch8Theme.accent),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -608,7 +618,7 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
           ],
         ),
       ),
-      if (isKorovas) ...[
+      if (bySubject) ...[
         for (final g in _groupPackagesByCow(packages)) ...[
           Epoch8Card(
             child: ListTile(
@@ -726,20 +736,27 @@ List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Packag
         orElse: () => null,
       );
   final proj = _projectById(projects, pkg.projectId);
-  if (proj?.config.collectionFlow == 'korovas') {
-    return [
-      _packageHistoryFieldRow(context, 'ID коровы', raw[KorovasKeys.cowId]?.toString()),
-      _packageHistoryFieldRow(context, 'Время скана', _formatPackageScanTime(raw[KorovasKeys.scanTime])),
-      _packageHistoryFieldRow(context, 'Возраст', raw[KorovasKeys.cowAge]?.toString()),
-      _packageHistoryFieldRow(context, 'Вес', raw[KorovasKeys.cowWeight]?.toString()),
-      _packageHistoryFieldRow(context, 'Порода', raw[KorovasKeys.cowBreed]?.toString()),
-    ];
+  if (proj == null) return _genericPayloadFieldRows(context, raw);
+  final rows = <Widget>[];
+  for (final f in proj.config.fields) {
+    if (f.type == 'instruction') continue;
+    if (f.type == 'camera_photo') {
+      final v = raw[f.fieldId];
+      final n = v is List
+          ? v.where((e) => e != null && e.toString().isNotEmpty).length
+          : (v != null && v.toString().isNotEmpty ? 1 : 0);
+      rows.add(_packageHistoryFieldRow(context, f.title, n == 0 ? null : '$n файл(ов)'));
+      continue;
+    }
+    final val = raw[f.fieldId];
+    final display = f.type == 'datetime' ? _formatPackageScanTime(val) : val?.toString();
+    rows.add(_packageHistoryFieldRow(context, f.title, display));
   }
-  return _genericPayloadFieldRows(context, raw);
+  return rows;
 }
 
 List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic> raw) {
-  const skip = {'korovas_camera_context'};
+  const skip = {'camera_capture_context', 'korovas_camera_context'};
   final out = <Widget>[];
   final keys = raw.keys.where((k) => !skip.contains(k)).toList()..sort();
   for (final k in keys) {
@@ -860,7 +877,7 @@ List<String> _extractImagePaths(Package pkg) {
 
 Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data, String packageId) {
   final out = <String, Map<String, dynamic>>{};
-  final ctx = data['korovas_camera_context'];
+  final ctx = data['camera_capture_context'] ?? data['korovas_camera_context'];
   if (ctx is! Map) return out;
   final poses = ctx['poses'];
   if (poses is! Map) return out;
