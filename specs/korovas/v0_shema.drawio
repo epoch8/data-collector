@@ -1,62 +1,117 @@
 <mxfile host="65bd71144e">
-    <diagram id="f898buzu8I9ERMDU4Tjs" name="Page-1">
-        <mxGraphModel dx="857" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" background="none" math="0" shadow="0">
+    <diagram id="korovas-full" name="Korovas — поток и пакет">
+        <mxGraphModel dx="1614" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1520" pageHeight="1180" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="8" style="edgeStyle=none;html=1;fontSize=8;" parent="1" source="2" target="6" edge="1">
+                <mxCell id="t1" value="Korovas — стрелки по шагам, что пишется в state, итоговый пакет в SQLite" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="14" width="1440" height="26" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="/login&#10;мок" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="68" width="100" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="/dashboard&#10;Проекты | История" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="160" y="68" width="160" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="w0" value="wizard&#10;korovas-2026" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontStyle=1;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="340" y="68" width="130" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="2" target="3" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="Homepage + login *" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="175" y="360" width="95" height="110" as="geometry"/>
-                </mxCell>
-                <mxCell id="4" value="User - Mobile&lt;div&gt;&lt;div style=&quot;background-color: rgb(255, 255, 255); font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; line-height: 18px; white-space: pre; color: rgb(0, 0, 0);&quot;&gt;&lt;div style=&quot;color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;    &lt;/span&gt;&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;email = str,&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;role = str, *&lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;span style=&quot;color: rgb(0, 0, 0);&quot;&gt;org = uuid, ** &lt;/span&gt;&lt;/div&gt;&lt;div style=&quot;color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;/div&gt;&lt;div style=&quot;color: light-dark(rgb(0, 0, 0), rgb(237, 237, 237));&quot;&gt;&lt;/div&gt;&lt;/div&gt;&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="90" y="585" width="250" height="160" as="geometry"/>
-                </mxCell>
-                <mxCell id="5" value="&lt;font color=&quot;#ffffff&quot; style=&quot;background-color: rgb(0, 0, 0);&quot;&gt;Scan:&lt;br&gt;&lt;/font&gt;&lt;font face=&quot;Menlo, Monaco, Courier New, monospace&quot;&gt;&lt;span style=&quot;white-space: pre;&quot;&gt;&lt;font color=&quot;#ffffff&quot; style=&quot;background-color: rgb(0, 0, 0);&quot;&gt;farm_id = str; *&lt;br&gt;korova_id = str; **&lt;br&gt;pictures = List [images];&lt;br&gt;meta = json;&lt;br&gt;timestamp = timestamp;&lt;br&gt;korava_data = json; ***&lt;br&gt;&lt;/font&gt;&lt;span style=&quot;background-color: rgb(255, 255, 255);&quot;&gt;&lt;br&gt;&lt;/span&gt;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="510" y="60" width="250" height="160" as="geometry"/>
-                </mxCell>
-                <mxCell id="12" value="" style="edgeStyle=none;html=1;fontSize=8;" parent="1" source="6" target="11" edge="1">
+                <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="3" target="w0" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="6" value="Form scan" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="500" y="350" width="110" height="110" as="geometry"/>
+                <mxCell id="s0" value="Шаг 0&#10;Анкета" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="40" y="152" width="100" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400; background-color: rgb(255, 255, 255);&quot;&gt;* зачем, что она дает?&lt;br&gt;**&amp;nbsp;&lt;/span&gt;&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400; background-color: rgb(255, 255, 255);&quot;&gt;подтягиваются доступные фермы ?&amp;nbsp;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="150" y="790" width="300" height="80" as="geometry"/>
+                <mxCell id="s1" value="Шаг 1&#10;Справка" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="158" y="152" width="88" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="&lt;font color=&quot;#000000&quot; face=&quot;Menlo, Monaco, Courier New, monospace&quot;&gt;&lt;span style=&quot;font-size: 12px; font-weight: 400; background-color: rgb(255, 255, 255);&quot;&gt;* в выпадающем списке все фермы для этой орги&lt;br&gt;&amp;nbsp;+ можно добавить новую&lt;br&gt;** должны ли они быть предефайнены ?&amp;nbsp;&lt;br&gt;&lt;/span&gt;&lt;/font&gt;&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400; background-color: rgb(255, 255, 255);&quot;&gt;&lt;font color=&quot;#000000&quot;&gt;*** поля для ввода веса, возраста и прочей подобной инфы&lt;/font&gt;&lt;br&gt;&lt;font color=&quot;#f2f2f2&quot;&gt;***&lt;/font&gt;&lt;br&gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="820" y="20" width="400" height="130" as="geometry"/>
+                <mxCell id="s2" value="Шаг 2&#10;Ракурс 1" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="264" y="152" width="100" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400;&quot;&gt;&lt;span style=&quot;background-color: rgb(20, 20, 20);&quot;&gt;Собираем timetamp и korova_data&lt;/span&gt;&lt;br&gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="414" y="480" width="230" height="40" as="geometry"/>
+                <mxCell id="s3" value="Шаг 3&#10;Ракурс 2" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="382" y="152" width="100" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="14" style="edgeStyle=none;html=1;fontSize=8;" parent="1" source="11" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1160" y="340" as="targetPoint"/>
-                    </mxGeometry>
+                <mxCell id="s4" value="Шаг 4&#10;Ракурс 3" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="500" y="152" width="100" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="11" value="Pictures loop" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="760" y="280" width="110" height="110" as="geometry"/>
+                <mxCell id="s5" value="Шаг 5&#10;Проверка" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;fontStyle=1" parent="1" vertex="1">
+                    <mxGeometry x="618" y="152" width="100" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="13" value="&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400;&quot;&gt;&lt;span style=&quot;background-color: rgb(0, 0, 0);&quot;&gt;Пример какую фотку мы ждем + текстовое описание&lt;br&gt;И возможность эту фотку сделать&lt;/span&gt;&lt;br&gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="740" y="400" width="230" height="40" as="geometry"/>
-                </mxCell>
-                <mxCell id="16" style="edgeStyle=none;html=1;entryX=1;entryY=1;entryDx=0;entryDy=0;fontSize=8;" parent="1" source="15" target="6" edge="1">
+                <mxCell id="ew" value="старт" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#D4A84B;endArrow=classic;fontColor=#C9B87A;" parent="1" source="w0" target="s0" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="1060" y="650"/>
+                            <mxPoint x="405" y="138"/>
+                            <mxPoint x="90" y="138"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="15" value="Check and send all data&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-                    <mxGeometry x="1160" y="290" width="110" height="110" as="geometry"/>
+                <mxCell id="es01" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="s0" target="s1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" value="&lt;span style=&quot;font-family: Menlo, Monaco, &amp;quot;Courier New&amp;quot;, monospace; font-size: 12px; font-weight: 400;&quot;&gt;&lt;span style=&quot;background-color: rgb(0, 0, 0);&quot;&gt;Кнопка новый скан&lt;/span&gt;&lt;br&gt;&lt;/span&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="1060" y="660" width="230" height="40" as="geometry"/>
+                <mxCell id="es12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="s1" target="s2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="&lt;font color=&quot;#000000&quot; face=&quot;Menlo, Monaco, Courier New, monospace&quot;&gt;&lt;span style=&quot;font-size: 12px; font-weight: 400; background-color: rgb(255, 255, 255);&quot;&gt;* baseline v0 - фейк login&lt;/span&gt;&lt;/font&gt;" style="text;strokeColor=none;fillColor=none;html=1;fontSize=24;fontStyle=1;verticalAlign=middle;align=center;" parent="1" vertex="1">
-                    <mxGeometry x="114" y="270" width="300" height="80" as="geometry"/>
+                <mxCell id="es23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="s2" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="s3" target="s4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="es45" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#7D8FA9;endArrow=classic;" parent="1" source="s4" target="s5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="p0" value="В state:&#10;• scan_time&#10;• cow_id&#10;• cow_age&#10;• cow_weight&#10;• cow_breed" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=9;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="212" width="100" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p1" value="В state:&#10;(пусто)&#10;только UI,&#10;полей нет" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#5a5a68;fontSize=9;fontColor=#9CA3AF;fontFamily=Courier New;fontStyle=2" vertex="1" parent="1">
+                    <mxGeometry x="158" y="212" width="88" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p2" value="В state:&#10;• pose_1 [paths]&#10;• korovas_camera_context*&#10;  device (1×)&#10;  native_back_camera&#10;  poses[&amp;quot;1&amp;quot;].shots[]&#10;*каждый кадр, не web" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="264" y="212" width="100" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p3" value="В state:&#10;• pose_2 [paths]&#10;• context.poses[2]&#10;  .shots[] +&#10;  exif + derived" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="382" y="212" width="100" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p4" value="В state:&#10;• pose_3 [paths]&#10;• context.poses[3]&#10;  .shots[] +&#10;  exif + derived" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#1e1e28;strokeColor=#6B7280;fontSize=8;fontColor=#C8CDD8;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="500" y="212" width="100" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="p5" value="Новых полей&#10;нет — сводка&#10;и кнопка&#10;«Отправить»&#10;→ insert" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;fillColor=#14261f;strokeColor=#3DCC85;fontSize=9;fontColor=#B8E8D0;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="618" y="212" width="100" height="108" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s0" target="p0">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s1" target="p1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s2" target="p2">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s3" target="p3">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#6B7588;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s4" target="p4">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ep5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;dashed=1;strokeColor=#3DCC85;endArrow=classic;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" edge="1" parent="1" source="s5" target="p5">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="lbl-merge" value="Ниже — одна строка БД: колонки + полный JSON в data_json (как jsonEncode всего wizardState)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontColor=#ADB5C4;fontStyle=1" vertex="1" parent="1">
+                    <mxGeometry x="40" y="332" width="900" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="fullpkg" value="ИТОГ: таблица packages (SQLite / Drift)&#10;&#10;┌─ id (PK) ───────────────── pkg_&amp;lt;ms&amp;gt;&#10;├─ project_id ─────────────── korovas-2026&#10;├─ status ─────────────────── completed&#10;├─ created_at ─────────────── DateTime.now() при insert (не scan_time!)&#10;└─ data_json (TEXT) ───────── JSON ниже целиком&#10;&#10;────────── содержимое data_json (объект) ──────────&#10;scan_time ............... string ISO-8601&#10;cow_id .................. string&#10;cow_age ................. string&#10;cow_weight .............. string&#10;cow_breed ............... string&#10;pose_1 .................. string[] путей (или одна string, legacy)&#10;pose_2 .................. string[]&#10;pose_3 .................. string[]&#10;korovas_camera_context .. object | отсутствует (web — обычно нет)&#10;  ├─ device ............ platform + поля модели (android/ios/web)&#10;  ├─ native_back_camera .. map с нативными intrinsics или {}&#10;  └─ poses .............. &amp;quot;1&amp;quot;|&amp;quot;2&amp;quot;|&amp;quot;3&amp;quot; → { shots: [&#10;         { image_path, collected_at UTC, exif{…}, derived{ fx_px…, preferred_fx…, notes{…} } }, … ] }" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5B8DEF;fontSize=10;fontColor=#D1D5DB;fontFamily=Courier New;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="358" width="1440" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="e-merge" value="все поля state" style="edgeStyle=orthogonalEdgeStyle;rounded=0;html=1;strokeColor=#3DCC85;fontColor=#8FD9B0;endArrow=classic;dashed=0;exitX=0.5;exitY=1;entryX=0.92;entryY=0;" edge="1" parent="1" source="p5" target="fullpkg">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="668" y="345"/>
+                            <mxPoint x="1365" y="345"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
