@@ -742,9 +742,14 @@ List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Packag
     if (f.type == 'instruction') continue;
     if (f.type == 'camera_photo') {
       final v = raw[f.fieldId];
-      final n = v is List
-          ? v.where((e) => e != null && e.toString().isNotEmpty).length
-          : (v != null && v.toString().isNotEmpty ? 1 : 0);
+      final int n;
+      if (v is Map) {
+        n = v.keys.where((k) => k.toString().trim().isNotEmpty).length;
+      } else if (v is List) {
+        n = v.where((e) => e != null && e.toString().isNotEmpty).length;
+      } else {
+        n = (v != null && v.toString().trim().isNotEmpty ? 1 : 0);
+      }
       rows.add(_packageHistoryFieldRow(context, f.title, n == 0 ? null : '$n файл(ов)'));
       continue;
     }
@@ -871,6 +876,13 @@ List<String> _extractImagePaths(Package pkg) {
         }
       }
     }
+    if (value is Map && (key.contains('photo') || key.contains('image') || key.contains('pose_'))) {
+      for (final k in value.keys) {
+        final path = k.toString();
+        if (path.isEmpty) continue;
+        out.add(PackagePaths.resolveMediaReference(path, pkg.id));
+      }
+    }
   }
   return out.toList();
 }
@@ -878,23 +890,47 @@ List<String> _extractImagePaths(Package pkg) {
 Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data, String packageId) {
   final out = <String, Map<String, dynamic>>{};
   final ctx = data['camera_capture_context'] ?? data['korovas_camera_context'];
-  if (ctx is! Map) return out;
-  final poses = ctx['poses'];
-  if (poses is! Map) return out;
+  if (ctx is Map) {
+    final poses = ctx['poses'];
+    if (poses is Map) {
+      for (final poseEntry in poses.entries) {
+        final poseValue = poseEntry.value;
+        if (poseValue is! Map) continue;
+        final shots = poseValue['shots'];
+        if (shots is! List) continue;
+        for (final shot in shots) {
+          if (shot is! Map) continue;
+          final imagePath = shot['image_path']?.toString();
+          if (imagePath == null || imagePath.isEmpty) continue;
+          final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
+          final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
+          for (final key in ['collected_at', 'exif', 'derived']) {
+            payload[key] = shot[key];
+          }
+          out[resolved] = payload;
+        }
+      }
+    }
+  }
 
-  for (final poseEntry in poses.entries) {
-    final poseValue = poseEntry.value;
-    if (poseValue is! Map) continue;
-    final shots = poseValue['shots'];
-    if (shots is! List) continue;
-    for (final shot in shots) {
-      if (shot is! Map) continue;
-      final imagePath = shot['image_path']?.toString();
-      if (imagePath == null || imagePath.isEmpty) continue;
+  const skipRoot = {'camera_capture_context', 'korovas_camera_context'};
+  for (final fieldEntry in data.entries) {
+    if (skipRoot.contains(fieldEntry.key)) continue;
+    final vid = fieldEntry.value;
+    if (vid is! Map) continue;
+    for (final pe in vid.entries) {
+      final imagePath = pe.key.toString();
+      if (imagePath.isEmpty) continue;
+      if (!imagePath.contains('/') && !imagePath.contains(r'\') && !imagePath.startsWith('blobs/')) {
+        continue;
+      }
+      final shotBody = pe.value;
+      if (shotBody is! Map) continue;
       final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
-      final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
+      if (out.containsKey(resolved)) continue;
+      final payload = <String, dynamic>{'pose': fieldEntry.key.toString()};
       for (final key in ['collected_at', 'exif', 'derived']) {
-        payload[key] = shot[key];
+        payload[key] = shotBody[key];
       }
       out[resolved] = payload;
     }

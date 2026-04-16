@@ -14,11 +14,13 @@ class CameraMetadataCollector {
 
   static final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
 
-  /// Call after each successful camera capture; merges into [PackagePayloadKeys.cameraCaptureContext].
+  /// Call after each successful camera capture: fills [PackagePayloadKeys.cameraCaptureContext]
+  /// with device + native intrinsics, and stores per-frame EXIF / derived data under [poseFieldId]
+  /// as `{ "<abs-or-blob-path>": { exif, derived, collected_at } }`.
   static Future<void> attachPoseMetadata({
     required WidgetRef ref,
     required String projectId,
-    required int poseIndex1Based,
+    required String poseFieldId,
     required String imagePath,
   }) async {
     if (kIsWeb) return;
@@ -26,6 +28,7 @@ class CameraMetadataCollector {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
     final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
+    ctx.remove('poses');
 
     await _ensureDevice(ctx);
     await _ensureNativeCamera(ctx);
@@ -36,76 +39,47 @@ class CameraMetadataCollector {
       exif: exifMap,
     );
 
-    ctx['poses'] ??= <String, dynamic>{};
-    final poses = ctx['poses'] as Map<String, dynamic>;
-    final key = '$poseIndex1Based';
-    final existing = poses[key];
-    final prev = existing is Map<String, dynamic> ? Map<String, dynamic>.from(existing) : <String, dynamic>{};
-    final shots = List<Map<String, dynamic>>.from(
-      (prev['shots'] as List?)?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)) ?? const [],
-    );
-    if (shots.isEmpty && prev['image_path'] != null) {
-      shots.add(<String, dynamic>{
-        'image_path': prev['image_path'],
-        'exif': prev['exif'],
-        'derived': prev['derived'],
-        'collected_at': prev['collected_at'],
-      });
-    }
-    shots.add(<String, dynamic>{
-      'image_path': imagePath,
+    final shotMeta = <String, dynamic>{
       'exif': exifMap,
       'derived': derived,
       'collected_at': DateTime.now().toUtc().toIso8601String(),
-    });
-    poses[key] = <String, dynamic>{'shots': shots};
+    };
 
+    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(state[poseFieldId]);
+    pathMap[imagePath] = shotMeta;
+
+    notifier.updateField(poseFieldId, pathMap);
     notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 
-  /// Удалить один кадр из метаданных по пути файла.
+  /// Удалить один кадр из поля ракурса (map path → meta) и убрать устаревший блок `poses` из контекста, если был.
   static void removePoseShotByPath({
     required WidgetRef ref,
     required String projectId,
-    required int poseIndex1Based,
+    required String poseFieldId,
     required String imagePath,
   }) {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
+    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(state[poseFieldId]);
+    pathMap.remove(imagePath);
+    notifier.updateField(poseFieldId, pathMap.isEmpty ? null : pathMap);
+
     final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
-    final poses = ctx['poses'];
-    if (poses is! Map<String, dynamic>) {
+    if (ctx.remove('poses') != null) {
       notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
-      return;
     }
-    final key = '$poseIndex1Based';
-    final pe = poses[key];
-    if (pe is! Map<String, dynamic>) return;
-    final shots = List<Map<String, dynamic>>.from(
-      (pe['shots'] as List?)?.whereType<Map>().map((e) => Map<String, dynamic>.from(e)) ?? const [],
-    );
-    shots.removeWhere((s) => s['image_path']?.toString() == imagePath);
-    if (shots.isEmpty) {
-      poses.remove(key);
-    } else {
-      poses[key] = <String, dynamic>{'shots': shots};
-    }
-    notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 
-  /// Remove pose entry when user deletes all frames for a pose.
-  static void removePoseMetadata({
+  /// Удалить устаревший `camera_capture_context.poses` (раньше дублировали кадры).
+  static void stripLegacyContextPoses({
     required WidgetRef ref,
     required String projectId,
-    required int poseIndex1Based,
   }) {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
     final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
-    final poses = ctx['poses'];
-    if (poses is Map<String, dynamic>) {
-      poses.remove('$poseIndex1Based');
-    }
+    if (ctx.remove('poses') == null) return;
     notifier.updateField(PackagePayloadKeys.cameraCaptureContext, ctx);
   }
 

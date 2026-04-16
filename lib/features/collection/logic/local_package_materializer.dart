@@ -61,8 +61,12 @@ Future<MaterializedLocalPackage> materializeLocalPackage({
   final candidates = <String>{};
   void collect(dynamic node) {
     if (node is Map) {
-      for (final v in node.values) {
-        collect(v);
+      for (final k in node.keys) {
+        final ks = k is String ? k : k.toString();
+        if (_mightBeFilesystemPath(ks)) {
+          candidates.add(ks);
+        }
+        collect(node[k]);
       }
     } else if (node is List) {
       for (final v in node) {
@@ -105,14 +109,15 @@ Map<String, dynamic> _deepJsonCopy(Map<String, dynamic> m) {
 }
 
 void _replacePaths(dynamic node, Map<String, String> absToRel) {
-  if (node is Map<String, dynamic>) {
-    for (final key in node.keys.toList()) {
-      final v = node[key];
-      if (v is String && absToRel.containsKey(v)) {
-        node[key] = absToRel[v];
-      } else {
-        _replacePaths(v, absToRel);
-      }
+  if (node is Map) {
+    final entries = node.entries.toList();
+    node.clear();
+    for (final e in entries) {
+      final ks = e.key is String ? e.key as String : e.key.toString();
+      final newKey = absToRel[ks] ?? ks;
+      var v = e.value;
+      _replacePaths(v, absToRel);
+      node[newKey] = v;
     }
   } else if (node is List<dynamic>) {
     for (var i = 0; i < node.length; i++) {

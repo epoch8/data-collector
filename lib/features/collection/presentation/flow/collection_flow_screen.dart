@@ -27,6 +27,59 @@ String _formatDateTime(DateTime d) {
   return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
 }
 
+/// Сводит значение поля `camera_photo` к списку «кадров» для UI метаданных (путь + exif/derived/…).
+List<Map<String, dynamic>> _syntheticShotsFromPoseFieldValue(dynamic v) {
+  if (v is Map) {
+    return v.entries.map((e) {
+      final path = e.key.toString();
+      final val = e.value;
+      final Map<String, dynamic> meta;
+      if (val is Map<String, dynamic>) {
+        meta = Map<String, dynamic>.from(val);
+      } else if (val is Map) {
+        meta = Map<String, dynamic>.from(val.map((k, x) => MapEntry(k.toString(), x)));
+      } else {
+        meta = <String, dynamic>{};
+      }
+      return <String, dynamic>{'image_path': path, ...meta};
+    }).where((m) => (m['image_path']?.toString() ?? '').isNotEmpty).toList();
+  }
+  if (v is List) {
+    return v
+        .map((p) => <String, dynamic>{'image_path': p.toString()})
+        .where((m) => (m['image_path']?.toString() ?? '').isNotEmpty)
+        .toList();
+  }
+  if (v is String && v.isNotEmpty) {
+    return [<String, dynamic>{'image_path': v}];
+  }
+  return [];
+}
+
+/// `camera_capture_context` без устаревшего `poses`, плюс синтетические `poses` из полей ракурсов.
+Map<String, dynamic>? _mergedReviewCameraContext(Map<String, dynamic> answers, List<ConfigField> cameraFields) {
+  final raw = answers[PackagePayloadKeys.cameraCaptureContext];
+  final base = <String, dynamic>{};
+  if (raw is Map) {
+    raw.forEach((k, v) {
+      base[k.toString()] = v;
+    });
+  }
+  base.remove('poses');
+  final poses = <String, dynamic>{};
+  for (var i = 0; i < cameraFields.length; i++) {
+    final shots = _syntheticShotsFromPoseFieldValue(answers[cameraFields[i].fieldId]);
+    if (shots.isNotEmpty) {
+      poses['${i + 1}'] = <String, dynamic>{'shots': shots};
+    }
+  }
+  if (poses.isNotEmpty) {
+    base['poses'] = poses;
+  }
+  if (base.isEmpty) return null;
+  return base;
+}
+
 /// Единая точка входа: `config.flow` из JSON — либо один шаг `scroll_form`, либо пошаговый сценарий.
 class CollectionFlowScreen extends ConsumerStatefulWidget {
   const CollectionFlowScreen({super.key, required this.projectId});
@@ -706,7 +759,7 @@ class _CameraPoseStep extends ConsumerStatefulWidget {
   final ConfigField poseField;
   /// Ключ в [wizardState] и в payload (`field_id` из конфига).
   final String storageKey;
-  /// 1..n — порядок ракурса для `camera_capture_context.poses`.
+  /// 1..n — порядок ракурса в ленте (подписи, счётчики).
   final int poseIndex1Based;
   final int totalPoses;
   final VoidCallback onNext;
@@ -755,13 +808,10 @@ class _CameraPoseStepState extends ConsumerState<_CameraPoseStep> {
     await CameraMetadataCollector.attachPoseMetadata(
       ref: ref,
       projectId: widget.projectId,
-      poseIndex1Based: widget.poseIndex1Based,
+      poseFieldId: _key,
       imagePath: x.path,
     );
     if (!mounted) return;
-    final answers = ref.read(wizardStateProvider(widget.projectId));
-    final paths = List<String>.from(CapturedPhotoPaths.list(answers[_key]))..add(x.path);
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, paths);
     setState(() {});
   }
 
@@ -769,20 +819,16 @@ class _CameraPoseStepState extends ConsumerState<_CameraPoseStep> {
     CameraMetadataCollector.removePoseShotByPath(
       ref: ref,
       projectId: widget.projectId,
-      poseIndex1Based: widget.poseIndex1Based,
+      poseFieldId: _key,
       imagePath: path,
     );
-    final answers = ref.read(wizardStateProvider(widget.projectId));
-    final paths = List<String>.from(CapturedPhotoPaths.list(answers[_key]))..remove(path);
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, paths.isEmpty ? null : paths);
     setState(() {});
   }
 
   void _clearAll() {
-    CameraMetadataCollector.removePoseMetadata(
+    CameraMetadataCollector.stripLegacyContextPoses(
       ref: ref,
       projectId: widget.projectId,
-      poseIndex1Based: widget.poseIndex1Based,
     );
     ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, null);
     setState(() {});
@@ -1052,7 +1098,7 @@ class _FlowReviewStep extends ConsumerWidget {
     final u = ProjectUi(project);
     final a = ref.watch(wizardStateProvider(projectId));
     final complete = _isComplete(a);
-    final cameraCtx = a[PackagePayloadKeys.cameraCaptureContext] as Map<String, dynamic>?;
+    final cameraCtx = _mergedReviewCameraContext(a, cameraFields);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 32),
