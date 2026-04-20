@@ -1,0 +1,105 @@
+<mxfile host="65bd71144e">
+    <diagram id="project-config-delivery" name="Конфиги проектов с сервера (09)">
+        <mxGraphModel dx="1231" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1240" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t0" value="Спека 09 — доставка конфигов проектов&#10;файл: specs/09-server-project-config-delivery.md" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="32" width="720" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="secA" value="&lt;b&gt;A. Сервер: конфиг → БД → клиенты&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#D4A84B;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="84" width="320" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="adm" value="Админ / API&#10;создаёт или обновляет&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;JSON проекта + project_id&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="116" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="cfgstore" value="Хранилище конфигов&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;config_version, ETag&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="116" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="dbtbl" value="Миграция приёмки&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;таблица / схема под project_id&lt;/span&gt;&#10;после успеха — публикация версии" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="760" y="116" width="240" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_adm_cfg" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;endFill=1;" parent="1" source="adm" target="cfgstore" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cfg_db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;endFill=1;" parent="1" source="cfgstore" target="dbtbl" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="secB" value="&lt;b&gt;B. Клиент: первый запуск и список проектов&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="220" width="400" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneL" value="КЛИЕНТ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="252" width="100" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneR" value="СЕРВЕР" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="252" width="100" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="c1" value="&lt;b&gt;1.&lt;/b&gt; Auth (если есть)&#10;токен → доступные project_id" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="284" width="280" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="c2" value="&lt;b&gt;2.&lt;/b&gt; Каталог&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;GET /v1/projects&lt;/span&gt;&#10;ETag · список имён и config_version" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2438;strokeColor=#6B9BD1;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="368" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="c3" value="&lt;b&gt;3.&lt;/b&gt; Полный конфиг по изменившимся&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;GET …/projects/{id}/config&lt;/span&gt;&#10;If-None-Match → 304" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="468" width="280" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="c4" value="&lt;b&gt;4.&lt;/b&gt; Кэш + parse → Project&#10;дашборд как с assets, но источник — сервер" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#2d3a4a;strokeColor=#7D8FA9;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="576" width="280" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="&lt;b&gt;Ответы&lt;/b&gt;&#10;&#10;· Список проектов для UI&#10;· JSON проекта = тот же формат,&#10;  что lib/models/project_config&#10;· Контроль: id в JSON = project_id в пути" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="284" width="300" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" value="&lt;b&gt;После публикации конфига&lt;/b&gt;&#10;новая config_version в каталоге;&#10;клиенты догружают при следующем старте&#10;или по pull-to-refresh" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#C8D4F0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="424" width="300" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="seq12" value="затем" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;fontColor=#9CA3AF;fontSize=10;" parent="1" source="c1" target="c2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="seq23" value="затем" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;fontColor=#9CA3AF;fontSize=10;" parent="1" source="c2" target="c3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="seq34" value="затем" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;fontColor=#9CA3AF;fontSize=10;" parent="1" source="c3" target="c4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="h2" value="200/304" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6B9BD1;endArrow=classic;fontSize=9;fontColor=#9EC5F7;exitX=1;exitY=0.35;entryX=0;entryY=0.35;" parent="1" source="c2" target="s1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="620" y="396"/>
+                            <mxPoint x="620" y="326"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="h3" value="200/304" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=classic;fontSize=9;fontColor=#8FD9B0;exitX=1;exitY=0.4;entryX=0;entryY=0.65;" parent="1" source="c3" target="s1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="620" y="503"/>
+                            <mxPoint x="620" y="430"/>
+                            <mxPoint x="900" y="430"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="secC" value="&lt;b&gt;C. Приём пакета: проект известен&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="680" width="360" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="u1" value="Все шаги upload (спека 08)&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;/v1/projects/&lt;b&gt;{project_id}&lt;/b&gt;/packages/…&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="712" width="360" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="u2" value="payload.json (корень)&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;project_id&lt;/span&gt; = тот же, что в URL&#10;иначе &lt;b&gt;422&lt;/b&gt; project_id_mismatch" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="792" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="u3" value="Сервер: сессия и запись&#10;в &lt;b&gt;таблицу приёмки этого project_id&lt;/b&gt;&#10;после успешного commit" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="900" y="712" width="300" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="eu" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=classic;exitX=1;exitY=0.5;entryX=0;entryY=0.35;" parent="1" source="u1" target="u3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eu2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9B7ED0;endArrow=classic;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.85;" parent="1" source="u2" target="u3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="n1" value="Связь с кодом: каталог и парсинг — см. specs/config/json-driven-collection-ui.md · загрузка пакета — specs/08-server-api-package-upload.md" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="280" y="900" width="920" height="44" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
