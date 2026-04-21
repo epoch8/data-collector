@@ -12,10 +12,17 @@
 {% block content %}
 <div class="ui-page-head">
   <div>
-    <h1 class="ui-page-title">Конфигурация</h1>
-    <p class="ui-page-sub mb-0">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. Клиенты увидят обновление по <code>config_version</code> и ETag.</p>
+    <h1 class="ui-page-title">Конфигурация (JSON)</h1>
+    <p class="ui-page-sub mb-0">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. Перед сохранением конфиг проверяется теми же правилами, что и мобильный клиент.</p>
   </div>
+  <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>Визуальный редактор</a>
 </div>
+{% if validation_errors %}
+<div class="alert alert-danger mb-3">
+  <strong>Исправьте ошибки и сохраните снова:</strong>
+  <ul class="mb-0 small">{% for e in validation_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
 <form method="post">
   {% csrf_token %}
   <div class="card p-4 mb-3">

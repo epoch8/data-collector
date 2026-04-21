@@ -18,6 +18,16 @@ urlpatterns = [
     path("projects/new/", views_ui.project_new, name="ui_project_new"),
     path("projects/<str:project_id>/", views_ui.project_detail, name="ui_project_detail"),
     path("projects/<str:project_id>/config/", views_ui.project_config, name="ui_project_config"),
+    path(
+        "projects/<str:project_id>/config/builder/",
+        views_ui.project_config_builder,
+        name="ui_project_config_builder",
+    ),
+    path(
+        "projects/<str:project_id>/config/validate/",
+        views_ui.project_config_validate_api,
+        name="ui_project_config_validate_api",
+    ),
     path("projects/<str:project_id>/media/", views_ui.project_media, name="ui_project_media"),
     path("projects/<str:project_id>/delete/", views_ui.project_delete, name="ui_project_delete"),
     path("packages/", views_ui.package_list, name="ui_package_list"),

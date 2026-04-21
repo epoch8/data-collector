@@ -10,11 +10,13 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden
+from django.http import FileResponse, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import PackageSession, Project, UploadedBlob
+from .project_config_validate import validate_project_payload
 
 staff_only = user_passes_test(lambda u: u.is_authenticated and u.is_staff)
 
@@ -48,6 +50,56 @@ def _safe_rel_path(s: str) -> str | None:
     return s
 
 
+def _seed_project_json(project_id: str, name: str) -> dict:
+    """Минимальный валидный конфиг для нового проекта и при битом JSON в БД."""
+    return {
+        "id": project_id,
+        "name": name or project_id,
+        "version": "1",
+        "config": {
+            "fields": [
+                {
+                    "field_id": "demo_text",
+                    "priority": 1,
+                    "type": "text_input",
+                    "title": "Пример текста",
+                    "instructions": "Заполните поле",
+                    "validation": {},
+                },
+            ],
+            "flow": {
+                "steps": [
+                    {"id": "form1", "screen": "form", "field_ids": ["demo_text"]},
+                ],
+            },
+            "ui": {},
+        },
+    }
+
+
+def _next_config_version(project: Project, ver: str) -> str:
+    if ver:
+        return ver
+    try:
+        v = int(project.config_version)
+        return str(v + 1)
+    except ValueError:
+        return project.config_version + "-1"
+
+
+def _save_project_json(project: Project, project_id: str, data: dict, ver: str) -> list[str]:
+    """Возвращает список ошибок валидации; пустой — сохранено."""
+    data["id"] = project_id
+    errs = validate_project_payload(data, project_id)
+    if errs:
+        return errs
+    project.config_version = _next_config_version(project, ver.strip())
+    project.raw_json = json.dumps(data, ensure_ascii=False, indent=2)
+    project.name = (data.get("name") or project.name)[:512]
+    project.save()
+    return []
+
+
 @staff_only
 @login_required
 def ui_home(request):
@@ -77,11 +129,12 @@ def project_new(request):
         if Project.objects.filter(project_id=pid).exists():
             messages.error(request, "Проект с таким id уже есть.")
             return redirect("ui_project_detail", project_id=pid)
+        seed = _seed_project_json(pid, name)
         body = {
             "id": pid,
             "name": name,
-            "version": "1",
-            "config": {"fields": [], "flow": {"steps": []}, "ui": {}},
+            "version": seed["version"],
+            "config": seed["config"],
         }
         Project.objects.create(
             project_id=pid,
@@ -125,20 +178,19 @@ def project_config(request, project_id: str):
         except json.JSONDecodeError as e:
             messages.error(request, f"Невалидный JSON: {e}")
             return redirect("ui_project_config", project_id=project_id)
-        if data.get("id") and data.get("id") != project_id:
-            messages.error(request, "Поле id в JSON должно совпадать с project_id проекта.")
-            return redirect("ui_project_config", project_id=project_id)
-        data["id"] = project_id
-        if not ver:
+        errs = _save_project_json(project, project_id, data, ver)
+        if errs:
+            for e in errs:
+                messages.error(request, e)
             try:
-                v = int(project.config_version)
-                ver = str(v + 1)
-            except ValueError:
-                ver = project.config_version + "-1"
-        project.config_version = ver
-        project.raw_json = json.dumps(data, ensure_ascii=False, indent=2)
-        project.name = (data.get("name") or project.name)[:512]
-        project.save()
+                pretty = json.dumps(json.loads(raw), ensure_ascii=False, indent=2)
+            except json.JSONDecodeError:
+                pretty = raw
+            return render(
+                request,
+                "ui/project_config.html",
+                {"project": project, "pretty_json": pretty, "validation_errors": errs},
+            )
         messages.success(request, "Конфиг сохранён, версия обновлена.")
         return redirect("ui_project_detail", project_id=project_id)
     try:
@@ -148,8 +200,79 @@ def project_config(request, project_id: str):
     return render(
         request,
         "ui/project_config.html",
-        {"project": project, "pretty_json": pretty},
+        {"project": project, "pretty_json": pretty, "validation_errors": None},
     )
+
+
+@ensure_csrf_cookie
+@staff_only
+@login_required
+@require_http_methods(["GET", "POST"])
+def project_config_builder(request, project_id: str):
+    """Визуальный редактор + превью; сохраняет тот же JSON, что и raw-редактор."""
+    project = get_object_or_404(Project, project_id=project_id)
+    if request.method == "POST":
+        raw = request.POST.get("raw_json", "")
+        ver = (request.POST.get("config_version") or "").strip()
+        try:
+            data = json.loads(raw)
+        except json.JSONDecodeError as e:
+            messages.error(request, f"Невалидный JSON: {e}")
+            return redirect("ui_project_config_builder", project_id=project_id)
+        errs = _save_project_json(project, project_id, data, ver)
+        if errs:
+            for e in errs:
+                messages.error(request, e)
+            try:
+                initial_data = json.loads(raw)
+            except json.JSONDecodeError:
+                initial_data = _seed_project_json(project.project_id, project.name)
+            try:
+                pretty = json.dumps(json.loads(project.raw_json), ensure_ascii=False, indent=2)
+            except json.JSONDecodeError:
+                pretty = project.raw_json
+            return render(
+                request,
+                "ui/project_config_builder.html",
+                {
+                    "project": project,
+                    "initial_data": initial_data,
+                    "pretty_json": pretty,
+                    "validation_errors": errs,
+                    "config_version": ver or project.config_version,
+                },
+            )
+        messages.success(request, "Конфиг сохранён, версия обновлена.")
+        return redirect("ui_project_detail", project_id=project_id)
+    try:
+        initial_data = json.loads(project.raw_json)
+        pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
+    except json.JSONDecodeError:
+        initial_data = _seed_project_json(project.project_id, project.name)
+        pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
+    return render(
+        request,
+        "ui/project_config_builder.html",
+        {
+            "project": project,
+            "initial_data": initial_data,
+            "pretty_json": pretty,
+            "config_version": project.config_version,
+        },
+    )
+
+
+@staff_only
+@login_required
+@require_POST
+def project_config_validate_api(request, project_id: str):
+    """POST JSON тела проекта — ответ { ok, errors } без сохранения."""
+    try:
+        data = json.loads(request.body.decode())
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "errors": ["Тело запроса не является JSON."]}, status=400)
+    errs = validate_project_payload(data, project_id)
+    return JsonResponse({"ok": not bool(errs), "errors": errs})
 
 
 @staff_only
