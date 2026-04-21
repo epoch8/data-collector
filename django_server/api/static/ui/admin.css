@@ -85,19 +85,35 @@ body.ui-body {
   color: var(--ui-text) !important;
 }
 
-.ui-brand-mark {
+/* Логотип E8 (PNG с белым фоном) */
+.ui-brand-logo-wrap {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.1rem;
-  height: 2.1rem;
+  padding: 4px 8px;
   border-radius: 10px;
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: -0.05em;
-  color: var(--ui-bg-deep);
-  background: linear-gradient(135deg, var(--ui-accent), var(--ui-accent-dim));
-  box-shadow: 0 0 20px rgba(45, 212, 191, 0.35);
+  background: #ffffff;
+  box-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+/* Один предел по высоте — ширина считается пропорционально исходному PNG, без растягивания */
+.ui-brand-logo {
+  display: block;
+  width: auto;
+  height: auto;
+  max-height: 26px;
+  max-width: none;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.navbar-brand-text {
+  font-weight: 700;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: var(--ui-text) !important;
 }
 
 .ui-badge-admin {

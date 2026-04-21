@@ -36,10 +36,14 @@
 
   <nav class="navbar navbar-expand-md ui-topnav mb-0">
     <div class="container-fluid px-3 px-lg-4">
-      <a class="navbar-brand d-flex align-items-center gap-2 py-2" href="{% url 'ui_project_list' %}">
-        <span class="ui-brand-mark">DC</span>
-        <span>Data Collector</span>
-        <span class="ui-badge-admin d-none d-sm-inline">ADMIN</span>
+      <a class="navbar-brand d-flex align-items-center gap-2 gap-md-3 py-2 text-decoration-none" href="{% url 'ui_project_list' %}">
+        <span class="ui-brand-logo-wrap" aria-hidden="true">
+          <img src="{% static 'ui/e8_logo.png' %}" alt="" class="ui-brand-logo" decoding="async">
+        </span>
+        <span class="d-flex flex-column align-items-start lh-sm">
+          <span class="navbar-brand-text">Data Collector</span>
+          <span class="ui-badge-admin align-self-start mt-1">ADMIN</span>
+        </span>
       </a>
       <button class="navbar-toggler border-secondary text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#uiNavCollapse" aria-controls="uiNavCollapse" aria-expanded="false" aria-label="Меню">
         <span class="navbar-toggler-icon"></span>
