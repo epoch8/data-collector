@@ -1,38 +1,55 @@
 {% extends "ui/base.html" %}
 {% block title %}Пакет {{ session.package_id }}{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_package_list' %}?project={{ session.project.project_id }}">Пакеты</a></li>
+    <li class="breadcrumb-item active" aria-current="page"><code class="small">{{ session.package_id }}</code></li>
+  </ol>
+</nav>
+{% endblock %}
 {% block content %}
-<div class="mb-3">
-  <a href="{% url 'ui_package_list' %}?project={{ session.project.project_id }}">← Пакеты</a>
+<div class="ui-page-head align-items-center">
+  <div>
+    <h1 class="ui-page-title font-monospace" style="font-size:1.25rem;">{{ session.package_id }}</h1>
+    <p class="ui-page-sub mb-0">
+      Проект <code>{{ session.project.project_id }}</code>
+      · {% include 'ui/_phase_badge.html' with phase=session.phase label=session.get_phase_display %}
+      · <span class="ui-muted">{{ session.created_at }}</span>
+    </p>
+  </div>
+  <a class="btn btn-outline-light btn-sm" href="{% url 'ui_package_list' %}?project={{ session.project.project_id }}"><i class="bi bi-arrow-left me-1"></i>К списку</a>
 </div>
-<h1 class="h3 mb-1"><code>{{ session.package_id }}</code></h1>
-<p style="color:#c9d1d9;">Проект <code>{{ session.project.project_id }}</code> · фаза: <strong>{{ session.get_phase_display }}</strong> · {{ session.created_at }}</p>
 
-<div class="row g-3 mt-2">
+<div class="row g-4">
   <div class="col-lg-6">
-    <div class="card p-3">
-      <h2 class="h6" style="color:#c9d1d9;">Блобы</h2>
+    <div class="card p-4 h-100">
+      <div class="ui-card-title"><i class="bi bi-file-binary me-1"></i>Блобы</div>
       {% if blobs %}
       <ul class="list-unstyled small mb-0">
         {% for b in blobs %}
-        <li class="mb-2 d-flex justify-content-between align-items-center gap-2">
-          <code>{{ b.logical_path }}</code>
-          <span class="text-nowrap" style="color:#b1bac4;">{{ b.size_bytes }} B</span>
-          <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_blob_download' session.project.project_id session.package_id b.pk %}">Скачать</a>
+        <li class="d-flex flex-wrap justify-content-between align-items-center gap-2 py-2 border-bottom border-secondary border-opacity-50">
+          <code class="me-2">{{ b.logical_path }}</code>
+          <div class="d-flex align-items-center gap-2 ms-auto">
+            <span class="text-nowrap ui-muted small">{{ b.size_bytes }} B</span>
+            <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_blob_download' session.project.project_id session.package_id b.pk %}"><i class="bi bi-download me-1"></i>Скачать</a>
+          </div>
         </li>
         {% endfor %}
       </ul>
       {% else %}
-      <p class="small mb-0" style="color:#b1bac4;">Нет блобов</p>
+      <p class="small ui-muted mb-0">Нет блобов</p>
       {% endif %}
     </div>
   </div>
   <div class="col-lg-6">
-    <div class="card p-3">
-      <h2 class="h6" style="color:#c9d1d9;">Манифест (после PUT)</h2>
+    <div class="card p-4 h-100 d-flex flex-column">
+      <div class="ui-card-title"><i class="bi bi-filetype-json me-1"></i>Манифест (после PUT)</div>
       {% if manifest_pretty %}
-      <pre class="json-block small mb-0" style="max-height: 420px; overflow: auto; white-space: pre-wrap;">{{ manifest_pretty }}</pre>
+      <pre class="json-block small mb-0 flex-grow-1" style="max-height: 480px; overflow: auto; white-space: pre-wrap;">{{ manifest_pretty }}</pre>
       {% else %}
-      <p class="small mb-0" style="color:#b1bac4;">Манифест ещё не загружен</p>
+      <p class="small ui-muted mb-0">Манифест ещё не загружен</p>
       {% endif %}
     </div>
   </div>

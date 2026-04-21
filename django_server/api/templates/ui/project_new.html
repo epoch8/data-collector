@@ -1,20 +1,40 @@
 {% extends "ui/base.html" %}
 {% block title %}Новый проект{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Новый</li>
+  </ol>
+</nav>
+{% endblock %}
 {% block content %}
-<h1 class="h3 mb-3">Новый проект</h1>
-<div class="card p-4" style="max-width: 520px;">
-  <form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-      <label class="form-label">project_id (как <code>id</code> в JSON)</label>
-      <input class="form-control" name="project_id" required placeholder="korovas-2026">
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Новый проект</h1>
+    <p class="ui-page-sub mb-0">Будет создан пустой шаблон JSON — поля и сценарий можно настроить в редакторе.</p>
+  </div>
+</div>
+<div class="row justify-content-start">
+  <div class="col-lg-6">
+    <div class="card p-4">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">project_id</label>
+          <input class="form-control" name="project_id" required placeholder="korovas-2026" autocomplete="off">
+          <div class="form-text ui-muted">Как поле <code>id</code> в корне JSON конфига.</div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Название</label>
+          <input class="form-control" name="name" placeholder="Отображаемое имя">
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-magic me-1"></i>Создать шаблон</button>
+          <a href="{% url 'ui_project_list' %}" class="btn btn-outline-secondary">Отмена</a>
+        </div>
+      </form>
     </div>
-    <div class="mb-3">
-      <label class="form-label">Название</label>
-      <input class="form-control" name="name" placeholder="Korovas">
-    </div>
-    <button type="submit" class="btn btn-primary">Создать пустой шаблон</button>
-    <a href="{% url 'ui_project_list' %}" class="btn btn-link">Отмена</a>
-  </form>
+  </div>
 </div>
 {% endblock %}
