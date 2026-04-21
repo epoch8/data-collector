@@ -1,0 +1,44 @@
+{% extends "ui/base.html" %}
+{% block title %}Пакеты{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3">Загруженные пакеты</h1>
+  <form class="d-flex gap-2 align-items-center" method="get">
+    <select class="form-select form-select-sm" name="project" style="width: auto; min-width: 200px;" onchange="this.form.submit()">
+      <option value="">Все проекты</option>
+      {% for p in projects %}
+      <option value="{{ p.project_id }}" {% if filter_project == p.project_id %}selected{% endif %}>{{ p.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+</div>
+<p class="text-muted small">До 500 последних сессий.</p>
+<div class="card p-0">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr>
+          <th>Проект</th>
+          <th>package_id</th>
+          <th>Статус</th>
+          <th>Создан</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td><code>{{ s.project.project_id }}</code></td>
+          <td><code>{{ s.package_id }}</code></td>
+          <td>{{ s.get_phase_display }}</td>
+          <td class="text-muted small">{{ s.created_at }}</td>
+          <td><a href="{% url 'ui_package_detail' s.project.project_id s.package_id %}">Открыть</a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-muted p-3">Нет пакетов</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

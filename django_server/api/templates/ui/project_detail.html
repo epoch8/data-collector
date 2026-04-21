@@ -1,0 +1,49 @@
+{% extends "ui/base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-start mb-3">
+  <div>
+    <h1 class="h3">{{ project.name }}</h1>
+    <p class="text-muted mb-0"><code>{{ project.project_id }}</code> · версия конфига {{ project.config_version }}</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary btn-sm" href="{% url 'ui_project_config' project.project_id %}">Редактировать JSON</a>
+    <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_media' project.project_id %}">Файлы и картинки</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Пакеты</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h2 class="h6 text-muted">Медиа в <code>project_assets/{{ project.project_id }}/</code></h2>
+      {% if media_files %}
+        <ul class="small mb-0">
+          {% for rel, sz in media_files %}
+          {% if forloop.counter <= 12 %}<li><code>{{ rel }}</code> — {{ sz }} B</li>{% endif %}
+          {% endfor %}
+          {% if media_files|length > 12 %}<li>… ещё файлы</li>{% endif %}
+        </ul>
+      {% else %}
+        <p class="text-muted small mb-0">Нет файлов. Загрузите на странице «Файлы» или импорт из репо.</p>
+      {% endif %}
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="card p-3">
+      <h2 class="h6 text-muted">Пакеты</h2>
+      <p class="mb-0">Всего сессий: <strong>{{ package_count }}</strong></p>
+      <a class="small" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Список по этому проекту</a>
+    </div>
+  </div>
+</div>
+<hr class="border-secondary my-4">
+<h2 class="h6 text-danger">Опасная зона</h2>
+<form method="post" action="{% url 'ui_project_delete' project.project_id %}" class="card p-3 border-danger" onsubmit="return confirm('Удалить проект и все связанные пакеты?');">
+  {% csrf_token %}
+  <p class="small text-muted mb-2">Введите в поле точный <code>project_id</code> для подтверждения.</p>
+  <div class="input-group input-group-sm" style="max-width: 400px;">
+    <input class="form-control" name="confirm" placeholder="{{ project.project_id }}" required>
+    <button type="submit" class="btn btn-outline-danger">Удалить проект</button>
+  </div>
+</form>
+{% endblock %}

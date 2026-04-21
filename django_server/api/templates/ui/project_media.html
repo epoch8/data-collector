@@ -1,0 +1,56 @@
+{% extends "ui/base.html" %}
+{% block title %}Файлы — {{ project.project_id }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'ui_project_detail' project.project_id %}">← {{ project.name }}</a>
+</div>
+<h1 class="h3 mb-3">Файлы для API <code>/v1/projects/{{ project.project_id }}/assets/…</code></h1>
+<p class="small" style="color:#c9d1d9;">Корень на диске: <code>project_assets/{{ project.project_id }}/</code>. В JSON — пути вида <code>assets/…</code>; клиент запросит хвост после <code>assets/</code>.</p>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card p-3">
+      <h2 class="h6 mb-3">Загрузить файл</h2>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-2">
+          <label class="form-label">Файл</label>
+          <input class="form-control" type="file" name="file" required>
+        </div>
+        <div class="mb-2">
+          <label class="form-label">Относительный путь внутри проекта</label>
+          <input class="form-control" name="relative_path" required placeholder="korovas/example_pose_placeholder.jpg">
+        </div>
+        <button type="submit" class="btn btn-primary">Загрузить</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="card p-0">
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Путь</th><th>Размер</th><th></th></tr></thead>
+          <tbody>
+            {% for rel, sz in media_files %}
+            <tr>
+              <td><code>{{ rel }}</code></td>
+              <td class="small" style="color:#c9d1d9;">{{ sz }}</td>
+              <td>
+                <form method="post" class="d-inline" onsubmit="return confirm('Удалить {{ rel }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="delete" value="1">
+                  <input type="hidden" name="rel_path" value="{{ rel }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger">Удалить</button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-muted p-3">Нет файлов</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -11,6 +11,9 @@ import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'core/package/package_paths.dart';
 import 'features/collection/logic/package_payload_codec.dart';
+import 'features/sync/presentation/server_sync_tab.dart';
+import 'features/history/history_local_actions.dart';
+import 'features/history/package_delivery_style.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 
@@ -190,7 +193,7 @@ class DashboardScreen extends ConsumerWidget {
     final packagesAsync = ref.watch(packagesStreamProvider);
 
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
@@ -213,6 +216,7 @@ class DashboardScreen extends ConsumerWidget {
                   dividerHeight: 0,
                   tabs: const [
                     Tab(icon: Icon(Icons.folder_outlined, size: 20), text: 'Проекты'),
+                    Tab(icon: Icon(Icons.cloud_outlined, size: 20), text: 'Сервер'),
                     Tab(icon: Icon(Icons.history_outlined, size: 20), text: 'История'),
                   ],
                 ),
@@ -303,6 +307,7 @@ class DashboardScreen extends ConsumerWidget {
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
               ),
+              const ServerSyncTab(),
               _historyTabBody(context, ref, projectsAsync, packagesAsync),
             ],
           ),
@@ -345,16 +350,29 @@ class CowHistoryScreen extends ConsumerWidget {
               final pkg = filtered[index];
               final photoCount = _extractImagePaths(pkg).length;
               return Epoch8Card(
+                highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
                 child: ListTile(
                   title: Text(
                     'Пакет ${pkg.id}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    '${pkg.createdAt.toString().split('.').first}\nФото: $photoCount • Проект: ${pkg.projectId}',
+                    '${pkg.createdAt.toString().split('.').first}\nФото: $photoCount • ${pkg.projectId}\n${deliveryStateShortRu(pkg.serverDeliveryState)}',
                   ),
                   isThreeLine: true,
-                  trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      IconButton(
+                        tooltip: 'Удалить с устройства',
+                        icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                        onPressed: () async {
+                          await confirmAndDeleteLocalPackage(context, ref, pkg);
+                        },
+                      ),
+                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                    ],
+                  ),
                   onTap: () => context.push('/history/package/${pkg.id}'),
                 ),
               );
@@ -381,159 +399,54 @@ class PackageHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final packagesAsync = ref.watch(packagesStreamProvider);
-    return Scaffold(
-      backgroundColor: Epoch8Theme.bgDeep,
-      appBar: AppBar(title: Text('Пакет $packageId')),
-      body: packagesAsync.when(
-        data: (packages) {
-          Package? pkg;
-          for (final item in packages) {
-            if (item.id == packageId) {
-              pkg = item;
-              break;
-            }
+    return packagesAsync.when(
+      data: (packages) {
+        Package? pkg;
+        for (final item in packages) {
+          if (item.id == packageId) {
+            pkg = item;
+            break;
           }
-          if (pkg == null) {
-            return const Epoch8EmptyState(
-              icon: Icons.error_outline,
-              title: 'Пакет не найден',
-              subtitle: 'Возможно, он был удалён или база обновилась.',
-            );
-          }
-          final raw = _decodePackageData(pkg);
-          final photos = _extractImagePaths(pkg);
-          final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
-          final projectsList = ref.watch(projectsProvider).maybeWhen(
-                data: (v) => v,
-                orElse: () => null,
-              );
-          final projMeta = _projectById(projectsList, pkg.projectId);
-          final groupSubject = projMeta != null && resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
-          final subjectLabel = _extractCowId(raw);
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
-            children: [
-              Epoch8Card(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      projMeta != null ? 'Проект: ${projMeta.name}' : 'Проект: ${pkg.projectId}',
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    if (groupSubject && subjectLabel != 'без-id') ...[
-                      const SizedBox(height: 8),
-                      Text('Объект: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
-                    ],
-                    const SizedBox(height: 8),
-                    Text('Идентификатор: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
-                    Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
-                    Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
-                  ],
+        }
+        return Scaffold(
+          backgroundColor: Epoch8Theme.bgDeep,
+          appBar: AppBar(
+            title: Text('Пакет $packageId'),
+            actions: [
+              if (pkg != null)
+                IconButton(
+                  tooltip: 'Удалить с устройства',
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () async {
+                    await confirmAndDeleteLocalPackage(context, ref, pkg!);
+                    if (!context.mounted) return;
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/dashboard');
+                    }
+                  },
                 ),
-              ),
-              const SizedBox(height: 12),
-              Epoch8Card(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Данные анкеты',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 12),
-                    ..._packageFormSummaryRows(context, ref, pkg, raw),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-              if (photos.isEmpty)
-                const Epoch8EmptyState(
-                  icon: Icons.photo_library_outlined,
-                  title: 'В пакете нет фото',
-                  subtitle: 'Сохранены только поля формы.',
-                )
-              else
-                ...photos.map((path) {
-                  final meta = metadataByPath[path];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Epoch8Card(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: File(path).existsSync()
-                                ? InkWell(
-                                    onTap: () => _showFullPhoto(context, path),
-                                    child: Stack(
-                                      children: [
-                                        Image.file(File(path), height: 180, width: double.infinity, fit: BoxFit.cover),
-                                        Positioned(
-                                          right: 8,
-                                          bottom: 8,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                            decoration: BoxDecoration(
-                                              color: Colors.black.withValues(alpha: 0.55),
-                                              borderRadius: BorderRadius.circular(8),
-                                            ),
-                                            child: const Text(
-                                              'Открыть',
-                                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : Container(
-                                    height: 120,
-                                    color: Epoch8Theme.bgElevated,
-                                    alignment: Alignment.center,
-                                    child: const Text('Файл не найден на устройстве'),
-                                  ),
-                          ),
-                          const SizedBox(height: 10),
-                          Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Путь: $path',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
-                          ),
-                          if (meta != null) ...[
-                            const SizedBox(height: 8),
-                            Theme(
-                              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                              child: ExpansionTile(
-                                tilePadding: EdgeInsets.zero,
-                                childrenPadding: EdgeInsets.zero,
-                                iconColor: Epoch8Theme.textMuted,
-                                collapsedIconColor: Epoch8Theme.textMuted,
-                                title: Text(
-                                  'Параметры кадра и камеры',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                                ),
-                                children: [
-                                  SelectableText(
-                                    const JsonEncoder.withIndent('  ').convert(meta),
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                  );
-                }),
             ],
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, st) => Center(
+          ),
+          body: pkg == null
+              ? const Epoch8EmptyState(
+                  icon: Icons.error_outline,
+                  title: 'Пакет не найден',
+                  subtitle: 'Возможно, он был удалён или база обновилась.',
+                )
+              : _packageHistoryDetailBody(context, ref, pkg),
+        );
+      },
+      loading: () => Scaffold(
+        backgroundColor: Epoch8Theme.bgDeep,
+        appBar: AppBar(title: Text('Пакет $packageId')),
+        body: const Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, st) => Scaffold(
+        backgroundColor: Epoch8Theme.bgDeep,
+        appBar: AppBar(title: Text('Пакет $packageId')),
+        body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
@@ -542,6 +455,149 @@ class PackageHistoryScreen extends ConsumerWidget {
       ),
     );
   }
+}
+
+Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pkg) {
+  final raw = _decodePackageData(pkg);
+  final photos = _extractImagePaths(pkg);
+  final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
+  final projectsList = ref.watch(projectsProvider).maybeWhen(
+        data: (v) => v,
+        orElse: () => null,
+      );
+  final projMeta = _projectById(projectsList, pkg.projectId);
+  final groupSubject = projMeta != null && resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
+  final subjectLabel = _extractCowId(raw);
+  return ListView(
+    padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+    children: [
+      Epoch8Card(
+        highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              projMeta != null ? 'Проект: ${projMeta.name}' : 'Проект: ${pkg.projectId}',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            if (groupSubject && subjectLabel != 'без-id') ...[
+              const SizedBox(height: 8),
+              Text('Объект: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
+            ],
+            const SizedBox(height: 8),
+            Text(
+              deliveryStateShortRu(pkg.serverDeliveryState),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: historyPackageBorderColor(pkg.serverDeliveryState),
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+            const SizedBox(height: 6),
+            Text('Идентификатор: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
+            Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
+            Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      Epoch8Card(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Данные анкеты',
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 12),
+            ..._packageFormSummaryRows(context, ref, pkg, raw),
+          ],
+        ),
+      ),
+      const SizedBox(height: 12),
+      if (photos.isEmpty)
+        const Epoch8EmptyState(
+          icon: Icons.photo_library_outlined,
+          title: 'В пакете нет фото',
+          subtitle: 'Сохранены только поля формы.',
+        )
+      else
+        ...photos.map((path) {
+          final meta = metadataByPath[path];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Epoch8Card(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: File(path).existsSync()
+                        ? InkWell(
+                            onTap: () => _showFullPhoto(context, path),
+                            child: Stack(
+                              children: [
+                                Image.file(File(path), height: 180, width: double.infinity, fit: BoxFit.cover),
+                                Positioned(
+                                  right: 8,
+                                  bottom: 8,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.55),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: const Text(
+                                      'Открыть',
+                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                        : Container(
+                            height: 120,
+                            color: Epoch8Theme.bgElevated,
+                            alignment: Alignment.center,
+                            child: const Text('Файл не найден на устройстве'),
+                          ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Путь: $path',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                  ),
+                  if (meta != null) ...[
+                    const SizedBox(height: 8),
+                    Theme(
+                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      child: ExpansionTile(
+                        tilePadding: EdgeInsets.zero,
+                        childrenPadding: EdgeInsets.zero,
+                        iconColor: Epoch8Theme.textMuted,
+                        collapsedIconColor: Epoch8Theme.textMuted,
+                        title: Text(
+                          'Параметры кадра и камеры',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        children: [
+                          SelectableText(
+                            const JsonEncoder.withIndent('  ').convert(meta),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          );
+        }),
+    ],
+  );
 }
 
 Widget _historyTabBody(
@@ -570,15 +626,40 @@ Widget _historyTabBody(
           for (final proj in projects) {
             final pkgs = byProject[proj.id];
             if (pkgs == null || pkgs.isEmpty) continue;
-            sections.add(_historyProjectSection(context, proj, pkgs));
+            sections.add(_historyProjectSection(context, ref, proj, pkgs));
           }
           for (final entry in byProject.entries) {
             if (knownIds.contains(entry.key)) continue;
-            sections.add(_historyOrphanProjectSection(context, entry.key, entry.value));
+            sections.add(_historyOrphanProjectSection(context, ref, entry.key, entry.value));
           }
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
-            children: sections,
+          final completedCount = packages.where((p) => p.serverDeliveryState == 'completed').length;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (completedCount > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 4, Epoch8Layout.pagePadding, 0),
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton.icon(
+                      onPressed: () => confirmAndClearUploadedPackagesCache(context, ref),
+                      icon: const Icon(Icons.cleaning_services_outlined, size: 18),
+                      label: Text('Очистить кэш загруженных ($completedCount)'),
+                    ),
+                  ),
+                ),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.fromLTRB(
+                    Epoch8Layout.pagePadding,
+                    completedCount > 0 ? 4 : 12,
+                    Epoch8Layout.pagePadding,
+                    24,
+                  ),
+                  children: sections,
+                ),
+              ),
+            ],
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -590,7 +671,7 @@ Widget _historyTabBody(
   );
 }
 
-Widget _historyProjectSection(BuildContext context, Project proj, List<Package> packages) {
+Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj, List<Package> packages) {
   final flow = resolveCollectionFlow(proj);
   final bySubject = flow.shouldGroupHistoryBySubject;
   return Column(
@@ -621,6 +702,7 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
       if (bySubject) ...[
         for (final g in _groupPackagesByCow(packages)) ...[
           Epoch8Card(
+            highlightBorderColor: historyGroupBorderColor(g.packages),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               leading: Container(
@@ -637,10 +719,11 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  'Пакетов: ${g.packages.length} • Фото: ${g.totalPhotos}',
+                  _historyCowGroupSubtitle(g.packages),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
+              isThreeLine: true,
               trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
               onTap: () => context.push('/history/project/${proj.id}/cow/${Uri.encodeComponent(g.cowId)}'),
             ),
@@ -650,6 +733,7 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
       ] else ...[
         for (final pkg in (packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))) ...[
           Epoch8Card(
+            highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
               leading: Container(
@@ -658,9 +742,9 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Epoch8Theme.card,
-                  border: Border.all(color: Epoch8Theme.border),
+                  border: Border.all(color: historyPackageBorderColor(pkg.serverDeliveryState).withValues(alpha: 0.35)),
                 ),
-                child: const Icon(Icons.photo_library_outlined, color: Epoch8Theme.textMuted, size: 24),
+                child: Icon(Icons.photo_library_outlined, color: historyPackageBorderColor(pkg.serverDeliveryState), size: 24),
               ),
               title: Text(
                 pkg.id,
@@ -676,7 +760,19 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
                 ),
               ),
               isThreeLine: true,
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Удалить с устройства',
+                    icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                    onPressed: () async {
+                      await confirmAndDeleteLocalPackage(context, ref, pkg);
+                    },
+                  ),
+                  const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                ],
+              ),
               onTap: () => context.push('/history/package/${pkg.id}'),
             ),
           ),
@@ -688,14 +784,32 @@ Widget _historyProjectSection(BuildContext context, Project proj, List<Package> 
   );
 }
 
+String _historyCowGroupSubtitle(List<Package> packages) {
+  final n = packages.length;
+  final photos = packages.fold<int>(0, (a, p) => a + _extractImagePaths(p).length);
+  final pending = packages.where((p) => p.serverDeliveryState != 'completed').length;
+  final failed = packages.where((p) => p.serverDeliveryState == 'failed').length;
+  final buf = StringBuffer('Пакетов: $n • Фото: $photos');
+  if (failed > 0) {
+    buf.write('\nОшибка отправки: $failed');
+  } else if (pending > 0) {
+    buf.write('\nНе на сервере: $pending из $n');
+  } else {
+    buf.write('\nВсе пакеты на сервере');
+  }
+  return buf.toString();
+}
+
 String _historyPackageSubtitle(Package pkg) {
   final raw = unpackPackageFormData(pkg.dataJson);
   final n = raw['session_note']?.toString().trim() ?? '';
-  if (n.isEmpty) return '';
-  return n.length > 80 ? '${n.substring(0, 80)}…' : n;
+  final note = n.isEmpty ? '' : (n.length > 80 ? '${n.substring(0, 80)}…' : n);
+  final delivery = deliveryStateShortRu(pkg.serverDeliveryState);
+  if (note.isEmpty) return delivery;
+  return '$note\n$delivery';
 }
 
-Widget _historyOrphanProjectSection(BuildContext context, String projectId, List<Package> packages) {
+Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String projectId, List<Package> packages) {
   final sorted = packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -709,10 +823,26 @@ Widget _historyOrphanProjectSection(BuildContext context, String projectId, List
       ),
       for (final pkg in sorted) ...[
         Epoch8Card(
+          highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
           child: ListTile(
             title: Text(pkg.id, style: const TextStyle(fontWeight: FontWeight.w600)),
-            subtitle: Text(pkg.createdAt.toString().split('.').first),
-            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+            subtitle: Text(
+              '${pkg.createdAt.toString().split('.').first}\n${deliveryStateShortRu(pkg.serverDeliveryState)}',
+            ),
+            isThreeLine: true,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'Удалить с устройства',
+                  icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                  onPressed: () async {
+                    await confirmAndDeleteLocalPackage(context, ref, pkg);
+                  },
+                ),
+                const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+              ],
+            ),
             onTap: () => context.push('/history/package/${pkg.id}'),
           ),
         ),

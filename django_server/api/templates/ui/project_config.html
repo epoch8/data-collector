@@ -1,0 +1,20 @@
+{% extends "ui/base.html" %}
+{% block title %}Конфиг — {{ project.project_id }}{% endblock %}
+{% block content %}
+<div class="mb-3">
+  <a href="{% url 'ui_project_detail' project.project_id %}">← {{ project.name }}</a>
+</div>
+<h1 class="h3 mb-3">JSON конфигурации</h1>
+<p class="small" style="color:#c9d1d9;">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. После сохранения клиенты получат новую версию по <code>config_version</code>.</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label class="form-label">config_version (пусто = авто +1 к числу или суффикс)</label>
+    <input class="form-control" name="config_version" value="{{ project.config_version }}" style="max-width: 200px;">
+  </div>
+  <div class="mb-3">
+    <textarea class="form-control json-block" name="raw_json" rows="28" required>{{ pretty_json }}</textarea>
+  </div>
+  <button type="submit" class="btn btn-primary">Сохранить</button>
+</form>
+{% endblock %}

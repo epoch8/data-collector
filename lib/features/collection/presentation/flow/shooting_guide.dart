@@ -1,3 +1,4 @@
+import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
@@ -156,6 +157,7 @@ class ShootingGuideBody extends StatelessWidget {
           const SizedBox(height: 16),
           for (final g in poseCards) ...[
             _PoseGuideCard(
+              project: project,
               guide: g,
               assetMissingHint: ui.str(['shooting_guide', 'asset_missing_hint'], ''),
               emptyImagePlaceholder: ui.str(['shooting_guide', 'no_asset_placeholder'], '—'),
@@ -181,11 +183,13 @@ class ShootingGuideBody extends StatelessWidget {
 
 class _PoseGuideCard extends StatelessWidget {
   const _PoseGuideCard({
+    required this.project,
     required this.guide,
     required this.assetMissingHint,
     required this.emptyImagePlaceholder,
   });
 
+  final Project project;
   final PoseGuide guide;
   final String assetMissingHint;
   final String emptyImagePlaceholder;
@@ -202,10 +206,11 @@ class _PoseGuideCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
             child: AspectRatio(
               aspectRatio: 4 / 3,
-              child: Image.asset(
-                guide.exampleAssetPath,
+              child: projectExampleImage(
+                project: project,
+                assetPath: guide.exampleAssetPath,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorPlaceholder: (ctx) => Container(
                   color: Epoch8Theme.bgElevated,
                   alignment: Alignment.center,
                   child: Text(

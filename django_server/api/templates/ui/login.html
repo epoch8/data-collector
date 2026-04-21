@@ -1,0 +1,17 @@
+{% extends "ui/base.html" %}
+{% block title %}Вход — админка{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-5">
+    <div class="card p-4 login-form-card">
+      <h2 class="h4 mb-3 text-white">Вход (staff)</h2>
+      <p class="small mb-3" style="color:#c9d1d9;">Создайте пользователя: <code style="color:#79c0ff;">python manage.py createsuperuser</code></p>
+      <form method="post" action="">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary w-100 mt-2">Войти</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

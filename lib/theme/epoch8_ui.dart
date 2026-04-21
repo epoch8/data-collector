@@ -39,12 +39,17 @@ class Epoch8Card extends StatelessWidget {
     this.padding,
     this.onTap,
     this.accentBorder = false,
+    /// Явный цвет границы (например статус доставки на сервер). Имеет приоритет над [accentBorder].
+    this.highlightBorderColor,
+    this.highlightBorderWidth = 1.5,
   });
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
   final VoidCallback? onTap;
   final bool accentBorder;
+  final Color? highlightBorderColor;
+  final double highlightBorderWidth;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +57,19 @@ class Epoch8Card extends StatelessWidget {
       padding: padding ?? const EdgeInsets.all(Epoch8Layout.cardPadding),
       child: child,
     );
+
+    final Color borderColor;
+    final double borderW;
+    if (highlightBorderColor != null) {
+      borderColor = highlightBorderColor!;
+      borderW = highlightBorderWidth;
+    } else if (accentBorder) {
+      borderColor = Epoch8Theme.accent.withValues(alpha: 0.35);
+      borderW = 1.25;
+    } else {
+      borderColor = Epoch8Theme.border.withValues(alpha: 0.85);
+      borderW = 1;
+    }
 
     final deco = BoxDecoration(
       borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
@@ -64,10 +82,8 @@ class Epoch8Card extends StatelessWidget {
         ],
       ),
       border: Border.all(
-        color: accentBorder
-            ? Epoch8Theme.accent.withValues(alpha: 0.35)
-            : Epoch8Theme.border.withValues(alpha: 0.85),
-        width: accentBorder ? 1.25 : 1,
+        color: borderColor,
+        width: borderW,
       ),
       boxShadow: [
         BoxShadow(

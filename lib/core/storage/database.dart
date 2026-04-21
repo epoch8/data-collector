@@ -12,6 +12,9 @@ class Packages extends Table {
   TextColumn get status => text()();
   DateTimeColumn get createdAt => dateTime()();
   TextColumn get dataJson => text()();
+  /// `pending` | `uploading` | `completed` | `failed` — доставка на сервер (спека 08).
+  TextColumn get serverDeliveryState => text().withDefault(const Constant('pending'))();
+  TextColumn get serverDeliveryError => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -22,7 +25,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -37,6 +40,10 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'CREATE INDEX IF NOT EXISTS idx_packages_project_id ON packages (project_id);',
             );
+          }
+          if (from < 3) {
+            await m.addColumn(packages, packages.serverDeliveryState);
+            await m.addColumn(packages, packages.serverDeliveryError);
           }
         },
       );

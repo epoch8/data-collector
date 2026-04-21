@@ -9,6 +9,7 @@ import 'package:data_collector/features/collection/logic/package_payload_codec.d
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/presentation/flow/scroll_form_screen.dart';
+import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_ui.dart';
 import 'package:data_collector/features/collection/presentation/flow/shooting_guide.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
@@ -886,10 +887,11 @@ class _CameraPoseStepState extends ConsumerState<_CameraPoseStep> {
             borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
             child: AspectRatio(
               aspectRatio: 4 / 3,
-              child: Image.asset(
-                guide.exampleAssetPath,
+              child: projectExampleImage(
+                project: widget.project,
+                assetPath: guide.exampleAssetPath,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
+                errorPlaceholder: (_) => Container(
                   color: Epoch8Theme.bgElevated,
                   alignment: Alignment.center,
                   child: Padding(

@@ -1,0 +1,20 @@
+{% extends "ui/base.html" %}
+{% block title %}Новый проект{% endblock %}
+{% block content %}
+<h1 class="h3 mb-3">Новый проект</h1>
+<div class="card p-4" style="max-width: 520px;">
+  <form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label">project_id (как <code>id</code> в JSON)</label>
+      <input class="form-control" name="project_id" required placeholder="korovas-2026">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Название</label>
+      <input class="form-control" name="name" placeholder="Korovas">
+    </div>
+    <button type="submit" class="btn btn-primary">Создать пустой шаблон</button>
+    <a href="{% url 'ui_project_list' %}" class="btn btn-link">Отмена</a>
+  </form>
+</div>
+{% endblock %}

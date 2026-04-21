@@ -1,0 +1,11 @@
+name: data_collector_mock_server
+description: Reference HTTP server for specs 08–09 (projects catalog, config ETag, package upload).
+publish_to: none
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  path: ^1.9.1
+  shelf: ^1.4.2
+  shelf_router: ^1.1.4
