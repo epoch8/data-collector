@@ -112,12 +112,15 @@ class ShootingGuideBody extends StatelessWidget {
     this.showStartButton = false,
     this.onStart,
     this.compact = false,
+    /// Если false — только колонка без собственного [SingleChildScrollView] (родитель скроллит).
+    this.scrollable = true,
   });
 
   final Project project;
   final bool showStartButton;
   final VoidCallback? onStart;
   final bool compact;
+  final bool scrollable;
 
   @override
   Widget build(BuildContext context) {
@@ -126,7 +129,7 @@ class ShootingGuideBody extends StatelessWidget {
     final tips = ui.strings(['shooting_guide', 'general_tips'], const []);
     final poseCards = _parsePoseCardsFromProject(project);
 
-    return SingleChildScrollView(
+    final inner = Padding(
       padding: EdgeInsets.fromLTRB(pad, pad, pad, pad + 8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -178,6 +181,9 @@ class ShootingGuideBody extends StatelessWidget {
         ],
       ),
     );
+
+    if (!scrollable) return inner;
+    return SingleChildScrollView(child: inner);
   }
 }
 

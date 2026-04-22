@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import re
 from pathlib import Path
+from uuid import uuid4
 
 from django.conf import settings
 from django.contrib import messages
@@ -48,6 +50,24 @@ def _safe_rel_path(s: str) -> str | None:
     if not s or ".." in Path(s).parts:
         return None
     return s
+
+
+def _sanitize_upload_basename(name: str) -> str:
+    base = Path(str(name or "file")).name
+    s = re.sub(r"[^a-zA-Z0-9._-]+", "_", base).strip("._") or "file"
+    return s[:200]
+
+
+def _allocate_auto_relative_path(project_id: str, uploaded_filename: str) -> str:
+    """Уникальный относительный путь: uploads/<короткий id>_<безопасное имя файла>."""
+    safe = _sanitize_upload_basename(uploaded_filename)
+    base = _project_assets_dir(project_id)
+    for _ in range(4096):
+        rel = f"uploads/{uuid4().hex[:12]}_{safe}".replace("\\", "/")
+        sp = _safe_rel_path(rel)
+        if sp and not (base / sp).exists():
+            return sp
+    return _safe_rel_path(f"uploads/{uuid4().hex}_{safe}") or f"uploads/{uuid4().hex}_file.bin"
 
 
 def _seed_project_json(project_id: str, name: str) -> dict:
@@ -300,17 +320,29 @@ def project_media(request, project_id: str):
                         messages.warning(request, "Файл не найден.")
             return redirect("ui_project_media", project_id=project_id)
         f = request.FILES.get("file")
-        rel = _safe_rel_path(request.POST.get("relative_path", ""))
-        if not f or not rel:
-            messages.error(request, "Нужны файл и относительный путь (например korovas/example.jpg).")
+        if not f:
+            msg = "Выберите файл для загрузки."
+            if request.POST.get("respond") == "json":
+                return JsonResponse({"ok": False, "error": msg}, status=400)
+            messages.error(request, msg)
             return redirect("ui_project_media", project_id=project_id)
+        rel = _allocate_auto_relative_path(project_id, f.name)
         dest = _project_assets_dir(project_id) / rel
         dest.parent.mkdir(parents=True, exist_ok=True)
         with dest.open("wb") as out:
             for chunk in f.chunks():
                 out.write(chunk)
         messages.success(request, f"Сохранено: {rel}")
+        if request.POST.get("respond") == "json":
+            return JsonResponse({"ok": True, "relative_path": rel})
         return redirect("ui_project_media", project_id=project_id)
+    if request.GET.get("format") == "json":
+        rows = _list_media_files(project_id)
+        files = [
+            {"relative_path": rel, "size": size, "asset_path": f"assets/{rel}" if rel else ""}
+            for rel, size in rows
+        ]
+        return JsonResponse({"files": files})
     return render(
         request,
         "ui/project_media.html",

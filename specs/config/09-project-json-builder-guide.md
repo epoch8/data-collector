@@ -35,7 +35,7 @@
 | `id`, `name`, `version` | да | `id` — роутер и БД; `name` — заголовки. |
 | `config.fields` | да | Справочник полей. |
 | `config.flow` | да | `steps` — сценарий. |
-| `config.ui` | нет | Тексты `ProjectUi`. |
+| `config.ui` | нет | Тексты `ProjectUi`. В визуальном редакторе проекта на вкладке **«UI / гайд»** редактируется блок **`ui.shooting_guide`** (как в `korovas-2026.json` / `product-shelf-shoot-2026.json`): заголовки секции, `general_tips` по строкам, карточки `pose_cards` с `example_asset_path` и `description_lines`. Остальной `ui.flow` по-прежнему можно править только в JSON. |
 
 ---
 

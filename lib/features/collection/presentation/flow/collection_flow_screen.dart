@@ -330,6 +330,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
         return _InstructionBriefingStep(
           key: ValueKey('flow_instruction_${cur.id}'),
           project: p,
+          instructionField: cur.fields.single,
           onContinue: () => setState(() => _step++),
         );
       case CollectionScreenKind.cameraPose:
@@ -732,14 +733,59 @@ class _FlowFormStepState extends ConsumerState<_FlowFormStep> {
 }
 
 class _InstructionBriefingStep extends StatelessWidget {
-  const _InstructionBriefingStep({super.key, required this.project, required this.onContinue});
+  const _InstructionBriefingStep({
+    super.key,
+    required this.project,
+    required this.instructionField,
+    required this.onContinue,
+  });
 
   final Project project;
+  final ConfigField instructionField;
   final VoidCallback onContinue;
 
   @override
   Widget build(BuildContext context) {
-    return ShootingGuideBody(project: project, showStartButton: true, onStart: onContinue);
+    final title = instructionField.title.trim();
+    final body = instructionField.instructions.trim();
+    final hasFieldCopy = title.isNotEmpty || body.isNotEmpty;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (hasFieldCopy) ...[
+            if (title.isNotEmpty)
+              Text(
+                title,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+              ),
+            if (body.isNotEmpty) ...[
+              if (title.isNotEmpty) const SizedBox(height: 12),
+              ...body.split('\n').map((raw) {
+                final line = raw.trim();
+                if (line.isEmpty) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Text(
+                    line,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45),
+                  ),
+                );
+              }),
+            ],
+            const SizedBox(height: 20),
+          ],
+          ShootingGuideBody(
+            project: project,
+            showStartButton: true,
+            onStart: onContinue,
+            scrollable: false,
+          ),
+        ],
+      ),
+    );
   }
 }
 
