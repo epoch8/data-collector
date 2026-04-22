@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="abstract-config" name="Абстрактный конфиг — сущности и сценарии">
-        <mxGraphModel dx="850" dy="695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1680" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="987" dy="695" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1760" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -13,7 +13,7 @@
                 <mxCell id="s" value="&lt;b&gt;2. Экраны&lt;/b&gt;&#10;Шаг UI: как показать поля (форма, скролл, инструкция, камера…).&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Ссылаются на поля по &lt;code&gt;field_id&lt;/code&gt; (где нужно).&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="352" y="140" width="280" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="sc" value="&lt;b&gt;3. Сценарий&lt;/b&gt;&lt;br&gt;Упорядоченные шаги (= экраны) и переходы «далее».&lt;br&gt;&lt;font color=&quot;#9ca3af&quot;&gt;Составные сценарии могут иметь сколько угодно экрананов &lt;br&gt;Единый сценарий имеет сколько угодно полей, но один экран&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                <mxCell id="sc" value="&lt;b&gt;3. Сценарий&lt;/b&gt;&lt;br&gt;Упорядоченные шаги (= экраны) и переходы «далее».&lt;br&gt;&lt;font color=&quot;#9ca3af&quot;&gt;Составные сценарии могут иметь сколько угодно экранов &lt;br&gt;Единый сценарий имеет сколько угодно полей, но один экран&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="656" y="140" width="300" height="90" as="geometry"/>
                 </mxCell>
                 <mxCell id="p" value="&lt;b&gt;4. Конфиг проекта&lt;/b&gt;&lt;br&gt;Итог: значения полей + вложения (фото и т.д.).&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Структура &lt;code&gt;data&lt;/code&gt; должна совпадать с ожиданием сервера/БД - внутри интрефейса есть кнопка и механизмы проверки&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
@@ -59,7 +59,7 @@
                 <mxCell id="exS2" value="&lt;b&gt;camera_pose&lt;/b&gt;&lt;br&gt;field_id: pose_1" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="6">
                     <mxGeometry x="652" y="52" width="100" height="112" as="geometry"/>
                 </mxCell>
-                <mxCell id="exS3" value="&lt;b&gt;camera_pose&lt;/b&gt;&lt;br&gt;pfield_id: pose_2" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="6">
+                <mxCell id="exS3" value="&lt;b&gt;camera_pose&lt;/b&gt;&lt;br&gt;field_id: pose_2" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="6">
                     <mxGeometry x="772" y="52" width="100" height="112" as="geometry"/>
                 </mxCell>
                 <mxCell id="exS4" value="&lt;b&gt;camera_pose&lt;/b&gt;&lt;br&gt;field_id: pose_3" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="6">
@@ -84,10 +84,10 @@
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="8" value="" style="group" connectable="0" vertex="1" parent="1">
-                    <mxGeometry x="460" y="252" width="340" height="460" as="geometry"/>
+                    <mxGeometry x="460" y="252" width="340" height="482" as="geometry"/>
                 </mxCell>
                 <mxCell id="9" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;dashed=1;dashPattern=8 6;strokeColor=#9B7ED0;fillColor=#18141f;fontColor=#C9B8E8;fontSize=10;strokeWidth=1;" vertex="1" parent="8">
-                    <mxGeometry width="340" height="460" as="geometry"/>
+                    <mxGeometry width="340" height="482" as="geometry"/>
                 </mxCell>
                 <mxCell id="10" value="&lt;b&gt;Одна длинная форма (scroll_form)&lt;/b&gt;&lt;br&gt;Все поля проекта по &lt;code&gt;priority&lt;/code&gt;.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Других&amp;nbsp; шагов быть не должно.&lt;br&gt;Можно добавить сколько угодно полей&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
                     <mxGeometry x="28" y="70" width="280" height="52" as="geometry"/>
@@ -95,14 +95,14 @@
                 <mxCell id="11" value="&lt;b&gt;form - Анкета&lt;/b&gt;&lt;br&gt;Явный список &lt;code&gt;field_ids&lt;/code&gt;.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Только поля типов text_input и datetime (остальное — другой шаг).&amp;nbsp;&lt;br&gt;Поля заполненные тут сохраняются в хранищие визарда и потом&amp;nbsp; отображены в rewiew&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
                     <mxGeometry x="20" y="180" width="284" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" value="&lt;b&gt;instruction - справка&lt;/b&gt;&lt;br&gt;Нужен &lt;code&gt;field_id&lt;/code&gt;&amp;nbsp; поле типа instruction.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Несовпадение типа поля&amp;nbsp; приводит к ошибке конфига.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
-                    <mxGeometry x="20" y="260" width="284" height="52" as="geometry"/>
+                <mxCell id="12" value="&lt;b&gt;instruction — справка&lt;/b&gt;&lt;br&gt;В &lt;code&gt;fields[]&lt;/code&gt;: &lt;code&gt;field_id&lt;/code&gt;, &lt;code&gt;priority&lt;/code&gt;, &lt;code&gt;type&lt;/code&gt;, &lt;code&gt;title&lt;/code&gt;, &lt;code&gt;instructions&lt;/code&gt;, &lt;code&gt;validation&lt;/code&gt;. В flow — шаг &lt;code&gt;instruction&lt;/code&gt; + один id.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Пунктир → отдельный блок &lt;b&gt;UX guide&lt;/b&gt;: тексты/картинки гайда съёмки не в этом поле, а в &lt;code&gt;config.ui.shooting_guide&lt;/code&gt;.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
+                    <mxGeometry x="20" y="252" width="284" height="68" as="geometry"/>
                 </mxCell>
-                <mxCell id="13" value="&lt;b&gt;camera_pose - отдельный экран под загрузку фото&lt;/b&gt;&lt;br&gt;&lt;code&gt;field_id&lt;/code&gt;&amp;nbsp;поле типа camera_photo.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Индекс позы считается по порядку таких шагов в сценарии.&lt;br&gt;&lt;/span&gt;&lt;span style=&quot;color: rgb(156, 163, 175);&quot;&gt;Поля заполненные тут сохраняются в хранищие визарда и отображены в rewiew&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
-                    <mxGeometry x="20" y="320" width="290" height="60" as="geometry"/>
+                <mxCell id="13" value="&lt;b&gt;camera_pose — ракурс&lt;/b&gt;&lt;br&gt;&lt;code&gt;field_id&lt;/code&gt; → тип &lt;code&gt;camera_photo&lt;/code&gt;. Порядок шагов = порядок ракурсов.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Пунктир → тот же &lt;b&gt;UX guide&lt;/b&gt;: подписи и пример кадра для &lt;i&gt;i&lt;/i&gt;-го ракурса из &lt;code&gt;pose_cards[i]&lt;/code&gt;.&lt;br&gt;&lt;/span&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Снимки пользователя — во визард, затем review.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#7a5fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="8">
+                    <mxGeometry x="20" y="328" width="290" height="72" as="geometry"/>
                 </mxCell>
                 <mxCell id="14" value="&lt;b&gt;review&lt;/b&gt; — сводка перед отправкой. Сюда попадают поля из form и camera_pose" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#252032;strokeColor=#7a5fa8;fontColor=#DDD6EE;fontSize=9;" vertex="1" parent="8">
-                    <mxGeometry x="20" y="390" width="288" height="44" as="geometry"/>
+                    <mxGeometry x="20" y="412" width="288" height="44" as="geometry"/>
                 </mxCell>
                 <mxCell id="15" value="Экраны для составных сценариев" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;fontStyle=1" vertex="1" parent="8">
                     <mxGeometry x="28" y="130" width="272" height="44" as="geometry"/>
@@ -122,11 +122,41 @@
                 <mxCell id="fb2" value="&lt;b&gt;datetime&lt;/b&gt;&#10;Дата/время.&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Те же рамки, что text_input на &lt;i&gt;form&lt;/i&gt;.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="17">
                     <mxGeometry x="158" y="22" width="136" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="fb3" value="&lt;b&gt;instruction&lt;/b&gt;&#10;Текст брифинга.&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Шаг &lt;i&gt;instruction&lt;/i&gt;, один field_id.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="17">
+                <mxCell id="fb3" value="&lt;b&gt;instruction&lt;/b&gt;&#10;Текст брифинга в fields[] (см. ключи на экране instruction).&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Гайд съёмки — отдельно, блок &lt;code&gt;shooting_guide&lt;/code&gt; справа.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="17">
                     <mxGeometry x="14" y="86" width="136" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="fb4" value="&lt;b&gt;camera_photo&lt;/b&gt;&#10;Снимки + метаданные.&#10;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Шаг &lt;i&gt;camera_pose&lt;/i&gt;; поза 1…N по порядку.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="17">
                     <mxGeometry x="158" y="86" width="136" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="" style="group" vertex="1" connectable="0" parent="1">
+                    <mxGeometry x="48" y="790" width="1324" height="278" as="geometry"/>
+                </mxCell>
+                <mxCell id="uxg" value="&lt;b&gt;UX guide&lt;/b&gt; · это справка по проекту при создании экрана instruction справка будет отображаться как отдельный объязательный экран, если нет то будет окрываться только при клике на значек справки&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#C9B8E8&quot;&gt;Отдельная форма в редакторе проекта (вкладка «UI / гайд»). Не путать с полем &lt;code&gt;instruction&lt;/code&gt; в &lt;code&gt;fields[]&lt;/code&gt;&amp;nbsp; там только заголовок и текст брифинга.&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Что внутри&lt;/b&gt;: &lt;code&gt;section_overline&lt;/code&gt;, &lt;code&gt;section_title&lt;/code&gt;, &lt;code&gt;section_subtitle&lt;/code&gt;, &lt;code&gt;general_tips_heading&lt;/code&gt;, &lt;code&gt;general_tips&lt;/code&gt;[], &lt;code&gt;asset_missing_hint&lt;/code&gt;, &lt;code&gt;no_asset_placeholder&lt;/code&gt;, &lt;code&gt;start_button&lt;/code&gt;.&lt;br&gt;&lt;b&gt;pose_cards[]&lt;/b&gt;: &lt;code&gt;index_1based&lt;/code&gt;, &lt;code&gt;title&lt;/code&gt;, &lt;code&gt;short_label&lt;/code&gt;, &lt;code&gt;description_lines&lt;/code&gt;[], &lt;code&gt;example_asset_path&lt;/code&gt; (картинка-пример).&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;&lt;b&gt;Можно добавить&lt;/b&gt;: карточки ракурсов, строки советов, привязать превью к файлам медиа (&lt;code&gt;assets/…&lt;/code&gt;). Клиент на экране instruction показывает весь гайд; на каждом camera_pose — одну карточку по порядку шага.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#241a32;strokeColor=#C4A8F5;strokeWidth=2;fontColor=#F0E8FF;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="860" y="254" width="430" height="318" as="geometry"/>
+                </mxCell>
+                <mxCell id="mdb" value="&lt;b&gt;БД + медиа проекта&lt;/b&gt;&lt;br&gt;&lt;br&gt;• В &lt;b&gt;БД&lt;/b&gt; хранится JSON проекта (&lt;code&gt;raw_json&lt;/code&gt;), вместе с блоком &lt;code&gt;ui.shooting_guide&lt;/code&gt;.&lt;br&gt;• У &lt;b&gt;каждого проекта&lt;/b&gt; свой каталог файлов на сервере (страница «Файлы»): загрузки → пути вида &lt;code&gt;uploads/…&lt;/code&gt;, в конфиге — &lt;code&gt;assets/…&lt;/code&gt; для клиента.&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Эти файлы подтягиваются в превью инструкции и в примеры ракурсов (&lt;code&gt;example_asset_path&lt;/code&gt;); API: &lt;code&gt;/v1/projects/{id}/assets/…&lt;/code&gt;.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#15251f;strokeColor=#3DCC85;strokeWidth=2;fontColor=#E3F7EC;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="880" y="600" width="390" height="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="eInstUxg" value="экран + гайд" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;dashPattern=10 6;strokeColor=#C4A8F5;endArrow=classic;fontSize=9;fontColor=#D8C8FF;exitX=1;exitY=0.5;entryX=0;entryY=0.28;jumpStyle=arc;" edge="1" parent="1" source="12" target="uxg">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="780" y="538"/>
+                            <mxPoint x="780" y="337"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eCamUxg" value="ракурс + гайд к конкретному ракурсу&lt;br&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;dashPattern=10 6;strokeColor=#C4A8F5;endArrow=classic;fontSize=9;fontColor=#D8C8FF;exitX=1;exitY=0.5;entryX=0;entryY=0.62;jumpStyle=arc;" edge="1" parent="1" source="13" target="uxg">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="770" y="614"/>
+                            <mxPoint x="830" y="614"/>
+                            <mxPoint x="830" y="445"/>
+                            <mxPoint x="860" y="445"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eUxgDb" value="сохранение JSON и файлов" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=classic;fontSize=9;fontColor=#B8E8D0;exitX=0.5;exitY=1;entryX=0.5;entryY=0;jumpStyle=arc;" edge="1" parent="1" source="uxg" target="mdb">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
