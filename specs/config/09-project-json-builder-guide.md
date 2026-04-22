@@ -53,8 +53,6 @@
 | `title`, `instructions` | Подписи. |
 | `validation` | Минимум `required`; камера и «Далее». |
 | `multiple` | У `camera_photo`: один путь vs список. |
-| `options` | У `dropdown` на scroll. |
-| `sub_fields` | У `collection` на scroll. |
 
 ### Типы на одном экране `scroll_form`
 
@@ -62,13 +60,13 @@
 
 | `type` | Scroll |
 |--------|--------|
-| `text_input`, `dropdown`, `camera_photo`, `collection` | да |
+| `text_input`, `camera_photo` | да |
 | `datetime` | нет |
 | `instruction` | нет отдельного блока |
 
 ### Шаг `form` (мастер)
 
-В **`field_ids`** только **`text_input`** и **`datetime`**. Камера, `instruction`, `dropdown` — отдельными шагами.
+В **`field_ids`** только **`text_input`** и **`datetime`**. Камера и `instruction` — отдельными шагами.
 
 ### `instruction`
 

@@ -5,13 +5,12 @@
 (function () {
   "use strict";
 
+  /** value → подпись в селекте (в JSON уходит только value). */
   const FIELD_TYPES = [
-    "text_input",
-    "datetime",
-    "instruction",
-    "camera_photo",
-    "dropdown",
-    "collection",
+    { v: "text_input", label: "text_input — однострочный текст" },
+    { v: "datetime", label: "datetime — дата и время" },
+    { v: "instruction", label: "instruction — экран подсказки (без ввода)" },
+    { v: "camera_photo", label: "camera_photo — снимок с камеры" },
   ];
   const SCREENS = [
     { v: "form", label: "Форма" },
@@ -55,6 +54,12 @@
     out.config.flow = out.config.flow || { steps: [] };
     out.config.flow.steps = out.config.flow.steps || [];
     if (!out.config.ui) delete out.config.ui;
+    (out.config.fields || []).forEach((f) => {
+      if (f && typeof f === "object") {
+        delete f.options;
+        delete f.sub_fields;
+      }
+    });
     return out;
   }
 
@@ -133,7 +138,15 @@
       <td><input type="text" class="form-control form-control-sm" data-fk="field_id" value="${escapeAttr(f.field_id || "")}" autocomplete="off"></td>
       <td><input type="number" class="form-control form-control-sm" data-fk="priority" value="${Number(f.priority) || 0}"></td>
       <td><select class="form-select form-select-sm" data-fk="type">
-        ${FIELD_TYPES.map((t) => `<option value="${t}" ${f.type === t ? "selected" : ""}>${t}</option>`).join("")}
+        ${
+          !FIELD_TYPES.some((t) => t.v === f.type) && f.type
+            ? `<option value="${escapeAttr(f.type)}" selected>${escapeHtml(String(f.type) + " (устар./не в списке)")}</option>`
+            : ""
+        }
+        ${FIELD_TYPES.map(
+          (t) =>
+            `<option value="${escapeAttr(t.v)}" ${f.type === t.v ? "selected" : ""}>${escapeHtml(t.label)}</option>`,
+        ).join("")}
       </select></td>
       <td><input type="text" class="form-control form-control-sm" data-fk="title" value="${escapeAttr(f.title || "")}" autocomplete="off"></td>
       <td><textarea class="form-control form-control-sm" data-fk="instructions" rows="2" autocomplete="off"></textarea></td>
@@ -172,7 +185,7 @@
       }
       hint =
         screen === "scroll_form"
-          ? '<p class="small text-info mb-0 mt-2"><i class="bi bi-lightbulb me-1"></i>Оставьте список пустым — на экран попадут все поля по priority.</p>'
+          ? '<p class="small text-info mb-0 mt-2"><i class="bi bi-lightbulb me-1"></i>Оставьте список пустым — на экран попадут все поля по priority (поддерживаются <strong>text_input</strong> и <strong>camera_photo</strong>).</p>'
           : '<p class="small text-info mb-0 mt-2"><i class="bi bi-lightbulb me-1"></i>Только типы <strong>text_input</strong> и <strong>datetime</strong>.</p>';
     } else if (screen === "instruction" || screen === "camera_pose") {
       extra = `<label class="form-label small ui-muted mt-2 mb-0">Одно поле этого шага</label>
@@ -232,6 +245,8 @@
     f.type = get("type")?.value || "text_input";
     f.title = get("title")?.value || "";
     f.instructions = get("instructions")?.value || "";
+    delete f.options;
+    delete f.sub_fields;
   }
 
   function syncStepCardFromDom(card, root) {

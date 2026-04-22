@@ -7,6 +7,9 @@ from __future__ import annotations
 
 from typing import Any
 
+# Согласовано с рендером scroll_form / шагов мастера в клиенте.
+ALLOWED_FIELD_TYPES = frozenset({"text_input", "datetime", "instruction", "camera_photo"})
+
 
 def _parse_screen(raw: str) -> str:
     s = raw.strip().lower().replace("-", "_")
@@ -78,6 +81,12 @@ def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]
             errs.append(f'config.fields[{i}] ({fid}): title должен быть строкой.')
         if not isinstance(f.get("instructions"), str):
             errs.append(f'config.fields[{i}] ({fid}): instructions должен быть строкой.')
+        ft = str(f.get("type", "")).strip()
+        if ft not in ALLOWED_FIELD_TYPES:
+            errs.append(
+                f'config.fields[{i}] ({fid}): неизвестный type "{ft}". '
+                f"Допустимо: {sorted(ALLOWED_FIELD_TYPES)}.",
+            )
         by_id[fid] = f
 
     flow = cfg.get("flow")

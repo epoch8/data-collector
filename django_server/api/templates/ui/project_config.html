@@ -13,7 +13,7 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">Конфигурация (JSON)</h1>
-    <p class="ui-page-sub mb-0">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. Перед сохранением конфиг проверяется теми же правилами, что и мобильный клиент.</p>
+    <p class="ui-page-sub mb-0">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. Перед сохранением конфиг проверяется теми же правилами, что и мобильный клиент. У каждого элемента <code>config.fields</code> поле <code>type</code> должно быть одним из: <code>text_input</code>, <code>datetime</code>, <code>instruction</code>, <code>camera_photo</code>.</p>
   </div>
   <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>Визуальный редактор</a>
 </div>

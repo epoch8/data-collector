@@ -31,7 +31,7 @@ The **Data Collector** is a Flutter-based mobile application designed to securel
   * Integrated custom camera for photos and videos.
   * Real-time validation (e.g., length of video, number of required photos).
 * **Structured Info:**
-  * Forms supporting text inputs, numerical values, dropdowns, and checkboxes.
+  * Forms supporting text inputs, dates/times, photos, and related field types from the project config.
 * Local auto-save/draft functionality to prevent data loss during active collection.
 
 ### 3.4 Packaging & Upload Management

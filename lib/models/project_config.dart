@@ -3,7 +3,7 @@ import 'package:json_annotation/json_annotation.dart';
 part 'project_config.g.dart';
 
 /// Matches [specs/02-data-models-schema.md](specs/02-data-models-schema.md).\
-/// Extended `type` values understood by the app: `datetime`, `instruction`, `camera_photo`.
+/// `type` values used by the app: `text_input`, `datetime`, `instruction`, `camera_photo`.
 @JsonSerializable(explicitToJson: true)
 class ConfigField {
   @JsonKey(name: 'field_id')
@@ -13,10 +13,7 @@ class ConfigField {
   final String title;
   final String instructions;
   final Map<String, dynamic>? validation;
-  final List<String>? options;
   final bool? multiple;
-  @JsonKey(name: 'sub_fields')
-  final List<ConfigField>? subFields;
 
   ConfigField({
     required this.fieldId,
@@ -25,9 +22,7 @@ class ConfigField {
     required this.title,
     required this.instructions,
     this.validation,
-    this.options,
     this.multiple,
-    this.subFields,
   });
 
   factory ConfigField.fromJson(Map<String, dynamic> json) => _$ConfigFieldFromJson(json);
