@@ -154,18 +154,6 @@
   }
 
   function applyFieldRowMeta(tr, type, f) {
-    const mult = tr.querySelector('[data-fk="multiple"]');
-    const minEl = tr.querySelector('[data-fk="min_items"]');
-    const cam = type === "camera_photo";
-    if (mult) {
-      mult.disabled = !cam;
-      mult.checked = f.multiple === true;
-    }
-    if (minEl) {
-      const mi = f.validation && f.validation.min_items != null ? Number(f.validation.min_items) : "";
-      minEl.value = mi === "" || Number.isNaN(mi) ? "" : String(mi);
-      minEl.disabled = !cam || !mult?.checked;
-    }
     const req = tr.querySelector('[data-fk="val_required"]');
     if (req) req.checked = !!(f.validation && f.validation.required === true);
   }
@@ -184,7 +172,7 @@
       ? `<a href="${escapeAttr(murl)}" target="_blank" rel="noopener">странице «Файлы» проекта</a>`
       : "странице «Файлы» проекта";
     tr.innerHTML = `
-      <td colspan="8" class="p-0 border-secondary">
+      <td colspan="6" class="p-0 border-secondary">
         <div class="px-3 py-3" style="background: rgba(45, 212, 191, 0.07); border-left: 3px solid var(--ui-accent, #2dd4bf);">
           <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
             <i class="bi bi-journal-text text-info"></i>
@@ -233,8 +221,6 @@
       <td>${typeSelect}</td>
       <td colspan="2" class="align-middle small ui-muted bg-dark bg-opacity-25"><i class="bi bi-arrow-down-circle me-1"></i>Содержимое поля — в форме <strong>под этой строкой</strong> (title, instructions).</td>
       <td class="text-center align-middle text-muted">—</td>
-      <td class="text-center align-middle text-muted">—</td>
-      <td class="text-center align-middle text-muted">—</td>
       <td><button type="button" class="btn btn-sm btn-outline-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button></td>`;
     } else {
       tr.innerHTML = `
@@ -245,10 +231,6 @@
       <td class="text-center align-middle" title="validation.required">
         <input class="form-check-input" type="checkbox" data-fk="val_required" ${f.validation && f.validation.required ? "checked" : ""}>
       </td>
-      <td class="text-center align-middle" title="Несколько фото (только camera_photo)">
-        <input class="form-check-input" type="checkbox" data-fk="multiple" ${f.multiple === true ? "checked" : ""}>
-      </td>
-      <td style="width:4.5rem"><input type="number" min="0" class="form-control form-control-sm" data-fk="min_items" placeholder="мин." title="validation.min_items при нескольких фото"></td>
       <td><button type="button" class="btn btn-sm btn-outline-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button></td>`;
       const ins = tr.querySelector('[data-fk="instructions"]');
       if (ins) ins.value = f.instructions || "";
@@ -340,18 +322,15 @@
 
     const ft = f.type;
     const req = ft !== "instruction" && get("val_required")?.checked === true;
-    const mult = get("multiple")?.checked === true;
-    const minRaw = get("min_items")?.value;
-    const nextVal = {};
-    if (req) nextVal.required = true;
-    if (ft === "camera_photo") {
-      if (mult) f.multiple = true;
-      else delete f.multiple;
-      const mi = parseInt(String(minRaw || "").trim(), 10);
-      if (mult && !Number.isNaN(mi) && mi > 0) nextVal.min_items = mi;
-    } else {
+    if (ft !== "camera_photo") {
       delete f.multiple;
     }
+    const nextVal = { ...(f.validation && typeof f.validation === "object" ? f.validation : {}) };
+    if (ft !== "camera_photo") {
+      delete nextVal.min_items;
+    }
+    if (req) nextVal.required = true;
+    else delete nextVal.required;
     if (Object.keys(nextVal).length) f.validation = nextVal;
     else delete f.validation;
   }
@@ -479,11 +458,6 @@
       }
       const tr = e.target.closest("#builder-fields-body tr[data-row-index]");
       if (tr) {
-        if (e.target.matches('[data-fk="multiple"]')) {
-          const type = tr.querySelector('[data-fk="type"]')?.value;
-          const minEl = tr.querySelector('[data-fk="min_items"]');
-          if (minEl) minEl.disabled = type !== "camera_photo" || !e.target.checked;
-        }
         syncFieldRowFromDom(tr, root);
         if (e.target.matches('select[data-fk="type"]')) {
           structuralSync();
