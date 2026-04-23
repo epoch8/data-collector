@@ -73,10 +73,6 @@ class ResolvedCollectionFlow {
   List<ResolvedCollectionStep> get scrollSteps =>
       steps.where((s) => s.kind == CollectionScreenKind.scrollForm).toList();
 
-  /// Шаги формы, которые показывают пользователю (не только instruction).
-  List<ResolvedCollectionStep> get substantiveScrollSteps =>
-      scrollSteps.where((s) => !s.isInstructionOnlyScroll).toList();
-
   int indexOfFirstForm() => steps.indexWhere((s) => s.kind == CollectionScreenKind.form);
 
   int indexOfCameraPose(int poseIndex1Based) {

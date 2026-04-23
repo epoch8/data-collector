@@ -21,6 +21,7 @@
         {
           "id": "briefing",
           "screen": "scroll_form",
+          "form_title": "Брифинг перед съёмкой",
           "field_ids": [
             "general_briefing"
           ]

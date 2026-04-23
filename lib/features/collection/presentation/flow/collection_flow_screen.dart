@@ -137,40 +137,14 @@ class _FlowStepShell extends ConsumerStatefulWidget {
 }
 
 class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
-  late int _step;
-
-  @override
-  void initState() {
-    super.initState();
-    _step = _indexAfterSkippingInstructionOnly(0);
-  }
-
-  /// Пропускаем `scroll_form`, где только поля `instruction` (без ввода и камеры).
-  int _indexAfterSkippingInstructionOnly(int start) {
-    var i = start;
-    while (i < _flow.steps.length && _flow.steps[i].isInstructionOnlyScroll) {
-      i++;
-    }
-    if (i < _flow.steps.length) return i;
-    final r = _flow.reviewStepIndex;
-    if (r != null) return r;
-    return _flow.steps.isEmpty ? 0 : _flow.steps.length - 1;
-  }
+  int _step = 0;
 
   void _goBack() {
     if (_step <= 0) {
       context.go('/dashboard');
       return;
     }
-    var i = _step - 1;
-    while (i >= 0 && _flow.steps[i].isInstructionOnlyScroll) {
-      i--;
-    }
-    if (i < 0) {
-      context.go('/dashboard');
-      return;
-    }
-    setState(() => _step = i);
+    setState(() => _step--);
   }
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
@@ -187,8 +161,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
   int _scrollOrdinal1Based() {
     var n = 0;
     for (var i = 0; i <= _step && i < _flow.steps.length; i++) {
-      final s = _flow.steps[i];
-      if (s.kind == CollectionScreenKind.scrollForm && !s.isInstructionOnlyScroll) n++;
+      if (_flow.steps[i].kind == CollectionScreenKind.scrollForm) n++;
     }
     return n;
   }
@@ -255,7 +228,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
       ];
     }
     if (cur.kind == CollectionScreenKind.scrollForm) {
-      final totalScroll = _flow.substantiveScrollSteps.length;
+      final totalScroll = _flow.scrollSteps.length;
       final ord = _scrollOrdinal1Based();
       return [
         Padding(
@@ -302,9 +275,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
           flow: _flow,
           step: cur,
           continueLabel: _scrollContinueLabel(),
-          onContinue: () => setState(() {
-            _step = _indexAfterSkippingInstructionOnly(_step + 1);
-          }),
+          onContinue: () => setState(() => _step++),
         );
       case CollectionScreenKind.review:
         return _FlowReviewStep(
@@ -393,7 +364,6 @@ class _FlowReviewStep extends ConsumerWidget {
     for (var i = 0; i < flow.steps.length; i++) {
       final s = flow.steps[i];
       if (s.kind != CollectionScreenKind.scrollForm) continue;
-      if (s.isInstructionOnlyScroll) continue;
       scrollOrdinal++;
       stepCards.add(
         _Card(
@@ -415,41 +385,53 @@ class _FlowReviewStep extends ConsumerWidget {
                 ],
               ),
               const Divider(height: 22),
-              for (final f in s.fields) ...[
-                if (f.type == 'text_input' || f.type == 'datetime')
-                  _reviewLine(
-                    f.title,
-                    _formatReviewValue(u, f, a[f.fieldId]),
-                  )
-                else if (f.type == 'camera_photo') ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    f.title,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final p in CapturedPhotoPaths.list(a[f.fieldId]))
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(File(p), width: 72, height: 72, fit: BoxFit.cover),
-                        ),
-                    ],
-                  ),
-                  if (CapturedPhotoPaths.list(a[f.fieldId]).isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        u.str(['flow', 'review', 'no_frames'], 'Нет кадров'),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
-                      ),
+              if (s.isInstructionOnlyScroll)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    u.str(
+                      ['flow', 'review', 'instruction_only_hint'],
+                      'На этом шаге только инструкция (Markdown) — без полей для проверки.',
                     ),
-                  const SizedBox(height: 8),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                  ),
+                ),
+              if (!s.isInstructionOnlyScroll)
+                for (final f in s.fields) ...[
+                  if (f.type == 'text_input' || f.type == 'datetime')
+                    _reviewLine(
+                      f.title,
+                      _formatReviewValue(u, f, a[f.fieldId]),
+                    )
+                  else if (f.type == 'camera_photo') ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      f.title,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        for (final p in CapturedPhotoPaths.list(a[f.fieldId]))
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: Image.file(File(p), width: 72, height: 72, fit: BoxFit.cover),
+                          ),
+                      ],
+                    ),
+                    if (CapturedPhotoPaths.list(a[f.fieldId]).isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          u.str(['flow', 'review', 'no_frames'], 'Нет кадров'),
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                  ],
                 ],
-              ],
             ],
           ),
         ),

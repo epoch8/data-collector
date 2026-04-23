@@ -64,11 +64,14 @@
         delete f.priority;
         delete f.options;
         delete f.sub_fields;
-        if (f.type === "instruction" && f.validation && typeof f.validation === "object") {
-          const nv = { ...f.validation };
-          delete nv.required;
-          if (Object.keys(nv).length) f.validation = nv;
-          else delete f.validation;
+        if (f.type === "instruction") {
+          f.title = "";
+          if (f.validation && typeof f.validation === "object") {
+            const nv = { ...f.validation };
+            delete nv.required;
+            if (Object.keys(nv).length) f.validation = nv;
+            else delete f.validation;
+          }
         }
       }
     });
@@ -180,11 +183,7 @@
           </div>
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label small ui-muted mb-0">title</label>
-              <input type="text" class="form-control form-control-sm" data-fk="title" value="${escapeAttr(f.title || "")}" autocomplete="off" placeholder="Заголовок на экране инструкции">
-            </div>
-            <div class="col-12">
-              <label class="form-label small ui-muted mb-0">instructions <span class="fw-normal text-secondary">— основной текст; новая строка = новый абзац в приложении</span></label>
+              <label class="form-label small ui-muted mb-0">instructions <span class="fw-normal text-secondary">— Markdown; новая строка = новый абзац; заголовки — в самом тексте (# …)</span></label>
               <textarea class="form-control form-control-sm" data-fk="instructions" rows="14" autocomplete="off" placeholder="Длинный текст инструкции…"></textarea>
             </div>
             <div class="col-12">
@@ -219,7 +218,7 @@
       tr.innerHTML = `
       <td><input type="text" class="form-control form-control-sm" data-fk="field_id" value="${escapeAttr(f.field_id || "")}" autocomplete="off"></td>
       <td>${typeSelect}</td>
-      <td colspan="2" class="align-middle small ui-muted bg-dark bg-opacity-25"><i class="bi bi-arrow-down-circle me-1"></i>Содержимое поля — в форме <strong>под этой строкой</strong> (title, instructions).</td>
+      <td colspan="2" class="align-middle small ui-muted bg-dark bg-opacity-25"><i class="bi bi-arrow-down-circle me-1"></i>Содержимое — в форме <strong>под строкой</strong> (Markdown в instructions).</td>
       <td class="text-center align-middle text-muted">—</td>
       <td><button type="button" class="btn btn-sm btn-outline-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button></td>`;
     } else {
@@ -315,7 +314,11 @@
     if (fid) f.field_id = fid;
     delete f.priority;
     f.type = get("type")?.value || "text_input";
-    f.title = get("title")?.value || "";
+    if (f.type === "instruction") {
+      f.title = "";
+    } else {
+      f.title = get("title")?.value || "";
+    }
     f.instructions = get("instructions")?.value || "";
     delete f.options;
     delete f.sub_fields;

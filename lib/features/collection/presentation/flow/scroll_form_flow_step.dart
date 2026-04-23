@@ -343,10 +343,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (f.title.trim().isNotEmpty)
-              Text(f.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600)),
-            if (f.instructions.trim().isNotEmpty) ...[
-              const SizedBox(height: 12),
+            if (f.instructions.trim().isNotEmpty)
               MarkdownBody(
                 data: f.instructions,
                 selectable: true,
@@ -382,8 +379,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                     ),
                   );
                 },
+              )
+            else
+              Text(
+                u.str(['flow', 'form', 'instruction_empty'], ''),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
-            ],
           ],
         );
       case 'camera_photo':
