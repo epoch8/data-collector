@@ -1,0 +1,123 @@
+{
+  "id": "urban-issue-2026",
+  "name": "Город: дефект на улице",
+  "version": "1.0",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "issue_card",
+          "screen": "scroll_form",
+          "form_title": "Заявка",
+          "field_ids": [
+            "ix_urban_intro",
+            "issue_category",
+            "address_text",
+            "reported_at"
+          ]
+        },
+        {
+          "id": "issue_wide",
+          "screen": "scroll_form",
+          "form_title": "Общий вид",
+          "field_ids": [
+            "ix_wide_shot",
+            "photo_overview"
+          ]
+        },
+        {
+          "id": "issue_close",
+          "screen": "scroll_form",
+          "form_title": "Деталь",
+          "field_ids": [
+            "ix_close_shot",
+            "photo_defect",
+            "urgency_note"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "ix_urban_intro",
+        "type": "instruction",
+        "title": "Как заполнять",
+        "instructions": "Один объект — одна заявка. Укажите категорию из справочника задачи, **точный адрес** или координаты текстом, и время осмотра."
+      },
+      {
+        "field_id": "issue_category",
+        "type": "text_input",
+        "title": "Категория",
+        "instructions": "Например: яма на проезжей части, сломанная скамейка, негорящий фонарь, граффити, завал во дворе.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "address_text",
+        "type": "text_input",
+        "title": "Адрес / ориентир",
+        "instructions": "Улица, дом, сторона; при необходимости — ближайший перекрёсток.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "reported_at",
+        "type": "datetime",
+        "title": "Когда зафиксировано",
+        "instructions": "Дата и время на месте.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "ix_wide_shot",
+        "type": "instruction",
+        "title": "Первый кадр",
+        "instructions": "Снимите **общий контекст**: объект и окружение, чтобы по фото было понятно расположение."
+      },
+      {
+        "field_id": "photo_overview",
+        "type": "camera_photo",
+        "title": "Общий план",
+        "instructions": "Широкий кадр: дефект в окружении.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "ix_close_shot",
+        "type": "instruction",
+        "title": "Второй кадр",
+        "instructions": "Сделайте **крупный план** повреждения или опасной зоны. При необходимости добавьте второй ракурс."
+      },
+      {
+        "field_id": "photo_defect",
+        "type": "camera_photo",
+        "title": "Дефект крупно",
+        "instructions": "Чётко видна суть проблемы (глубина ямы, трещина, оголённые провода и т.д.).",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "urgency_note",
+        "type": "text_input",
+        "title": "Срочность и риски",
+        "instructions": "Необязательно: угроза ДТП, детская площадка рядом, ограниченная видимость ночью.",
+        "validation": {
+          "required": false
+        }
+      }
+    ]
+  }
+}

@@ -8,7 +8,7 @@ part of 'project_config.dart';
 
 ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
   fieldId: json['field_id'] as String,
-  priority: (json['priority'] as num).toInt(),
+  priority: (json['priority'] as num?)?.toInt() ?? 0,
   type: json['type'] as String,
   title: json['title'] as String,
   instructions: json['instructions'] as String,
@@ -38,6 +38,7 @@ CollectionFlowStepDecl _$CollectionFlowStepDeclFromJson(
   fieldId: json['field_id'] as String?,
   cowIdHints: json['cow_id_hints'] as bool?,
   cowIdFieldId: json['cow_id_field_id'] as String?,
+  formTitle: json['form_title'] as String?,
 );
 
 Map<String, dynamic> _$CollectionFlowStepDeclToJson(
@@ -49,6 +50,7 @@ Map<String, dynamic> _$CollectionFlowStepDeclToJson(
   'field_id': instance.fieldId,
   'cow_id_hints': instance.cowIdHints,
   'cow_id_field_id': instance.cowIdFieldId,
+  'form_title': instance.formTitle,
 };
 
 CollectionFlowDecl _$CollectionFlowDeclFromJson(Map<String, dynamic> json) =>

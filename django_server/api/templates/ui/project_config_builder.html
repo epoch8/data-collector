@@ -34,28 +34,27 @@
     <div class="row g-3">
       <div class="col-md-4">
         <div class="small text-uppercase ui-muted mb-1">Шаг 1</div>
-        <p class="small mb-0"><strong>Вкладка «Поля».</strong> Для <strong>instruction</strong> под строкой поля открывается форма со всеми полями объекта в JSON. Для остальных типов — <code>title</code> и <code>instructions</code> в таблице. Картинки и чек-лист ракурсов (<code>shooting_guide</code>) — вкладка <strong>«UI / гайд»</strong>.</p>
+        <p class="small mb-0"><strong>Поля.</strong> Описываете всё, что может понадобиться на экранах: идентификатор, тип, подписи. Это справочник; что реально показать и в каком порядке — решает сценарий.</p>
       </div>
       <div class="col-md-4">
         <div class="small text-uppercase ui-muted mb-1">Шаг 2</div>
-        <p class="small mb-0"><strong>Вкладка «Сценарий».</strong> Каждый блок — один экран <strong>сверху вниз</strong>, как пользователь их увидит. Для «Форма» перечислите <code>field_id</code> через запятую в том же порядке.</p>
+        <p class="small mb-0"><strong>Сценарий.</strong> Собираете экраны: шаг <code>scroll_form</code> = один скролл-экран и список полей на нём; при необходимости — финальный <code>review</code>. Каждое поле из таблицы должно встретиться ровно в одном шаге.</p>
       </div>
       <div class="col-md-4">
         <div class="small text-uppercase ui-muted mb-1">Шаг 3</div>
-        <p class="small mb-0"><strong>Проверить</strong> — без сохранения. <strong>Сохранить</strong> — запись в БД. Подсказки под полями шага (синие) напоминают правила типов.</p>
+        <p class="small mb-0"><strong>Проверка и сохранение.</strong> «Проверить» — валидация без записи. Картинки для инструкций — на <a href="{% url 'ui_project_media' project.project_id %}">странице «Файлы»</a> этого проекта.</p>
       </div>
     </div>
     <hr class="border-secondary my-3 opacity-50">
-    <p class="small ui-muted mb-0"><strong>Типы экранов:</strong> «Форма» — только <code>text_input</code> и <code>datetime</code>. «Инструкция» / «Камера» — по одному полю с типом <code>instruction</code> или <code>camera_photo</code>. «Одна длинная форма» — единственный шаг сценария; список id можно оставить пустым (возьмутся все поля).</p>
+    <p class="small ui-muted mb-0"><strong>Сценарий:</strong> только <code>scroll_form</code> и <code>review</code>. Объект <code>config.ui</code> (подписи в приложении) правьте во вкладке <strong>JSON</strong> или в режиме «Только JSON».</p>
   </div>
 </div>
 
 <div id="builder-app"
      class="builder-app"
      data-project-id="{{ project.project_id }}"
-     data-validate-url="{% url 'ui_project_config_validate_api' project.project_id %}"
-     data-media-list-url="{% url 'ui_project_media' project.project_id %}?format=json"
-     data-media-page-url="{% url 'ui_project_media' project.project_id %}">
+     data-media-url="{% url 'ui_project_media' project.project_id %}"
+     data-validate-url="{% url 'ui_project_config_validate_api' project.project_id %}">
   {{ initial_data|json_script:"builder-initial" }}
   <form method="post" id="builder-form">
     {% csrf_token %}
@@ -89,18 +88,15 @@
             <button class="nav-link" id="tab-flow-btn" data-bs-toggle="tab" data-bs-target="#tab-flow" type="button" role="tab">Сценарий</button>
           </li>
           <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-ui-btn" data-bs-toggle="tab" data-bs-target="#tab-ui" type="button" role="tab">UI / гайд</button>
-          </li>
-          <li class="nav-item" role="presentation">
             <button class="nav-link" id="tab-json-btn" data-bs-toggle="tab" data-bs-target="#tab-json" type="button" role="tab">JSON</button>
           </li>
         </ul>
         <div class="tab-content border border-secondary border-top-0 rounded-bottom p-3 p-md-4 mb-3" style="background: var(--ui-surface, #111a24);">
           <div class="tab-pane fade show active" id="tab-fields" role="tabpanel">
-            <p class="small ui-muted mb-2">Сначала полный список полей. Для типа <strong>instruction</strong> под строкой с <code>field_id</code> показывается <strong>полная форма</strong> полей JSON (<code>title</code>, <code>instructions</code>, <code>validation.required</code>). Картинки и гайд ракурсов — вкладка <strong>«UI / гайд»</strong>. Для остальных типов — колонки в одной строке.</p>
+            <p class="small ui-muted mb-2">Заполните поля: у типа <strong>instruction</strong> текст и заголовок — в блоке под строкой; у остальных типов — в колонках строки.</p>
             <div class="table-responsive ui-table-card mb-3">
               <table class="table table-sm align-middle mb-0">
-                <thead><tr><th>field_id</th><th>priority</th><th>type</th><th>title</th><th>instructions</th><th class="text-center" title="validation.required">Обяз.</th><th class="text-center" title="Несколько фото (camera_photo)">Неск.</th><th title="validation.min_items">Мин.</th><th></th></tr></thead>
+                <thead><tr><th>field_id</th><th>type</th><th>title</th><th>instructions</th><th class="text-center" title="validation.required">Обяз.</th><th class="text-center" title="Несколько фото (camera_photo)">Неск.</th><th title="validation.min_items">Мин.</th><th></th></tr></thead>
                 <tbody id="builder-fields-body"></tbody>
               </table>
             </div>
@@ -110,10 +106,6 @@
             <p class="small ui-muted mb-2">Порядок карточек = порядок экранов. Смена «типа экрана» перестраивает поля шага. Удаление шага — корзина справа вверху карточки.</p>
             <div id="builder-steps"></div>
             <button type="button" class="btn btn-outline-light btn-sm mt-2" id="builder-add-step"><i class="bi bi-plus-lg me-1"></i>Добавить шаг</button>
-          </div>
-          <div class="tab-pane fade" id="tab-ui" role="tabpanel">
-            <p class="small ui-muted mb-3">Редактирование <code>config.ui.shooting_guide</code> — то же, что в JSON коров / витрины: заголовки секции, общие советы (по строкам), карточки ракурсов с <code>example_asset_path</code> и описанием по строкам. Остальной <code>config.ui.flow</code> не трогается здесь — при необходимости правьте во вкладке JSON.</p>
-            <div id="builder-ui-panel"></div>
           </div>
           <div class="tab-pane fade" id="tab-json" role="tabpanel">
             <p class="small ui-muted mb-2">Синхронизируется с редактором. Ручные правки здесь перезапишутся при переключении вкладок, если не обновить страницу.</p>

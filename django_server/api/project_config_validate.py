@@ -1,34 +1,23 @@
 """
 Проверка JSON проекта перед сохранением — правила согласованы с
 lib/features/collection/logic/collection_flow_resolver.dart (resolveCollectionFlow).
+Допускаются только шаги scroll_form и review; каждое поле из config.fields встречается ровно в одном scroll_form.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-# Согласовано с рендером scroll_form / шагов мастера в клиенте.
 ALLOWED_FIELD_TYPES = frozenset({"text_input", "datetime", "instruction", "camera_photo"})
 
 
-def _parse_screen(raw: str) -> str:
+def _norm_screen(raw: str) -> str:
     s = raw.strip().lower().replace("-", "_")
-    allowed = {
-        "form",
-        "instruction",
-        "camera_pose",
-        "cameraphoto",
-        "review",
-        "scroll_form",
-        "scrollform",
-    }
-    if s in allowed:
-        return s
-    raise ValueError(f'Неизвестный screen "{raw}"')
-
-
-def _norm_screen(s: str) -> str:
-    return _parse_screen(s)
+    if s in ("scroll_form", "scrollform"):
+        return "scroll_form"
+    if s == "review":
+        return "review"
+    raise ValueError(f'Неизвестный или устаревший screen "{raw}". Допустимо: scroll_form, review.')
 
 
 def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]:
@@ -70,11 +59,12 @@ def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]
             continue
         if fid in by_id:
             errs.append(f'Дублируется field_id "{fid}".')
-        for key in ("priority", "type", "title", "instructions"):
+        for key in ("type", "title", "instructions"):
             if key not in f:
                 errs.append(f'config.fields[{i}] ({fid}): отсутствует поле "{key}".')
-        if not isinstance(f.get("priority"), (int, float)):
-            errs.append(f'config.fields[{i}] ({fid}): priority должен быть числом.')
+        pr = f.get("priority")
+        if pr is not None and not isinstance(pr, (int, float)):
+            errs.append(f'config.fields[{i}] ({fid}): priority, если задан, должен быть числом.')
         if not isinstance(f.get("type"), str):
             errs.append(f'config.fields[{i}] ({fid}): type должен быть строкой.')
         if not isinstance(f.get("title"), str):
@@ -109,82 +99,56 @@ def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]
         errs.append(str(e))
         return errs
 
-    if len(steps) > 1:
-        for st, k in zip(steps, kinds):
-            if k in ("scroll_form", "scrollform"):
-                errs.append(
-                    f'Шаг "{st.get("id", "?")}": screen scroll_form допустим только как единственный шаг сценария.',
-                )
+    field_step: dict[str, str] = {}
 
     for st, k in zip(steps, kinds):
         sid = str(st.get("id", "?"))
 
-        if k in ("scroll_form", "scrollform"):
-            ids = st.get("field_ids")
-            if ids is not None:
-                if not isinstance(ids, list):
-                    errs.append(f'Шаг "{sid}": field_ids должен быть массивом или отсутствовать.')
-                elif ids:
-                    for fid in ids:
-                        if fid not in by_id:
-                            errs.append(f'Шаг "{sid}": неизвестный field_id "{fid}" в field_ids.')
+        if k == "review":
+            continue
 
-        elif k == "form":
-            ids = st.get("field_ids")
-            if not isinstance(ids, list) or not ids:
-                errs.append(f'Шаг "{sid}" (form): нужен непустой field_ids.')
-            else:
-                allowed_types = {"text_input", "datetime"}
-                for fid in ids:
-                    f = by_id.get(fid)
-                    if f is None:
-                        errs.append(f'Шаг "{sid}": неизвестный field_id "{fid}" в field_ids.')
-                        continue
-                    t = f.get("type")
-                    if t not in allowed_types:
-                        errs.append(
-                            f'Шаг "{sid}": поле "{fid}" имеет type "{t}", для form допустимо: {sorted(allowed_types)}.',
-                        )
-                hint_field = st.get("cow_id_field_id")
-                if hint_field is not None and isinstance(ids, list) and hint_field not in ids:
+        ftit = st.get("form_title")
+        if ftit is not None and not isinstance(ftit, str):
+            errs.append(f'Шаг "{sid}": form_title, если задан, должен быть строкой.')
+
+        if k != "scroll_form":
+            errs.append(f'Шаг "{sid}": допускается только screen scroll_form или review.')
+            continue
+
+        ids = st.get("field_ids")
+        if not isinstance(ids, list) or not ids:
+            errs.append(f'Шаг "{sid}" (scroll_form): нужен непустой массив field_ids.')
+            continue
+
+        for j, fid in enumerate(ids):
+            if not isinstance(fid, str) or not fid.strip():
+                errs.append(f'Шаг "{sid}": field_ids[{j}] должен быть непустой строкой.')
+                continue
+            if fid not in by_id:
+                errs.append(f'Шаг "{sid}": неизвестный field_id "{fid}" в field_ids.')
+                continue
+            if fid in field_step:
+                prev = field_step[fid]
+                if prev == sid:
+                    errs.append(f'Шаг "{sid}": field_id "{fid}" повторяется в field_ids.')
+                else:
                     errs.append(
-                        f'Шаг "{sid}": cow_id_field_id "{hint_field}" должен входить в field_ids.',
+                        f'Поле "{fid}" уже назначено шагу "{prev}" и снова в "{sid}"; '
+                        f"каждое поле — только в одном scroll_form.",
                     )
-
-        elif k == "instruction":
-            fid = st.get("field_id")
-            if not isinstance(fid, str) or not fid:
-                errs.append(f'Шаг "{sid}" (instruction): нужен field_id.')
             else:
-                f = by_id.get(fid)
-                if f is None:
-                    errs.append(f'Шаг "{sid}": неизвестный field_id "{fid}".')
-                elif f.get("type") != "instruction":
-                    errs.append(
-                        f'Шаг "{sid}": поле "{fid}" должно иметь type instruction, сейчас {f.get("type")!r}.',
-                    )
+                field_step[fid] = sid
 
-        elif k in ("camera_pose", "cameraphoto"):
-            fid = st.get("field_id")
-            if not isinstance(fid, str) or not fid:
-                errs.append(f'Шаг "{sid}" (camera_pose): нужен field_id.')
-            else:
-                f = by_id.get(fid)
-                if f is None:
-                    errs.append(f'Шаг "{sid}": неизвестный field_id "{fid}".')
-                elif f.get("type") != "camera_photo":
-                    errs.append(
-                        f'Шаг "{sid}": поле "{fid}" должно иметь type camera_photo, сейчас {f.get("type")!r}.',
-                    )
+        if st.get("cow_id_hints") is True:
+            cf = st.get("cow_id_field_id")
+            if not isinstance(cf, str) or not cf.strip():
+                errs.append(f'Шаг "{sid}": при cow_id_hints нужен непустой cow_id_field_id.')
+            elif cf not in ids:
+                errs.append(f'Шаг "{sid}": cow_id_field_id "{cf}" должен входить в field_ids.')
 
-        elif k == "review":
-            pass
-
-    has_camera = any(k in ("camera_pose", "cameraphoto") for k in kinds)
-    has_review = any(k == "review" for k in kinds)
-    if has_camera and not has_review:
-        # клиент автоматически добавляет review — не ошибка
-        pass
+    for fid in by_id:
+        if fid not in field_step:
+            errs.append(f'Поле "{fid}" не указано ни в одном шаге scroll_form (field_ids).')
 
     ui = cfg.get("ui")
     if ui is not None and not isinstance(ui, dict):

@@ -1,27 +1,19 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:data_collector/core/device/camera_metadata_collector.dart';
-import 'package:data_collector/core/quality/image_quality_analyzer.dart';
-import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/collection_flow_resolver.dart';
-import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
-import 'package:data_collector/features/collection/presentation/flow/scroll_form_screen.dart';
-import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
+import 'package:data_collector/features/collection/presentation/flow/scroll_form_flow_step.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_ui.dart';
-import 'package:data_collector/features/collection/presentation/flow/shooting_guide.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
 
 String _formatDateTime(DateTime d) {
   String two(int n) => n.toString().padLeft(2, '0');
@@ -111,9 +103,6 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
           );
         }
         final flow = resolveCollectionFlow(project);
-        if (flow.isSingleScrollOnly) {
-          return ScrollFormCollectionScreen(projectId: widget.projectId);
-        }
         return _FlowStepShell(
           projectId: widget.projectId,
           project: project,
@@ -148,29 +137,60 @@ class _FlowStepShell extends ConsumerStatefulWidget {
 }
 
 class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
-  int _step = 0;
+  late int _step;
+
+  @override
+  void initState() {
+    super.initState();
+    _step = _indexAfterSkippingInstructionOnly(0);
+  }
+
+  /// Пропускаем `scroll_form`, где только поля `instruction` (без ввода и камеры).
+  int _indexAfterSkippingInstructionOnly(int start) {
+    var i = start;
+    while (i < _flow.steps.length && _flow.steps[i].isInstructionOnlyScroll) {
+      i++;
+    }
+    if (i < _flow.steps.length) return i;
+    final r = _flow.reviewStepIndex;
+    if (r != null) return r;
+    return _flow.steps.isEmpty ? 0 : _flow.steps.length - 1;
+  }
 
   void _goBack() {
     if (_step <= 0) {
       context.go('/dashboard');
       return;
     }
-    setState(() => _step--);
+    var i = _step - 1;
+    while (i >= 0 && _flow.steps[i].isInstructionOnlyScroll) {
+      i--;
+    }
+    if (i < 0) {
+      context.go('/dashboard');
+      return;
+    }
+    setState(() => _step = i);
   }
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
 
-  String _formContinueLabel() {
+  String _scrollContinueLabel() {
     final u = ProjectUi(widget.project);
     if (_step + 1 >= _flow.steps.length) return u.str(['flow', 'continue', 'next'], 'Далее');
-    switch (_flow.steps[_step + 1].kind) {
-      case CollectionScreenKind.instruction:
-        return u.str(['flow', 'continue', 'to_briefing'], 'Далее: справка по съёмке');
-      case CollectionScreenKind.cameraPose:
-        return u.str(['flow', 'continue', 'to_capture'], 'Далее: съёмка');
-      default:
-        return u.str(['flow', 'continue', 'next'], 'Далее');
+    if (_flow.steps[_step + 1].kind == CollectionScreenKind.review) {
+      return u.str(['flow', 'camera_pose', 'to_review'], 'К проверке');
     }
+    return u.str(['flow', 'continue', 'next'], 'Далее');
+  }
+
+  int _scrollOrdinal1Based() {
+    var n = 0;
+    for (var i = 0; i <= _step && i < _flow.steps.length; i++) {
+      final s = _flow.steps[i];
+      if (s.kind == CollectionScreenKind.scrollForm && !s.isInstructionOnlyScroll) n++;
+    }
+    return n;
   }
 
   @override
@@ -195,14 +215,6 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          actions: [
-            if (_step >= 1)
-              IconButton(
-                icon: const Icon(Icons.help_outline),
-                tooltip: ProjectUi(project).str(['flow', 'app_bar', 'shooting_help_tooltip'], 'Справка по съёмке'),
-                onPressed: () => showShootingHelp(context, widget.project),
-              ),
-          ],
         ),
         body: Container(
           decoration: Epoch8Theme.screenGradient(),
@@ -230,54 +242,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
     final u = ProjectUi(widget.project);
     if (_step < 0 || _step >= _flow.steps.length) return const [];
     final cur = _flow.steps[_step];
-    final cams = _flow.cameraPoseCount;
 
-    if (cur.kind == CollectionScreenKind.cameraPose) {
-      final slot = cur.poseIndex1Based ?? 1;
-      final fieldTitle = cur.fields.isNotEmpty ? cur.fields.single.title : '';
-      final sep = u.str(['flow', 'ribbon', 'pose_counter_sep'], '·');
-      return [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 6),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    u.str(['flow', 'ribbon', 'shooting'], 'Съёмка'),
-                    style: t.labelSmall?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 1.1),
-                  ),
-                  Text(
-                    '$fieldTitle $sep $slot/$cams',
-                    style: t.labelLarge?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              Epoch8StepDots(current: slot - 1, total: cams),
-            ],
-          ),
-        ),
-      ];
-    }
-    if (cur.kind == CollectionScreenKind.instruction) {
-      return [
-        Padding(
-          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 4),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              cur.fields.isNotEmpty
-                  ? cur.fields.first.title
-                  : u.str(['flow', 'ribbon', 'instruction_fallback'], 'Справка перед съёмкой'),
-              style: t.titleSmall?.copyWith(color: Epoch8Theme.textMuted, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ),
-      ];
-    }
     if (cur.kind == CollectionScreenKind.review) {
       return [
         Padding(
@@ -289,13 +254,33 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
         ),
       ];
     }
-    if (cur.kind == CollectionScreenKind.form) {
+    if (cur.kind == CollectionScreenKind.scrollForm) {
+      final totalScroll = _flow.substantiveScrollSteps.length;
+      final ord = _scrollOrdinal1Based();
       return [
         Padding(
-          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 2),
-          child: Text(
-            u.str(['flow', 'ribbon', 'form'], 'Анкета'),
-            style: t.labelMedium?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 0.4),
+          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 6),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    u.str(['flow', 'ribbon', 'scroll_form'], 'Шаг сбора'),
+                    style: t.labelSmall?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 1.1),
+                  ),
+                  Text(
+                    u.tpl(['flow', 'ribbon', 'scroll_counter'], '{cur} из {total}', {'cur': '$ord', 'total': '$totalScroll'}),
+                    style: t.labelLarge?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w800),
+                  ),
+                ],
+              ),
+              if (totalScroll > 1) ...[
+                const SizedBox(height: 10),
+                Epoch8StepDots(current: ord - 1, total: totalScroll),
+              ],
+            ],
           ),
         ),
       ];
@@ -309,57 +294,25 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
     final cur = _flow.steps[_step];
 
     switch (cur.kind) {
-      case CollectionScreenKind.form:
-        return _FlowFormStep(
-          key: ValueKey('flow_form_${cur.id}'),
+      case CollectionScreenKind.scrollForm:
+        return ScrollFormFlowStep(
+          key: ValueKey('scroll_${cur.id}'),
           project: p,
           projectId: widget.projectId,
-          formFields: cur.fields,
-          useCowHints: cur.cowIdHints,
-          cowMatchFieldId: cur.cowIdFieldId ??
-              () {
-                for (final f in cur.fields) {
-                  if (f.type == 'text_input') return f.fieldId;
-                }
-                return null;
-              }(),
-          continueLabel: _formContinueLabel(),
-          onContinue: () => setState(() => _step++),
-        );
-      case CollectionScreenKind.instruction:
-        return _InstructionBriefingStep(
-          key: ValueKey('flow_instruction_${cur.id}'),
-          project: p,
-          instructionField: cur.fields.single,
-          onContinue: () => setState(() => _step++),
-        );
-      case CollectionScreenKind.cameraPose:
-        final field = cur.fields.single;
-        final poseIdx = cur.poseIndex1Based ?? 1;
-        final total = cur.poseTotal ?? _flow.cameraPoseCount;
-        return _CameraPoseStep(
-          key: ValueKey('flow_pose_${field.fieldId}'),
-          project: p,
-          projectId: widget.projectId,
-          poseField: field,
-          storageKey: field.fieldId,
-          poseIndex1Based: poseIdx,
-          totalPoses: total,
-          onNext: () => setState(() => _step++),
+          flow: _flow,
+          step: cur,
+          continueLabel: _scrollContinueLabel(),
+          onContinue: () => setState(() {
+            _step = _indexAfterSkippingInstructionOnly(_step + 1);
+          }),
         );
       case CollectionScreenKind.review:
         return _FlowReviewStep(
-          key: ValueKey('flow_review'),
+          key: const ValueKey('flow_review'),
           project: p,
-          formFields: _flow.allFormFields,
-          cameraFields: _flow.allCameraFields,
+          flow: _flow,
           projectId: widget.projectId,
-          onEditForm: () {
-            final i = _flow.indexOfFirstForm();
-            setState(() => _step = i >= 0 ? i : 0);
-          },
-          onEditPose: (int poseIndex1Based) =>
-              setState(() => _step = _flow.indexOfCameraPose(poseIndex1Based)),
+          onEditScrollStep: (int stepIndex) => setState(() => _step = stepIndex),
           onSubmit: () async {
             final answers = ref.read(wizardStateProvider(widget.projectId));
             await submitLocalPackage(
@@ -370,736 +323,11 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
             );
           },
         );
-      case CollectionScreenKind.scrollForm:
-        return const SizedBox.shrink();
+      case CollectionScreenKind.form:
+      case CollectionScreenKind.instruction:
+      case CollectionScreenKind.cameraPose:
+        throw StateError('Unsupported flow step kind ${cur.kind} (resolver allows only scroll_form and review)');
     }
-  }
-}
-
-class _FlowFormStep extends ConsumerStatefulWidget {
-  const _FlowFormStep({
-    super.key,
-    required this.project,
-    required this.projectId,
-    required this.formFields,
-    required this.useCowHints,
-    required this.cowMatchFieldId,
-    required this.continueLabel,
-    required this.onContinue,
-  });
-
-  final Project project;
-  final String projectId;
-  final List<ConfigField> formFields;
-  final bool useCowHints;
-  final String? cowMatchFieldId;
-  final String continueLabel;
-  final VoidCallback onContinue;
-
-  @override
-  ConsumerState<_FlowFormStep> createState() => _FlowFormStepState();
-}
-
-class _FlowFormStepState extends ConsumerState<_FlowFormStep> {
-  DateTime _scanTime = DateTime.now();
-  ConfigField? _scanField;
-  final Map<String, TextEditingController> _textCtrls = {};
-
-  @override
-  void initState() {
-    super.initState();
-    final s = ref.read(wizardStateProvider(widget.projectId));
-    ConfigField? scan;
-    for (final f in widget.formFields) {
-      if (f.type == 'datetime') {
-        if (scan == null) {
-          scan = f;
-          _scanTime = _parseScanTime(s[f.fieldId]) ?? DateTime.now();
-        }
-      } else if (f.type == 'text_input') {
-        _textCtrls[f.fieldId] = TextEditingController(text: s[f.fieldId]?.toString() ?? '');
-      }
-    }
-    _scanField = scan;
-  }
-
-  DateTime? _parseScanTime(dynamic v) {
-    if (v == null) return null;
-    if (v is DateTime) return v;
-    if (v is String) return DateTime.tryParse(v);
-    return null;
-  }
-
-  @override
-  void dispose() {
-    for (final c in _textCtrls.values) {
-      c.dispose();
-    }
-    super.dispose();
-  }
-
-  TextEditingController? _cowCtrl() {
-    final id = widget.cowMatchFieldId;
-    if (id == null) return null;
-    return _textCtrls[id];
-  }
-
-  Future<void> _pickDateTime() async {
-    final d = await showDatePicker(
-      context: context,
-      initialDate: _scanTime,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2100),
-    );
-    if (d == null || !mounted) return;
-    final t = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(_scanTime),
-    );
-    if (t == null || !mounted) return;
-    setState(() {
-      _scanTime = DateTime(d.year, d.month, d.day, t.hour, t.minute);
-    });
-  }
-
-  bool get _formValid {
-    for (final f in widget.formFields) {
-      if (!configFieldRequired(f)) continue;
-      if (f.type == 'datetime') continue;
-      final c = _textCtrls[f.fieldId];
-      if (c == null || c.text.trim().isEmpty) return false;
-    }
-    return true;
-  }
-
-  void _saveToState() {
-    final n = ref.read(wizardStateProvider(widget.projectId).notifier);
-    if (_scanField != null) {
-      n.updateField(_scanField!.fieldId, _scanTime.toIso8601String());
-    }
-    for (final e in _textCtrls.entries) {
-      n.updateField(e.key, e.value.text.trim());
-    }
-  }
-
-  void _prefillFrom(Map<String, dynamic> data) {
-    setState(() {
-      if (_scanField != null) {
-        final pt = _parseScanTime(data[_scanField!.fieldId]);
-        if (pt != null) _scanTime = pt;
-      }
-      for (final f in widget.formFields) {
-        if (f.type != 'text_input') continue;
-        final c = _textCtrls[f.fieldId];
-        if (c != null && data[f.fieldId] != null) {
-          c.text = data[f.fieldId].toString();
-        }
-      }
-    });
-  }
-
-  String? _payloadCowId(Map<String, dynamic> payload) {
-    final key = widget.cowMatchFieldId;
-    final a = key != null ? payload[key]?.toString().trim() : null;
-    if (a != null && a.isNotEmpty) return a;
-    final b = payload['cow_identifier']?.toString().trim() ?? payload['cow_id']?.toString().trim();
-    if (b != null && b.isNotEmpty) return b;
-    return null;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final u = ProjectUi(widget.project);
-    final packages = ref.watch(packagesStreamProvider).asData?.value ?? const [];
-    final cowCtrl = _cowCtrl();
-    final typedCowId = cowCtrl?.text.trim() ?? '';
-    final typedLower = typedCowId.toLowerCase();
-    final matchedIds = <String>{};
-    DateTime? exactCreatedAt;
-    Map<String, dynamic>? exactData;
-
-    if (widget.useCowHints && typedLower.isNotEmpty && cowCtrl != null) {
-      for (final pkg in packages) {
-        if (pkg.projectId != widget.projectId) continue;
-        final payload = unpackPackageFormData(pkg.dataJson);
-        final existingCowId = _payloadCowId(payload) ?? '';
-        if (existingCowId.isEmpty) continue;
-        final existingLower = existingCowId.toLowerCase();
-        if (existingLower.contains(typedLower)) {
-          matchedIds.add(existingCowId);
-        }
-        if (existingLower == typedLower) {
-          if (exactCreatedAt == null || pkg.createdAt.isAfter(exactCreatedAt)) {
-            exactCreatedAt = pkg.createdAt;
-            exactData = payload;
-          }
-        }
-      }
-    }
-
-    final hasAnyMatches = matchedIds.isNotEmpty;
-    final hasExactMatch = exactData != null;
-
-    final textFields = widget.formFields.where((f) => f.type == 'text_input').toList()
-      ..sort((a, b) => a.priority.compareTo(b.priority));
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Epoch8SectionHeader(
-            overline: u.str(['flow', 'form', 'step_overline'], 'Шаг 1'),
-            title: _scanField != null
-                ? u.str(['flow', 'form', 'scan_section_title'], 'Данные скана')
-                : u.str(['flow', 'form', 'form_section_title_fallback'], 'Анкета'),
-            subtitle: _scanField?.instructions ??
-                (widget.formFields.isNotEmpty ? widget.formFields.first.instructions : ''),
-          ),
-          const SizedBox(height: Epoch8Layout.sectionGap),
-          if (_scanField != null) ...[
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(_scanField!.title, style: Theme.of(context).textTheme.titleSmall),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          _formatDateTime(_scanTime.toLocal()),
-                          style: Theme.of(context).textTheme.bodyLarge,
-                        ),
-                      ),
-                      TextButton.icon(
-                        onPressed: _pickDateTime,
-                        icon: const Icon(Icons.edit_calendar_outlined, size: 20),
-                        label: Text(u.str(['flow', 'form', 'datetime_change'], 'Изменить')),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 14),
-          ],
-          _Card(
-            accentBorder: true,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.useCowHints
-                      ? u.str(['flow', 'form', 'fields_heading_cow'], 'Параметры коровы')
-                      : u.str(['flow', 'form', 'fields_heading_default'], 'Поля'),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 14),
-                for (var i = 0; i < textFields.length; i++) ...[
-                  if (i > 0) const SizedBox(height: 12),
-                  _buildTextFieldRow(
-                    context,
-                    field: textFields[i],
-                    typedCowId: typedCowId,
-                    typedLower: typedLower,
-                    hasExactMatch: hasExactMatch,
-                    hasAnyMatches: hasAnyMatches,
-                    matchedIds: matchedIds,
-                    cowCtrl: cowCtrl,
-                    exactData: exactData,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: Epoch8Layout.sectionGap),
-          FilledButton(
-            onPressed: _formValid
-                ? () {
-                    _saveToState();
-                    widget.onContinue();
-                  }
-                : null,
-            child: Text(widget.continueLabel),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextFieldRow(
-    BuildContext context, {
-    required ConfigField field,
-    required String typedCowId,
-    required String typedLower,
-    required bool hasExactMatch,
-    required bool hasAnyMatches,
-    required Set<String> matchedIds,
-    required TextEditingController? cowCtrl,
-    required Map<String, dynamic>? exactData,
-  }) {
-    final c = _textCtrls[field.fieldId];
-    if (c == null) return const SizedBox.shrink();
-
-    final isCowId = widget.cowMatchFieldId != null && field.fieldId == widget.cowMatchFieldId;
-    if (widget.useCowHints && isCowId) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TextField(
-            controller: c,
-            decoration: InputDecoration(
-              labelText: field.title,
-              hintText: field.instructions,
-              helperText: typedCowId.isEmpty
-                  ? null
-                  : hasExactMatch
-                      ? ProjectUi(widget.project).str(['flow', 'form', 'cow_hint_exact'], 'ID найден в локальной истории')
-                      : hasAnyMatches
-                          ? ProjectUi(widget.project).str(['flow', 'form', 'cow_hint_similar'], 'Есть похожие ID в истории')
-                          : ProjectUi(widget.project).str(['flow', 'form', 'cow_hint_new'], 'Новый ID (в истории не найден)'),
-              helperStyle: TextStyle(
-                color: hasExactMatch
-                    ? Epoch8Theme.success
-                    : hasAnyMatches
-                        ? Epoch8Theme.accent
-                        : Epoch8Theme.textMuted,
-              ),
-              suffixIcon: typedCowId.isEmpty
-                  ? null
-                  : Icon(
-                      hasExactMatch ? Icons.verified_outlined : (hasAnyMatches ? Icons.search : Icons.add_circle_outline),
-                      color: hasExactMatch
-                          ? Epoch8Theme.success
-                          : (hasAnyMatches ? Epoch8Theme.accent : Epoch8Theme.textMuted),
-                    ),
-            ),
-            onChanged: (_) => setState(() {}),
-          ),
-          if (typedCowId.isNotEmpty && hasAnyMatches) ...[
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: matchedIds.take(6).map((id) {
-                final isExact = id.toLowerCase() == typedLower;
-                return ActionChip(
-                  label: Text(id),
-                  backgroundColor: isExact
-                      ? Epoch8Theme.success.withValues(alpha: 0.18)
-                      : Epoch8Theme.bgElevated,
-                  side: BorderSide(
-                    color: isExact
-                        ? Epoch8Theme.success.withValues(alpha: 0.6)
-                        : Epoch8Theme.border,
-                  ),
-                  onPressed: () {
-                    final cc = cowCtrl;
-                    if (cc != null) {
-                      cc.text = id;
-                      cc.selection = TextSelection.fromPosition(TextPosition(offset: cc.text.length));
-                    }
-                    setState(() {});
-                  },
-                );
-              }).toList(),
-            ),
-          ],
-          if (hasExactMatch && exactData != null) ...[
-            const SizedBox(height: 10),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: TextButton.icon(
-                onPressed: () => _prefillFrom(exactData),
-                icon: const Icon(Icons.auto_fix_high_outlined, size: 18),
-                label: Text(ProjectUi(widget.project).str(['flow', 'form', 'prefill_button'], 'Предзаполнить поля из последней записи')),
-              ),
-            ),
-          ],
-        ],
-      );
-    }
-
-    return TextField(
-      controller: c,
-      decoration: InputDecoration(
-        labelText: field.title,
-        hintText: field.instructions,
-      ),
-      onChanged: (_) => setState(() {}),
-    );
-  }
-}
-
-class _InstructionBriefingStep extends StatelessWidget {
-  const _InstructionBriefingStep({
-    super.key,
-    required this.project,
-    required this.instructionField,
-    required this.onContinue,
-  });
-
-  final Project project;
-  final ConfigField instructionField;
-  final VoidCallback onContinue;
-
-  @override
-  Widget build(BuildContext context) {
-    final title = instructionField.title.trim();
-    final body = instructionField.instructions.trim();
-    final hasFieldCopy = title.isNotEmpty || body.isNotEmpty;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (hasFieldCopy) ...[
-            if (title.isNotEmpty)
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            if (body.isNotEmpty) ...[
-              if (title.isNotEmpty) const SizedBox(height: 12),
-              ...body.split('\n').map((raw) {
-                final line = raw.trim();
-                if (line.isEmpty) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Text(
-                    line,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45),
-                  ),
-                );
-              }),
-            ],
-            const SizedBox(height: 20),
-          ],
-          ShootingGuideBody(
-            project: project,
-            showStartButton: true,
-            onStart: onContinue,
-            scrollable: false,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CameraPoseStep extends ConsumerStatefulWidget {
-  const _CameraPoseStep({
-    super.key,
-    required this.project,
-    required this.projectId,
-    required this.poseField,
-    required this.storageKey,
-    required this.poseIndex1Based,
-    required this.totalPoses,
-    required this.onNext,
-  });
-
-  final Project project;
-  final String projectId;
-  final ConfigField poseField;
-  /// Ключ в [wizardState] и в payload (`field_id` из конфига).
-  final String storageKey;
-  /// 1..n — порядок ракурса в ленте (подписи, счётчики).
-  final int poseIndex1Based;
-  final int totalPoses;
-  final VoidCallback onNext;
-
-  @override
-  ConsumerState<_CameraPoseStep> createState() => _CameraPoseStepState();
-}
-
-class _CameraPoseStepState extends ConsumerState<_CameraPoseStep> {
-  final _picker = ImagePicker();
-
-  String get _key => widget.storageKey;
-
-  Future<void> _pickImage(ImageSource source) async {
-    // Keep original quality for new captures; preview scaling is done only in UI.
-    final x = await _picker.pickImage(source: source);
-    if (x == null || !mounted) return;
-
-    if (!kIsWeb) {
-      final quality = await analyzeCaptureQuality(x.path);
-      if (!mounted) return;
-      if (!quality.isAcceptable) {
-        final qu = ProjectUi(widget.project);
-        final useAnyway = await showDialog<bool>(
-          context: context,
-          barrierDismissible: false,
-          builder: (ctx) => AlertDialog(
-            title: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'title'], 'Проверка качества кадра')),
-            content: SingleChildScrollView(child: Text(quality.userMessage)),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'use_anyway'], 'Всё равно использовать')),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'retake'], 'Переснять')),
-              ),
-            ],
-          ),
-        );
-        if (useAnyway != true) return;
-      }
-    }
-
-    await CameraMetadataCollector.attachPoseMetadata(
-      ref: ref,
-      projectId: widget.projectId,
-      poseFieldId: _key,
-      imagePath: x.path,
-    );
-    if (!mounted) return;
-    setState(() {});
-  }
-
-  void _removePhoto(String path) {
-    CameraMetadataCollector.removePoseShotByPath(
-      ref: ref,
-      projectId: widget.projectId,
-      poseFieldId: _key,
-      imagePath: path,
-    );
-    setState(() {});
-  }
-
-  void _clearAll() {
-    CameraMetadataCollector.stripLegacyContextPoses(
-      ref: ref,
-      projectId: widget.projectId,
-    );
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, null);
-    setState(() {});
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final u = ProjectUi(widget.project);
-    final guide = resolvePoseGuide(widget.project, widget.poseIndex1Based, widget.poseField);
-    final answers = ref.watch(wizardStateProvider(widget.projectId));
-    final paths = CapturedPhotoPaths.list(answers[_key]);
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 28),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            guide.title,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          ...guide.descriptionLines.map(
-            (line) => Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('• ', style: TextStyle(color: Epoch8Theme.accent)),
-                  Expanded(
-                    child: Text(line, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35)),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  u.str(['flow', 'camera_pose', 'example_heading'], 'Пример ракурса'),
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => showShootingHelp(context, widget.project),
-                icon: const Icon(Icons.help_outline, size: 18),
-                label: Text(u.str(['flow', 'camera_pose', 'help_button'], 'Справка')),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
-            child: AspectRatio(
-              aspectRatio: 4 / 3,
-              child: projectExampleImage(
-                project: widget.project,
-                assetPath: guide.exampleAssetPath,
-                fit: BoxFit.cover,
-                errorPlaceholder: (_) => Container(
-                  color: Epoch8Theme.bgElevated,
-                  alignment: Alignment.center,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Text(
-                      u.str(['flow', 'camera_pose', 'example_asset_missing'], ''),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Epoch8Theme.textMuted),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 20),
-          Text(
-            u.tpl(['flow', 'camera_pose', 'your_shots_heading'], 'Ваши кадры ({count})', {'count': '${paths.length}'}),
-            style: Theme.of(context).textTheme.titleSmall,
-          ),
-          const SizedBox(height: 8),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
-              border: Border.all(color: Epoch8Theme.border.withValues(alpha: 0.9)),
-              color: Epoch8Theme.bgElevated.withValues(alpha: 0.5),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (paths.isEmpty) ...[
-                  Icon(
-                    Icons.add_photo_alternate_outlined,
-                    size: 44,
-                    color: Epoch8Theme.textMuted.withValues(alpha: 0.55),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    u.str(['flow', 'camera_pose', 'empty_hint'], 'Добавьте кадры камерой или из галереи'),
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
-                  ),
-                  const SizedBox(height: 18),
-                ] else ...[
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (var i = 0; i < paths.length; i++)
-                        _PoseThumbTile(
-                          path: paths[i],
-                          index: i + 1,
-                          onRemove: () => _removePhoto(paths[i]),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    u.str(['flow', 'camera_pose', 'add_more'], 'Добавить ещё'),
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Epoch8Theme.textMuted),
-                  ),
-                  const SizedBox(height: 10),
-                ],
-                Row(
-                  children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () => _pickImage(ImageSource.camera),
-                        icon: const Icon(Icons.photo_camera_outlined, size: 20),
-                        label: Text(u.str(['flow', 'camera_pose', 'camera'], 'Камера')),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () => _pickImage(ImageSource.gallery),
-                        icon: const Icon(Icons.photo_library_outlined, size: 20),
-                        label: Text(u.str(['flow', 'camera_pose', 'gallery'], 'Галерея')),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (paths.isNotEmpty) ...[
-            const SizedBox(height: 8),
-            TextButton.icon(
-              onPressed: _clearAll,
-              icon: const Icon(Icons.delete_sweep_outlined, color: Epoch8Theme.danger),
-              label: Text(u.str(['flow', 'camera_pose', 'clear_all_poses'], 'Удалить все кадры этого ракурса')),
-            ),
-          ],
-          const SizedBox(height: 24),
-          FilledButton(
-            onPressed: (!configFieldRequired(widget.poseField) || paths.isNotEmpty) ? widget.onNext : null,
-            style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
-            child: Text(
-              widget.poseIndex1Based < widget.totalPoses
-                  ? u.str(['flow', 'camera_pose', 'next'], 'Далее')
-                  : u.str(['flow', 'camera_pose', 'to_review'], 'К проверке'),
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PoseThumbTile extends StatelessWidget {
-  const _PoseThumbTile({required this.path, required this.index, required this.onRemove});
-
-  final String path;
-  final int index;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.file(
-            File(path),
-            width: 104,
-            height: 104,
-            fit: BoxFit.cover,
-          ),
-        ),
-        Positioned(
-          left: 4,
-          top: 4,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Epoch8Theme.bgDeep.withValues(alpha: 0.75),
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Text('$index', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
-          ),
-        ),
-        Positioned(
-          right: -4,
-          top: -4,
-          child: Material(
-            color: Epoch8Theme.danger,
-            shape: const CircleBorder(),
-            child: InkWell(
-              onTap: onRemove,
-              customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.all(4),
-                child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
   }
 }
 
@@ -1107,24 +335,20 @@ class _FlowReviewStep extends ConsumerWidget {
   const _FlowReviewStep({
     super.key,
     required this.project,
-    required this.formFields,
-    required this.cameraFields,
+    required this.flow,
     required this.projectId,
-    required this.onEditForm,
-    required this.onEditPose,
+    required this.onEditScrollStep,
     required this.onSubmit,
   });
 
   final Project project;
-  final List<ConfigField> formFields;
-  final List<ConfigField> cameraFields;
+  final ResolvedCollectionFlow flow;
   final String projectId;
-  final VoidCallback onEditForm;
-  final void Function(int poseIndex) onEditPose;
+  final void Function(int flowStepIndex) onEditScrollStep;
   final Future<void> Function() onSubmit;
 
   bool _isComplete(Map<String, dynamic> a) {
-    for (final f in formFields) {
+    for (final f in flow.allFormFields) {
       if (!configFieldRequired(f)) continue;
       final v = a[f.fieldId];
       if (f.type == 'datetime') {
@@ -1133,12 +357,28 @@ class _FlowReviewStep extends ConsumerWidget {
         if (v.toString().trim().isEmpty) return false;
       }
     }
-    for (var i = 0; i < cameraFields.length; i++) {
-      final f = cameraFields[i];
+    for (final f in flow.allCameraFields) {
       if (!configFieldRequired(f)) continue;
       if (!CapturedPhotoPaths.hasPhotos(a[f.fieldId])) return false;
     }
     return true;
+  }
+
+  /// Заголовок карточки: `flow.steps[].form_title` или только «Шаг n».
+  String _reviewScrollBlockTitle(ProjectUi u, ResolvedCollectionStep s, int scrollOrdinal) {
+    final label = (s.formTitle ?? '').trim();
+    if (label.isNotEmpty) {
+      return u.tpl(
+        ['flow', 'review', 'scroll_block_title'],
+        'Шаг {n}: {form_title}',
+        {'n': '$scrollOrdinal', 'form_title': label, 'title': label, 'id': label},
+      );
+    }
+    return u.tpl(
+      ['flow', 'review', 'scroll_block_title'],
+      'Шаг {n}',
+      {'n': '$scrollOrdinal', 'form_title': '', 'title': '', 'id': ''},
+    );
   }
 
   @override
@@ -1146,7 +386,77 @@ class _FlowReviewStep extends ConsumerWidget {
     final u = ProjectUi(project);
     final a = ref.watch(wizardStateProvider(projectId));
     final complete = _isComplete(a);
-    final cameraCtx = _mergedReviewCameraContext(a, cameraFields);
+    final cameraCtx = _mergedReviewCameraContext(a, flow.allCameraFields);
+
+    var scrollOrdinal = 0;
+    final stepCards = <Widget>[];
+    for (var i = 0; i < flow.steps.length; i++) {
+      final s = flow.steps[i];
+      if (s.kind != CollectionScreenKind.scrollForm) continue;
+      if (s.isInstructionOnlyScroll) continue;
+      scrollOrdinal++;
+      stepCards.add(
+        _Card(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      _reviewScrollBlockTitle(u, s, scrollOrdinal),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () => onEditScrollStep(i),
+                    child: Text(u.str(['flow', 'review', 'edit'], 'Изменить')),
+                  ),
+                ],
+              ),
+              const Divider(height: 22),
+              for (final f in s.fields) ...[
+                if (f.type == 'text_input' || f.type == 'datetime')
+                  _reviewLine(
+                    f.title,
+                    _formatReviewValue(u, f, a[f.fieldId]),
+                  )
+                else if (f.type == 'camera_photo') ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    f.title,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final p in CapturedPhotoPaths.list(a[f.fieldId]))
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.file(File(p), width: 72, height: 72, fit: BoxFit.cover),
+                        ),
+                    ],
+                  ),
+                  if (CapturedPhotoPaths.list(a[f.fieldId]).isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        u.str(['flow', 'review', 'no_frames'], 'Нет кадров'),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                ],
+              ],
+            ],
+          ),
+        ),
+      );
+      stepCards.add(const SizedBox(height: 12));
+    }
+    if (stepCards.isNotEmpty) stepCards.removeLast();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 32),
@@ -1158,83 +468,12 @@ class _FlowReviewStep extends ConsumerWidget {
             title: u.str(['flow', 'review', 'header_title'], 'Проверка и отправка'),
             subtitle: u.str(
               ['flow', 'review', 'header_subtitle'],
-              'Проверьте данные. Можно вернуться к анкете или к любому ракурсу — снимки сохраняются, их можно заменить.',
+              'Проверьте данные. Можно вернуться к любому шагу — введённые значения и снимки сохраняются.',
             ),
           ),
           const SizedBox(height: Epoch8Layout.sectionGap),
-          _Card(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        u.str(['flow', 'review', 'form_card_title'], 'Анкета'),
-                        style: Theme.of(context).textTheme.titleSmall,
-                      ),
-                    ),
-                    TextButton(onPressed: onEditForm, child: Text(u.str(['flow', 'review', 'edit'], 'Изменить'))),
-                  ],
-                ),
-                const Divider(height: 24),
-                for (final f in formFields) ...[
-                  _line(
-                    f.title,
-                    _formatReviewValue(u, f, a[f.fieldId]),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            u.str(['flow', 'review', 'photos_section_title'], 'Фотографии по ракурсам'),
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-          ),
+          ...stepCards,
           const SizedBox(height: 8),
-          for (var i = 0; i < cameraFields.length; i++) ...[
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          cameraFields[i].title,
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () => onEditPose(i + 1),
-                        child: Text(u.str(['flow', 'review', 'edit'], 'Изменить')),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final p in CapturedPhotoPaths.list(a[cameraFields[i].fieldId]))
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(File(p), width: 72, height: 72, fit: BoxFit.cover),
-                        ),
-                    ],
-                  ),
-                  if (CapturedPhotoPaths.list(a[cameraFields[i].fieldId]).isEmpty)
-                    Text(
-                      u.str(['flow', 'review', 'no_frames'], 'Нет кадров'),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
-                    ),
-                ],
-              ),
-            ),
-            if (i < cameraFields.length - 1) const SizedBox(height: 8),
-          ],
-          const SizedBox(height: 16),
           _CameraMetaReviewPanel(project: project, cameraContext: cameraCtx),
           const SizedBox(height: 24),
           FilledButton(
@@ -1250,7 +489,7 @@ class _FlowReviewStep extends ConsumerWidget {
     );
   }
 
-  Widget _line(String label, String value) {
+  Widget _reviewLine(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Row(
@@ -1615,13 +854,12 @@ class _CameraMetaReviewPanel extends StatelessWidget {
 }
 
 class _Card extends StatelessWidget {
-  const _Card({required this.child, this.accentBorder = false});
+  const _Card({required this.child});
 
   final Widget child;
-  final bool accentBorder;
 
   @override
   Widget build(BuildContext context) {
-    return Epoch8Card(accentBorder: accentBorder, child: child);
+    return Epoch8Card(child: child);
   }
 }

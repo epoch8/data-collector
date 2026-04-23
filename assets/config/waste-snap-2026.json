@@ -1,0 +1,122 @@
+{
+  "id": "waste-snap-2026",
+  "name": "Фиксация отходов",
+  "version": "1.0",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "waste_context",
+          "screen": "scroll_form",
+          "form_title": "Где и что",
+          "field_ids": [
+            "ix_waste_safety",
+            "waste_stream",
+            "location_label",
+            "recorded_at"
+          ]
+        },
+        {
+          "id": "waste_photos",
+          "screen": "scroll_form",
+          "form_title": "Съёмка",
+          "field_ids": [
+            "ix_waste_photo",
+            "photos_heap",
+            "photos_context"
+          ]
+        },
+        {
+          "id": "waste_notes",
+          "screen": "scroll_form",
+          "form_title": "Дополнительно",
+          "field_ids": [
+            "ix_notes_hint",
+            "inspector_comment"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "ix_waste_safety",
+        "type": "instruction",
+        "title": "Безопасность",
+        "instructions": "Не заходите на проезжую часть и на закрытые территории. Снимайте с безопасного расстояния; при необходимости используйте сигнальный жилет."
+      },
+      {
+        "field_id": "waste_stream",
+        "type": "text_input",
+        "title": "Тип / фракция",
+        "instructions": "Например: ТКО, пластик, стекло, крупногабарит, смешанные отходы.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "location_label",
+        "type": "text_input",
+        "title": "Место",
+        "instructions": "Адрес, ориентир или ID контейнерной площадки из задания.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "recorded_at",
+        "type": "datetime",
+        "title": "Время фиксации",
+        "instructions": "Когда сделаны кадры.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "ix_waste_photo",
+        "type": "instruction",
+        "title": "Как фотографировать",
+        "instructions": "1) **Куча/контейнер** — чтобы было видно объём и состав. 2) **Контекст** — откуда понятно расположение (дом, дорога, знак)."
+      },
+      {
+        "field_id": "photos_heap",
+        "type": "camera_photo",
+        "title": "Отходы крупным планом",
+        "instructions": "Один или несколько кадров нарушения или заполненности.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "photos_context",
+        "type": "camera_photo",
+        "title": "Контекст места",
+        "instructions": "Шире: улица, подъезд к площадке, при необходимости — номер дома в кадре.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "ix_notes_hint",
+        "type": "instruction",
+        "title": "Комментарий",
+        "instructions": "Кратко опишите запах, подтеки, доступ для техники или другие детали, которых нет на фото."
+      },
+      {
+        "field_id": "inspector_comment",
+        "type": "text_input",
+        "title": "Текстовое пояснение",
+        "instructions": "Необязательно: номер нарушения, контакт ответственного, ссылка на тикет.",
+        "validation": {
+          "required": false
+        }
+      }
+    ]
+  }
+}

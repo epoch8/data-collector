@@ -1,32 +1,32 @@
 <mxfile host="65bd71144e">
     <diagram id="upload-flow" name="Загрузка пакета (08)">
-        <mxGraphModel dx="1334" dy="799" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="900" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1458" dy="666" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="t0" value="API загрузки пакета · specs/08-server-api-package-upload.md" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=14;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="32" width="560" height="28" as="geometry"/>
+                <mxCell id="t0" value="Загрузка пакета · спека specs/08-server-api-package-upload.md&lt;br&gt;&lt;span style=&quot;color:#9CA3AF;font-weight:normal;font-size:10px;&quot;&gt;Реализация: &lt;b&gt;lib/features/collection/logic/package_server_upload.dart&lt;/b&gt; (Dio) · эталонные ответы: &lt;b&gt;mock_server/bin/server.dart&lt;/b&gt; (shelf)&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=14;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="28" width="1000" height="52" as="geometry"/>
                 </mxCell>
-                <mxCell id="laneL" value="КЛИЕНТ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="72" width="100" height="20" as="geometry"/>
+                <mxCell id="laneL" value="ПРИЛОЖЕНИЕ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="88" width="120" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="laneR" value="СЕРВЕР" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
-                    <mxGeometry x="820" y="72" width="100" height="20" as="geometry"/>
+                <mxCell id="laneR" value="СЕРВЕР (mock / тот же контракт путей)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="88" width="360" height="20" as="geometry"/>
                 </mxCell>
-                <mxCell id="a1" value="&lt;b&gt;1.&lt;/b&gt; Сессия (черновик)&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;POST …/projects/{id}/packages&lt;/span&gt;&lt;br&gt;&lt;br&gt;Тело: &lt;b&gt;package_id&lt;/b&gt; (обяз.) · по желанию &lt;i&gt;device_id&lt;/i&gt;, &lt;i&gt;client_version&lt;/i&gt;, &lt;i&gt;created_at&lt;/i&gt; — для логов и аудита (кто/когда/с какого клиента).&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#8FD9B0&quot;&gt;Зачем сессия:&lt;/span&gt; зарегистрировать пакет, фаза «ждём блобы», &lt;b&gt;GET&lt;/b&gt; статуса, TTL черновика, одна точка идемпотентности для всей загрузки." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="100" width="400" height="168" as="geometry"/>
+                <mxCell id="a1" value="&lt;b&gt;1. Сессия&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;POST /v1/projects/{projectId}/packages&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Тело&lt;/b&gt;&amp;nbsp;&lt;code&gt;{&quot;package_id&quot;: packageId}&lt;/code&gt;&amp;nbsp;отправляется с клиента -- может нужно еще отправлять device, время для однозначности&lt;br&gt;Dio принимает &lt;b&gt;200 / 201 / 409&lt;/b&gt;. Если &lt;b&gt;409&lt;/b&gt;&amp;nbsp;&amp;nbsp;&lt;span style=&quot;color:#9CA3AF&quot;&gt;GET …/packages/{packageId}&lt;/span&gt;; при &lt;code&gt;status == completed&lt;/code&gt; в БД пишется &lt;i&gt;serverDeliveryState: completed&lt;/i&gt; и выход &lt;b&gt;без&lt;/b&gt; повторной заливки файлов." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="116" width="420" height="168" as="geometry"/>
                 </mxCell>
-                <mxCell id="a2" value="&lt;b&gt;2.&lt;/b&gt; Каждый файл — отдельный запрос&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;PUT …/packages/{package_id}/blobs/{blob_path}&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Почему PUT:&lt;/b&gt; у файла уже есть стабильный URL (путь как в манифесте). Повтор того же &lt;b&gt;PUT&lt;/b&gt; = идемпотентно (докачка после обрыва)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1e2438;strokeColor=#6B9BD1;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="288" width="400" height="112" as="geometry"/>
+                <mxCell id="a2" value="&lt;b&gt;2. Блобы по одному файлу&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;PUT /v1/projects/{projectId}/packages/{packageId}/blobs/{pathSuffix}&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Код:&lt;/b&gt; читает &lt;code&gt;packages/&lt;id&gt;/blobs/&lt;/code&gt;; логический путь &lt;code&gt;blobs/&lt;имя&gt;&lt;/code&gt; превращается в &lt;b&gt;один&lt;/b&gt; сегмент URL: части разделяются &lt;code&gt;/&lt;/code&gt;, каждая &lt;code&gt;encodeComponent&lt;/code&gt; → пример &lt;code&gt;blobs%2Fimg_0001.jpg&lt;/code&gt; (как в mock, комментарий в server.dart).&lt;br&gt;Тело: &lt;code&gt;Uint8List&lt;/code&gt; байтов, заголовок &lt;code&gt;Content-Type: application/octet-stream&lt;/code&gt;, ответ парсится как JSON." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1e2438;strokeColor=#6B9BD1;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="296" width="420" height="152" as="geometry"/>
                 </mxCell>
-                <mxCell id="a3" value="&lt;b&gt;3.&lt;/b&gt; Манифест (один JSON)&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;PUT &lt;i&gt;или&lt;/i&gt; POST …/manifest&lt;/span&gt; — в продукте выбирают &lt;b&gt;один&lt;/b&gt; метод.&lt;br&gt;&lt;br&gt;&lt;b&gt;Почему не тот же метод, что у блоба:&lt;/b&gt; это другой ресурс и другой смысл («согласовать JSON со всеми уже принятыми blobs/…»). Сервер: если ссылка в JSON на файл ещё не загружена → &lt;b&gt;422&lt;/b&gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="416" width="400" height="120" as="geometry"/>
+                <mxCell id="a3" value="&lt;b&gt;3. Манифест&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;PUT /v1/projects/{projectId}/packages/{packageId}/manifest&lt;/span&gt;&lt;br&gt;&lt;br&gt;&amp;nbsp;&lt;b&gt;PUT&lt;/b&gt;.&amp;nbsp;&amp;nbsp;&lt;code&gt;payload.json&lt;/code&gt;&amp;nbsp;&lt;br&gt;&lt;code&gt;Content-Type: application/json; charset=utf-8&lt;/code&gt;.&lt;br&gt;&lt;br&gt;&lt;b&gt;Mock:&lt;/b&gt; сверяет &lt;code&gt;manifest.project_id&lt;/code&gt; с URL; обходит JSON и требует, чтобы каждая строка &lt;code&gt;blobs/…&lt;/code&gt; уже лежала в сессии&amp;nbsp; иначе &lt;b&gt;422&lt;/b&gt; &lt;code&gt;missing_blobs&lt;/code&gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="460" width="420" height="168" as="geometry"/>
                 </mxCell>
-                <mxCell id="a4" value="&lt;b&gt;4.&lt;/b&gt; Финализация&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;POST …/commit&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;Почему POST:&lt;/b&gt; это &lt;i&gt;действие&lt;/i&gt; «закрыть приёмку», а не запись по произвольному URL. После &lt;b&gt;2xx&lt;/b&gt; — пакет &lt;i&gt;completed&lt;/i&gt;; повторы &lt;b&gt;commit&lt;/b&gt; без дублей в очереди обработки (спека §11.4)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="552" width="400" height="120" as="geometry"/>
+                <mxCell id="a4" value="&lt;b&gt;4. Commit&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;POST /v1/projects/{projectId}/packages/{packageId}/commit&lt;/span&gt;&lt;br&gt;&lt;br&gt;пустой POST; при успехе в SQLite &lt;code&gt;serverDeliveryState = completed&lt;/code&gt;.&lt;br&gt;&lt;b&gt;Mock:&lt;/b&gt; без принятого манифеста → &lt;b&gt;409&lt;/b&gt;; если уже &lt;i&gt;completed&lt;/i&gt; → &lt;b&gt;200&lt;/b&gt; с &lt;code&gt;idempotent: true&lt;/code&gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="240" y="644" width="420" height="112" as="geometry"/>
                 </mxCell>
-                <mxCell id="s0" value="&lt;b&gt;Кратко на сервере&lt;/b&gt;&lt;br&gt;&lt;br&gt;· Внешним системам пакет «готов» только после валидного манифеста + &lt;b&gt;commit&lt;/b&gt;.&lt;br&gt;· Между шагами клиент ждёт &lt;b&gt;2xx&lt;/b&gt;.&lt;br&gt;· Статусы: &lt;span style=&quot;color:#9CA3AF&quot;&gt;awaiting_blobs → … → completed&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=10;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="860" y="100" width="360" height="120" as="geometry"/>
+                <mxCell id="s0" value="&lt;b&gt;shelf mock&amp;nbsp;&lt;/b&gt;&lt;br&gt;&lt;br&gt;· Сессия в памяти: &lt;code&gt;awaiting_blobs&lt;/code&gt; → после валидного manifest &lt;code&gt;ready_to_commit&lt;/code&gt; → после commit &lt;code&gt;completed&lt;/code&gt;.&lt;br&gt;· &lt;span style=&quot;color:#9CA3AF&quot;&gt;GET …/packages/{packageId}&lt;/span&gt; — &lt;code&gt;status&lt;/code&gt; + отсортированные ключи &lt;code&gt;blobs&lt;/code&gt; (клиент использует в ветке 409).&lt;br&gt;· Опционально &lt;code&gt;Authorization: Bearer&lt;/code&gt; если задан &lt;code&gt;DC_MOCK_TOKEN&lt;/code&gt;.&lt;br&gt;· Ошибки&amp;nbsp; JSON &lt;code&gt;{ error: { code, message, details? } }&lt;/code&gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=10;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="860" y="116" width="400" height="168" as="geometry"/>
                 </mxCell>
                 <mxCell id="seq1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="1" source="a1" target="a2" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
@@ -37,43 +37,42 @@
                 <mxCell id="seq3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="1" source="a3" target="a4" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="h1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=classic;exitX=1;exitY=0.25;entryX=0;entryY=0.35;" parent="1" source="a1" target="s0" edge="1">
+                <mxCell id="h1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=classic;exitX=1;exitY=0.22;entryX=0;entryY=0.25;" parent="1" source="a1" target="s0" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="700" y="142"/>
-                            <mxPoint x="700" y="142"/>
+                            <mxPoint x="660" y="154"/>
+                            <mxPoint x="860" y="154"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
                 <mxCell id="h2" value="×N" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6B9BD1;endArrow=classic;fontColor=#9EC5F7;fontSize=9;exitX=1;exitY=0.35;entryX=0;entryY=0.55;" parent="1" source="a2" target="s0" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="700" y="328"/>
-                            <mxPoint x="700" y="166"/>
+                            <mxPoint x="700" y="349"/>
+                            <mxPoint x="700" y="208"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="h3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=classic;exitX=1;exitY=0.3;entryX=0;entryY=0.75;" parent="1" source="a3" target="s0" edge="1">
+                <mxCell id="h3" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=classic;exitX=1;exitY=0.25;entryX=0;entryY=0.78;" parent="1" source="a3" target="s0" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="750" y="452"/>
-                            <mxPoint x="750" y="190"/>
+                            <mxPoint x="720" y="502"/>
+                            <mxPoint x="720" y="247"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="h4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=classic;exitX=1;exitY=0.35;entryX=0;entryY=0.92;" parent="1" source="a4" target="s0" edge="1">
+                <mxCell id="h4" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=classic;exitX=1;exitY=0.4;entryX=0;entryY=0.95;" parent="1" source="a4" target="s0" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
-                            <mxPoint x="790" y="594"/>
-                            <mxPoint x="790" y="210"/>
+                            <mxPoint x="760" y="689"/>
+                            <mxPoint x="760" y="276"/>
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="n1" value="Клиент: статус &lt;b&gt;по каждому блобу&lt;/b&gt; и по пакету — докачка после обрыва (спека 06)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#2d3a4a;strokeColor=#7D8FA9;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="240" y="700" width="520" height="44" as="geometry"/>
-                </mxCell>
-                <mxCell id="n2" value="UI: экран «Загрузка» (outbox) и история — см. 08 §6–7." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="780" y="700" width="400" height="44" as="geometry"/>
+                <mxCell id="e_s1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6B7280;dashed=1;endArrow=none;exitX=0.5;exitY=0;entryX=0.72;entryY=1;" edge="1" parent="1" target="s0">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="1060" y="300.0000000000001" as="sourcePoint"/>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>

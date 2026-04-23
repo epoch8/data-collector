@@ -14,6 +14,7 @@ class ResolvedCollectionStep {
     required this.id,
     required this.kind,
     required this.fields,
+    this.formTitle,
     this.poseIndex1Based,
     this.poseTotal,
     this.cowIdHints = false,
@@ -23,6 +24,15 @@ class ResolvedCollectionStep {
   final String id;
   final CollectionScreenKind kind;
   final List<ConfigField> fields;
+
+  /// Подпись для review из `flow.steps[].form_title`.
+  final String? formTitle;
+
+  /// Шаг `scroll_form`, где нет полей для ввода/съёмки — только текстовые инструкции в конфиге.
+  bool get isInstructionOnlyScroll =>
+      kind == CollectionScreenKind.scrollForm &&
+      fields.isNotEmpty &&
+      fields.every((f) => f.type == 'instruction');
   final int? poseIndex1Based;
   final int? poseTotal;
   final bool cowIdHints;
@@ -38,22 +48,34 @@ class ResolvedCollectionFlow {
       steps.length == 1 && steps.single.kind == CollectionScreenKind.scrollForm;
 
   int get cameraPoseCount =>
-      steps.where((s) => s.kind == CollectionScreenKind.cameraPose).length;
+      steps.where((s) => s.kind == CollectionScreenKind.scrollForm).expand((s) => s.fields).where((f) => f.type == 'camera_photo').length;
 
   int? get reviewStepIndex {
     final i = steps.indexWhere((s) => s.kind == CollectionScreenKind.review);
     return i >= 0 ? i : null;
   }
 
+  /// Текстовые/дата поля со всех шагов scroll_form (для review).
   List<ConfigField> get allFormFields => [
         for (final s in steps)
-          if (s.kind == CollectionScreenKind.form) ...s.fields,
+          if (s.kind == CollectionScreenKind.scrollForm)
+            for (final f in s.fields)
+              if (f.type == 'text_input' || f.type == 'datetime') f,
       ];
 
   List<ConfigField> get allCameraFields => [
         for (final s in steps)
-          if (s.kind == CollectionScreenKind.cameraPose) ...s.fields,
+          if (s.kind == CollectionScreenKind.scrollForm)
+            for (final f in s.fields)
+              if (f.type == 'camera_photo') f,
       ];
+
+  List<ResolvedCollectionStep> get scrollSteps =>
+      steps.where((s) => s.kind == CollectionScreenKind.scrollForm).toList();
+
+  /// Шаги формы, которые показывают пользователю (не только instruction).
+  List<ResolvedCollectionStep> get substantiveScrollSteps =>
+      scrollSteps.where((s) => !s.isInstructionOnlyScroll).toList();
 
   int indexOfFirstForm() => steps.indexWhere((s) => s.kind == CollectionScreenKind.form);
 
@@ -68,14 +90,35 @@ class ResolvedCollectionFlow {
     return 0;
   }
 
-  /// Group history by extracted subject id (e.g. cow) only when the flow is set up for that:
-  /// several camera poses **and** a form step with [cowIdHints] or a `cow_identifier` field.
-  ///
-  /// Multi-pose retail / product flows without a subject id must stay a flat package list.
+  /// Индекс шага [flow.steps], где встречается поле (только scroll_form).
+  int indexOfScrollStepContainingField(String fieldId) {
+    for (var i = 0; i < steps.length; i++) {
+      final s = steps[i];
+      if (s.kind != CollectionScreenKind.scrollForm) continue;
+      if (s.fields.any((f) => f.fieldId == fieldId)) return i;
+    }
+    return 0;
+  }
+
+  /// Глобальный номер ракурса (1..N) для поля camera_photo по порядку шагов scroll_form.
+  int cameraPoseIndex1Based(ConfigField poseField) {
+    var n = 0;
+    for (final s in steps) {
+      if (s.kind != CollectionScreenKind.scrollForm) continue;
+      for (final f in s.fields) {
+        if (f.type != 'camera_photo') continue;
+        n++;
+        if (f.fieldId == poseField.fieldId) return n;
+      }
+    }
+    return 1;
+  }
+
+  /// Группировать историю по субъекту: несколько camera_photo и поле cow на scroll-шаге.
   bool get shouldGroupHistoryBySubject {
     if (cameraPoseCount <= 1) return false;
     for (final s in steps) {
-      if (s.kind != CollectionScreenKind.form) continue;
+      if (s.kind != CollectionScreenKind.scrollForm) continue;
       if (s.cowIdHints) return true;
       if (s.fields.any((f) => f.fieldId == 'cow_identifier')) return true;
     }
@@ -103,27 +146,28 @@ CollectionScreenKind _parseScreen(String raw) {
   }
 }
 
-/// Builds the screen list for [Project] — entirely from `config.flow` and `config.fields`.
+/// Собирает экраны только из шагов `scroll_form` и опционально `review`.
 ResolvedCollectionFlow resolveCollectionFlow(Project project) {
   return _fromDecl(project, project.config.flow);
 }
 
 ResolvedCollectionFlow _fromDecl(Project project, CollectionFlowDecl decl) {
-  if (decl.steps.length > 1) {
-    for (final st in decl.steps) {
-      if (_parseScreen(st.screen) == CollectionScreenKind.scrollForm) {
-        throw FormatException(
-          'flow step "${st.id}": scroll_form is only allowed as the sole step',
-        );
-      }
+  if (decl.steps.isEmpty) {
+    throw FormatException('flow.steps must not be empty');
+  }
+
+  for (final st in decl.steps) {
+    final k = _parseScreen(st.screen);
+    if (k != CollectionScreenKind.scrollForm && k != CollectionScreenKind.review) {
+      throw FormatException(
+        'flow step "${st.id}": only scroll_form and review are supported (got ${st.screen})',
+      );
     }
   }
 
   final byId = {for (final f in project.config.fields) f.fieldId: f};
-  final totalCams = decl.steps
-      .where((st) => _parseScreen(st.screen) == CollectionScreenKind.cameraPose)
-      .length;
-  var camDone = 0;
+  final assigned = <String>{};
+
   final steps = <ResolvedCollectionStep>[];
 
   for (final st in decl.steps) {
@@ -131,105 +175,41 @@ ResolvedCollectionFlow _fromDecl(Project project, CollectionFlowDecl decl) {
     switch (kind) {
       case CollectionScreenKind.scrollForm:
         final ids = st.fieldIds;
-        final fields = ids == null || ids.isEmpty
-            ? (project.config.fields.toList()
-              ..sort((a, b) => a.priority.compareTo(b.priority)))
-            : [
-                for (final id in ids)
-                  byId[id] ?? (throw FormatException('flow step "${st.id}": unknown field_id "$id"')),
-              ];
-        steps.add(
-          ResolvedCollectionStep(id: st.id, kind: kind, fields: fields),
-        );
-      case CollectionScreenKind.form:
-        final ids = st.fieldIds;
         if (ids == null || ids.isEmpty) {
-          throw FormatException('flow step "${st.id}": form requires field_ids');
+          throw FormatException('flow step "${st.id}": scroll_form requires non-empty field_ids');
         }
         final fields = <ConfigField>[];
         for (final id in ids) {
-          final f =
-              byId[id] ?? (throw FormatException('flow step "${st.id}": unknown field_id "$id"'));
-          const allowed = {'text_input', 'datetime'};
-          if (!allowed.contains(f.type)) {
-            throw FormatException(
-              'flow step "${st.id}": field "$id" has type ${f.type}, allowed: $allowed',
-            );
+          if (!assigned.add(id)) {
+            throw FormatException('flow step "${st.id}": field_id "$id" is already used in another step');
           }
+          final f = byId[id] ?? (throw FormatException('flow step "${st.id}": unknown field_id "$id"'));
           fields.add(f);
-        }
-        final hintField = st.cowIdFieldId;
-        if (hintField != null && !fields.any((x) => x.fieldId == hintField)) {
-          throw FormatException(
-            'flow step "${st.id}": cow_id_field_id "$hintField" is not in field_ids',
-          );
         }
         steps.add(
           ResolvedCollectionStep(
             id: st.id,
             kind: kind,
             fields: fields,
+            formTitle: st.formTitle,
             cowIdHints: st.cowIdHints == true,
             cowIdFieldId: st.cowIdFieldId,
           ),
         );
-      case CollectionScreenKind.instruction:
-        final id = st.fieldId;
-        if (id == null || id.isEmpty) {
-          throw FormatException('flow step "${st.id}": instruction requires field_id');
-        }
-        final f =
-            byId[id] ?? (throw FormatException('flow step "${st.id}": unknown field_id "$id"'));
-        if (f.type != 'instruction') {
-          throw FormatException(
-            'flow step "${st.id}": field "$id" must have type instruction, got ${f.type}',
-          );
-        }
-        steps.add(
-          ResolvedCollectionStep(id: st.id, kind: kind, fields: [f]),
-        );
-      case CollectionScreenKind.cameraPose:
-        final id = st.fieldId;
-        if (id == null || id.isEmpty) {
-          throw FormatException('flow step "${st.id}": camera_pose requires field_id');
-        }
-        final f =
-            byId[id] ?? (throw FormatException('flow step "${st.id}": unknown field_id "$id"'));
-        if (f.type != 'camera_photo') {
-          throw FormatException(
-            'flow step "${st.id}": field "$id" must have type camera_photo, got ${f.type}',
-          );
-        }
-        camDone++;
-        steps.add(
-          ResolvedCollectionStep(
-            id: st.id,
-            kind: kind,
-            fields: [f],
-            poseIndex1Based: camDone,
-            poseTotal: totalCams,
-          ),
-        );
       case CollectionScreenKind.review:
-        steps.add(
-          ResolvedCollectionStep(id: st.id, kind: kind, fields: const []),
-        );
+        steps.add(ResolvedCollectionStep(id: st.id, kind: kind, fields: const []));
+      case CollectionScreenKind.form:
+      case CollectionScreenKind.instruction:
+      case CollectionScreenKind.cameraPose:
+        break;
     }
   }
-  final hasCamera = decl.steps.any(
-    (st) => _parseScreen(st.screen) == CollectionScreenKind.cameraPose,
-  );
-  final hasReview = decl.steps.any(
-    (st) => _parseScreen(st.screen) == CollectionScreenKind.review,
-  );
-  if (hasCamera && !hasReview) {
-    steps.add(
-      const ResolvedCollectionStep(
-        id: 'review',
-        kind: CollectionScreenKind.review,
-        fields: <ConfigField>[],
-      ),
-    );
+
+  for (final f in project.config.fields) {
+    if (!assigned.contains(f.fieldId)) {
+      throw FormatException('field "${f.fieldId}" is not listed in any scroll_form step');
+    }
   }
+
   return ResolvedCollectionFlow(steps: steps);
 }

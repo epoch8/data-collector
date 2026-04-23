@@ -8,6 +8,9 @@ part 'project_config.g.dart';
 class ConfigField {
   @JsonKey(name: 'field_id')
   final String fieldId;
+
+  /// Устарело: порядок полей задаётся порядком в `flow.steps[].field_ids` и порядком строк в редакторе.
+  @JsonKey(defaultValue: 0)
   final int priority;
   final String type;
   final String title;
@@ -17,7 +20,7 @@ class ConfigField {
 
   ConfigField({
     required this.fieldId,
-    required this.priority,
+    this.priority = 0,
     required this.type,
     required this.title,
     required this.instructions,
@@ -45,6 +48,10 @@ class CollectionFlowStepDecl {
   @JsonKey(name: 'cow_id_field_id')
   final String? cowIdFieldId;
 
+  /// Подпись шага на экране проверки (вместо латинского `id`).
+  @JsonKey(name: 'form_title')
+  final String? formTitle;
+
   CollectionFlowStepDecl({
     required this.id,
     required this.screen,
@@ -52,6 +59,7 @@ class CollectionFlowStepDecl {
     this.fieldId,
     this.cowIdHints,
     this.cowIdFieldId,
+    this.formTitle,
   });
 
   factory CollectionFlowStepDecl.fromJson(Map<String, dynamic> json) =>

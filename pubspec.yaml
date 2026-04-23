@@ -48,6 +48,7 @@ dependencies:
   device_info_plus: ^11.3.0
   exif: ^3.3.0
   image: ^4.5.4
+  flutter_markdown: ^0.7.7+1
 
 dev_dependencies:
   flutter_test:

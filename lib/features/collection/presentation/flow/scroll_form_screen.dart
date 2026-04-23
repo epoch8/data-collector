@@ -9,7 +9,7 @@ import 'package:data_collector/features/collection/logic/submit_local_package.da
 
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 
-/// Шаг `scroll_form`: все поля из [Project.config.fields], порядок по `priority`.
+/// Устаревший экран: все поля из [Project.config.fields] в порядке объявления в JSON.
 class ScrollFormCollectionScreen extends ConsumerWidget {
   const ScrollFormCollectionScreen({super.key, required this.projectId});
 
@@ -61,7 +61,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
   @override
   void initState() {
     super.initState();
-    _fields = widget.project.config.fields.toList()..sort((a, b) => a.priority.compareTo(b.priority));
+    _fields = List<ConfigField>.from(widget.project.config.fields);
     
     _focusNodes = List.generate(_fields.length, (index) {
       final node = FocusNode();
