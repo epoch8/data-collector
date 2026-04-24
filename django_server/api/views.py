@@ -247,7 +247,18 @@ class PackageManifestPutView(View):
                 _err("missing_blobs", "Manifest references blobs not uploaded yet", missing),
                 status=422,
             )
-        session.manifest_json = raw
+        uid = getattr(request, "firebase_uid", None) or ""
+        email = getattr(request, "firebase_email", None) or ""
+        if uid:
+            manifest["submitted_by"] = {
+                "firebase_uid": uid,
+                "email": email,
+            }
+        session.manifest_json = json.dumps(
+            manifest,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
         session.phase = PackageSession.Phase.READY_TO_COMMIT
         session.save(update_fields=["manifest_json", "phase"])
         return JsonResponse({"status": "ready_to_commit", "package_id": package_id})

@@ -1,18 +1,24 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/package/package_paths.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
 /// Загрузка одного пакета на Django API (спека 08).
+///
+/// [allowedProjectIds] — `project_id`, к которым у текущего пользователя есть доступ
+/// по актуальному каталогу с сервера; иначе загрузка не начинается.
 Future<void> uploadDriftPackageToServer({
   required Dio dio,
   required AppDatabase db,
   required Package pkg,
+  required Set<String> allowedProjectIds,
 }) async {
   if (kIsWeb) {
     throw UnsupportedError('Upload is not supported on web.');
@@ -28,6 +34,12 @@ Future<void> uploadDriftPackageToServer({
         serverDeliveryError: Value(err),
       ),
     );
+  }
+
+  if (!allowedProjectIds.contains(projectId)) {
+    const msg = 'Нет доступа к этому проекту у текущего пользователя (проверьте каталог на сервере).';
+    await setState('failed', msg);
+    throw StateError(msg);
   }
 
   await setState('uploading', null);
@@ -69,12 +81,15 @@ Future<void> uploadDriftPackageToServer({
     }
 
     final payloadFile = File(p.join(root, 'payload.json'));
-    final String manifestBody;
+    final Map<String, dynamic> manifestMap;
     if (await payloadFile.exists()) {
-      manifestBody = await payloadFile.readAsString();
+      manifestMap = jsonDecode(await payloadFile.readAsString()) as Map<String, dynamic>;
     } else {
-      manifestBody = const JsonEncoder.withIndent('  ').convert(jsonDecode(pkg.dataJson));
+      manifestMap = Map<String, dynamic>.from(jsonDecode(pkg.dataJson) as Map);
     }
+    _injectSubmittedBy(manifestMap);
+
+    final manifestBody = const JsonEncoder.withIndent('  ').convert(manifestMap);
 
     await dio.put<dynamic>(
       '/v1/projects/$projectId/packages/$packageId/manifest',
@@ -92,4 +107,14 @@ Future<void> uploadDriftPackageToServer({
     await setState('failed', e.toString());
     rethrow;
   }
+}
+
+void _injectSubmittedBy(Map<String, dynamic> manifest) {
+  if (!firebaseInitialized) return;
+  final user = FirebaseAuth.instance.currentUser;
+  if (user == null) return;
+  manifest['submitted_by'] = <String, dynamic>{
+    'firebase_uid': user.uid,
+    'email': user.email ?? '',
+  };
 }

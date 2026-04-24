@@ -17,6 +17,11 @@
       Проект <code>{{ session.project.project_id }}</code>
       · {% include 'ui/_phase_badge.html' with phase=session.phase label=session.get_phase_display %}
       · <span class="ui-muted">{{ session.created_at }}</span>
+      {% if session.uploader_email or session.uploader_uid %}
+      · Загрузил:
+        {% if session.uploader_email %}<span class="text-light">{{ session.uploader_email }}</span>{% endif %}
+        {% if session.uploader_uid %}{% if session.uploader_email %} <code class="small ui-muted">{{ session.uploader_uid }}</code>{% else %}<code class="small">{{ session.uploader_uid }}</code>{% endif %}{% endif %}
+      {% endif %}
     </p>
   </div>
   <a class="btn btn-outline-light btn-sm" href="{% url 'ui_package_list' %}?project={{ session.project.project_id }}"><i class="bi bi-arrow-left me-1"></i>К списку</a>

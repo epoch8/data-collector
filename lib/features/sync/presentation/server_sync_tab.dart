@@ -50,8 +50,15 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
     if (dio == null) return;
     setState(() => _busyPackageId = pkg.id);
     try {
+      final projects = await ref.read(projectsProvider.future);
+      final allowed = projects.map((p) => p.id).toSet();
       final db = ref.read(databaseProvider);
-      await uploadDriftPackageToServer(dio: dio, db: db, pkg: pkg);
+      await uploadDriftPackageToServer(
+        dio: dio,
+        db: db,
+        pkg: pkg,
+        allowedProjectIds: allowed,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Пакет ${pkg.id} отправлен')),
