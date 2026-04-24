@@ -56,6 +56,9 @@
             <a class="nav-link ui-nav-link {% if u == 'ui_project_list' or u == 'ui_project_new' or u == 'ui_project_detail' or u == 'ui_project_config' or u == 'ui_project_config_builder' or u == 'ui_project_media' or u == 'ui_project_delete' %}active{% endif %}" href="{% url 'ui_project_list' %}">
               <i class="bi bi-folder2-open"></i> Проекты
             </a>
+            <a class="nav-link ui-nav-link {% if u == 'ui_collector_user_list' or u == 'ui_collector_user_detail' %}active{% endif %}" href="{% url 'ui_collector_user_list' %}">
+              <i class="bi bi-people"></i> Пользователи
+            </a>
             <a class="nav-link ui-nav-link {% if u == 'ui_package_list' or u == 'ui_package_detail' %}active{% endif %}" href="{% url 'ui_package_list' %}">
               <i class="bi bi-box-seam"></i> Пакеты
             </a>
@@ -67,6 +70,7 @@
           {% endwith %}
           {% elif user.is_authenticated %}
             <a class="nav-link ui-nav-link" href="{% url 'ui_project_list' %}"><i class="bi bi-folder2-open"></i> Проекты</a>
+            <a class="nav-link ui-nav-link" href="{% url 'ui_collector_user_list' %}"><i class="bi bi-people"></i> Пользователи</a>
             <a class="nav-link ui-nav-link" href="{% url 'ui_package_list' %}"><i class="bi bi-box-seam"></i> Пакеты</a>
             <span class="nav-link ui-nav-user d-none d-md-inline">{{ user.username }}</span>
             <a class="btn btn-sm btn-outline-light ms-md-2" href="{% url 'ui_logout' %}"><i class="bi bi-box-arrow-right me-1"></i>Выход</a>

@@ -16,6 +16,30 @@ from .models import PackageSession, Project, UploadedBlob
 from .utils import collect_blob_refs, parse_json_body, validate_blob_logical_path, weak_etag
 
 
+def _project_ids_for_request(request) -> set[str] | None:
+    """Если Firebase-режим — только явно выданные project_id; иначе None = все проекты."""
+    user = getattr(request, "collector_user", None)
+    if user is not None:
+        return set(user.projects.values_list("project_id", flat=True))
+    return None
+
+
+def _forbidden_project():
+    return JsonResponse(
+        _err("forbidden", "No access to this project"),
+        status=403,
+    )
+
+
+def _require_project(request, project_id: str) -> JsonResponse | None:
+    if not Project.objects.filter(project_id=project_id).exists():
+        return JsonResponse(_err("not_found", "Unknown project"), status=404)
+    allowed = _project_ids_for_request(request)
+    if allowed is not None and project_id not in allowed:
+        return _forbidden_project()
+    return None
+
+
 def _err(code: str, message: str, details=None):
     body = {"error": {"code": code, "message": message}}
     if details is not None:
@@ -30,7 +54,11 @@ def health(_request):
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectsCatalogView(View):
     def get(self, request):
-        rows = list(Project.objects.all().order_by("name"))
+        qs = Project.objects.all().order_by("name")
+        allowed = _project_ids_for_request(request)
+        if allowed is not None:
+            qs = qs.filter(project_id__in=allowed)
+        rows = list(qs)
         items = [
             {
                 "project_id": p.project_id,
@@ -54,6 +82,9 @@ class ProjectsCatalogView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectConfigView(View):
     def get(self, request, project_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         project = Project.objects.filter(project_id=project_id).first()
         if not project:
             return JsonResponse(
@@ -74,8 +105,9 @@ class ProjectConfigView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class PackageSessionCreateView(View):
     def post(self, request, project_id: str):
-        if not Project.objects.filter(project_id=project_id).exists():
-            return JsonResponse(_err("not_found", "Unknown project"), status=404)
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         raw = request.body.decode("utf-8") if request.body else "{}"
         data, err = parse_json_body(raw)
         if err:
@@ -92,6 +124,12 @@ class PackageSessionCreateView(View):
             package_id=package_id,
             defaults={"phase": PackageSession.Phase.AWAITING_BLOBS},
         )
+        uid = getattr(request, "firebase_uid", None) or ""
+        email = getattr(request, "firebase_email", None) or ""
+        if uid and not session.uploader_uid:
+            session.uploader_uid = uid
+            session.uploader_email = email
+            session.save(update_fields=["uploader_uid", "uploader_email"])
         if session.phase == PackageSession.Phase.COMPLETED:
             return JsonResponse(
                 _err(
@@ -120,6 +158,9 @@ def _session_status(session: PackageSession) -> str:
 @method_decorator(csrf_exempt, name="dispatch")
 class PackageBlobPutView(View):
     def put(self, request, project_id: str, package_id: str, blob_path: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         logical = blob_path.replace("\\", "/")
         if "%" in logical:
             from urllib.parse import unquote
@@ -159,6 +200,9 @@ class PackageBlobPutView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class PackageManifestPutView(View):
     def put(self, request, project_id: str, package_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         session = PackageSession.objects.filter(
             project__project_id=project_id,
             package_id=package_id,
@@ -212,6 +256,9 @@ class PackageManifestPutView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class PackageCommitView(View):
     def post(self, request, project_id: str, package_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         session = PackageSession.objects.filter(
             project__project_id=project_id,
             package_id=package_id,
@@ -244,6 +291,9 @@ class PackageDetailView(View):
     """GET статус; DELETE отмена черновика (спека 08 §11.5–11.6)."""
 
     def get(self, request, project_id: str, package_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         session = PackageSession.objects.filter(
             project__project_id=project_id,
             package_id=package_id,
@@ -260,6 +310,9 @@ class PackageDetailView(View):
         )
 
     def delete(self, request, project_id: str, package_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         session = PackageSession.objects.filter(
             project__project_id=project_id,
             package_id=package_id,
@@ -277,8 +330,9 @@ class ProjectAssetGetView(View):
     """GET файла примера для конфига: путь относительно `assets/<slug>/` на репо → project_assets/<project_id>/."""
 
     def get(self, request, project_id: str, asset_path: str):
-        if not Project.objects.filter(project_id=project_id).exists():
-            return JsonResponse(_err("not_found", "Unknown project"), status=404)
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
         rel = (asset_path or "").replace("\\", "/").strip("/")
         if not rel or ".." in Path(rel).parts:
             return JsonResponse(_err("invalid_path", rel), status=422)

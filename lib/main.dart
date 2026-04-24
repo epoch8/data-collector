@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'bootstrap.dart';
+import 'firebase_options.dart';
+import 'core/api/api_environment.dart';
 import 'features/projects/providers/project_providers.dart';
 import 'models/project_config.dart';
 import 'features/collection/logic/collection_flow_resolver.dart';
@@ -19,72 +24,111 @@ import 'theme/epoch8_ui.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    firebaseInitialized = true;
+    // Дождаться первого события: сессия Email/Password уже восстановлена с диска (персистентность по умолчанию).
+    await FirebaseAuth.instance.authStateChanges().first;
+    appRouterInitialLocation =
+        FirebaseAuth.instance.currentUser != null ? '/dashboard' : '/login';
+  } catch (e) {
+    debugPrint('Firebase.initializeApp: $e');
+  }
   await PackagePaths.init();
-  runApp(const ProviderScope(child: DataCollectorApp()));
+  runApp(ProviderScope(child: DataCollectorApp()));
 }
 
-final _router = GoRouter(
-  initialLocation: '/login',
-  routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
-    GoRoute(
-      path: '/dashboard',
-      builder: (context, state) => const DashboardScreen(),
-    ),
-    GoRoute(
-      path: '/project/:id/wizard',
-      builder: (context, state) {
-        final id = state.pathParameters['id']!;
-        return Consumer(
-          builder: (context, ref, _) {
-            final async = ref.watch(projectsProvider);
-            return async.when(
-              data: (projects) {
-                try {
-                  projects.firstWhere((p) => p.id == id);
-                } catch (_) {
-                  return Scaffold(
-                    backgroundColor: Epoch8Theme.bgDeep,
-                    appBar: AppBar(title: const Text('Проект')),
-                    body: const Center(child: Text('Проект не найден в конфигурации.')),
-                  );
-                }
-                return CollectionFlowScreen(projectId: id);
-              },
-              loading: () => const Scaffold(
-                backgroundColor: Epoch8Theme.bgDeep,
-                body: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => Scaffold(
-                backgroundColor: Epoch8Theme.bgDeep,
-                body: Center(child: Text('Ошибка: $e')),
-              ),
-            );
-          },
-        );
-      },
-    ),
-    GoRoute(
-      path: '/history/project/:projectId/cow/:cowId',
-      builder: (context, state) => CowHistoryScreen(
-        projectId: state.pathParameters['projectId']!,
-        // go_router already percent-decodes path parameters; decoding again
-        // throws on ids that contain '%' (e.g. "12%3" after one decode).
-        cowId: state.pathParameters['cowId']!,
-      ),
-    ),
-    GoRoute(
-      path: '/history/package/:packageId',
-      builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
-    ),
-  ],
-);
+class _AuthRefresh extends ChangeNotifier {
+  _AuthRefresh() {
+    FirebaseAuth.instance.authStateChanges().listen((_) => notifyListeners());
+  }
+}
 
-class DataCollectorApp extends StatelessWidget {
+GoRouter _buildAppRouter(Listenable? authRefresh) {
+  return GoRouter(
+    initialLocation: appRouterInitialLocation,
+    refreshListenable: authRefresh,
+    redirect: (context, state) {
+      if (!firebaseInitialized) return null;
+      final user = FirebaseAuth.instance.currentUser;
+      final onLogin = state.matchedLocation == '/login';
+      if (user == null) return onLogin ? null : '/login';
+      if (onLogin) return '/dashboard';
+      return null;
+    },
+    routes: [
+      GoRoute(
+        path: '/login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: '/dashboard',
+        builder: (context, state) => const DashboardScreen(),
+      ),
+      GoRoute(
+        path: '/project/:id/wizard',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return Consumer(
+            builder: (context, ref, _) {
+              final async = ref.watch(projectsProvider);
+              return async.when(
+                data: (projects) {
+                  try {
+                    projects.firstWhere((p) => p.id == id);
+                  } catch (_) {
+                    return Scaffold(
+                      backgroundColor: Epoch8Theme.bgDeep,
+                      appBar: AppBar(title: const Text('Проект')),
+                      body: const Center(child: Text('Проект не найден в конфигурации.')),
+                    );
+                  }
+                  return CollectionFlowScreen(projectId: id);
+                },
+                loading: () => const Scaffold(
+                  backgroundColor: Epoch8Theme.bgDeep,
+                  body: Center(child: CircularProgressIndicator()),
+                ),
+                error: (e, _) => Scaffold(
+                  backgroundColor: Epoch8Theme.bgDeep,
+                  body: Center(child: Text('Ошибка: $e')),
+                ),
+              );
+            },
+          );
+        },
+      ),
+      GoRoute(
+        path: '/history/project/:projectId/cow/:cowId',
+        builder: (context, state) => CowHistoryScreen(
+          projectId: state.pathParameters['projectId']!,
+          cowId: state.pathParameters['cowId']!,
+        ),
+      ),
+      GoRoute(
+        path: '/history/package/:packageId',
+        builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
+      ),
+    ],
+  );
+}
+
+class DataCollectorApp extends StatefulWidget {
   const DataCollectorApp({super.key});
+
+  @override
+  State<DataCollectorApp> createState() => _DataCollectorAppState();
+}
+
+class _DataCollectorAppState extends State<DataCollectorApp> {
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    final refresh = firebaseInitialized ? _AuthRefresh() : null;
+    _router = _buildAppRouter(refresh);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +143,45 @@ class DataCollectorApp extends StatelessWidget {
   }
 }
 
-class LoginScreen extends StatelessWidget {
+class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _email.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _signInWithFirebase() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: _email.text.trim(),
+        password: _password.text,
+      );
+      if (mounted) context.go('/dashboard');
+    } on FirebaseAuthException catch (e) {
+      setState(() => _error = e.message ?? e.code);
+    } catch (e) {
+      setState(() => _error = '$e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -163,14 +244,68 @@ class LoginScreen extends StatelessWidget {
                         style: t.bodyMedium?.copyWith(fontSize: 15),
                         textAlign: TextAlign.center,
                       ),
-                      const SizedBox(height: 40),
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton(
-                          onPressed: () => context.go('/dashboard'),
-                          child: const Text('Перейти в рабочее пространство'),
+                      const SizedBox(height: 32),
+                      if (firebaseInitialized) ...[
+                        TextField(
+                          controller: _email,
+                          keyboardType: TextInputType.emailAddress,
+                          autofillHints: const [AutofillHints.email],
+                          decoration: const InputDecoration(
+                            labelText: 'Email',
+                            border: OutlineInputBorder(),
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 12),
+                        TextField(
+                          controller: _password,
+                          obscureText: true,
+                          autofillHints: const [AutofillHints.password],
+                          decoration: const InputDecoration(
+                            labelText: 'Пароль',
+                            border: OutlineInputBorder(),
+                          ),
+                          onSubmitted: (_) {
+                            if (!_busy) _signInWithFirebase();
+                          },
+                        ),
+                        if (_error != null) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            _error!,
+                            style: t.bodySmall?.copyWith(color: Epoch8Theme.danger),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: _busy ? null : _signInWithFirebase,
+                            child: _busy
+                                ? const SizedBox(
+                                    height: 22,
+                                    width: 22,
+                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                  )
+                                : const Text('Войти'),
+                          ),
+                        ),
+                      ] else ...[
+                        Text(
+                          'Firebase не инициализирован: проверьте lib/firebase_options.dart и '
+                          'google-services.json (Android). Для разработки без входа:',
+                          style: t.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FilledButton(
+                            onPressed: () => context.go('/dashboard'),
+                            child: const Text('Перейти в рабочее пространство'),
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -184,11 +319,40 @@ class LoginScreen extends StatelessWidget {
   }
 }
 
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && ApiEnvironment.isConfigured) {
+      ref.invalidate(projectsProvider);
+    }
+  }
+
+  Future<void> _refreshProjects() async {
+    ref.invalidate(projectsProvider);
+    await ref.read(projectsProvider.future);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final projectsAsync = ref.watch(projectsProvider);
     final packagesAsync = ref.watch(packagesStreamProvider);
 
@@ -227,7 +391,12 @@ class DashboardScreen extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.logout_outlined),
               tooltip: 'Выйти',
-              onPressed: () => context.go('/login'),
+              onPressed: () async {
+                if (firebaseInitialized) {
+                  await FirebaseAuth.instance.signOut();
+                }
+                if (context.mounted) context.go('/login');
+              },
             ),
           ],
         ),
@@ -235,75 +404,97 @@ class DashboardScreen extends ConsumerWidget {
           child: TabBarView(
             children: [
               projectsAsync.when(
-                data: (projects) => projects.isEmpty
-                    ? const Epoch8EmptyState(
-                        icon: Icons.folder_open_outlined,
-                        title: 'Пока нет проектов',
-                        subtitle: 'Добавьте проекты в assets/config/projects.json.',
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(
-                          Epoch8Layout.pagePadding,
-                          12,
-                          Epoch8Layout.pagePadding,
-                          24,
-                        ),
-                        itemCount: projects.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final project = projects[index];
-                          return Epoch8Card(
-                            accentBorder: resolveCollectionFlow(project).shouldGroupHistoryBySubject,
-                            child: ListTile(
-                              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                              leading: Container(
-                                width: 52,
-                                height: 52,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(14),
-                                  color: Epoch8Theme.accent.withValues(alpha: 0.12),
-                                  border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
-                                ),
-                                child: const Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
-                              ),
-                              title: Text(
-                                project.name,
-                                style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
-                              ),
-                              subtitle: Padding(
-                                padding: const EdgeInsets.only(top: 6),
-                                child: Text(
-                                  () {
-                                    final flow = resolveCollectionFlow(project);
-                                    if (flow.isSingleScrollOnly) {
-                                      return 'Версия ${project.version} • полей: ${project.config.fields.length}';
-                                    }
-                                    final nCam = flow.cameraPoseCount;
-                                    final hasInstr = flow.steps.any((s) => s.kind == CollectionScreenKind.instruction);
-                                    final hasForm = flow.steps.any((s) => s.kind == CollectionScreenKind.form);
-                                    final bits = <String>['Версия ${project.version}'];
-                                    if (hasForm) bits.add('анкета');
-                                    if (hasInstr) bits.add('справка');
-                                    if (nCam > 0) bits.add('$nCam ракурса');
-                                    if (flow.reviewStepIndex != null) bits.add('проверка');
-                                    return bits.join(' • ');
-                                  }(),
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
-                                ),
-                              ),
-                              trailing: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color: Epoch8Theme.bgElevated,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
-                              ),
-                              onTap: () => context.go('/project/${project.id}/wizard'),
+                data: (projects) {
+                  final emptySubtitle = ApiEnvironment.isConfigured
+                      ? 'С сервера пока нечего показать: нет доступных проектов или нет сети (показан кэш/bundled). Потяните вниз для обновления.'
+                      : 'Задайте API_BASE_URL при запуске, чтобы подтянуть проекты с Django, или добавьте проекты в assets/config/projects.json.';
+                  final list = ListView.separated(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(
+                      Epoch8Layout.pagePadding,
+                      12,
+                      Epoch8Layout.pagePadding,
+                      24,
+                    ),
+                    itemCount: projects.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    itemBuilder: (context, index) {
+                      final project = projects[index];
+                      return Epoch8Card(
+                        accentBorder: resolveCollectionFlow(project).shouldGroupHistoryBySubject,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          leading: Container(
+                            width: 52,
+                            height: 52,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              color: Epoch8Theme.accent.withValues(alpha: 0.12),
+                              border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                             ),
-                          );
-                        },
+                            child: const Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
+                          ),
+                          title: Text(
+                            project.name,
+                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                          ),
+                          subtitle: Padding(
+                            padding: const EdgeInsets.only(top: 6),
+                            child: Text(
+                              () {
+                                final flow = resolveCollectionFlow(project);
+                                if (flow.isSingleScrollOnly) {
+                                  return 'Версия ${project.version} • полей: ${project.config.fields.length}';
+                                }
+                                final nCam = flow.cameraPoseCount;
+                                final hasInstr = flow.steps.any((s) => s.kind == CollectionScreenKind.instruction);
+                                final hasForm = flow.steps.any((s) => s.kind == CollectionScreenKind.form);
+                                final bits = <String>['Версия ${project.version}'];
+                                if (hasForm) bits.add('анкета');
+                                if (hasInstr) bits.add('справка');
+                                if (nCam > 0) bits.add('$nCam ракурса');
+                                if (flow.reviewStepIndex != null) bits.add('проверка');
+                                return bits.join(' • ');
+                              }(),
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
+                            ),
+                          ),
+                          trailing: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Epoch8Theme.bgElevated,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                          ),
+                          onTap: () => context.go('/project/${project.id}/wizard'),
+                        ),
+                      );
+                    },
+                  );
+                  if (projects.isEmpty) {
+                    return RefreshIndicator(
+                      onRefresh: _refreshProjects,
+                      child: ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.sizeOf(context).height * 0.5,
+                            child: Epoch8EmptyState(
+                              icon: Icons.folder_open_outlined,
+                              title: 'Пока нет проектов',
+                              subtitle: emptySubtitle,
+                            ),
+                          ),
+                        ],
                       ),
+                    );
+                  }
+                  return RefreshIndicator(
+                    onRefresh: _refreshProjects,
+                    child: list,
+                  );
+                },
                 loading: () => const Center(child: CircularProgressIndicator()),
                 error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
               ),

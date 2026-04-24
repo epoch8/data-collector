@@ -3,7 +3,7 @@
 ///
 /// Запуск:
 /// `flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000`
-/// Опционально: `--dart-define=API_BEARER_TOKEN=...` если на сервере задан `API_BEARER_TOKEN`.
+/// Опционально: `--dart-define=API_BEARER_TOKEN=...` если на Django не включён Firebase Auth.
 abstract final class ApiEnvironment {
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',

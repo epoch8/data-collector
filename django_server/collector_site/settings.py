@@ -15,6 +15,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 APPEND_SLASH = False
 
 INSTALLED_APPS = [
+    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -28,7 +29,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "api.middleware.OptionalBearerAuthMiddleware",
+    "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
@@ -38,7 +39,7 @@ ROOT_URLCONF = "collector_site.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -79,6 +80,39 @@ PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / 
 STATIC_URL = "static/"
 
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
+
+# Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id, если он есть в БД.
+DEFAULT_COLLECTOR_PROJECT_ID = (
+    os.environ.get("DEFAULT_COLLECTOR_PROJECT_ID", "").strip() or "simple-photo-2026"
+)
+
+# Firebase Admin SDK: проверка ID token (/v1/*) и синхронизация пользователей.
+# 1) Переменная FIREBASE_SERVICE_ACCOUNT_PATH — путь к JSON сервисного аккаунта
+# 2) Или положите файл firebase-service-account.json в папку django_server/ (не коммитить)
+# 3) Или FIREBASE_SERVICE_ACCOUNT_JSON — весь JSON одной строкой
+# 4) Или GOOGLE_APPLICATION_CREDENTIALS — путь к JSON (как в документации Google Cloud)
+_firebase_sa_path = os.environ.get("FIREBASE_SERVICE_ACCOUNT_PATH", "").strip()
+_firebase_sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT_JSON", "").strip()
+_local_sa = BASE_DIR / "firebase-service-account.json"
+if _firebase_sa_path:
+    FIREBASE_SERVICE_ACCOUNT_PATH = _firebase_sa_path
+elif _local_sa.is_file():
+    FIREBASE_SERVICE_ACCOUNT_PATH = str(_local_sa.resolve())
+else:
+    FIREBASE_SERVICE_ACCOUNT_PATH = None
+
+_firebase_flag = os.environ.get("FIREBASE_AUTH_ENABLED", "").strip().lower()
+_firebase_has_credentials = bool(
+    FIREBASE_SERVICE_ACCOUNT_PATH
+    or _firebase_sa_json
+    or os.environ.get("GOOGLE_APPLICATION_CREDENTIALS", "").strip()
+)
+if _firebase_flag in ("0", "false", "no", "off"):
+    FIREBASE_AUTH_ENABLED = False
+elif _firebase_flag in ("1", "true", "yes", "on"):
+    FIREBASE_AUTH_ENABLED = True
+else:
+    FIREBASE_AUTH_ENABLED = _firebase_has_credentials
 
 ASSETS_CONFIG_ROOT = Path(
     os.environ.get(

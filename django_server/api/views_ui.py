@@ -17,7 +17,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods, require_POST
 
-from .models import PackageSession, Project, UploadedBlob
+from .firebase_user_sync import sync_collector_users_from_firebase
+from .models import CollectorUser, PackageSession, Project, UploadedBlob
 from .project_config_validate import validate_project_payload
 
 staff_only = user_passes_test(lambda u: u.is_authenticated and u.is_staff)
@@ -427,3 +428,50 @@ def package_blob_download(request, project_id: str, package_id: str, blob_pk: in
     resp = FileResponse(blob.file.open("rb"), content_type=ctype or "application/octet-stream")
     resp["Content-Disposition"] = f'inline; filename="{Path(blob.logical_path).name}"'
     return resp
+
+
+@staff_only
+@login_required
+def collector_user_list(request):
+    users = CollectorUser.objects.prefetch_related("projects").order_by("email", "firebase_uid")
+    return render(request, "ui/collector_user_list.html", {"collector_users": users})
+
+
+@staff_only
+@login_required
+@require_POST
+def collector_user_sync_firebase(request):
+    try:
+        r = sync_collector_users_from_firebase()
+        messages.success(
+            request,
+            f"Firebase: импортировано пользователей из консоли — {r.total_firebase} "
+            f"(новых записей {r.created}, обновлён email {r.updated_email}).",
+        )
+    except Exception as e:
+        messages.error(request, str(e))
+    return redirect("ui_collector_user_list")
+
+
+@staff_only
+@login_required
+@require_http_methods(["GET", "POST"])
+def collector_user_detail(request, pk: int):
+    cu = get_object_or_404(CollectorUser.objects.prefetch_related("projects"), pk=pk)
+    all_projects = list(Project.objects.all().order_by("name"))
+    if request.method == "POST":
+        ids = request.POST.getlist("projects")
+        allowed = set(Project.objects.filter(project_id__in=ids).values_list("project_id", flat=True))
+        cu.projects.set(Project.objects.filter(project_id__in=allowed))
+        messages.success(request, "Доступные проекты сохранены.")
+        return redirect("ui_collector_user_detail", pk=cu.pk)
+    selected = list(cu.projects.values_list("project_id", flat=True))
+    return render(
+        request,
+        "ui/collector_user_detail.html",
+        {
+            "collector_user": cu,
+            "all_projects": all_projects,
+            "selected_project_ids": selected,
+        },
+    )

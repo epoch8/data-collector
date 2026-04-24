@@ -6,6 +6,31 @@ def _blob_upload_to(instance, filename: str) -> str:
     return f"pkg/{instance.session_id}/{lid}_{filename}"
 
 
+class CollectorUser(models.Model):
+    """Пользователь мобильного приложения (Firebase Auth): UID — ключ, email для списка в админке."""
+
+    firebase_uid = models.CharField("Firebase UID", max_length=128, unique=True, db_index=True)
+    email = models.CharField("Email (из токена / для отображения)", max_length=254, blank=True, db_index=True)
+    projects = models.ManyToManyField(
+        "Project",
+        blank=True,
+        related_name="collector_users",
+        verbose_name="Доступные проекты",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["email", "firebase_uid"]
+        verbose_name = "Пользователь (Firebase)"
+        verbose_name_plural = "Пользователи (Firebase)"
+
+    def __str__(self) -> str:
+        if self.email:
+            return f"{self.email} ({self.firebase_uid})"
+        return self.firebase_uid
+
+
 class Project(models.Model):
     """Проект: полный JSON конфига и версия (спека 09)."""
 
@@ -40,6 +65,14 @@ class PackageSession(models.Model):
     )
     manifest_json = models.TextField(blank=True, default="")
     failure_reason = models.TextField(blank=True, default="")
+    uploader_uid = models.CharField(
+        max_length=128,
+        blank=True,
+        default="",
+        db_index=True,
+        help_text="Firebase UID создателя сессии (первый POST packages).",
+    )
+    uploader_email = models.CharField(max_length=254, blank=True, default="")
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

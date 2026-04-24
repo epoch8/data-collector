@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:data_collector/features/projects/project_catalog.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
@@ -21,14 +21,28 @@ final class ServerProjectCatalog {
     return root;
   }
 
-  /// Сеть → кэш; при ошибке — только кэш; если пусто — bundled assets.
+  /// При наличии сети — актуальный каталог с Django (в т.ч. пустой список при отсутствии доступа).
+  /// Офлайн или ошибка запроса — только кэш с диска. Bundled из assets здесь не подмешиваются
+  /// (они только если в приложении не задан `API_BASE_URL`).
   Future<List<Project>> loadProjectsWithFallback() async {
+    final online = await _likelyHasNetwork();
+    if (!online) {
+      return _loadProjectsFromDiskCache();
+    }
     try {
       return await syncFromServer();
     } catch (_) {
-      final fromDisk = await _loadProjectsFromDiskCache();
-      if (fromDisk.isNotEmpty) return fromDisk;
-      return ProjectCatalog.loadAll();
+      return _loadProjectsFromDiskCache();
+    }
+  }
+
+  static Future<bool> _likelyHasNetwork() async {
+    try {
+      final r = await Connectivity().checkConnectivity();
+      if (r.isEmpty) return true;
+      return !r.every((e) => e == ConnectivityResult.none);
+    } catch (_) {
+      return true;
     }
   }
 
@@ -180,7 +194,6 @@ final class ServerProjectCatalog {
       final m = jsonDecode(f.readAsStringSync()) as Map<String, dynamic>;
       out.add(Project.fromJson(m));
     }
-    if (out.isEmpty) throw StateError('No project configs after sync');
     return out;
   }
 }

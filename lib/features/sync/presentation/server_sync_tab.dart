@@ -79,7 +79,8 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
               'Чтобы ходить на Django с эмулятора, запустите приложение с:\n\n'
               'flutter run '
               '--dart-define=API_BASE_URL=http://10.0.2.2:8000\n\n'
-              '(порт как у runserver). При токене на сервере добавьте:\n'
+              '(порт как у runserver). Войдите в приложении через Firebase.\n'
+              'Если на сервере не включён Firebase Auth, можно добавить:\n'
               '--dart-define=API_BEARER_TOKEN=...',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,

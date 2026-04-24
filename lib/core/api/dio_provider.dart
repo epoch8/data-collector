@@ -1,5 +1,7 @@
+import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/api/api_environment.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// `null`, если [ApiEnvironment.isConfigured] == false.
@@ -16,17 +18,28 @@ final dioProvider = Provider<Dio?>((ref) {
     ),
   );
 
-  final token = ApiEnvironment.bearerToken.trim();
-  if (token.isNotEmpty) {
-    dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          options.headers['Authorization'] = 'Bearer $token';
-          return handler.next(options);
-        },
-      ),
-    );
-  }
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) async {
+        if (firebaseInitialized) {
+          final user = FirebaseAuth.instance.currentUser;
+          if (user != null) {
+            final id = await user.getIdToken();
+            if (id != null && id.isNotEmpty) {
+              options.headers['Authorization'] = 'Bearer $id';
+            }
+          }
+        }
+        if (options.headers['Authorization'] == null) {
+          final token = ApiEnvironment.bearerToken.trim();
+          if (token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          }
+        }
+        return handler.next(options);
+      },
+    ),
+  );
 
   return dio;
 });

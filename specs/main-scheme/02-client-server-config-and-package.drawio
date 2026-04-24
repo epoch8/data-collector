@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="client-server" name="Клиент — сервер: конфиг и приём пакета">
-        <mxGraphModel dx="1906" dy="1141" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="920" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1094" dy="799" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="919" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -39,7 +39,7 @@
                 <mxCell id="m1" value="&lt;b&gt;4.&lt;/b&gt; Мобилка показывает сбор по сценарию&#10;опирается на поля и экраны из конфига" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
                     <mxGeometry x="48" y="330" width="360" height="72" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="m2" target="s4">
+                <mxCell id="3" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="m2" target="s4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="900" y="371.1428571428571" as="targetPoint"/>
                     </mxGeometry>

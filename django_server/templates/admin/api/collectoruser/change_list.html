@@ -1,0 +1,13 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+<li>
+  <form method="post" action="{% url 'admin:api_collectoruser_sync_firebase' %}" style="display: inline;">
+    {% csrf_token %}
+    <button type="submit" class="button" style="background: #417690; color: #fff; padding: 10px 15px; border-radius: 4px; border: none; cursor: pointer;">
+      Синхронизировать с Firebase
+    </button>
+  </form>
+</li>
+{{ block.super }}
+{% endblock %}

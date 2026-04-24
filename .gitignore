@@ -1,5 +1,87 @@
+# --- OS & editors ---
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.atom/
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/*
+!.vscode/extensions.json
 
-# FVM Version Cache
-build/
+# --- Flutter / Dart ---
 .dart_tool/
-android/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub/
+.pub-cache/
+build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+coverage/
+*.symbols
+app.*.map.json
+
+# --- FVM ---
+.fvm/flutter_sdk
+
+# --- Android (артефакты; исходники в android/ коммитим) ---
+android/.gradle/
+android/app/debug/
+android/app/profile/
+android/app/release/
+android/local.properties
+android/**/GeneratedPluginRegistrant.java
+**/captures/
+**/*.jks
+**/*.keystore
+
+# --- iOS / macOS (доп. к ios/.gitignore, macos/.gitignore) ---
+**/Pods/
+**/DerivedData/
+*.xcuserstate
+
+# --- Django / Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg
+*.egg-info/
+.eggs/
+dist/
+pip-log.txt
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+.coverage.*
+*.cover
+.hypothesis/
+
+django_server/.venv/
+django_server/venv/
+django_server/**/.env
+django_server/.env
+django_server/.env.*
+django_server/db.sqlite3
+django_server/db.sqlite3-journal
+django_server/media/
+django_server/staticfiles/
+
+# --- Секреты (сервисный аккаунт — только локально / CI) ---
+# google-services.json / GoogleService-Info.plist обычно коммитят для сборки клиента.
+django_server/firebase-service-account.json
+*.pem
+
+# --- Прочее ---
+*.log
+.env
+.env.local
+*.orig
