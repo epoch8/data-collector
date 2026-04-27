@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="project-config-delivery" name="Конфиги проектов с сервера (09)">
-        <mxGraphModel dx="1231" dy="767" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1240" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1474" dy="926" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1240" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -95,9 +95,6 @@
                 </mxCell>
                 <mxCell id="eu2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9B7ED0;endArrow=classic;dashed=1;exitX=1;exitY=0.5;entryX=0;entryY=0.85;" parent="1" source="u2" target="u3" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
-                </mxCell>
-                <mxCell id="n1" value="Связь с кодом: каталог и парсинг — см. specs/config/json-driven-collection-ui.md · загрузка пакета — specs/08-server-api-package-upload.md" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="280" y="900" width="920" height="44" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

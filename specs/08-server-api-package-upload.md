@@ -4,7 +4,7 @@
 
 **Связанные документы:** [06-upload-lifecycle.md](06-upload-lifecycle.md) (жизненный цикл и ретраи на устройстве), [07-package-payload-structure.md](07-package-payload-structure.md) (`payload.json`, `blobs/`), [02-data-models-schema.md](02-data-models-schema.md) (идентификаторы).
 
-**Схема:** [08_server_api.drawio](08_server_api.drawio) — порядок шагов, клиент ↔ сервер, outbox и история.
+**Схема:** [main-scheme/03_server_api.drawio](main-scheme/03_server_api.drawio) — порядок шагов, клиент ↔ сервер, outbox и история.
 
 Инициатор трафика — **только клиент** (push).
 
@@ -108,6 +108,8 @@
 
 Переходы **монотонны** из `completed` / `failed` назад без администратора — нет.
 
+**Референс-сервер в репозитории** (`django_server/api`): в БД используются фазы `awaiting_blobs`, `ready_to_commit`, `completed`, `failed` (без отдельного `created`, без `awaiting_manifest` и без `abandoned`). В модели есть поле `failure_reason`, но в ответе `GET …/packages/{package_id}` оно пока не отдаётся.
+
 ---
 
 ## 11. Сервер: эндпоинты (логика)
@@ -118,9 +120,9 @@
 
 Тело: минимум `package_id`; опционально `client_version`, `device_id`, `created_at`; опционально `blob_inventory` → ранняя проверка квот (`422`).
 
-Ответ `201`: `package_id`, при необходимости `upload_session_id`, `status`, `expires_at`.
+Ответ `201` (новая сессия) или `200` (сессия уже была): минимум `package_id`, `status` (`awaiting_blobs` | `ready_to_commit` | `completed` | `failed`). Опционально в продукте: `upload_session_id`, `expires_at`.
 
-Повтор с тем же `package_id` → `200`/`201` с тем же состоянием или `409`, если пакет уже завершён.
+Повтор с тем же `package_id` → `200`/`201` с тем же состоянием или `409`, если пакет уже завершён. **В референсе Django:** для уже `completed` при повторном `POST` возвращается **`409`**, а идемпотентный успех без побочных эффектов реализован на **`POST …/commit`** (см. §11.4).
 
 ### 11.2. `PUT …/packages/{package_id}/blobs/{blob_path}` — один файл
 
@@ -128,11 +130,15 @@
 
 Заголовки: `Content-Type`, `Content-Length` (если не chunked); опционально `Content-MD5` / `Digest`.
 
-Ответ `200`/`201`: подтверждение. Resumable (tus, `Content-Range`) — только если явно в спеке.
+Ответ `200`/`201`: подтверждение. **В референсе Django:** тело ответа `{"path": "<логический путь>", "size": <байты>}`. Resumable (tus, `Content-Range`) — только если явно в спеке.
+
+**Замечание для референса:** если сессия уже в фазе `ready_to_commit`, повторный `PUT` блоба **сбрасывает** сохранённый манифест и возвращает фазу в `awaiting_blobs` (разрешён повторный цикл «блобы → манифест → commit»).
 
 ### 11.3. `PUT` или `POST …/manifest` — JSON после блобов
 
 Тело как `payload.json` по `07`. Сервер: схема и доменные правила; все ссылки на `blobs/…` должны указывать на принятые объекты — иначе **`422`** со списком отсутствующих путей → `ready_to_commit`.
+
+**В референсе Django** реализован только **`PUT`** на `…/manifest` (без `POST`). Неверный JSON тела — **`400`** (`invalid_json`). Отсутствующие блобы: код ошибки `missing_blobs`, пути в `error.details`. Несовпадение `project_id` в JSON и в URL — **`422`**, код `project_id_mismatch`. Если пакет уже `completed`, `PUT` манифеста возвращает **`200`** с `status: completed` (идемпотентно, без изменения данных).
 
 ### 11.4. `POST …/commit`
 
@@ -142,17 +148,25 @@
 
 ### 11.5. `GET …/packages/{package_id}` — статус
 
-После краша: `status`, список принятых блобов, `expires_at`, причина `failed`.
+После краша: `status`, список принятых блобов, опционально `expires_at`, причина `failed`.
+
+**В референсе Django:** JSON `{"package_id", "status", "blobs": [<логические пути>]}`; полей `expires_at` и причины `failed` в ответе пока нет.
 
 ### 11.6. `DELETE …/packages/{package_id}` *(опционально)*
 
-Отмена черновика, пока не `completed` (или отдельная роль).
+Отмена черновика, пока не `completed` (или отдельная роль). **В референсе Django:** успех — **`204`**, для `completed` — **`409`**.
+
+### 11.7. Клиент Flutter в этом репозитории
+
+Последовательность `POST` сессия → `PUT` всех файлов из `blobs/` (путь в URL с `Uri.encodeComponent` по сегментам) → `PUT` манифест → `POST` `commit`: см. `lib/features/collection/logic/package_server_upload.dart`. При **`409`** на `POST` сессии выполняется `GET` статуса; если `completed`, локальное состояние доставки помечается завершённым без повторной отправки блобов.
 
 ---
 
 ## 12. Аутентификация
 
 Bearer / OAuth2 / mTLS — в OpenAPI явно. Токен ограничивает доступные `project_id`. Аудит: `project_id`, `package_id`, субъект, результат `commit` (GDPR для IP/UA).
+
+**В референсе Django** (`ApiV1AuthMiddleware`): при включённом Firebase — заголовок `Authorization: Bearer <Firebase ID token>`, доступ к `project_id` по связи пользователя `CollectorUser` с проектами; при выключенном Firebase и заданном `API_BEARER_TOKEN` — общий секрет; иначе локально `/v1/*` без проверки токена. Эндпоинт **`GET /health`** (вне `/v1/`) — текст `ok` для проверки живости процесса.
 
 ---
 

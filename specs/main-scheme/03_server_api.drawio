@@ -1,4 +1,4 @@
-<mxfile host="65bd71144e">
+<mxfile host="app.diagrams.net" modified="2026-04-27T12:00:00.000Z" agent="Mozilla/5.0" version="24.7.17" type="device">
     <diagram id="upload-flow" name="Загрузка пакета (08)">
         <mxGraphModel dx="1458" dy="666" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
@@ -71,7 +71,7 @@
                 </mxCell>
                 <mxCell id="e_s1" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6B7280;dashed=1;endArrow=none;exitX=0.5;exitY=0;entryX=0.72;entryY=1;" edge="1" parent="1" target="s0">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="1060" y="300.0000000000001" as="sourcePoint"/>
+                        <mxPoint x="1060" y="300" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
             </root>
