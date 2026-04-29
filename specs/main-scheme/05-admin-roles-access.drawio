@@ -1,0 +1,31 @@
+<mxfile host="65bd71144e">
+    <diagram id="admin-roles" name="Admin Roles Access">
+        <mxGraphModel dx="1334" dy="724" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#14161c" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Роли пользователей админки и мобильного приложения" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="760" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="superadmin" value="1) Суперадмин (E8)&lt;br&gt;&lt;br&gt;Права:&lt;br&gt;- Создаёт и редактирует пользователей&lt;br&gt;- Назначает права и роли&lt;br&gt;- Видит все проекты всех пользователей&lt;br&gt;- Назначает админов на проекты&lt;br&gt;- Видит и редактирует все пакеты&lt;br&gt;- Конфигурирует проекты (создание/редактирование)&lt;br&gt;- Задает flow обработки и хранения данных&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1c2d44;strokeColor=#5b9bd5;align=left;verticalAlign=top;spacing=10;fontSize=13;fontColor=#e8eaef;labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="90" width="460" height="200" as="geometry"/>
+                </mxCell>
+                <mxCell id="admin" value="2) Админ проекта (хозяйства)&#10;&#10;Права:&#10;- Даёт доступ к своему проекту&#10;- Создаёт пользователей проекта&#10;- Управляет доступом сотрудников к проекту&#10;- Видит все пакеты проекта и результаты обработки&#10;- Скачивает результаты&#10;- Редактирует и исправляет результаты в своём проекте" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a3328;strokeColor=#6abf8e;align=left;verticalAlign=top;spacing=10;fontSize=13;fontColor=#e8eaef;labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="80" width="460" height="210" as="geometry"/>
+                </mxCell>
+                <mxCell id="employee" value="3) Сотрудник хозяйства&#10;&#10;Права:&#10;- Работает в мобильном приложении&#10;- Отправляет пакеты в доступный проект" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3d3018;strokeColor=#d4a84b;align=left;verticalAlign=top;spacing=10;fontSize=13;fontColor=#e8eaef;labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="700" y="410" width="460" height="140" as="geometry"/>
+                </mxCell>
+                <mxCell id="e1" value="Назначает админов проектов" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#8b95a8;fontColor=#c5cad6;labelBackgroundColor=#14161c;" parent="1" source="superadmin" target="admin" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e2" value="Создаёт/назначает сотрудников проекта" style="endArrow=block;html=1;rounded=0;strokeWidth=2;strokeColor=#8b95a8;fontColor=#c5cad6;labelBackgroundColor=#14161c;" parent="1" source="admin" target="employee" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="note" value="Граница доступа:&#10;- Суперадмин: все проекты&#10;- Админ проекта: только свой проект&#10;- Сотрудник: только отправка данных из МП" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;align=left;verticalAlign=top;spacing=8;fontSize=12;fontColor=#e8eaef;labelBackgroundColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="390" width="290" height="90" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

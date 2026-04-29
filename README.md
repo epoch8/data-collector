@@ -52,9 +52,10 @@ flutter run --dart-define=API_BASE_URL=... --dart-define=API_BEARER_TOKEN=...
 
 | Файл | О чём |
 |------|--------|
-| `specs/main-scheme/01-abstract-config-entities.drawio` | Абстрактный конфиг: сущности и как из них **собираются проекты**. |
-| `specs/main-scheme/02-client-server-config-and-package.drawio` + `specs/09-server-project-config-delivery.md` | Как конфиг **создаётся и доставляется** клиенту; как клиент **заполняет** данные по конфигу и что **ожидает сервер**. |
-| `specs/main-scheme/03_server_api.drawio` + `specs/08-server-api-package-upload.md` | **Загрузка пакета** на сервер (API и поток). |
-| `specs/main-scheme/04-auth-firebase-django.drawio` | **Аутентификация:** Firebase на клиенте и связка с Django. |
+| [`specs/main-scheme/01-abstract-config-entities.drawio`](specs/main-scheme/01-abstract-config-entities.drawio) | Абстрактный конфиг: сущности и как из них **собираются проекты**. |
+| [`specs/main-scheme/02-client-server-config-and-package.drawio`](specs/main-scheme/02-client-server-config-and-package.drawio) + [`specs/09-server-project-config-delivery.md`](specs/09-server-project-config-delivery.md) | Как конфиг **создаётся и доставляется** клиенту; как клиент **заполняет** данные по конфигу и что **ожидает сервер**. |
+| [`specs/main-scheme/03_server_api.drawio`](specs/main-scheme/03_server_api.drawio) + [`specs/08-server-api-package-upload.md`](specs/08-server-api-package-upload.md) | **Загрузка пакета** на сервер (API и поток). |
+| [`specs/main-scheme/04-auth-firebase-django.drawio`](specs/main-scheme/04-auth-firebase-django.drawio) | **Аутентификация:** Firebase на клиенте и связка с Django. |
+| [`specs/main-scheme/05-admin-roles-access.drawio`](specs/main-scheme/05-admin-roles-access.drawio) | **Роли админки:** суперадмин (E8), админ проекта (хозяйства), сотрудник; границы доступа и иерархия назначения прав. |
 
 Остальная документация по продукту и стеку лежит в `specs/*.md` (обзор, MVP, структура пакета и т.д.).
