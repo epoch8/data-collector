@@ -1,6 +1,10 @@
 import 'package:data_collector/core/api/api_environment.dart';
+import 'package:data_collector/core/api/dio_provider.dart';
+import 'package:data_collector/features/projects/project_asset_cache.dart';
 import 'package:data_collector/models/project_config.dart';
+import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Путь из Markdown `![](...)`: относительные `uploads/…`, `assets/…`, абсолютные URL.
 String? markdownImageRefFromUri(Uri uri) {
@@ -55,15 +59,8 @@ Uri? exampleGuideImageUri(Project project, String path) {
   if (p.startsWith('/v1/')) {
     return Uri.parse('$base$p');
   }
-  final String rel;
-  if (p.startsWith('assets/')) {
-    rel = p.substring('assets/'.length);
-  } else if (!p.contains('://') && !p.startsWith('/')) {
-    rel = p;
-  } else {
-    return null;
-  }
-  if (rel.isEmpty || rel.split('/').contains('..')) {
+  final rel = projectAssetStorageRelativePath(path);
+  if (rel == null) {
     return null;
   }
   final enc = rel.split('/').where((s) => s.isNotEmpty).map(Uri.encodeComponent).join('/');
@@ -76,31 +73,172 @@ Map<String, String>? _imageAuthHeaders() {
   return {'Authorization': 'Bearer $t'};
 }
 
-/// Картинка примера из конфига: с сервера при `API_BASE_URL`, иначе из bundle.
+/// Картинка примера: сначала локальный кэш (`server_project_cache/project_assets`), затем одна загрузка с API.
 Widget projectExampleImage({
   required Project project,
   required String assetPath,
   required BoxFit fit,
   required Widget Function(BuildContext context) errorPlaceholder,
 }) {
-  final uri = exampleGuideImageUri(project, assetPath);
-  if (uri != null) {
-    return Image.network(
-      uri.toString(),
-      fit: fit,
-      headers: _imageAuthHeaders(),
-      errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
-    );
-  }
-  final bundled = assetPath.trim();
-  if (bundled.startsWith('assets/')) {
-    return Image.asset(
-      bundled,
-      fit: fit,
-      errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
-    );
-  }
-  return Builder(
-    builder: (ctx) => errorPlaceholder(ctx),
+  return ProjectExampleImage(
+    project: project,
+    assetPath: assetPath,
+    fit: fit,
+    errorPlaceholder: errorPlaceholder,
   );
+}
+
+class ProjectExampleImage extends ConsumerStatefulWidget {
+  const ProjectExampleImage({
+    super.key,
+    required this.project,
+    required this.assetPath,
+    required this.fit,
+    required this.errorPlaceholder,
+  });
+
+  final Project project;
+  final String assetPath;
+  final BoxFit fit;
+  final Widget Function(BuildContext context) errorPlaceholder;
+
+  @override
+  ConsumerState<ProjectExampleImage> createState() => _ProjectExampleImageState();
+}
+
+class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
+  Widget? _image;
+  bool _ready = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _resolve();
+  }
+
+  @override
+  void didUpdateWidget(ProjectExampleImage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.project.id != widget.project.id || oldWidget.assetPath != widget.assetPath) {
+      setState(() {
+        _ready = false;
+        _image = null;
+      });
+      _resolve();
+    }
+  }
+
+  Future<void> _resolve() async {
+    final path = widget.assetPath;
+    final trimmed = path.trim();
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      final u = Uri.tryParse(trimmed);
+      if (u != null && mounted) {
+        setState(() {
+          _image = Image.network(
+            u.toString(),
+            fit: widget.fit,
+            headers: _imageAuthHeaders(),
+            errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+          );
+          _ready = true;
+        });
+      }
+      return;
+    }
+
+    final rel = projectAssetStorageRelativePath(path);
+    if (rel != null && ApiEnvironment.isConfigured) {
+      final file = await cachedProjectAssetFile(widget.project.id, rel);
+      if (await file.exists() && mounted) {
+        setState(() {
+          _image = Image.file(
+            file,
+            fit: widget.fit,
+            errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+          );
+          _ready = true;
+        });
+        return;
+      }
+
+      final dio = ref.read(dioProvider);
+      final uri = exampleGuideImageUri(widget.project, path);
+      if (dio != null && uri != null) {
+        try {
+          await ensureProjectAssetCached(
+            dio: dio,
+            projectId: widget.project.id,
+            relativePath: rel,
+            downloadUri: uri,
+          );
+        } catch (_) {
+          /* fallback: Image.network */
+        }
+        if (await file.exists() && mounted) {
+          setState(() {
+            _image = Image.file(
+              file,
+              fit: widget.fit,
+              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+            );
+            _ready = true;
+          });
+          return;
+        }
+        if (mounted) {
+          setState(() {
+            _image = Image.network(
+              uri.toString(),
+              fit: widget.fit,
+              headers: _imageAuthHeaders(),
+              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+            );
+            _ready = true;
+          });
+          return;
+        }
+      }
+    }
+
+    if (trimmed.startsWith('assets/') && mounted) {
+      setState(() {
+        _image = Image.asset(
+          trimmed,
+          fit: widget.fit,
+          errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+        );
+        _ready = true;
+      });
+      return;
+    }
+
+    if (mounted) {
+      setState(() {
+        _image = null;
+        _ready = true;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      return Container(
+        constraints: const BoxConstraints(minHeight: 80),
+        alignment: Alignment.center,
+        color: Epoch8Theme.bgElevated,
+        child: const SizedBox(
+          width: 28,
+          height: 28,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+    if (_image != null) {
+      return _image!;
+    }
+    return Builder(builder: (ctx) => widget.errorPlaceholder(ctx));
+  }
 }

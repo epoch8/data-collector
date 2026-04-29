@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:data_collector/features/projects/project_asset_cache.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:dio/dio.dart';
 import 'package:path/path.dart' as p;
@@ -180,6 +181,7 @@ final class ServerProjectCatalog {
       }),
       flush: true,
     );
+    await deleteCachedAssetsForProject(projectId);
   }
 
   List<Project> _projectsFromCatalogFile(Map<String, dynamic> catalog, Directory root) {
