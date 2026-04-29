@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="admin-roles" name="Admin Roles Access">
-        <mxGraphModel dx="1334" dy="724" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#14161c" math="0" shadow="0">
+        <mxGraphModel dx="1760" dy="921" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#14161c" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -24,6 +24,184 @@
                 </mxCell>
                 <mxCell id="note" value="Граница доступа:&#10;- Суперадмин: все проекты&#10;- Админ проекта: только свой проект&#10;- Сотрудник: только отправка данных из МП" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;align=left;verticalAlign=top;spacing=8;fontSize=12;fontColor=#e8eaef;labelBackgroundColor=none;" parent="1" vertex="1">
                     <mxGeometry x="40" y="390" width="290" height="90" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="admin-roles-decompose" name="Admin Roles Decomposition">
+        <mxGraphModel grid="1" page="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" pageScale="1" pageWidth="1600" pageHeight="1200" background="#14161c" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="d2_title" value="Декомпозиция ролей: сущности и права" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="680" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r_super" value="ROLE&#10;SuperAdmin (E8)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="30" width="220" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="r_admin" value="ROLE&#10;ProjectAdmin" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a3328;strokeColor=#6abf8e;fontColor=#e8eaef;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="180" width="220" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="r_worker" value="ROLE&#10;FarmEmployee" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3d3018;strokeColor=#d4a84b;fontColor=#e8eaef;fontStyle=1;" parent="1" vertex="1">
+                    <mxGeometry x="600" y="320" width="220" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_project" value="ENTITY&#10;Project" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="80" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_user" value="ENTITY&#10;User" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="160" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_access" value="ENTITY&#10;ProjectAccess" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="240" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_package" value="ENTITY&#10;Package" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="320" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_result" value="ENTITY&#10;Result" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="400" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="e_cfg" value="ENTITY&#10;ProjectConfig" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;" parent="1" vertex="1">
+                    <mxGeometry x="60" y="480" width="220" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="perm_super" value="PERMISSIONS&#10;manage_users&#10;assign_admin&#10;manage_all_projects&#10;edit_all_packages&#10;manage_project_config" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2038;strokeColor=#9f7aea;fontColor=#e8eaef;align=left;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="110" width="360" height="146" as="geometry"/>
+                </mxCell>
+                <mxCell id="perm_admin" value="PERMISSIONS&#10;manage_project_users&#10;grant_project_access&#10;view_project_packages&#10;download_results&#10;edit_project_results" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2038;strokeColor=#9f7aea;fontColor=#e8eaef;align=left;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="280" width="360" height="146" as="geometry"/>
+                </mxCell>
+                <mxCell id="perm_worker" value="PERMISSIONS&#10;submit_package_from_mobile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#2a2038;strokeColor=#9f7aea;fontColor=#e8eaef;align=left;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="450" width="360" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="n_scope" value="ACCESS SCOPE&#10;SuperAdmin: all projects&#10;ProjectAdmin: assigned project only&#10;FarmEmployee: submit only" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;align=left;spacing=8;" parent="1" vertex="1">
+                    <mxGeometry x="680" y="610" width="420" height="96" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed1" value="creates / edits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=0;exitY=0.5;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#5b9bd5;fontColor=#5b9bd5;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="e_user" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="156"/>
+                            <mxPoint x="430" y="192"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed2" value="assigns admin" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=1;strokeWidth=2;strokeColor=#8b95a8;fontColor=#c5cad6;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="r_admin" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed3" value="manages" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.35;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#5b9bd5;fontColor=#5b9bd5;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="e_project" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="145"/>
+                            <mxPoint x="430" y="112"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed4" value="configures" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.7;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#5b9bd5;fontColor=#5b9bd5;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="e_cfg" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="590" y="180"/>
+                            <mxPoint x="570" y="180"/>
+                            <mxPoint x="570" y="512"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed5" value="views / edits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.9;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#5b9bd5;fontColor=#5b9bd5;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="e_package" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="590" y="178"/>
+                            <mxPoint x="500" y="178"/>
+                            <mxPoint x="500" y="352"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed6" value="grants access" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.5;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#6abf8e;fontColor=#6abf8e;labelBackgroundColor=#14161c;" parent="1" source="r_admin" target="e_access" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="286"/>
+                            <mxPoint x="450" y="272"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed7" value="creates users" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.35;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#6abf8e;fontColor=#6abf8e;labelBackgroundColor=#14161c;" parent="1" source="r_admin" target="e_user" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="275"/>
+                            <mxPoint x="450" y="192"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed8" value="project scope" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.15;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#6abf8e;fontColor=#6abf8e;labelBackgroundColor=#14161c;" parent="1" source="r_admin" target="e_project" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="260"/>
+                            <mxPoint x="450" y="112"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed9" value="views / edits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.8;entryX=1;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#6abf8e;fontColor=#6abf8e;labelBackgroundColor=#14161c;" parent="1" source="r_admin" target="e_result" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="500" y="307"/>
+                            <mxPoint x="450" y="432"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed10" value="submits" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.45;entryX=0;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#d4a84b;fontColor=#d4a84b;labelBackgroundColor=#14161c;entryDx=0;entryDy=0;" parent="1" source="r_worker" target="e_package" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="412"/>
+                            <mxPoint x="540" y="412"/>
+                            <mxPoint x="540" y="640"/>
+                            <mxPoint x="40" y="640"/>
+                            <mxPoint x="40" y="352"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed11" value="only assigned project" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=0;exitY=0.7;endArrow=block;html=1;strokeWidth=2;strokeColor=#d4a84b;fontColor=#d4a84b;labelBackgroundColor=#14161c;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="r_worker" target="e_project" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="600" y="710"/>
+                            <mxPoint x="10" y="710"/>
+                            <mxPoint x="10" y="112"/>
+                        </Array>
+                        <mxPoint x="350" y="90" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed12" value="belongs to" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=1;strokeWidth=2;dashed=1;strokeColor=#6f7788;fontColor=#b0b7c6;labelBackgroundColor=#14161c;" parent="1" source="e_package" target="e_project" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed13" value="produces" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=1;strokeWidth=2;dashed=1;strokeColor=#6f7788;fontColor=#b0b7c6;labelBackgroundColor=#14161c;" parent="1" source="e_package" target="e_result" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed14" value="grants user→project" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=1;strokeWidth=2;dashed=1;strokeColor=#6f7788;fontColor=#b0b7c6;labelBackgroundColor=#14161c;" parent="1" source="e_access" target="e_project" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="40" y="272"/>
+                            <mxPoint x="40" y="112"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed15" value="links" style="edgeStyle=orthogonalEdgeStyle;rounded=0;endArrow=block;html=1;strokeWidth=2;dashed=1;strokeColor=#6f7788;fontColor=#b0b7c6;labelBackgroundColor=#14161c;" parent="1" source="e_access" target="e_user" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ed16" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#5b9bd5;fontColor=#5b9bd5;labelBackgroundColor=#14161c;" parent="1" source="r_super" target="perm_super" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="900" y="156"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed17" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#6abf8e;fontColor=#6abf8e;labelBackgroundColor=#14161c;" parent="1" source="r_admin" target="perm_admin" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="900" y="286"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ed18" value="has" style="edgeStyle=orthogonalEdgeStyle;rounded=0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;endArrow=block;html=1;strokeWidth=2;strokeColor=#d4a84b;fontColor=#d4a84b;labelBackgroundColor=#14161c;" parent="1" source="r_worker" target="perm_worker" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="900" y="416"/>
+                        </Array>
+                    </mxGeometry>
                 </mxCell>
             </root>
         </mxGraphModel>
