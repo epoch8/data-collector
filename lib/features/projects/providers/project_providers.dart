@@ -14,10 +14,11 @@ final firebaseAuthUserProvider = StreamProvider<User?>((ref) {
 /// Без `API_BASE_URL` — только bundled JSON. Иначе при сети — актуальный `/v1/projects` + конфиги;
 /// офлайн — кэш на диске, затем bundled (см. [ServerProjectCatalog.loadProjectsWithFallback]).
 final projectsProvider = FutureProvider<List<Project>>((ref) async {
-  ref.watch(firebaseAuthUserProvider);
   if (!ApiEnvironment.isConfigured) {
     return ProjectCatalog.loadAll();
   }
+  // Дождаться первого снимка сессии перед `/v1/projects`, иначе часто два запроса подряд (loading → user).
+  await ref.watch(firebaseAuthUserProvider.future);
   final dio = ref.watch(dioProvider);
   if (dio == null) return ProjectCatalog.loadAll();
   return ServerProjectCatalog(dio).loadProjectsWithFallback();

@@ -12,7 +12,9 @@ final dioProvider = Provider<Dio?>((ref) {
   final dio = Dio(
     BaseOptions(
       baseUrl: base,
-      connectTimeout: const Duration(seconds: 30),
+      // Короткое подключение — быстрее уходим на локальный кэш при недоступном API.
+      connectTimeout: const Duration(seconds: 12),
+      sendTimeout: const Duration(seconds: 30),
       receiveTimeout: const Duration(minutes: 2),
       headers: {Headers.acceptHeader: 'application/json'},
     ),

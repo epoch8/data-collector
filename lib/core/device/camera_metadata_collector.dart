@@ -129,6 +129,8 @@ class CameraMetadataCollector {
     ctx['native_back_camera'] = native;
   }
 
+  static const int _maxExifValueChars = 8000;
+
   static Future<Map<String, dynamic>> _readExifSubset(String path) async {
     final out = <String, dynamic>{};
     try {
@@ -136,29 +138,16 @@ class CameraMetadataCollector {
       final data = await readExifFromBytes(bytes);
       if (data.isEmpty) return out;
 
-      bool wantKey(String key) {
-        final k = key.toUpperCase();
-        return k.contains('FOCAL') ||
-            k.contains('LENS') ||
-            k.contains('MAKE') ||
-            k.contains('MODEL') ||
-            k.contains('DATETIME') ||
-            k.contains('EXPOSURE') ||
-            k.contains('FNUMBER') ||
-            k.contains('ISO') ||
-            k.contains('EXIFIMAGEWIDTH') ||
-            k.contains('EXIFIMAGELENGTH') ||
-            k.contains('IMAGE WIDTH') ||
-            k.contains('IMAGE LENGTH') ||
-            k.contains('ZOOM');
-      }
-
       for (final e in data.entries) {
         final key = e.key.toString();
-        if (!wantKey(key)) continue;
         final tag = e.value;
         try {
-          out[key] = tag.printable;
+          var s = tag.printable;
+          if (s.length > _maxExifValueChars) {
+            s = '${s.substring(0, _maxExifValueChars)}…(truncated, ${_maxExifValueChars} chars max)';
+            out['${key}__value_truncated'] = true;
+          }
+          out[key] = s;
         } catch (_) {
           out[key] = tag.toString();
         }
@@ -202,6 +191,18 @@ class CameraMetadataCollector {
     final pxW = _asInt(native?['sensor_pixel_array_width']);
     final pxH = _asInt(native?['sensor_pixel_array_height']);
 
+    final calList = _asDoubleList(native?['lens_intrinsic_calibration_px']) ??
+        _calibrationFromCamera2Map(native?['camera2_characteristics'] as Map<String, dynamic>?);
+    if (calList != null && calList.length >= 4) {
+      d['fx_px_from_lens_intrinsic_calibration'] = calList[0];
+      d['fy_px_from_lens_intrinsic_calibration'] = calList[1];
+      d['cx_px_from_lens_intrinsic_calibration'] = calList[2];
+      d['cy_px_from_lens_intrinsic_calibration'] = calList[3];
+      if (calList.length >= 5) {
+        d['skew_from_lens_intrinsic_calibration'] = calList[4];
+      }
+    }
+
     final nativeFx = _asDouble(native?['estimated_fx_px']);
     final nativeFy = _asDouble(native?['estimated_fy_px']);
 
@@ -218,8 +219,10 @@ class CameraMetadataCollector {
       d['fx_px_from_35mm_equiv'] = (imgW / 36.0) * focal35;
     }
 
-    // If native gave pixel array but EXIF focal + sensor width — prefer combined label
-    if (d.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
+    // Prefer OEM intrinsic calibration when present, then EXIF+sensor, then pinhole native, then 35mm equiv.
+    if (d.containsKey('fx_px_from_lens_intrinsic_calibration')) {
+      d['preferred_fx_px_estimate'] = d['fx_px_from_lens_intrinsic_calibration'];
+    } else if (d.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
       d['preferred_fx_px_estimate'] = d['fx_px_from_exif_focal_and_native_sensor'];
     } else if (d.containsKey('fx_px_from_native_mm')) {
       d['preferred_fx_px_estimate'] = d['fx_px_from_native_mm'];
@@ -270,4 +273,22 @@ class CameraMetadataCollector {
   }
 
   static int? _parseInt(dynamic v) => _asInt(v);
+
+  static List<double>? _asDoubleList(dynamic v) {
+    if (v is! List || v.isEmpty) return null;
+    final out = <double>[];
+    for (final e in v) {
+      final d = _asDouble(e);
+      if (d == null) return null;
+      out.add(d);
+    }
+    return out;
+  }
+
+  /// Fallback when only [camera2_characteristics] is present (e.g. hand-built JSON).
+  static List<double>? _calibrationFromCamera2Map(Map<String, dynamic>? m) {
+    if (m == null) return null;
+    final raw = m['android.lens.intrinsicCalibration'];
+    return _asDoubleList(raw);
+  }
 }

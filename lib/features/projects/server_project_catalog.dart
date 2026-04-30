@@ -112,17 +112,21 @@ final class ServerProjectCatalog {
     }
 
     final items = catalogMap['projects'] as List<dynamic>? ?? [];
+    final configFutures = <Future<void>>[];
     for (final raw in items) {
       if (raw is! Map) continue;
       final pid = raw['project_id'] as String?;
       if (pid == null) continue;
       final ver = raw['config_version']?.toString() ?? '';
-      await _ensureProjectConfig(
-        projectId: pid,
-        configVersion: ver,
-        cacheRoot: root,
+      configFutures.add(
+        _ensureProjectConfig(
+          projectId: pid,
+          configVersion: ver,
+          cacheRoot: root,
+        ),
       );
     }
+    await Future.wait(configFutures);
 
     return _projectsFromCatalogFile(catalogMap, root);
   }

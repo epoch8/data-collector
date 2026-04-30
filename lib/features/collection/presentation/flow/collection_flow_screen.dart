@@ -685,8 +685,12 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     native.forEach((k, v) => m[k.toString()] = v);
     final priority = [
       'source',
+      'metadata_schema_version',
       'primary_focal_length_mm',
       'focal_lengths_mm',
+      'lens_intrinsic_calibration_px',
+      'lens_intrinsic_calibration_order',
+      'lens_distortion',
       'sensor_physical_width_mm',
       'sensor_physical_height_mm',
       'sensor_pixel_array_width',
@@ -702,9 +706,15 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     final done = <String>{};
     final out = <Widget>[];
     void addLine(String k, dynamic v) {
+      String text;
+      if (k == 'camera2_characteristics' && v is Map) {
+        text = '$k: {${v.length} keys} — см. полный JSON ниже';
+      } else {
+        text = '$k: $v';
+      }
       out.add(Padding(
         padding: const EdgeInsets.only(bottom: 6),
-        child: SelectableText('$k: $v', style: const TextStyle(fontSize: 13, height: 1.35)),
+        child: SelectableText(text, style: const TextStyle(fontSize: 13, height: 1.35)),
       ));
     }
 

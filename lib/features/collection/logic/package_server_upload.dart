@@ -1,12 +1,11 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/package/package_paths.dart';
 import 'package:data_collector/core/storage/database.dart';
+import 'package:data_collector/features/collection/logic/package_server_manifest.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
@@ -80,14 +79,8 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
-    final payloadFile = File(p.join(root, 'payload.json'));
-    final Map<String, dynamic> manifestMap;
-    if (await payloadFile.exists()) {
-      manifestMap = jsonDecode(await payloadFile.readAsString()) as Map<String, dynamic>;
-    } else {
-      manifestMap = Map<String, dynamic>.from(jsonDecode(pkg.dataJson) as Map);
-    }
-    _injectSubmittedBy(manifestMap);
+    final manifestMap = await loadPackagePayloadMap(pkg);
+    injectSubmittedByIntoServerManifest(manifestMap);
 
     final manifestBody = const JsonEncoder.withIndent('  ').convert(manifestMap);
 
@@ -107,14 +100,4 @@ Future<void> uploadDriftPackageToServer({
     await setState('failed', e.toString());
     rethrow;
   }
-}
-
-void _injectSubmittedBy(Map<String, dynamic> manifest) {
-  if (!firebaseInitialized) return;
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return;
-  manifest['submitted_by'] = <String, dynamic>{
-    'firebase_uid': user.uid,
-    'email': user.email ?? '',
-  };
 }

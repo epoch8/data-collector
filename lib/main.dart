@@ -19,6 +19,7 @@ import 'features/collection/logic/package_payload_codec.dart';
 import 'features/sync/presentation/server_sync_tab.dart';
 import 'features/history/history_local_actions.dart';
 import 'features/history/package_delivery_style.dart';
+import 'features/history/package_manifest_export.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 
@@ -555,6 +556,11 @@ class CowHistoryScreen extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
+                        tooltip: 'Скачать JSON манифеста',
+                        icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                        onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                      ),
+                      IconButton(
                         tooltip: 'Удалить с устройства',
                         icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                         onPressed: () async {
@@ -604,7 +610,12 @@ class PackageHistoryScreen extends ConsumerWidget {
           appBar: AppBar(
             title: Text('Пакет $packageId'),
             actions: [
-              if (pkg != null)
+              if (pkg != null) ...[
+                IconButton(
+                  tooltip: 'Скачать JSON манифеста (как на сервер)',
+                  icon: const Icon(Icons.download_outlined),
+                  onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg!),
+                ),
                 IconButton(
                   tooltip: 'Удалить с устройства',
                   icon: const Icon(Icons.delete_outline),
@@ -618,6 +629,7 @@ class PackageHistoryScreen extends ConsumerWidget {
                     }
                   },
                 ),
+              ],
             ],
           ),
           body: pkg == null
@@ -787,6 +799,15 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
             ),
           );
         }),
+      const SizedBox(height: 8),
+      SizedBox(
+        width: double.infinity,
+        child: FilledButton.icon(
+          onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+          icon: const Icon(Icons.download_outlined),
+          label: const Text('Скачать JSON манифеста (как на сервер)'),
+        ),
+      ),
     ],
   );
 }
@@ -955,6 +976,11 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
+                    tooltip: 'Скачать JSON манифеста',
+                    icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                    onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                  ),
+                  IconButton(
                     tooltip: 'Удалить с устройства',
                     icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                     onPressed: () async {
@@ -1024,6 +1050,11 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                IconButton(
+                  tooltip: 'Скачать JSON манифеста',
+                  icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                  onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                ),
                 IconButton(
                   tooltip: 'Удалить с устройства',
                   icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),

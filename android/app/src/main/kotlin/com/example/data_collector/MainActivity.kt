@@ -77,12 +77,27 @@ class MainActivity : FlutterActivity() {
             "estimated_cy_px" to if (pixelH > 0) pixelH / 2.0 else null,
             "android_api" to Build.VERSION.SDK_INT,
             "source" to "android_camera2",
+            "metadata_schema_version" to 2,
         )
 
         if (focalLengths != null && focalLengths.isNotEmpty()) {
             out["focal_lengths_mm"] = focalLengths.map { it.toDouble() }
             out["primary_focal_length_mm"] = focalMm?.toDouble()
         }
+
+        val calibration = c.get(CameraCharacteristics.LENS_INTRINSIC_CALIBRATION)
+        if (calibration != null && calibration.size >= 5) {
+            out["lens_intrinsic_calibration_px"] = calibration.map { it.toDouble() }
+            out["lens_intrinsic_calibration_order"] = "fx,fy,cx,cy,skew"
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            val distortion = c.get(CameraCharacteristics.LENS_DISTORTION)
+            if (distortion != null && distortion.isNotEmpty()) {
+                out["lens_distortion"] = distortion.map { it.toDouble() }
+            }
+        }
+
+        out["camera2_characteristics"] = Camera2FullMetadata.collectAll(c)
 
         return out
     }
