@@ -14,12 +14,32 @@ final firebaseAuthUserProvider = StreamProvider<User?>((ref) {
 /// Без `API_BASE_URL` — только bundled JSON. Иначе при сети — актуальный `/v1/projects` + конфиги;
 /// офлайн — кэш на диске, затем bundled (см. [ServerProjectCatalog.loadProjectsWithFallback]).
 final projectsProvider = FutureProvider<List<Project>>((ref) async {
+  List<Project> projects;
   if (!ApiEnvironment.isConfigured) {
-    return ProjectCatalog.loadAll();
+    projects = await ProjectCatalog.loadAll();
+  } else {
+    // Дождаться первого снимка сессии перед `/v1/projects`, иначе часто два запроса подряд (loading → user).
+    await ref.watch(firebaseAuthUserProvider.future);
+    final dio = ref.watch(dioProvider);
+    if (dio == null) {
+      projects = await ProjectCatalog.loadAll();
+    } else {
+      projects = await ServerProjectCatalog(dio).loadProjectsWithFallback();
+    }
   }
-  // Дождаться первого снимка сессии перед `/v1/projects`, иначе часто два запроса подряд (loading → user).
-  await ref.watch(firebaseAuthUserProvider.future);
-  final dio = ref.watch(dioProvider);
-  if (dio == null) return ProjectCatalog.loadAll();
-  return ServerProjectCatalog(dio).loadProjectsWithFallback();
+
+  // Всегда держим локальный «Заметка + фото» как офлайн-safe базовый проект.
+  try {
+    final defaultProject = await ProjectCatalog.loadSimplePhotoNotes();
+    final idx = projects.indexWhere((p) => p.id == defaultProject.id);
+    if (idx >= 0) {
+      projects[idx] = defaultProject;
+    } else {
+      projects.insert(0, defaultProject);
+    }
+  } catch (_) {
+    // Если asset поврежден, не ломаем загрузку остального каталога.
+  }
+
+  return projects;
 });
