@@ -16,6 +16,7 @@ import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'core/package/package_paths.dart';
 import 'features/collection/logic/package_payload_codec.dart';
+import 'features/collection/presentation/flow/package_payload_keys.dart';
 import 'features/sync/presentation/server_sync_tab.dart';
 import 'features/history/history_local_actions.dart';
 import 'features/history/package_delivery_style.dart';
@@ -1113,7 +1114,12 @@ List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Packag
 }
 
 List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic> raw) {
-  const skip = {'camera_capture_context', 'korovas_camera_context'};
+  const skip = {
+    'camera_capture_context',
+    'korovas_camera_context',
+    PackagePayloadKeys.cameraSession,
+    PackagePayloadKeys.cameraDebug,
+  };
   final out = <Widget>[];
   final keys = raw.keys.where((k) => !skip.contains(k)).toList()..sort();
   for (final k in keys) {
@@ -1256,7 +1262,13 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
           if (imagePath == null || imagePath.isEmpty) continue;
           final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
           final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
-          for (final key in ['collected_at', 'exif', 'derived']) {
+          for (final key in [
+            'collected_at',
+            'exif',
+            'derived',
+            PackagePayloadKeys.frameCamera,
+            PackagePayloadKeys.cameraSupplement,
+          ]) {
             payload[key] = shot[key];
           }
           out[resolved] = payload;
@@ -1265,7 +1277,12 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
     }
   }
 
-  const skipRoot = {'camera_capture_context', 'korovas_camera_context'};
+  const skipRoot = {
+    'camera_capture_context',
+    'korovas_camera_context',
+    PackagePayloadKeys.cameraSession,
+    PackagePayloadKeys.cameraDebug,
+  };
   for (final fieldEntry in data.entries) {
     if (skipRoot.contains(fieldEntry.key)) continue;
     final vid = fieldEntry.value;
@@ -1281,7 +1298,13 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
       final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
       if (out.containsKey(resolved)) continue;
       final payload = <String, dynamic>{'pose': fieldEntry.key.toString()};
-      for (final key in ['collected_at', 'exif', 'derived']) {
+      for (final key in [
+        'collected_at',
+        'exif',
+        'derived',
+        PackagePayloadKeys.frameCamera,
+        PackagePayloadKeys.cameraSupplement,
+      ]) {
         payload[key] = shotBody[key];
       }
       out[resolved] = payload;

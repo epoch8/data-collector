@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:data_collector/core/device/device_camera_channel.dart';
+import 'package:data_collector/core/device/device_sensor_fallback.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -39,9 +40,19 @@ class CameraMetadataCollector {
       exif: exifMap,
     );
 
+    final dev = ctx['device'];
+    final deviceModel = dev is Map ? dev['model']?.toString() : null;
+    final frameCamera = buildFrameCamera(
+      native: ctx['native_back_camera'] as Map<String, dynamic>?,
+      exif: exifMap,
+      derived: derived,
+      deviceModel: deviceModel,
+    );
+
     final shotMeta = <String, dynamic>{
       'exif': exifMap,
       'derived': derived,
+      PackagePayloadKeys.frameCamera: frameCamera,
       'collected_at': DateTime.now().toUtc().toIso8601String(),
     };
 
@@ -241,6 +252,183 @@ class CameraMetadataCollector {
     };
 
     return d;
+  }
+
+  /// Intrinsics for the **saved image file** (EXIF image width/height), for depth / K consumers.
+  static Map<String, dynamic> buildFrameCamera({
+    required Map<String, dynamic>? native,
+    required Map<String, dynamic> exif,
+    required Map<String, dynamic> derived,
+    String? deviceModel,
+  }) {
+    final notes = derived['notes'];
+    final notesMap = <String, dynamic>{};
+    if (notes is Map) {
+      notes.forEach((k, v) => notesMap[k.toString()] = v);
+    }
+
+    var imgW = _asInt(notesMap['image_width_exif']);
+    var imgH = _asInt(notesMap['image_height_exif']);
+    if (imgW == null || imgH == null) {
+      final d = _parseExifImageDimensions(exif);
+      imgW = imgW ?? d.$1;
+      imgH = imgH ?? d.$2;
+    }
+
+    final natW = _asInt(native?['sensor_pixel_array_width']);
+    final natH = _asInt(native?['sensor_pixel_array_height']);
+
+    var focalMm = _asDouble(notesMap['focal_length_mm_exif']);
+    focalMm ??= _asDouble(native?['primary_focal_length_mm']);
+
+    final sensorWmm = _asDouble(notesMap['sensor_width_mm_native']) ?? _asDouble(native?['sensor_physical_width_mm']);
+    final sensorHmm = _asDouble(notesMap['sensor_height_mm_native']) ?? _asDouble(native?['sensor_physical_height_mm']);
+
+    final focal35 = _asDouble(notesMap['focal_length_35mm_equiv_exif']);
+
+    var source = _intrinsicsSourceFromDerived(derived);
+    double? fx;
+    double? fy;
+    double? cx;
+    double? cy;
+    double? skew;
+
+    final natFx = _asDouble(derived['fx_px_from_native_mm']);
+    final natFy = _asDouble(derived['fy_px_from_native_mm']);
+
+    if (imgW != null &&
+        imgH != null &&
+        natW != null &&
+        natH != null &&
+        natW > 0 &&
+        natH > 0) {
+      final sx = imgW / natW;
+      final sy = imgH / natH;
+
+      if (derived.containsKey('fx_px_from_lens_intrinsic_calibration')) {
+        final fxN = _asDouble(derived['fx_px_from_lens_intrinsic_calibration']);
+        final fyN = _asDouble(derived['fy_px_from_lens_intrinsic_calibration']);
+        final cxN = _asDouble(derived['cx_px_from_lens_intrinsic_calibration']);
+        final cyN = _asDouble(derived['cy_px_from_lens_intrinsic_calibration']);
+        skew = _asDouble(derived['skew_from_lens_intrinsic_calibration']);
+        if (fxN != null) fx = fxN * sx;
+        if (fyN != null) fy = fyN * sy;
+        if (cxN != null) cx = cxN * sx;
+        if (cyN != null) cy = cyN * sy;
+      } else if (derived.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
+        fx = _asDouble(derived['fx_px_from_exif_focal_and_native_sensor']);
+        if (focalMm != null && sensorHmm != null && sensorHmm > 0) {
+          fy = (focalMm / sensorHmm) * imgH;
+        } else if (natFy != null) {
+          fy = natFy * sy;
+        } else {
+          fy = fx;
+        }
+        cx = imgW / 2.0;
+        cy = imgH / 2.0;
+      } else if (derived.containsKey('fx_px_from_native_mm') && natFx != null) {
+        fx = natFx * sx;
+        fy = (natFy ?? natFx) * sy;
+        cx = imgW / 2.0;
+        cy = imgH / 2.0;
+      } else if (derived.containsKey('fx_px_from_35mm_equiv')) {
+        fx = _asDouble(derived['fx_px_from_35mm_equiv']);
+        fy = fx;
+        cx = imgW / 2.0;
+        cy = imgH / 2.0;
+      }
+    }
+
+    if (fx == null && source == 'incomplete') {
+      final fb = DeviceSensorFallback.lookupSensorMm(deviceModel);
+      if (fb != null && focalMm != null && imgW != null && imgH != null) {
+        final sw = fb['sensor_width_mm']!;
+        final sh = fb['sensor_height_mm']!;
+        if (sw > 0 && sh > 0) {
+          fx = (focalMm / sw) * imgW;
+          fy = (focalMm / sh) * imgH;
+          cx = imgW / 2.0;
+          cy = imgH / 2.0;
+          source = 'fallback_device_db';
+        }
+      }
+    }
+
+    if (fx != null && (cx == null || cy == null) && imgW != null && imgH != null) {
+      cx = imgW / 2.0;
+      cy = imgH / 2.0;
+    }
+
+    final orientation = _exifOrientationTag(exif);
+
+    final out = <String, dynamic>{
+      if (imgW != null) 'image_width_px': imgW,
+      if (imgH != null) 'image_height_px': imgH,
+      if (fx != null) 'fx_px': fx,
+      if (fy != null) 'fy_px': fy,
+      if (cx != null) 'cx_px': cx,
+      if (cy != null) 'cy_px': cy,
+      if (focalMm != null) 'focal_length_mm': focalMm,
+      if (sensorWmm != null) 'sensor_width_mm': sensorWmm,
+      if (sensorHmm != null) 'sensor_height_mm': sensorHmm,
+      if (focal35 != null) 'focal_length_35mm_equiv': focal35,
+      'intrinsics_source': source,
+      if (skew != null) 'skew': skew,
+      if (orientation != null) 'image_orientation_exif': orientation,
+    };
+
+    final dist = native?['lens_distortion'];
+    if (dist is List && dist.isNotEmpty) {
+      final nums = <double>[];
+      for (final e in dist) {
+        final d = _asDouble(e);
+        if (d != null) nums.add(d);
+      }
+      if (nums.isNotEmpty) out['lens_distortion'] = nums;
+    }
+
+    return out;
+  }
+
+  static String _intrinsicsSourceFromDerived(Map<String, dynamic> derived) {
+    if (derived.containsKey('fx_px_from_lens_intrinsic_calibration')) {
+      return 'lens_intrinsic_calibration';
+    }
+    if (derived.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
+      return 'exif_focal_sensor';
+    }
+    if (derived.containsKey('fx_px_from_native_mm')) {
+      return 'native_pinhole';
+    }
+    if (derived.containsKey('fx_px_from_35mm_equiv')) {
+      return '35mm_equiv';
+    }
+    return 'incomplete';
+  }
+
+  static (int?, int?) _parseExifImageDimensions(Map<String, dynamic> exif) {
+    int? w;
+    int? h;
+    for (final e in exif.entries) {
+      final k = e.key.toString().toUpperCase();
+      if (w == null && (k.contains('EXIFIMAGEWIDTH') || k == 'IMAGE WIDTH')) {
+        w = _parseInt(e.value);
+      }
+      if (h == null && (k.contains('EXIFIMAGELENGTH') || k == 'IMAGE LENGTH')) {
+        h = _parseInt(e.value);
+      }
+    }
+    return (w, h);
+  }
+
+  static String? _exifOrientationTag(Map<String, dynamic> exif) {
+    for (final e in exif.entries) {
+      final k = e.key.toString().toUpperCase();
+      if (k.contains('ORIENTATION')) {
+        return e.value?.toString();
+      }
+    }
+    return null;
   }
 
   static double? _asDouble(dynamic v) {

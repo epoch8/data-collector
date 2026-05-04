@@ -2,6 +2,18 @@
 abstract final class PackagePayloadKeys {
   /// Nested map: device, native_back_camera, poses[1..n] with exif + derived intrinsics.
   static const cameraCaptureContext = 'camera_capture_context';
+
+  /// Compact camera session at package save (no Camera2 dump).
+  static const cameraSession = 'camera_session';
+
+  /// Full capture context + heavy blobs for debugging.
+  static const cameraDebug = 'camera_debug';
+
+  /// Per-shot primary intrinsics for the saved image file (JPEG coordinates).
+  static const frameCamera = 'frame_camera';
+
+  /// Per-shot EXIF + derived alternatives (after materialize).
+  static const cameraSupplement = 'camera_supplement';
 }
 
 /// Normalizes stored values for `camera_photo` fields:

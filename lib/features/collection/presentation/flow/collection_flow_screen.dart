@@ -49,14 +49,25 @@ List<Map<String, dynamic>> _syntheticShotsFromPoseFieldValue(dynamic v) {
   return [];
 }
 
-/// `camera_capture_context` без устаревшего `poses`, плюс синтетические `poses` из полей ракурсов.
+/// `camera_capture_context` или сохранённый `camera_session` + опционально `camera_debug`;
+/// без устаревшего `poses`, плюс синтетические `poses` из полей ракурсов.
 Map<String, dynamic>? _mergedReviewCameraContext(Map<String, dynamic> answers, List<ConfigField> cameraFields) {
-  final raw = answers[PackagePayloadKeys.cameraCaptureContext];
   final base = <String, dynamic>{};
-  if (raw is Map) {
-    raw.forEach((k, v) {
-      base[k.toString()] = v;
-    });
+  void mergeMap(dynamic raw) {
+    if (raw is Map) {
+      raw.forEach((k, v) {
+        base[k.toString()] = v;
+      });
+    }
+  }
+
+  mergeMap(answers[PackagePayloadKeys.cameraCaptureContext]);
+  if (base.isEmpty) {
+    mergeMap(answers[PackagePayloadKeys.cameraSession]);
+    final dbg = answers[PackagePayloadKeys.cameraDebug];
+    if (dbg != null) {
+      base['_camera_debug'] = dbg;
+    }
   }
   base.remove('poses');
   final poses = <String, dynamic>{};
@@ -519,8 +530,17 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         if (shots is List) {
           for (final sh in shots) {
             if (sh is! Map) continue;
-            final d = sh['derived'];
-            if (d is Map && d['preferred_fx_px_estimate'] != null) {
+            final fc = sh['frame_camera'];
+            if (fc is Map && fc['fx_px'] != null) {
+              fxHint = u.tpl(
+                ['flow', 'camera_meta', 'fx_estimate'],
+                'fₓ≈{value} px',
+                {'value': _fmtNum(fc['fx_px'])},
+              );
+              break outer;
+            }
+            final d = _shotDerivedMap(sh);
+            if (d != null && d['preferred_fx_px_estimate'] != null) {
               fxHint = u.tpl(
                 ['flow', 'camera_meta', 'fx_estimate'],
                 'fₓ≈{value} px',
@@ -530,8 +550,17 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             }
           }
         }
-        final d = v['derived'];
-        if (d is Map && d['preferred_fx_px_estimate'] != null) {
+        final fc0 = v['frame_camera'];
+        if (fc0 is Map && fc0['fx_px'] != null) {
+          fxHint = u.tpl(
+            ['flow', 'camera_meta', 'fx_estimate'],
+            'fₓ≈{value} px',
+            {'value': _fmtNum(fc0['fx_px'])},
+          );
+          break;
+        }
+        final d = _shotDerivedMap(v);
+        if (d != null && d['preferred_fx_px_estimate'] != null) {
           fxHint = u.tpl(
             ['flow', 'camera_meta', 'fx_estimate'],
             'fₓ≈{value} px',
@@ -553,6 +582,32 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     if (v is double) return v.toStringAsFixed(v.abs() >= 1000 ? 0 : 1);
     if (v is int) return v.toString();
     return v.toString();
+  }
+
+  static Map<String, dynamic>? _shotDerivedMap(Map<dynamic, dynamic> sh) {
+    final d = sh['derived'];
+    if (d is Map<String, dynamic>) return d;
+    if (d is Map) return Map<String, dynamic>.from(d.map((k, v) => MapEntry(k.toString(), v)));
+    final sup = sh['camera_supplement'];
+    if (sup is Map) {
+      final inner = sup['derived'];
+      if (inner is Map<String, dynamic>) return inner;
+      if (inner is Map) return Map<String, dynamic>.from(inner.map((k, v) => MapEntry(k.toString(), v)));
+    }
+    return null;
+  }
+
+  static Map<String, dynamic>? _shotExifMap(Map<dynamic, dynamic> sh) {
+    final x = sh['exif'];
+    if (x is Map<String, dynamic>) return x;
+    if (x is Map) return Map<String, dynamic>.from(x.map((k, v) => MapEntry(k.toString(), v)));
+    final sup = sh['camera_supplement'];
+    if (sup is Map) {
+      final inner = sup['exif'];
+      if (inner is Map<String, dynamic>) return inner;
+      if (inner is Map) return Map<String, dynamic>.from(inner.map((k, v) => MapEntry(k.toString(), v)));
+    }
+    return null;
   }
 
   @override
@@ -743,8 +798,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         for (var si = 0; si < shots.length; si++) {
           final sh = shots[si];
           if (sh is! Map) continue;
-          final derived = sh['derived'];
-          final exif = sh['exif'];
+          final shotMap = Map<dynamic, dynamic>.from(sh);
           list.add(
             Padding(
               padding: const EdgeInsets.only(top: 12),
@@ -755,14 +809,13 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                   'Ракурс {idx} — кадр {shot}',
                   {'idx': '$idx', 'shot': '${si + 1}'},
                 ),
-                _shotMetaRows(u, derived, exif),
+                _shotMetaRows(u, shotMap),
               ),
             ),
           );
         }
       } else {
-        final derived = p['derived'];
-        final exif = p['exif'];
+        final shotMap = Map<dynamic, dynamic>.from(p);
         list.add(
           Padding(
             padding: const EdgeInsets.only(top: 12),
@@ -773,7 +826,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                 'Ракурс {idx} — оценки',
                 {'idx': '$idx'},
               ),
-              _shotMetaRows(u, derived, exif),
+              _shotMetaRows(u, shotMap),
             ),
           ),
         );
@@ -782,9 +835,33 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     return list;
   }
 
-  List<Widget> _shotMetaRows(ProjectUi u, dynamic derived, dynamic exif) {
+  List<Widget> _shotMetaRows(ProjectUi u, Map<dynamic, dynamic> shot) {
+    final fc = shot['frame_camera'];
+    final derived = _shotDerivedMap(shot);
+    final exif = _shotExifMap(shot);
     return [
-      if (derived is Map) ...[
+      if (fc is Map) ...[
+        Text(
+          u.str(['flow', 'camera_meta', 'frame_camera_heading'], 'Кадр (primary)'),
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Epoch8Theme.accent),
+        ),
+        const SizedBox(height: 4),
+        if (fc['fx_px'] != null) _selLine('fx_px', fc['fx_px']),
+        if (fc['fy_px'] != null) _selLine('fy_px', fc['fy_px']),
+        if (fc['cx_px'] != null) _selLine('cx_px', fc['cx_px']),
+        if (fc['cy_px'] != null) _selLine('cy_px', fc['cy_px']),
+        if (fc['image_width_px'] != null) _selLine('image_width_px', fc['image_width_px']),
+        if (fc['image_height_px'] != null) _selLine('image_height_px', fc['image_height_px']),
+        if (fc['intrinsics_source'] != null) _selLine('intrinsics_source', fc['intrinsics_source']),
+        if (fc['focal_length_mm'] != null) _selLine('focal_length_mm', fc['focal_length_mm']),
+        const SizedBox(height: 8),
+      ],
+      if (derived != null) ...[
+        Text(
+          u.str(['flow', 'camera_meta', 'derived_heading'], 'Доп. оценки focal (supplement)'),
+          style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
+        ),
+        const SizedBox(height: 4),
         if (derived['preferred_fx_px_estimate'] != null)
           _selLine('preferred_fx_px_estimate', derived['preferred_fx_px_estimate']),
         if (derived['fx_px_from_exif_focal_and_native_sensor'] != null)
@@ -802,9 +879,9 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             u.str(['flow', 'camera_meta', 'label_fx_native'], 'fx_px (натив)'),
             derived['fx_px_from_native_mm'],
           ),
-      ],
-      if (exif is Map && exif.isNotEmpty) ...[
         const SizedBox(height: 8),
+      ],
+      if (exif != null && exif.isNotEmpty) ...[
         Text(
           u.str(['flow', 'camera_meta', 'exif_heading'], 'Фрагмент EXIF'),
           style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:data_collector/core/device/package_camera_sanitizer.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -28,6 +29,7 @@ Future<MaterializedLocalPackage> materializeLocalPackage({
   final createdUtc = createdAt.toUtc();
   if (kIsWeb) {
     final data = _deepJsonCopy(answers);
+    sanitizePackageCameraPayload(data);
     final payload = _envelope(packageId, projectId, createdUtc, data);
     return MaterializedLocalPackage(
       packageId: packageId,
@@ -42,6 +44,7 @@ Future<MaterializedLocalPackage> materializeLocalPackage({
   await Directory(blobsDir).create(recursive: true);
 
   final data = _deepJsonCopy(answers);
+  sanitizePackageCameraPayload(data);
   final absToRel = <String, String>{};
   var blobCounter = 0;
 
