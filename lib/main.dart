@@ -525,7 +525,12 @@ class CowHistoryScreen extends ConsumerWidget {
       body: packagesAsync.when(
         data: (packages) {
           final filtered = packages
-              .where((p) => p.projectId == projectId && _extractCowIdFromPackage(p) == cowId)
+              .where(
+                (p) =>
+                    p.status != 'draft' &&
+                    p.projectId == projectId &&
+                    _extractCowIdFromPackage(p) == cowId,
+              )
               .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           if (filtered.isEmpty) {
@@ -823,7 +828,8 @@ Widget _historyTabBody(
     data: (projects) {
       return packagesAsync.when(
         data: (packages) {
-          if (packages.isEmpty) {
+          final visible = packages.where((p) => p.status != 'draft').toList();
+          if (visible.isEmpty) {
             return const Epoch8EmptyState(
               icon: Icons.cloud_outlined,
               title: 'История пуста',
@@ -831,7 +837,7 @@ Widget _historyTabBody(
             );
           }
           final byProject = <String, List<Package>>{};
-          for (final p in packages) {
+          for (final p in visible) {
             byProject.putIfAbsent(p.projectId, () => []).add(p);
           }
           final knownIds = projects.map((p) => p.id).toSet();
@@ -845,7 +851,7 @@ Widget _historyTabBody(
             if (knownIds.contains(entry.key)) continue;
             sections.add(_historyOrphanProjectSection(context, ref, entry.key, entry.value));
           }
-          final completedCount = packages.where((p) => p.serverDeliveryState == 'completed').length;
+          final completedCount = visible.where((p) => p.serverDeliveryState == 'completed').length;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

@@ -1,5 +1,12 @@
 import 'dart:convert';
 
+import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
+
+/// Убирает служебные ключи черновика перед материализацией и отправкой.
+void stripCollectionDraftKeys(Map<String, dynamic> data) {
+  data.remove(PackagePayloadKeys.collectionDraftFlowStep);
+}
+
 /// Decodes SQLite [Package.dataJson] per [spec 07](specs/07-package-payload-structure.md):
 /// envelope `{ package_id, project_id, created_at, data }` or legacy flat map.
 Map<String, dynamic> decodePackageEnvelope(String? dataJson) {

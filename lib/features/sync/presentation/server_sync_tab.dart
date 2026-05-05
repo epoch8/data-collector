@@ -129,7 +129,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
           packagesAsync.when(
             data: (packages) {
               final queue = packages
-                  .where((p) => p.serverDeliveryState != 'completed')
+                  .where((p) => p.serverDeliveryState != 'completed' && p.status != 'draft')
                   .toList()
                 ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
               if (queue.isEmpty) {

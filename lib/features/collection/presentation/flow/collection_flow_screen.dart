@@ -1,7 +1,12 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:data_collector/core/storage/database_provider.dart';
+import 'package:data_collector/features/collection/logic/collection_draft_store.dart';
 import 'package:data_collector/features/collection/logic/collection_flow_resolver.dart';
+import 'package:data_collector/features/collection/logic/local_package_cleanup.dart';
+import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/presentation/flow/scroll_form_flow_step.dart';
@@ -114,7 +119,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
           );
         }
         final flow = resolveCollectionFlow(project);
-        return _FlowStepShell(
+        return _CollectionDraftGate(
           projectId: widget.projectId,
           project: project,
           resolvedFlow: flow,
@@ -132,8 +137,11 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
   }
 }
 
-class _FlowStepShell extends ConsumerStatefulWidget {
-  const _FlowStepShell({
+enum _DraftResumeChoice { continueSession, startOver }
+
+/// Перед сценарием: проверка локального черновика и диалог «продолжить / начать заново».
+class _CollectionDraftGate extends ConsumerStatefulWidget {
+  const _CollectionDraftGate({
     required this.projectId,
     required this.project,
     required this.resolvedFlow,
@@ -144,18 +152,204 @@ class _FlowStepShell extends ConsumerStatefulWidget {
   final ResolvedCollectionFlow resolvedFlow;
 
   @override
+  ConsumerState<_CollectionDraftGate> createState() => _CollectionDraftGateState();
+}
+
+class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
+  bool _ready = false;
+  int _initialStep = 0;
+  String? _draftPackageId;
+  DateTime? _draftCreatedAt;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _runGate());
+  }
+
+  Future<void> _runGate() async {
+    final db = ref.read(databaseProvider);
+    final draft = await selectLatestDraftForProject(db, widget.projectId);
+    if (!mounted) return;
+
+    if (draft == null) {
+      setState(() => _ready = true);
+      return;
+    }
+
+    final u = ProjectUi(widget.project);
+    final choice = await showDialog<_DraftResumeChoice>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: Text(u.str(['flow', 'draft', 'dialog_title'], 'Незавершённый сбор')),
+        content: Text(
+          u.str(
+            ['flow', 'draft', 'dialog_body'],
+            'Для этого проекта сохранён прогресс заполнения. Продолжить с того же места или начать новый пакет?',
+          ),
+          style: const TextStyle(height: 1.35),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, _DraftResumeChoice.startOver),
+            child: Text(u.str(['flow', 'draft', 'start_fresh'], 'Начать заново')),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, _DraftResumeChoice.continueSession),
+            child: Text(u.str(['flow', 'draft', 'continue'], 'Продолжить')),
+          ),
+        ],
+      ),
+    );
+
+    if (!mounted) return;
+
+    if (choice == null) {
+      context.go('/dashboard');
+      return;
+    }
+
+    if (choice == _DraftResumeChoice.startOver) {
+      await deleteLocalPackageStorage(db, draft.id);
+      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
+      setState(() {
+        _ready = true;
+        _initialStep = 0;
+        _draftPackageId = null;
+        _draftCreatedAt = null;
+      });
+      return;
+    }
+
+    final data = unpackPackageFormData(draft.dataJson);
+    var step = draftFlowStepFromUnpackedData(data);
+    data.remove(PackagePayloadKeys.collectionDraftFlowStep);
+    ref.read(wizardStateProvider(widget.projectId).notifier).replaceAll(data);
+
+    final maxStep = widget.resolvedFlow.steps.length - 1;
+    if (step < 0) step = 0;
+    if (step > maxStep) step = maxStep > 0 ? maxStep : 0;
+
+    setState(() {
+      _ready = true;
+      _initialStep = step;
+      _draftPackageId = draft.id;
+      _draftCreatedAt = draft.createdAt;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (!_ready) {
+      return PopScope(
+        canPop: false,
+        onPopInvokedWithResult: (didPop, result) {
+          if (!didPop) context.go('/dashboard');
+        },
+        child: Scaffold(
+          backgroundColor: Epoch8Theme.bgDeep,
+          appBar: AppBar(title: Text(widget.project.name)),
+          body: const Center(child: CircularProgressIndicator()),
+        ),
+      );
+    }
+    return _FlowStepShell(
+      projectId: widget.projectId,
+      project: widget.project,
+      resolvedFlow: widget.resolvedFlow,
+      initialFlowStepIndex: _initialStep,
+      initialDraftPackageId: _draftPackageId,
+      initialDraftCreatedAt: _draftCreatedAt,
+    );
+  }
+}
+
+class _FlowStepShell extends ConsumerStatefulWidget {
+  const _FlowStepShell({
+    required this.projectId,
+    required this.project,
+    required this.resolvedFlow,
+    this.initialFlowStepIndex = 0,
+    this.initialDraftPackageId,
+    this.initialDraftCreatedAt,
+  });
+
+  final String projectId;
+  final Project project;
+  final ResolvedCollectionFlow resolvedFlow;
+  final int initialFlowStepIndex;
+  final String? initialDraftPackageId;
+  final DateTime? initialDraftCreatedAt;
+
+  @override
   ConsumerState<_FlowStepShell> createState() => _FlowStepShellState();
 }
 
-class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
-  int _step = 0;
+class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBindingObserver {
+  late int _step;
+  String? _packageId;
+  DateTime? _createdAtForRow;
+  Timer? _draftDebounce;
 
-  void _goBack() {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _step = widget.initialFlowStepIndex;
+    _packageId = widget.initialDraftPackageId;
+    _createdAtForRow = widget.initialDraftCreatedAt;
+  }
+
+  @override
+  void dispose() {
+    _draftDebounce?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      unawaited(_persistDraftNow());
+    }
+  }
+
+  void _scheduleDraftSave() {
+    _draftDebounce?.cancel();
+    _draftDebounce = Timer(const Duration(milliseconds: 450), () {
+      unawaited(_persistDraftNow());
+    });
+  }
+
+  Future<void> _persistDraftNow() async {
+    if (!mounted) return;
+    final answers = ref.read(wizardStateProvider(widget.projectId));
+    final meaningful = answers.isNotEmpty || _step > 0;
+    if (!meaningful && _packageId == null) return;
+
+    _packageId ??= 'pkg_${DateTime.now().millisecondsSinceEpoch}';
+    _createdAtForRow ??= DateTime.now();
+
+    await upsertCollectionDraft(
+      db: ref.read(databaseProvider),
+      packageId: _packageId!,
+      projectId: widget.projectId,
+      answers: answers,
+      flowStep: _step,
+      createdAt: _createdAtForRow!,
+    );
+  }
+
+  Future<void> _goBack() async {
     if (_step <= 0) {
+      await _persistDraftNow();
+      if (!mounted) return;
       context.go('/dashboard');
       return;
     }
     setState(() => _step--);
+    _scheduleDraftSave();
   }
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
@@ -180,19 +374,22 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
   @override
   Widget build(BuildContext context) {
     ref.watch(wizardStateProvider(widget.projectId));
+    ref.listen(wizardStateProvider(widget.projectId), (previous, next) {
+      _scheduleDraftSave();
+    });
     final project = widget.project;
 
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
-        if (!didPop) _goBack();
+        if (!didPop) unawaited(_goBack());
       },
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: _goBack,
+            onPressed: () => unawaited(_goBack()),
           ),
           title: Text(
             project.name,
@@ -286,7 +483,10 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
           flow: _flow,
           step: cur,
           continueLabel: _scrollContinueLabel(),
-          onContinue: () => setState(() => _step++),
+          onContinue: () {
+            setState(() => _step++);
+            _scheduleDraftSave();
+          },
         );
       case CollectionScreenKind.review:
         return _FlowReviewStep(
@@ -294,14 +494,21 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> {
           project: p,
           flow: _flow,
           projectId: widget.projectId,
-          onEditScrollStep: (int stepIndex) => setState(() => _step = stepIndex),
+          onEditScrollStep: (int stepIndex) {
+            setState(() => _step = stepIndex);
+            _scheduleDraftSave();
+          },
           onSubmit: () async {
+            await _persistDraftNow();
+            if (!context.mounted) return;
             final answers = ref.read(wizardStateProvider(widget.projectId));
             await submitLocalPackage(
               ref: ref,
               context: context,
               projectId: widget.projectId,
               answers: answers,
+              existingDraftPackageId: _packageId,
+              draftCreatedAt: _createdAtForRow,
             );
           },
         );

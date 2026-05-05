@@ -132,6 +132,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     if (useCow && typedLower.isNotEmpty && cowCtrl != null) {
       for (final pkg in packages) {
         if (pkg.projectId != widget.projectId) continue;
+        if (pkg.status == 'draft') continue;
         final payload = unpackPackageFormData(pkg.dataJson);
         final existingCowId = _payloadCowId(payload, cowMatch) ?? '';
         if (existingCowId.isEmpty) continue;

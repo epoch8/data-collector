@@ -35,6 +35,10 @@ Future<void> uploadDriftPackageToServer({
     );
   }
 
+  if (pkg.status == 'draft') {
+    throw StateError('Нельзя отправить незавершённый черновик — завершите сбор на устройстве.');
+  }
+
   if (!allowedProjectIds.contains(projectId)) {
     const msg = 'Нет доступа к этому проекту у текущего пользователя (проверьте каталог на сервере).';
     await setState('failed', msg);

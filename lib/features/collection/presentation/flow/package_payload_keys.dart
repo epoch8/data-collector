@@ -14,6 +14,9 @@ abstract final class PackagePayloadKeys {
 
   /// Per-shot EXIF + derived alternatives (after materialize).
   static const cameraSupplement = 'camera_supplement';
+
+  /// Индекс шага сценария сбора в незавершённом пакете (черновик); не уходит на сервер.
+  static const collectionDraftFlowStep = '_collection_draft_flow_step';
 }
 
 /// Normalizes stored values for `camera_photo` fields:

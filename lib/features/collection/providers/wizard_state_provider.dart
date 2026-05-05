@@ -13,6 +13,11 @@ class WizardState extends _$WizardState {
     state = {...state, fieldId: value};
   }
 
+  /// Полная подстановка состояния (восстановление черновика).
+  void replaceAll(Map<String, dynamic> next) {
+    state = Map<String, dynamic>.from(next);
+  }
+
   void reset() {
     state = <String, dynamic>{};
   }
