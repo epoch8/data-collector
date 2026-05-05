@@ -22,6 +22,7 @@ import 'features/sync/presentation/server_sync_tab.dart';
 import 'features/history/history_local_actions.dart';
 import 'features/history/package_delivery_style.dart';
 import 'features/history/package_manifest_export.dart';
+import 'features/help/presentation/help_screen.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
 import 'l10n/app_localizations.dart';
@@ -114,6 +115,10 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
       GoRoute(
         path: '/history/package/:packageId',
         builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
+      ),
+      GoRoute(
+        path: '/help',
+        builder: (context, state) => const HelpScreen(),
       ),
     ],
   );
@@ -461,6 +466,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
               },
             ),
           ],
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () => context.push('/help'),
+          tooltip: loc.helpTitle,
+          child: const Icon(Icons.help_outline),
         ),
         body: Epoch8ScreenBody(
           child: TabBarView(

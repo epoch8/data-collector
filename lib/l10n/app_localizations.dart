@@ -251,6 +251,35 @@ class AppLocalizations {
       _isRu ? 'Изображение недоступно' : 'Image unavailable';
   String get shootingGuideStartButton => _isRu ? 'Понятно' : 'OK';
 
+  String get helpTitle => _isRu ? 'Как пользоваться приложением' : 'How to use the app';
+  String get helpQuickStartTitle => _isRu ? 'Коротко: как работать' : 'Quick workflow';
+  String get helpQuickStartBody => _isRu
+      ? 'Процесс простой: выберите проект, пройдите шаги, отправьте пакеты на вкладке «Сервер», затем смотрите статусы и детали в «Истории».'
+      : 'The flow is simple: choose a project, complete the steps, send packages on the Server tab, then check statuses and details in History.';
+  String get helpFlowLine => _isRu
+      ? 'Проект -> Шаги -> Сервер -> История'
+      : 'Project -> Steps -> Server -> History';
+  String get helpStep1Title => _isRu ? 'Выберите проект' : 'Choose a project';
+  String get helpStep1Body => _isRu
+      ? 'Откройте вкладку «Проекты» и нажмите нужную карточку.'
+      : 'Open the Projects tab and tap the required card.';
+  String get helpStep2Title => _isRu ? 'Пройдите шаги' : 'Complete the steps';
+  String get helpStep2Body => _isRu
+      ? 'Заполните поля и добавьте фото там, где это требуется, затем завершите проверку.'
+      : 'Fill fields and add photos where required, then finish the review step.';
+  String get helpStep3Title => _isRu ? 'Отправьте пакеты' : 'Send packages';
+  String get helpStep3Body => _isRu
+      ? 'Перейдите во вкладку «Сервер» и отправьте очередь пакетов.'
+      : 'Go to the Server tab and send queued packages.';
+  String get helpStep4Title => _isRu ? 'Проверьте историю и статусы' : 'Check history and statuses';
+  String get helpStep4Body => _isRu
+      ? 'Во вкладке «История» доступны статусы, просмотр пакетов и фото.'
+      : 'In the History tab you can see statuses, package details, and photos.';
+  String get helpHintTitle => _isRu ? 'Подсказка' : 'Tip';
+  String get helpHintBody => _isRu
+      ? 'Если нет сети, пакеты останутся локально и их можно отправить позже через «Сервер».'
+      : 'If network is unavailable, packages stay local and can be sent later from Server.';
+
   String deliveryStateLabel(String serverDeliveryState) {
     switch (serverDeliveryState) {
       case 'completed':
