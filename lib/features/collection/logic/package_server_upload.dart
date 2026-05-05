@@ -36,11 +36,11 @@ Future<void> uploadDriftPackageToServer({
   }
 
   if (pkg.status == 'draft') {
-    throw StateError('Нельзя отправить незавершённый черновик — завершите сбор на устройстве.');
+    throw StateError('Cannot upload unfinished draft — complete collection on device first.');
   }
 
   if (!allowedProjectIds.contains(projectId)) {
-    const msg = 'Нет доступа к этому проекту у текущего пользователя (проверьте каталог на сервере).';
+    const msg = 'No access to this project for current user (check server catalog).';
     await setState('failed', msg);
     throw StateError(msg);
   }

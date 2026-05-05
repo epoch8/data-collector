@@ -10,12 +10,13 @@ import 'package:data_collector/features/collection/logic/package_payload_codec.d
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/presentation/flow/scroll_form_flow_step.dart';
-import 'package:data_collector/features/collection/presentation/flow/project_ui.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
+import 'package:data_collector/l10n/locale_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -110,11 +111,21 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
         try {
           project = projects.firstWhere((p) => p.id == widget.projectId);
         } catch (_) {
+          final loc = AppLocalizations.of(context);
           return Scaffold(
             backgroundColor: Epoch8Theme.bgDeep,
-            appBar: AppBar(title: const Text('Проект не найден')),
-            body: const Center(
-              child: Text('Добавьте проект в assets/config/projects.json', textAlign: TextAlign.center),
+            appBar: AppBar(
+              title: Text(loc.projectNotFoundShort),
+              actions: [
+                IconButton(
+                  tooltip: loc.languageToggleTooltip,
+                  onPressed: toggleAppLocale,
+                  icon: Text(loc.languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+                ),
+              ],
+            ),
+            body: Center(
+              child: Text(loc.addProjectToAssets, textAlign: TextAlign.center),
             ),
           );
         }
@@ -131,7 +142,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: Center(child: Text('Ошибка загрузки конфига: $e')),
+        body: Center(child: Text('${AppLocalizations.of(context).loadingConfigError}: $e')),
       ),
     );
   }
@@ -177,27 +188,24 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
       return;
     }
 
-    final u = ProjectUi(widget.project);
+    final loc = AppLocalizations.of(context);
     final choice = await showDialog<_DraftResumeChoice>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(u.str(['flow', 'draft', 'dialog_title'], 'Незавершённый сбор')),
+        title: Text(loc.flowDraftDialogTitle),
         content: Text(
-          u.str(
-            ['flow', 'draft', 'dialog_body'],
-            'Для этого проекта сохранён прогресс заполнения. Продолжить с того же места или начать новый пакет?',
-          ),
+          loc.flowDraftDialogBody,
           style: const TextStyle(height: 1.35),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, _DraftResumeChoice.startOver),
-            child: Text(u.str(['flow', 'draft', 'start_fresh'], 'Начать заново')),
+            child: Text(loc.flowDraftStartFresh),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, _DraftResumeChoice.continueSession),
-            child: Text(u.str(['flow', 'draft', 'continue'], 'Продолжить')),
+            child: Text(loc.flowDraftContinue),
           ),
         ],
       ),
@@ -249,7 +257,16 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
         },
         child: Scaffold(
           backgroundColor: Epoch8Theme.bgDeep,
-          appBar: AppBar(title: Text(widget.project.name)),
+          appBar: AppBar(
+            title: Text(widget.project.name),
+            actions: [
+              IconButton(
+                tooltip: AppLocalizations.of(context).languageToggleTooltip,
+                onPressed: toggleAppLocale,
+                icon: Text(AppLocalizations.of(context).languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ],
+          ),
           body: const Center(child: CircularProgressIndicator()),
         ),
       );
@@ -354,13 +371,13 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
 
-  String _scrollContinueLabel() {
-    final u = ProjectUi(widget.project);
-    if (_step + 1 >= _flow.steps.length) return u.str(['flow', 'continue', 'next'], 'Далее');
+  String _scrollContinueLabel(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    if (_step + 1 >= _flow.steps.length) return loc.flowNext;
     if (_flow.steps[_step + 1].kind == CollectionScreenKind.review) {
-      return u.str(['flow', 'camera_pose', 'to_review'], 'К проверке');
+      return loc.flowToReview;
     }
-    return u.str(['flow', 'continue', 'next'], 'Далее');
+    return loc.flowNext;
   }
 
   int _scrollOrdinal1Based() {
@@ -396,6 +413,13 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          actions: [
+            IconButton(
+              tooltip: AppLocalizations.of(context).languageToggleTooltip,
+              onPressed: toggleAppLocale,
+              icon: Text(AppLocalizations.of(context).languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+            ),
+          ],
         ),
         body: Container(
           decoration: Epoch8Theme.screenGradient(),
@@ -420,7 +444,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
 
   List<Widget> _stepRibbon(BuildContext context) {
     final t = Theme.of(context).textTheme;
-    final u = ProjectUi(widget.project);
+    final loc = AppLocalizations.of(context);
     if (_step < 0 || _step >= _flow.steps.length) return const [];
     final cur = _flow.steps[_step];
 
@@ -429,7 +453,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
         Padding(
           padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 4),
           child: Text(
-            u.str(['flow', 'ribbon', 'review'], 'Проверка и отправка'),
+            loc.flowRibbonReview,
             style: t.labelMedium?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 0.4),
           ),
         ),
@@ -448,11 +472,11 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    u.str(['flow', 'ribbon', 'scroll_form'], 'Шаг сбора'),
+                    loc.flowRibbonScrollForm,
                     style: t.labelSmall?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 1.1),
                   ),
                   Text(
-                    u.tpl(['flow', 'ribbon', 'scroll_counter'], '{cur} из {total}', {'cur': '$ord', 'total': '$totalScroll'}),
+                    loc.flowScrollCounter(ord, totalScroll),
                     style: t.labelLarge?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w800),
                   ),
                 ],
@@ -482,7 +506,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
           projectId: widget.projectId,
           flow: _flow,
           step: cur,
-          continueLabel: _scrollContinueLabel(),
+          continueLabel: _scrollContinueLabel(context),
           onContinue: () {
             setState(() => _step++);
             _scheduleDraftSave();
@@ -554,25 +578,17 @@ class _FlowReviewStep extends ConsumerWidget {
   }
 
   /// Заголовок карточки: `flow.steps[].form_title` или только «Шаг n».
-  String _reviewScrollBlockTitle(ProjectUi u, ResolvedCollectionStep s, int scrollOrdinal) {
+  String _reviewScrollBlockTitle(AppLocalizations loc, ResolvedCollectionStep s, int scrollOrdinal) {
     final label = (s.formTitle ?? '').trim();
     if (label.isNotEmpty) {
-      return u.tpl(
-        ['flow', 'review', 'scroll_block_title'],
-        'Шаг {n}: {form_title}',
-        {'n': '$scrollOrdinal', 'form_title': label, 'title': label, 'id': label},
-      );
+      return loc.flowReviewScrollBlockTitle(scrollOrdinal, label);
     }
-    return u.tpl(
-      ['flow', 'review', 'scroll_block_title'],
-      'Шаг {n}',
-      {'n': '$scrollOrdinal', 'form_title': '', 'title': '', 'id': ''},
-    );
+    return loc.flowReviewScrollBlockStepOnly(scrollOrdinal);
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final u = ProjectUi(project);
+    final loc = AppLocalizations.of(context);
     final a = ref.watch(wizardStateProvider(projectId));
     final complete = _isComplete(a);
     final cameraCtx = _mergedReviewCameraContext(a, flow.allCameraFields);
@@ -592,13 +608,13 @@ class _FlowReviewStep extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      _reviewScrollBlockTitle(u, s, scrollOrdinal),
+                      _reviewScrollBlockTitle(loc, s, scrollOrdinal),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                   TextButton(
                     onPressed: () => onEditScrollStep(i),
-                    child: Text(u.str(['flow', 'review', 'edit'], 'Изменить')),
+                    child: Text(loc.flowReviewEdit),
                   ),
                 ],
               ),
@@ -607,10 +623,7 @@ class _FlowReviewStep extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
-                    u.str(
-                      ['flow', 'review', 'instruction_only_hint'],
-                      'На этом шаге только инструкция (Markdown) — без полей для проверки.',
-                    ),
+                    loc.flowReviewInstructionOnlyHint,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
                   ),
                 ),
@@ -619,7 +632,7 @@ class _FlowReviewStep extends ConsumerWidget {
                   if (f.type == 'text_input' || f.type == 'datetime')
                     _reviewLine(
                       f.title,
-                      _formatReviewValue(u, f, a[f.fieldId]),
+                      _formatReviewValue(loc, f, a[f.fieldId]),
                     )
                   else if (f.type == 'camera_photo') ...[
                     const SizedBox(height: 4),
@@ -643,7 +656,7 @@ class _FlowReviewStep extends ConsumerWidget {
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
-                          u.str(['flow', 'review', 'no_frames'], 'Нет кадров'),
+                          loc.flowReviewNoFrames,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
                         ),
                       ),
@@ -664,17 +677,14 @@ class _FlowReviewStep extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Epoch8SectionHeader(
-            overline: u.str(['flow', 'review', 'header_overline'], 'Финиш'),
-            title: u.str(['flow', 'review', 'header_title'], 'Проверка и отправка'),
-            subtitle: u.str(
-              ['flow', 'review', 'header_subtitle'],
-              'Проверьте данные. Можно вернуться к любому шагу — введённые значения и снимки сохраняются.',
-            ),
+            overline: loc.flowReviewHeaderOverline,
+            title: loc.flowReviewHeaderTitle,
+            subtitle: loc.flowReviewHeaderSubtitle,
           ),
           const SizedBox(height: Epoch8Layout.sectionGap),
           ...stepCards,
           const SizedBox(height: 8),
-          _CameraMetaReviewPanel(project: project, cameraContext: cameraCtx),
+          _CameraMetaReviewPanel(cameraContext: cameraCtx),
           const SizedBox(height: 24),
           FilledButton(
             onPressed: complete
@@ -682,7 +692,7 @@ class _FlowReviewStep extends ConsumerWidget {
                     await onSubmit();
                   }
                 : null,
-            child: Text(u.str(['flow', 'review', 'submit'], 'Отправить данные')),
+            child: Text(loc.flowReviewSubmit),
           ),
         ],
       ),
@@ -702,8 +712,8 @@ class _FlowReviewStep extends ConsumerWidget {
     );
   }
 
-  String _formatReviewValue(ProjectUi u, ConfigField f, dynamic v) {
-    final dash = u.str(['flow', 'review', 'empty_value'], '—');
+  String _formatReviewValue(AppLocalizations loc, ConfigField f, dynamic v) {
+    final dash = loc.flowReviewEmptyValue;
     if (v == null) return dash;
     if (f.type == 'datetime') {
       final st = DateTime.tryParse(v.toString())?.toLocal();
@@ -716,12 +726,11 @@ class _FlowReviewStep extends ConsumerWidget {
 
 /// Сворачиваемый блок метаданных камеры / устройства для экрана проверки.
 class _CameraMetaReviewPanel extends StatelessWidget {
-  const _CameraMetaReviewPanel({required this.project, this.cameraContext});
+  const _CameraMetaReviewPanel({this.cameraContext});
 
-  final Project project;
   final Map<String, dynamic>? cameraContext;
 
-  static String? _subtitle(ProjectUi u, Map<String, dynamic> ctx) {
+  static String? _subtitle(AppLocalizations loc, Map<String, dynamic> ctx) {
     final dev = ctx['device'];
     String? model;
     if (dev is Map) {
@@ -739,40 +748,24 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             if (sh is! Map) continue;
             final fc = sh['frame_camera'];
             if (fc is Map && fc['fx_px'] != null) {
-              fxHint = u.tpl(
-                ['flow', 'camera_meta', 'fx_estimate'],
-                'fₓ≈{value} px',
-                {'value': _fmtNum(fc['fx_px'])},
-              );
+              fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(fc['fx_px']));
               break outer;
             }
             final d = _shotDerivedMap(sh);
             if (d != null && d['preferred_fx_px_estimate'] != null) {
-              fxHint = u.tpl(
-                ['flow', 'camera_meta', 'fx_estimate'],
-                'fₓ≈{value} px',
-                {'value': _fmtNum(d['preferred_fx_px_estimate'])},
-              );
+              fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(d['preferred_fx_px_estimate']));
               break outer;
             }
           }
         }
         final fc0 = v['frame_camera'];
         if (fc0 is Map && fc0['fx_px'] != null) {
-          fxHint = u.tpl(
-            ['flow', 'camera_meta', 'fx_estimate'],
-            'fₓ≈{value} px',
-            {'value': _fmtNum(fc0['fx_px'])},
-          );
+          fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(fc0['fx_px']));
           break;
         }
         final d = _shotDerivedMap(v);
         if (d != null && d['preferred_fx_px_estimate'] != null) {
-          fxHint = u.tpl(
-            ['flow', 'camera_meta', 'fx_estimate'],
-            'fₓ≈{value} px',
-            {'value': _fmtNum(d['preferred_fx_px_estimate'])},
-          );
+          fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(d['preferred_fx_px_estimate']));
           break;
         }
       }
@@ -781,7 +774,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     if (model != null && model.isNotEmpty) parts.add(model);
     if (fxHint != null) parts.add(fxHint);
     return parts.isEmpty
-        ? u.str(['flow', 'camera_meta', 'expand_hint'], 'Нажмите, чтобы развернуть')
+        ? loc.flowCameraMetaTapToExpand
         : parts.join(' · ');
   }
 
@@ -819,7 +812,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final u = ProjectUi(project);
+    final loc = AppLocalizations.of(context);
     final ctx = cameraContext;
     if (ctx == null || ctx.isEmpty) {
       return _Card(
@@ -829,7 +822,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                u.str(['flow', 'camera_meta', 'empty_notice'], 'Мета-параметры камеры появятся после съёмки поз.'),
+                loc.flowCameraMetaEmptyNotice,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
             ),
@@ -857,12 +850,12 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      u.str(['flow', 'camera_meta', 'tile_title'], 'Мета-параметры камеры'),
+                      loc.flowCameraMetaTileTitle,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      _subtitle(u, Map<String, dynamic>.from(ctx)) ?? '',
+                      _subtitle(loc, Map<String, dynamic>.from(ctx)) ?? '',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
                     ),
                   ],
@@ -874,21 +867,21 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             const Divider(height: 20),
             _metaSection(
               context,
-              u.str(['flow', 'camera_meta', 'section_device'], 'Устройство'),
-              _deviceRows(u, ctx['device']),
+              loc.flowCameraMetaSectionDevice,
+              _deviceRows(loc, ctx['device']),
             ),
             _metaSection(
               context,
-              u.str(['flow', 'camera_meta', 'section_native'], 'Нативная камера (задняя)'),
-              _nativeRows(u, ctx['native_back_camera']),
+              loc.flowCameraMetaSectionNative,
+              _nativeRows(loc, ctx['native_back_camera']),
             ),
-            ..._poseMetaSections(context, u, ctx['poses']),
+            ..._poseMetaSections(context, loc, ctx['poses']),
             Theme(
               data: Theme.of(context).copyWith(dividerColor: Epoch8Theme.border),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
-                  u.str(['flow', 'camera_meta', 'json_section'], 'Полный JSON (копирование)'),
+                  loc.flowCameraMetaJsonSection,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Epoch8Theme.textMuted),
                 ),
                 children: [
@@ -911,10 +904,10 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     );
   }
 
-  List<Widget> _deviceRows(ProjectUi u, dynamic device) {
+  List<Widget> _deviceRows(AppLocalizations loc, dynamic device) {
     if (device is! Map) {
       return [
-        Text(u.str(['flow', 'camera_meta', 'dash'], '—'), style: const TextStyle(color: Epoch8Theme.textMuted)),
+        Text(loc.flowReviewEmptyValue, style: const TextStyle(color: Epoch8Theme.textMuted)),
       ];
     }
     final m = <String, dynamic>{};
@@ -934,11 +927,11 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         )).toList();
   }
 
-  List<Widget> _nativeRows(ProjectUi u, dynamic native) {
+  List<Widget> _nativeRows(AppLocalizations loc, dynamic native) {
     if (native is! Map || native.isEmpty) {
       return [
         Text(
-          u.str(['flow', 'camera_meta', 'native_empty'], 'Нет данных с нативного API'),
+          loc.flowCameraMetaNativeEmpty,
           style: const TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
         ),
       ];
@@ -970,7 +963,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     void addLine(String k, dynamic v) {
       String text;
       if (k == 'camera2_characteristics' && v is Map) {
-        text = '$k: {${v.length} keys} — см. полный JSON ниже';
+        text = '$k: ${loc.flowCameraMetaNativeMapSummary(v.length)}';
       } else {
         text = '$k: $v';
       }
@@ -993,7 +986,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     return out;
   }
 
-  List<Widget> _poseMetaSections(BuildContext context, ProjectUi u, dynamic poses) {
+  List<Widget> _poseMetaSections(BuildContext context, AppLocalizations loc, dynamic poses) {
     if (poses is! Map || poses.isEmpty) return [];
     final list = <Widget>[];
     final keys = poses.keys.map((k) => int.tryParse(k.toString())).whereType<int>().toList()..sort();
@@ -1011,12 +1004,8 @@ class _CameraMetaReviewPanel extends StatelessWidget {
               padding: const EdgeInsets.only(top: 12),
               child: _metaSection(
                 context,
-                u.tpl(
-                  ['flow', 'camera_meta', 'pose_shot_title'],
-                  'Ракурс {idx} — кадр {shot}',
-                  {'idx': '$idx', 'shot': '${si + 1}'},
-                ),
-                _shotMetaRows(u, shotMap),
+                loc.flowCameraMetaPoseShotTitle(idx, si + 1),
+                _shotMetaRows(loc, shotMap),
               ),
             ),
           );
@@ -1028,12 +1017,8 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             padding: const EdgeInsets.only(top: 12),
             child: _metaSection(
               context,
-              u.tpl(
-                ['flow', 'camera_meta', 'pose_derived_title'],
-                'Ракурс {idx} — оценки',
-                {'idx': '$idx'},
-              ),
-              _shotMetaRows(u, shotMap),
+              loc.flowCameraMetaPoseDerivedTitle(idx),
+              _shotMetaRows(loc, shotMap),
             ),
           ),
         );
@@ -1042,14 +1027,14 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     return list;
   }
 
-  List<Widget> _shotMetaRows(ProjectUi u, Map<dynamic, dynamic> shot) {
+  List<Widget> _shotMetaRows(AppLocalizations loc, Map<dynamic, dynamic> shot) {
     final fc = shot['frame_camera'];
     final derived = _shotDerivedMap(shot);
     final exif = _shotExifMap(shot);
     return [
       if (fc is Map) ...[
         Text(
-          u.str(['flow', 'camera_meta', 'frame_camera_heading'], 'Кадр (primary)'),
+          loc.flowCameraMetaFrameCameraHeading,
           style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Epoch8Theme.accent),
         ),
         const SizedBox(height: 4),
@@ -1065,7 +1050,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       ],
       if (derived != null) ...[
         Text(
-          u.str(['flow', 'camera_meta', 'derived_heading'], 'Доп. оценки focal (supplement)'),
+          loc.flowCameraMetaDerivedHeading,
           style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
         ),
         const SizedBox(height: 4),
@@ -1073,24 +1058,24 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           _selLine('preferred_fx_px_estimate', derived['preferred_fx_px_estimate']),
         if (derived['fx_px_from_exif_focal_and_native_sensor'] != null)
           _selLine(
-            u.str(['flow', 'camera_meta', 'label_fx_exif'], 'fx_px (EXIF focal × сенсор)'),
+            loc.flowCameraMetaLabelFxExif,
             derived['fx_px_from_exif_focal_and_native_sensor'],
           ),
         if (derived['fx_px_from_35mm_equiv'] != null)
           _selLine(
-            u.str(['flow', 'camera_meta', 'label_fx_35mm'], 'fx_px (35mm equiv)'),
+            loc.flowCameraMetaLabelFx35mm,
             derived['fx_px_from_35mm_equiv'],
           ),
         if (derived['fx_px_from_native_mm'] != null)
           _selLine(
-            u.str(['flow', 'camera_meta', 'label_fx_native'], 'fx_px (натив)'),
+            loc.flowCameraMetaLabelFxNative,
             derived['fx_px_from_native_mm'],
           ),
         const SizedBox(height: 8),
       ],
       if (exif != null && exif.isNotEmpty) ...[
         Text(
-          u.str(['flow', 'camera_meta', 'exif_heading'], 'Фрагмент EXIF'),
+          loc.flowCameraMetaExifHeading,
           style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
         ),
         const SizedBox(height: 4),
@@ -1103,7 +1088,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             )),
         if (exif.length > 12)
           Text(
-            u.tpl(['flow', 'camera_meta', 'exif_more'], '… ещё {n} полей', {'n': '${exif.length - 12}'}),
+            loc.flowCameraMetaExifMore(exif.length - 12),
             style: const TextStyle(fontSize: 11, color: Epoch8Theme.textMuted),
           ),
       ],

@@ -33,14 +33,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.3.0"
-  ansi_styles:
-    dependency: transitive
-    description:
-      name: ansi_styles
-      sha256: "9c656cc12b3c27b17dd982b2cc5c0cfdfbdabd7bc8f3ae5e8542d9867b47ce8a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.3.2+1"
   archive:
     dependency: transitive
     description:
@@ -145,14 +137,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.4"
-  ci:
-    dependency: transitive
-    description:
-      name: ci
-      sha256: "145d095ce05cddac4d797a158bc4cf3b6016d1fe63d8c3d2fbd7212590adca13"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.1.0"
   cli_config:
     dependency: transitive
     description:
@@ -257,14 +241,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.9"
-  dart_console:
-    dependency: transitive
-    description:
-      name: dart_console
-      sha256: dfa4b63eb4382325ff975fdb6b7a0db8303bb5809ee5cb4516b44153844742ed
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.2.0"
   dart_style:
     dependency: transitive
     description:
@@ -281,14 +257,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.12"
-  deep_pick:
-    dependency: transitive
-    description:
-      name: deep_pick
-      sha256: "79d96b94a9c9ca2e823f05f72ec1a4efcc5ad5fd3875f46d1a8fe61ebbd9f359"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.1.0"
   device_info_plus:
     dependency: "direct main"
     description:
@@ -478,6 +446,11 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.0.0"
+  flutter_localizations:
+    dependency: "direct main"
+    description: flutter
+    source: sdk
+    version: "0.0.0"
   flutter_markdown:
     dependency: "direct main"
     description:
@@ -512,14 +485,6 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
-  flutterfire_cli:
-    dependency: "direct dev"
-    description:
-      name: flutterfire_cli
-      sha256: a87da56fc394da7a481e5dab17a53dc616ec212dac728669da0e6b8c2c9c125c
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.2"
   freezed:
     dependency: "direct dev"
     description:
@@ -672,22 +637,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
-  interact:
-    dependency: transitive
-    description:
-      name: interact
-      sha256: b1abf79334bec42e58496a054cb7ee7ca74da6181f6a1fb6b134f1aa22bc4080
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.2.0"
   intl:
     dependency: transitive
     description:
       name: intl
-      sha256: "3bc132a9dbce73a7e4a21a17d06e1878839ffbf975568bc875c60537824b0c4d"
+      sha256: "3df61194eb431efc39c4ceba583b95633a403f46c9fd341e550ce0bfa50e9aa5"
       url: "https://pub.dev"
     source: hosted
-    version: "0.18.1"
+    version: "0.20.2"
   io:
     dependency: transitive
     description:
@@ -936,14 +893,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.5.0"
-  process:
-    dependency: transitive
-    description:
-      name: process
-      sha256: c6248e4526673988586e8c00bb22a49210c258dc91df5227d5da9748ecf79744
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.5"
   pub_semver:
     dependency: transitive
     description:
@@ -952,14 +901,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.0"
-  pub_updater:
-    dependency: transitive
-    description:
-      name: pub_updater
-      sha256: "739a0161d73a6974c0675b864fb0cf5147305f7b077b7f03a58fa7a9ab3e7e7d"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.5.0"
   pubspec_parse:
     dependency: transitive
     description:
@@ -1205,14 +1146,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.6.16"
-  tint:
-    dependency: transitive
-    description:
-      name: tint
-      sha256: "9652d9a589f4536d5e392cf790263d120474f15da3cf1bee7f1fdb31b4de5f46"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.1"
   typed_data:
     dependency: transitive
     description:

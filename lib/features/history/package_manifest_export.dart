@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/features/collection/logic/package_server_manifest.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -12,8 +13,9 @@ import 'package:share_plus/share_plus.dart';
 Future<void> sharePackageServerManifest(BuildContext context, Package pkg) async {
   if (kIsWeb) {
     if (context.mounted) {
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Экспорт JSON на веб пока не поддерживается.')),
+        SnackBar(content: Text(loc.webExportNotSupported)),
       );
     }
     return;
@@ -29,8 +31,8 @@ Future<void> sharePackageServerManifest(BuildContext context, Package pkg) async
 
   await Share.shareXFiles(
     [XFile(file.path, mimeType: 'application/json', name: name)],
-    subject: 'Манифест ${pkg.id}',
-    text: 'JSON манифеста пакета (как на сервер)',
+    subject: AppLocalizations.of(context).manifestSubject(pkg.id),
+    text: AppLocalizations.of(context).manifestShareText,
   );
 }
 
@@ -41,8 +43,9 @@ Future<void> sharePackageServerManifestWithSnackBar(BuildContext context, Packag
   } catch (e, st) {
     debugPrint('sharePackageServerManifest: $e\n$st');
     if (context.mounted) {
+      final loc = AppLocalizations.of(context);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Не удалось экспортировать JSON: $e')),
+        SnackBar(content: Text(loc.exportJsonFailed('$e'))),
       );
     }
   }

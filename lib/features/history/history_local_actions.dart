@@ -1,6 +1,7 @@
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/local_package_cleanup.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -10,18 +11,18 @@ Future<void> confirmAndDeleteLocalPackage(
   WidgetRef ref,
   Package pkg,
 ) async {
+  final loc = AppLocalizations.of(context);
   final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Удалить пакет?'),
+          title: Text(loc.confirmDeletePackageTitle),
           content: Text(
-            'Пакет ${pkg.id} будет удалён с устройства (данные и фото в локальном кэше). '
-            'На сервере копия не удаляется.',
+            loc.confirmDeletePackageBody(pkg.id),
             style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Удалить')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.delete)),
           ],
         ),
       ) ??
@@ -30,23 +31,23 @@ Future<void> confirmAndDeleteLocalPackage(
   await deleteLocalPackageStorage(ref.read(databaseProvider), pkg.id);
   if (!context.mounted) return;
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text('Пакет ${pkg.id} удалён с устройства')),
+    SnackBar(content: Text(loc.deletedFromDevice(pkg.id))),
   );
 }
 
 Future<int?> confirmAndClearUploadedPackagesCache(BuildContext context, WidgetRef ref) async {
+  final loc = AppLocalizations.of(context);
   final ok = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Очистить кэш загруженных?'),
+          title: Text(loc.clearUploadedCacheConfirmTitle),
           content: Text(
-            'Будут удалены только пакеты со статусом «загружен на сервер»: записи в истории и '
-            'локальные файлы. Пакеты, которые ещё не отправлены, останутся.',
+            loc.clearUploadedCacheConfirmBody,
             style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Отмена')),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Очистить')),
+            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.cancel)),
+            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.clear)),
           ],
         ),
       ) ??
@@ -55,7 +56,7 @@ Future<int?> confirmAndClearUploadedPackagesCache(BuildContext context, WidgetRe
   final n = await deleteCompletedPackagesLocalCache(ref.read(databaseProvider));
   if (!context.mounted) return n;
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(n == 0 ? 'Нечего удалять' : 'Удалено пакетов с устройства: $n')),
+    SnackBar(content: Text(n == 0 ? loc.nothingToDelete : loc.clearedPackagesCount(n))),
   );
   return n;
 }

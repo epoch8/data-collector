@@ -5,6 +5,7 @@ import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/package_server_upload.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/features/projects/server_project_catalog.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:flutter/material.dart';
@@ -30,14 +31,16 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
       await ServerProjectCatalog(dio).syncFromServer();
       ref.invalidate(projectsProvider);
       if (mounted) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Проекты обновлены с сервера')),
+          SnackBar(content: Text(loc.projectsUpdated)),
         );
       }
     } catch (e) {
       if (mounted) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка синхронизации: $e')),
+          SnackBar(content: Text('${loc.syncError}: $e')),
         );
       }
     } finally {
@@ -60,14 +63,16 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
         allowedProjectIds: allowed,
       );
       if (mounted) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Пакет ${pkg.id} отправлен')),
+          SnackBar(content: Text(loc.packageSent(pkg.id))),
         );
       }
     } catch (e) {
       if (mounted) {
+        final loc = AppLocalizations.of(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ошибка: $e')),
+          SnackBar(content: Text('${loc.errorPrefix}: $e')),
         );
       }
     } finally {
@@ -77,18 +82,14 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     if (!ApiEnvironment.isConfigured) {
       return Epoch8ScreenBody(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              'Чтобы ходить на Django с эмулятора, запустите приложение с:\n\n'
-              'flutter run '
-              '--dart-define=API_BASE_URL=http://10.0.2.2:8000\n\n'
-              '(порт как у runserver). Войдите в приложении через Firebase.\n'
-              'Если на сервере не включён Firebase Auth, можно добавить:\n'
-              '--dart-define=API_BEARER_TOKEN=...',
+              loc.serverSetupHint,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
@@ -105,7 +106,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
         padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
         children: [
           Text(
-            'База: ${ApiEnvironment.normalizedBaseUrl()}',
+            loc.baseUrlLabel(ApiEnvironment.normalizedBaseUrl()),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
           ),
           const SizedBox(height: 16),
@@ -118,11 +119,11 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.cloud_download_outlined),
-            label: Text(_syncing ? 'Качаем конфиги…' : 'Синхронизировать проекты'),
+            label: Text(_syncing ? loc.syncingConfigs : loc.syncProjects),
           ),
           const SizedBox(height: 24),
           Text(
-            'Очередь на сервер',
+            loc.serverQueue,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -133,12 +134,12 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                   .toList()
                 ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
               if (queue.isEmpty) {
-                return const Padding(
+                return Padding(
                   padding: EdgeInsets.only(top: 16),
                   child: Epoch8EmptyState(
                     icon: Icons.cloud_done_outlined,
-                    title: 'Нет пакетов в очереди',
-                    subtitle: 'Все сохранённые пакеты уже на сервере или нет локальных данных.',
+                    title: loc.noQueuePackages,
+                    subtitle: loc.noQueuePackagesSubtitle,
                   ),
                 );
               }
@@ -156,7 +157,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                           ),
                           subtitle: Text(
                             '${pkg.projectId}\n'
-                            'Сервер: ${pkg.serverDeliveryState}'
+                            '${loc.serverStateLabel(pkg.serverDeliveryState)}'
                             '${pkg.serverDeliveryError != null ? '\n${pkg.serverDeliveryError}' : ''}',
                           ),
                           isThreeLine: true,
@@ -168,7 +169,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                                 )
                               : IconButton(
                                   icon: const Icon(Icons.cloud_upload_outlined),
-                                  tooltip: 'Отправить',
+                                  tooltip: loc.send,
                                   onPressed: () => _uploadOne(pkg),
                                 ),
                         ),
@@ -178,7 +179,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
               );
             },
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-            error: (e, _) => Text('Ошибка БД: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            error: (e, _) => Text('${loc.dbError}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
           ),
         ],
       ),

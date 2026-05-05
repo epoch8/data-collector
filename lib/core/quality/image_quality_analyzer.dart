@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:data_collector/l10n/locale_controller.dart';
 import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as img;
 
@@ -70,9 +71,14 @@ class ImageQualityResult {
   static ImageQualityResult ok({bool skipped = false}) =>
       ImageQualityResult(isAcceptable: true, issues: const [], skipped: skipped);
 
+  static bool get _isRu => appLocaleNotifier.value.languageCode == 'ru';
+
   String get userMessage {
-    if (issues.isEmpty) return 'Качество кадра в порядке.';
-    return 'Кадр не прошёл проверку:\n${issues.map((e) => '• $e').join('\n')}';
+    if (issues.isEmpty) {
+      return _isRu ? 'Качество кадра в порядке.' : 'Image quality looks good.';
+    }
+    final title = _isRu ? 'Кадр не прошёл проверку:' : 'Frame did not pass quality check:';
+    return '$title\n${issues.map((e) => '• $e').join('\n')}';
   }
 }
 
@@ -109,28 +115,52 @@ ImageQualityResult _analyzeInIsolate(String imagePath) {
 
     final issues = <String>[];
 
+    String m(String ru, String en) =>
+        appLocaleNotifier.value.languageCode == 'ru' ? ru : en;
+
     if (lumaStats.mean < ImageQualityThresholds.minMeanLuma) {
-      issues.add('слишком тёмно — добавьте света на объект или включите вспышку');
+      issues.add(m(
+        'слишком тёмно — добавьте света на объект или включите вспышку',
+        'too dark — add more light to the object or enable flash',
+      ));
     }
     if (lumaStats.mean > ImageQualityThresholds.maxMeanLuma) {
-      issues.add('слишком светло / пересвет — снимайте без прямого света в объектив, при необходимости снизьте экспозицию');
+      issues.add(m(
+        'слишком светло / пересвет — снимайте без прямого света в объектив, при необходимости снизьте экспозицию',
+        'too bright / overexposed — avoid direct light into lens, lower exposure if needed',
+      ));
     }
     if (p10 < ImageQualityThresholds.minP10Luma &&
         lumaStats.mean < ImageQualityThresholds.shadowChecksMeanGate) {
-      issues.add('большая часть кадра в тени — подсветите сцену равномернее');
+      issues.add(m(
+        'большая часть кадра в тени — подсветите сцену равномернее',
+        'most of the frame is in shadow — light the scene more evenly',
+      ));
     }
     if (p90 > ImageQualityThresholds.maxP90Luma) {
-      issues.add('много пересвеченных участков — отойдите от яркого источника или смените ракурс');
+      issues.add(m(
+        'много пересвеченных участков — отойдите от яркого источника или смените ракурс',
+        'too many overexposed areas — move away from bright source or change angle',
+      ));
     }
     if (darkFrac > ImageQualityThresholds.maxDarkPixelFraction &&
         lumaStats.mean < ImageQualityThresholds.shadowChecksMeanGate) {
-      issues.add('слишком много тёмных пикселей — улучшите освещение');
+      issues.add(m(
+        'слишком много тёмных пикселей — улучшите освещение',
+        'too many dark pixels — improve lighting',
+      ));
     }
     if (brightFrac > ImageQualityThresholds.maxBrightPixelFraction) {
-      issues.add('слишком много «вылезшего» белого — уберите засвет / блики');
+      issues.add(m(
+        'слишком много «вылезшего» белого — уберите засвет / блики',
+        'too much clipped white — remove glare / highlights',
+      ));
     }
     if (lumaStats.stdDev < ImageQualityThresholds.minLumaStdDev) {
-      issues.add('мало контраста — кадр выглядит «плоским», добавьте направленный свет');
+      issues.add(m(
+        'мало контраста — кадр выглядит «плоским», добавьте направленный свет',
+        'low contrast — frame looks flat, add directional light',
+      ));
     }
 
     // Размытие: любой из показателей ниже порога — кадр считаем недостаточно «чётким» (строже, чем AND).
@@ -138,12 +168,21 @@ ImageQualityResult _analyzeInIsolate(String imagePath) {
     final gradLow = gradE < ImageQualityThresholds.minGradientEnergy;
     if (lapLow || gradLow) {
       final hint = lapLow && gradLow
-          ? 'сильное размытие или смаз'
+          ? m('сильное размытие или смаз', 'strong blur or motion blur')
           : lapLow
-              ? 'мало высокочастотных деталей (возможен смаз или сильное сжатие)'
-              : 'мало чётких границ (возможен смаз или недофокус)';
+              ? m(
+                  'мало высокочастотных деталей (возможен смаз или сильное сжатие)',
+                  'not enough high-frequency details (possible motion blur or heavy compression)',
+                )
+              : m(
+                  'мало чётких границ (возможен смаз или недофокус)',
+                  'not enough sharp edges (possible motion blur or misfocus)',
+                );
       issues.add(
-        'изображение нечёткое ($hint) — держите телефон устойчивее, дождитесь фокуса, при необходимости отойдите',
+        m(
+          'изображение нечёткое ($hint) — держите телефон устойчивее, дождитесь фокуса, при необходимости отойдите',
+          'image is not sharp ($hint) — hold phone steadier, wait for focus, step back if needed',
+        ),
       );
     }
 

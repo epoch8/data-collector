@@ -1,4 +1,5 @@
 import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
@@ -124,6 +125,7 @@ class ShootingGuideBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     final ui = ProjectUi(project);
     final pad = compact ? 12.0 : 16.0;
     final tips = ui.strings(['shooting_guide', 'general_tips'], const []);
@@ -135,13 +137,13 @@ class ShootingGuideBody extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Epoch8SectionHeader(
-            overline: ui.str(['shooting_guide', 'section_overline'], 'Обучение'),
-            title: ui.str(['shooting_guide', 'section_title'], 'Съёмка'),
+            overline: loc.shootingGuideSectionOverline,
+            title: loc.shootingGuideSectionTitle,
             subtitle: ui.str(['shooting_guide', 'section_subtitle'], ''),
           ),
           const SizedBox(height: 16),
           Text(
-            ui.str(['shooting_guide', 'general_tips_heading'], 'Общие рекомендации'),
+            loc.shootingGuideGeneralTipsHeading,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
@@ -162,8 +164,8 @@ class ShootingGuideBody extends StatelessWidget {
             _PoseGuideCard(
               project: project,
               guide: g,
-              assetMissingHint: ui.str(['shooting_guide', 'asset_missing_hint'], ''),
-              emptyImagePlaceholder: ui.str(['shooting_guide', 'no_asset_placeholder'], '—'),
+              assetMissingHint: loc.shootingGuideAssetMissing,
+              emptyImagePlaceholder: loc.flowReviewEmptyValue,
             ),
             SizedBox(height: compact ? 12 : 16),
           ],
@@ -173,7 +175,7 @@ class ShootingGuideBody extends StatelessWidget {
               onPressed: onStart,
               style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
               child: Text(
-                ui.str(['shooting_guide', 'start_button'], 'OK'),
+                loc.shootingGuideStartButton,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),

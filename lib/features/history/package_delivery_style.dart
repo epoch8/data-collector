@@ -1,4 +1,5 @@
 import 'package:data_collector/core/storage/database.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -29,16 +30,6 @@ Color historyGroupBorderColor(List<Package> packages) {
   return Epoch8Theme.success.withValues(alpha: 0.78);
 }
 
-String deliveryStateShortRu(String serverDeliveryState) {
-  switch (serverDeliveryState) {
-    case 'completed':
-      return 'Сервер: загружен';
-    case 'failed':
-      return 'Сервер: ошибка отправки';
-    case 'uploading':
-      return 'Сервер: отправка…';
-    case 'pending':
-    default:
-      return 'Сервер: не загружен';
-  }
+String deliveryStateShort(BuildContext context, String serverDeliveryState) {
+  return AppLocalizations.of(context).deliveryStateLabel(serverDeliveryState);
 }

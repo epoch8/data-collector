@@ -7,11 +7,11 @@ import 'package:data_collector/features/collection/logic/collection_flow_resolve
 import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
-import 'package:data_collector/features/collection/presentation/flow/project_ui.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
@@ -117,7 +117,6 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   @override
   Widget build(BuildContext context) {
     final answers = ref.watch(wizardStateProvider(widget.projectId));
-    final u = ProjectUi(widget.project);
     final useCow = widget.step.cowIdHints;
     final cowMatch = _cowMatchFieldId();
     final cowCtrl = cowMatch != null ? _textCtrls[cowMatch] : null;
@@ -175,7 +174,6 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               child: _buildField(
                 context,
                 f,
-                u,
                 answers,
                 useCow: useCow,
                 cowMatch: cowMatch,
@@ -216,7 +214,6 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   Widget _buildField(
     BuildContext context,
     ConfigField f,
-    ProjectUi u,
     Map<String, dynamic> answers, {
     required bool useCow,
     required String? cowMatch,
@@ -229,6 +226,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     required Map<String, dynamic>? exactData,
     required void Function(Map<String, dynamic>) prefillFrom,
   }) {
+    final loc = AppLocalizations.of(context);
     switch (f.type) {
       case 'text_input':
         final c = _textCtrls[f.fieldId];
@@ -247,10 +245,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                   helperText: typedCowId.isEmpty
                       ? null
                       : hasExactMatch
-                          ? u.str(['flow', 'form', 'cow_hint_exact'], 'ID найден в локальной истории')
+                          ? loc.flowFormCowHintExact
                           : hasAnyMatches
-                              ? u.str(['flow', 'form', 'cow_hint_similar'], 'Есть похожие ID в истории')
-                              : u.str(['flow', 'form', 'cow_hint_new'], 'Новый ID (в истории не найден)'),
+                              ? loc.flowFormCowHintSimilar
+                              : loc.flowFormCowHintNew,
                   helperStyle: TextStyle(
                     color: hasExactMatch
                         ? Epoch8Theme.success
@@ -291,7 +289,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                 TextButton.icon(
                   onPressed: () => prefillFrom(exactData),
                   icon: const Icon(Icons.auto_fix_high_outlined, size: 18),
-                  label: Text(u.str(['flow', 'form', 'prefill_button'], 'Предзаполнить поля из последней записи')),
+                  label: Text(loc.flowFormPrefillButton),
                 ),
               ],
             ],
@@ -334,7 +332,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                       _dateTimes[f.fieldId] = DateTime(d.year, d.month, d.day, t.hour, t.minute);
                     });
                   },
-                  child: Text(u.str(['flow', 'form', 'datetime_change'], 'Изменить')),
+                  child: Text(loc.flowFormDatetimeChange),
                 ),
               ],
             ),
@@ -371,7 +369,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                           alignment: Alignment.center,
                           padding: const EdgeInsets.all(16),
                           child: Text(
-                            u.str(['flow', 'camera_pose', 'example_asset_missing'], ''),
+                            loc.flowCameraPoseExampleAssetMissing,
                             textAlign: TextAlign.center,
                             style: const TextStyle(color: Epoch8Theme.textMuted),
                           ),
@@ -383,7 +381,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               )
             else
               Text(
-                u.str(['flow', 'form', 'instruction_empty'], ''),
+                loc.flowFormInstructionEmpty,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
           ],
@@ -399,7 +397,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           totalPoses: total,
         );
       default:
-        return Text('Неизвестный тип поля: ${f.type}', style: const TextStyle(color: Epoch8Theme.danger));
+        return Text('${loc.unsupportedFieldType} (${f.type})', style: const TextStyle(color: Epoch8Theme.danger));
     }
   }
 }
@@ -456,16 +454,16 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
       final quality = await analyzeCaptureQuality(x.path);
       if (!mounted) return;
       if (!quality.isAcceptable) {
-        final qu = ProjectUi(widget.project);
+        final loc = AppLocalizations.of(context);
         final useAnyway = await showDialog<bool>(
           context: context,
           barrierDismissible: false,
           builder: (ctx) => AlertDialog(
-            title: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'title'], 'Проверка качества кадра')),
+            title: Text(loc.flowCameraPoseQualityTitle),
             content: SingleChildScrollView(child: Text(quality.userMessage)),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'use_anyway'], 'Всё равно использовать'))),
-              FilledButton(onPressed: () => Navigator.pop(ctx, false), child: Text(qu.str(['flow', 'camera_pose', 'quality_dialog', 'retake'], 'Переснять'))),
+              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.flowCameraPoseUseAnyway)),
+              FilledButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.flowCameraPoseRetake)),
             ],
           ),
         );
@@ -495,10 +493,10 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
 
   @override
   Widget build(BuildContext context) {
-    final u = ProjectUi(widget.project);
+    final loc = AppLocalizations.of(context);
     final answers = ref.watch(wizardStateProvider(widget.projectId));
     final paths = CapturedPhotoPaths.list(answers[_key]);
-    final sep = u.str(['flow', 'ribbon', 'pose_counter_sep'], '·');
+    const sep = '·';
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -524,13 +522,13 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
         ],
         const SizedBox(height: 16),
         Text(
-          u.tpl(['flow', 'camera_pose', 'your_shots_heading'], 'Ваши кадры ({count})', {'count': '${paths.length}'}),
+          loc.flowCameraPoseYourShots(paths.length),
           style: Theme.of(context).textTheme.titleSmall,
         ),
         const SizedBox(height: 8),
         if (paths.isEmpty)
           Text(
-            u.str(['flow', 'camera_pose', 'empty_hint'], 'Добавьте кадры камерой или из галереи'),
+            loc.flowCameraPoseEmptyHint,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
           )
         else
@@ -545,16 +543,16 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: FilledButton.icon(onPressed: () => _pick(ImageSource.camera), icon: const Icon(Icons.photo_camera_outlined), label: Text(u.str(['flow', 'camera_pose', 'camera'], 'Камера')))),
+            Expanded(child: FilledButton.icon(onPressed: () => _pick(ImageSource.camera), icon: const Icon(Icons.photo_camera_outlined), label: Text(loc.flowCameraPoseCamera))),
             const SizedBox(width: 8),
-            Expanded(child: OutlinedButton.icon(onPressed: () => _pick(ImageSource.gallery), icon: const Icon(Icons.photo_library_outlined), label: Text(u.str(['flow', 'camera_pose', 'gallery'], 'Галерея')))),
+            Expanded(child: OutlinedButton.icon(onPressed: () => _pick(ImageSource.gallery), icon: const Icon(Icons.photo_library_outlined), label: Text(loc.flowCameraPoseGallery))),
           ],
         ),
         if (paths.isNotEmpty)
           TextButton.icon(
             onPressed: _clear,
             icon: const Icon(Icons.delete_sweep_outlined, color: Epoch8Theme.danger),
-            label: Text(u.str(['flow', 'camera_pose', 'clear_all_poses'], 'Удалить все кадры этого ракурса')),
+            label: Text(loc.flowCameraPoseClearAll),
           ),
       ],
     );

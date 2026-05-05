@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'dart:convert';
@@ -23,6 +24,8 @@ import 'features/history/package_delivery_style.dart';
 import 'features/history/package_manifest_export.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/epoch8_ui.dart';
+import 'l10n/app_localizations.dart';
+import 'l10n/locale_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -76,13 +79,14 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
               final async = ref.watch(projectsProvider);
               return async.when(
                 data: (projects) {
+                  final loc = AppLocalizations.of(context);
                   try {
                     projects.firstWhere((p) => p.id == id);
                   } catch (_) {
                     return Scaffold(
                       backgroundColor: Epoch8Theme.bgDeep,
-                      appBar: AppBar(title: const Text('Проект')),
-                      body: const Center(child: Text('Проект не найден в конфигурации.')),
+                      appBar: AppBar(title: _epoch8AppBarTitle(loc.project)),
+                      body: Center(child: Text(loc.projectNotFound)),
                     );
                   }
                   return CollectionFlowScreen(projectId: id);
@@ -93,7 +97,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                 ),
                 error: (e, _) => Scaffold(
                   backgroundColor: Epoch8Theme.bgDeep,
-                  body: Center(child: Text('Ошибка: $e')),
+                  body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
                 ),
               );
             },
@@ -112,6 +116,37 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
         builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
       ),
     ],
+  );
+}
+
+Widget _epoch8AppBarTitle(String title) {
+  return Row(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      ClipRRect(
+        borderRadius: BorderRadius.circular(6),
+        child: Image.asset(
+          'e8_logo.png',
+          width: 22,
+          height: 22,
+          fit: BoxFit.cover,
+        ),
+      ),
+      const SizedBox(width: 8),
+      Text(title),
+    ],
+  );
+}
+
+Widget _languageSwitcherButton(BuildContext context) {
+  final loc = AppLocalizations.of(context);
+  return IconButton(
+    tooltip: loc.languageToggleTooltip,
+    onPressed: toggleAppLocale,
+    icon: Text(
+      loc.languageCodeLabel,
+      style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.4),
+    ),
   );
 }
 
@@ -134,13 +169,24 @@ class _DataCollectorAppState extends State<DataCollectorApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'EPOCH8 Data Collector',
-      theme: Epoch8Theme.dark,
-      darkTheme: Epoch8Theme.dark,
-      themeMode: ThemeMode.dark,
-      routerConfig: _router,
-      debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<Locale>(
+      valueListenable: appLocaleNotifier,
+      builder: (context, locale, _) => MaterialApp.router(
+        locale: locale,
+        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+        theme: Epoch8Theme.dark,
+        darkTheme: Epoch8Theme.dark,
+        themeMode: ThemeMode.dark,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        routerConfig: _router,
+        debugShowCheckedModeBanner: false,
+      ),
     );
   }
 }
@@ -188,6 +234,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final t = Theme.of(context).textTheme;
+    final loc = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: Epoch8Theme.bgDeep,
       body: Epoch8ScreenBody(
@@ -236,66 +283,71 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Data Collector',
+                        loc.loginTitle,
                         style: t.headlineSmall,
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 12),
                       Text(
-                        'Сбор полевых данных и фото с офлайн-историей на устройстве',
+                        loc.loginSubtitle,
                         style: t.bodyMedium?.copyWith(fontSize: 15),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 32),
                       if (firebaseInitialized) ...[
-                        TextField(
-                          controller: _email,
-                          keyboardType: TextInputType.emailAddress,
-                          autofillHints: const [AutofillHints.email],
-                          decoration: const InputDecoration(
-                            labelText: 'Email',
-                            border: OutlineInputBorder(),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        TextField(
-                          controller: _password,
-                          obscureText: true,
-                          autofillHints: const [AutofillHints.password],
-                          decoration: const InputDecoration(
-                            labelText: 'Пароль',
-                            border: OutlineInputBorder(),
-                          ),
-                          onSubmitted: (_) {
-                            if (!_busy) _signInWithFirebase();
-                          },
-                        ),
-                        if (_error != null) ...[
-                          const SizedBox(height: 12),
-                          Text(
-                            _error!,
-                            style: t.bodySmall?.copyWith(color: Epoch8Theme.danger),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: _busy ? null : _signInWithFirebase,
-                            child: _busy
-                                ? const SizedBox(
-                                    height: 22,
-                                    width: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                  )
-                                : const Text('Войти'),
+                        Epoch8Card(
+                          child: Column(
+                            children: [
+                              TextField(
+                                controller: _email,
+                                keyboardType: TextInputType.emailAddress,
+                                autofillHints: const [AutofillHints.email],
+                                decoration: const InputDecoration(
+                                  labelText: 'Email',
+                                  border: OutlineInputBorder(),
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: _password,
+                                obscureText: true,
+                                autofillHints: const [AutofillHints.password],
+                                decoration: InputDecoration(
+                                  labelText: loc.password,
+                                  border: OutlineInputBorder(),
+                                ),
+                                onSubmitted: (_) {
+                                  if (!_busy) _signInWithFirebase();
+                                },
+                              ),
+                              if (_error != null) ...[
+                                const SizedBox(height: 12),
+                                Text(
+                                  _error!,
+                                  style: t.bodySmall?.copyWith(color: Epoch8Theme.danger),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                              const SizedBox(height: 20),
+                              SizedBox(
+                                width: double.infinity,
+                                child: FilledButton(
+                                  onPressed: _busy ? null : _signInWithFirebase,
+                                  child: _busy
+                                      ? const SizedBox(
+                                          height: 22,
+                                          width: 22,
+                                          child: CircularProgressIndicator(strokeWidth: 2),
+                                        )
+                                      : Text(loc.signIn),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ] else ...[
                         Text(
-                          'Firebase не инициализирован: проверьте lib/firebase_options.dart и '
-                          'google-services.json (Android). Для разработки без входа:',
+                          loc.firebaseNotInitialized,
                           style: t.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
                           textAlign: TextAlign.center,
                         ),
@@ -304,10 +356,16 @@ class _LoginScreenState extends State<LoginScreen> {
                           width: double.infinity,
                           child: FilledButton(
                             onPressed: () => context.go('/dashboard'),
-                            child: const Text('Перейти в рабочее пространство'),
+                            child: Text(loc.goToWorkspace),
                           ),
                         ),
                       ],
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: toggleAppLocale,
+                        icon: Text(loc.languageCodeLabel),
+                        label: Text(loc.languageToggleTooltip),
+                      ),
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -355,6 +413,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     final projectsAsync = ref.watch(projectsProvider);
     final packagesAsync = ref.watch(packagesStreamProvider);
 
@@ -363,22 +422,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
-          title: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(6),
-                child: Image.asset(
-                  'e8_logo.png',
-                  width: 22,
-                  height: 22,
-                  fit: BoxFit.cover,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Text('Рабочее пространство'),
-            ],
-          ),
+          title: _epoch8AppBarTitle(loc.workspaceTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(58),
             child: Padding(
@@ -395,19 +439,20 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerHeight: 0,
-                  tabs: const [
-                    Tab(icon: Icon(Icons.folder_outlined, size: 20), text: 'Проекты'),
-                    Tab(icon: Icon(Icons.cloud_outlined, size: 20), text: 'Сервер'),
-                    Tab(icon: Icon(Icons.history_outlined, size: 20), text: 'История'),
+                  tabs: [
+                    Tab(icon: const Icon(Icons.folder_outlined, size: 20), text: loc.projectsTab),
+                    Tab(icon: const Icon(Icons.cloud_outlined, size: 20), text: loc.serverTab),
+                    Tab(icon: const Icon(Icons.history_outlined, size: 20), text: loc.historyTab),
                   ],
                 ),
               ),
             ),
           ),
           actions: [
+            _languageSwitcherButton(context),
             IconButton(
               icon: const Icon(Icons.logout_outlined),
-              tooltip: 'Выйти',
+              tooltip: loc.logout,
               onPressed: () async {
                 if (firebaseInitialized) {
                   await FirebaseAuth.instance.signOut();
@@ -423,8 +468,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
               projectsAsync.when(
                 data: (projects) {
                   final emptySubtitle = ApiEnvironment.isConfigured
-                      ? 'С сервера пока нечего показать: нет доступных проектов или нет сети (показан кэш/bundled). Потяните вниз для обновления.'
-                      : 'Задайте API_BASE_URL при запуске, чтобы подтянуть проекты с Django, или добавьте проекты в assets/config/projects.json.';
+                      ? loc.serverEmptySubtitleConfigured
+                      : loc.serverEmptySubtitleNotConfigured;
                   final list = ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
@@ -461,16 +506,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                               () {
                                 final flow = resolveCollectionFlow(project);
                                 if (flow.isSingleScrollOnly) {
-                                  return 'Версия ${project.version} • полей: ${project.config.fields.length}';
+                                  return '${loc.version} ${project.version} • ${project.config.fields.length}';
                                 }
                                 final nCam = flow.cameraPoseCount;
                                 final hasInstr = flow.steps.any((s) => s.kind == CollectionScreenKind.instruction);
                                 final hasForm = flow.steps.any((s) => s.kind == CollectionScreenKind.form);
-                                final bits = <String>['Версия ${project.version}'];
-                                if (hasForm) bits.add('анкета');
-                                if (hasInstr) bits.add('справка');
-                                if (nCam > 0) bits.add('$nCam ракурса');
-                                if (flow.reviewStepIndex != null) bits.add('проверка');
+                                final bits = <String>['${loc.version} ${project.version}'];
+                                if (hasForm) bits.add(loc.formLabel);
+                                if (hasInstr) bits.add(loc.guideLabel);
+                                if (nCam > 0) bits.add(loc.cameraPosesCount(nCam));
+                                if (flow.reviewStepIndex != null) bits.add(loc.reviewLabel);
                                 return bits.join(' • ');
                               }(),
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
@@ -499,7 +544,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                             height: MediaQuery.sizeOf(context).height * 0.5,
                             child: Epoch8EmptyState(
                               icon: Icons.folder_open_outlined,
-                              title: 'Пока нет проектов',
+                              title: loc.noProjectsTitle,
                               subtitle: emptySubtitle,
                             ),
                           ),
@@ -513,7 +558,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                   );
                 },
                 loading: () => const Center(child: CircularProgressIndicator()),
-                error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
+                error: (e, _) => Center(child: Text('${loc.configError}: $e')),
               ),
               const ServerSyncTab(),
               _historyTabBody(context, ref, projectsAsync, packagesAsync),
@@ -533,10 +578,11 @@ class CowHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final loc = AppLocalizations.of(context);
     final packagesAsync = ref.watch(packagesStreamProvider);
     return Scaffold(
       backgroundColor: Epoch8Theme.bgDeep,
-      appBar: AppBar(title: Text('Корова $cowId')),
+      appBar: AppBar(title: _epoch8AppBarTitle('${loc.objectLabel} $cowId')),
       body: packagesAsync.when(
         data: (packages) {
           final filtered = packages
@@ -549,10 +595,10 @@ class CowHistoryScreen extends ConsumerWidget {
               .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           if (filtered.isEmpty) {
-            return const Epoch8EmptyState(
+            return Epoch8EmptyState(
               icon: Icons.cloud_off_outlined,
-              title: 'Пакеты не найдены',
-              subtitle: 'Для этой коровы пока нет сохранённых пакетов.',
+              title: loc.packageNotFoundShort,
+              subtitle: loc.noPackagesForCow,
             );
           }
           return ListView.separated(
@@ -566,23 +612,23 @@ class CowHistoryScreen extends ConsumerWidget {
                 highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
                 child: ListTile(
                   title: Text(
-                    'Пакет ${pkg.id}',
+                    '${AppLocalizations.of(context).packageWord} ${pkg.id}',
                     style: const TextStyle(fontWeight: FontWeight.w600),
                   ),
                   subtitle: Text(
-                    '${pkg.createdAt.toString().split('.').first}\nФото: $photoCount • ${pkg.projectId}\n${deliveryStateShortRu(pkg.serverDeliveryState)}',
+                    '${pkg.createdAt.toString().split('.').first}\n${AppLocalizations.of(context).photos}: $photoCount • ${pkg.projectId}\n${deliveryStateShort(context, pkg.serverDeliveryState)}',
                   ),
                   isThreeLine: true,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       IconButton(
-                        tooltip: 'Скачать JSON манифеста',
+                        tooltip: loc.downloadManifest,
                         icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                         onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                       ),
                       IconButton(
-                        tooltip: 'Удалить с устройства',
+                        tooltip: loc.deleteFromDevice,
                         icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                         onPressed: () async {
                           await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -601,7 +647,7 @@ class CowHistoryScreen extends ConsumerWidget {
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            child: Text('${loc.errorPrefix}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
           ),
         ),
       ),
@@ -616,6 +662,7 @@ class PackageHistoryScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final loc = AppLocalizations.of(context);
     final packagesAsync = ref.watch(packagesStreamProvider);
     return packagesAsync.when(
       data: (packages) {
@@ -629,16 +676,17 @@ class PackageHistoryScreen extends ConsumerWidget {
         return Scaffold(
           backgroundColor: Epoch8Theme.bgDeep,
           appBar: AppBar(
-            title: Text('Пакет $packageId'),
+            title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
             actions: [
+              _languageSwitcherButton(context),
               if (pkg != null) ...[
                 IconButton(
-                  tooltip: 'Скачать JSON манифеста (как на сервер)',
+                  tooltip: loc.downloadManifestAsServer,
                   icon: const Icon(Icons.download_outlined),
                   onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg!),
                 ),
                 IconButton(
-                  tooltip: 'Удалить с устройства',
+                  tooltip: loc.deleteFromDevice,
                   icon: const Icon(Icons.delete_outline),
                   onPressed: () async {
                     await confirmAndDeleteLocalPackage(context, ref, pkg!);
@@ -654,26 +702,26 @@ class PackageHistoryScreen extends ConsumerWidget {
             ],
           ),
           body: pkg == null
-              ? const Epoch8EmptyState(
+              ? Epoch8EmptyState(
                   icon: Icons.error_outline,
-                  title: 'Пакет не найден',
-                  subtitle: 'Возможно, он был удалён или база обновилась.',
+                  title: loc.packageNotFoundTitle,
+                  subtitle: loc.packageNotFoundSubtitle,
                 )
               : _packageHistoryDetailBody(context, ref, pkg),
         );
       },
       loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        appBar: AppBar(title: Text('Пакет $packageId')),
+        appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
         body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, st) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        appBar: AppBar(title: Text('Пакет $packageId')),
+        appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('Ошибка: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            child: Text('${loc.errorPrefix}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
           ),
         ),
       ),
@@ -682,6 +730,7 @@ class PackageHistoryScreen extends ConsumerWidget {
 }
 
 Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pkg) {
+  final loc = AppLocalizations.of(context);
   final raw = _decodePackageData(pkg);
   final photos = _extractImagePaths(pkg);
   final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
@@ -701,25 +750,25 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              projMeta != null ? 'Проект: ${projMeta.name}' : 'Проект: ${pkg.projectId}',
+              projMeta != null ? loc.projectLabel(projMeta.name) : loc.projectLabel(pkg.projectId),
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            if (groupSubject && subjectLabel != 'без-id') ...[
+            if (groupSubject && subjectLabel != 'no-id') ...[
               const SizedBox(height: 8),
-              Text('Объект: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
+              Text('${loc.objectLabel}: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
             ],
             const SizedBox(height: 8),
             Text(
-              deliveryStateShortRu(pkg.serverDeliveryState),
+              deliveryStateShort(context, pkg.serverDeliveryState),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: historyPackageBorderColor(pkg.serverDeliveryState),
                     fontWeight: FontWeight.w600,
                   ),
             ),
             const SizedBox(height: 6),
-            Text('Идентификатор: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
-            Text('Создан: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('Фото: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
+            Text('${loc.identifier}: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
+            Text('${loc.createdAt}: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
+            Text('${loc.photos}: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
           ],
         ),
       ),
@@ -729,7 +778,7 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Данные анкеты',
+              loc.formDataTitle,
               style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
@@ -739,10 +788,10 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
       ),
       const SizedBox(height: 12),
       if (photos.isEmpty)
-        const Epoch8EmptyState(
+        Epoch8EmptyState(
           icon: Icons.photo_library_outlined,
-          title: 'В пакете нет фото',
-          subtitle: 'Сохранены только поля формы.',
+          title: loc.packageNoPhotosTitle,
+          subtitle: loc.packageNoPhotosSubtitle,
         )
       else
         ...photos.map((path) {
@@ -770,8 +819,8 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                                       color: Colors.black.withValues(alpha: 0.55),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
-                                    child: const Text(
-                                      'Открыть',
+                                    child: Text(
+                                      loc.openPhoto,
                                       style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                                     ),
                                   ),
@@ -783,14 +832,14 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                             height: 120,
                             color: Epoch8Theme.bgElevated,
                             alignment: Alignment.center,
-                            child: const Text('Файл не найден на устройстве'),
+                            child: Text(loc.fileNotFoundOnDevice),
                           ),
                   ),
                   const SizedBox(height: 10),
                   Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
                   const SizedBox(height: 6),
                   Text(
-                    'Путь: $path',
+                    '${loc.pathLabel}: $path',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
                   ),
                   if (meta != null) ...[
@@ -803,7 +852,7 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                         iconColor: Epoch8Theme.textMuted,
                         collapsedIconColor: Epoch8Theme.textMuted,
                         title: Text(
-                          'Параметры кадра и камеры',
+                          loc.frameCameraParams,
                           style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         children: [
@@ -826,7 +875,7 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
         child: FilledButton.icon(
           onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
           icon: const Icon(Icons.download_outlined),
-          label: const Text('Скачать JSON манифеста (как на сервер)'),
+          label: Text(loc.downloadManifestAsServer),
         ),
       ),
     ],
@@ -845,10 +894,10 @@ Widget _historyTabBody(
         data: (packages) {
           final visible = packages.where((p) => p.status != 'draft').toList();
           if (visible.isEmpty) {
-            return const Epoch8EmptyState(
+            return Epoch8EmptyState(
               icon: Icons.cloud_outlined,
-              title: 'История пуста',
-              subtitle: 'Отправленные пакеты появятся здесь.',
+              title: AppLocalizations.of(context).historyEmptyTitle,
+              subtitle: AppLocalizations.of(context).historyEmptySubtitle,
             );
           }
           final byProject = <String, List<Package>>{};
@@ -878,7 +927,7 @@ Widget _historyTabBody(
                     child: TextButton.icon(
                       onPressed: () => confirmAndClearUploadedPackagesCache(context, ref),
                       icon: const Icon(Icons.cleaning_services_outlined, size: 18),
-                      label: Text('Очистить кэш загруженных ($completedCount)'),
+                      label: Text(AppLocalizations.of(context).clearUploadedCacheWithCount(completedCount)),
                     ),
                   ),
                 ),
@@ -897,11 +946,11 @@ Widget _historyTabBody(
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Ошибка: $e')),
+        error: (e, _) => Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
       );
     },
     loading: () => const Center(child: CircularProgressIndicator()),
-    error: (e, _) => Center(child: Text('Ошибка конфига: $e')),
+    error: (e, _) => Center(child: Text('${AppLocalizations.of(context).configError}: $e')),
   );
 }
 
@@ -927,7 +976,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
               ),
             ),
             Text(
-              '${packages.length} пак.',
+              AppLocalizations.of(context).packageCountShort(packages.length),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Epoch8Theme.textMuted),
             ),
           ],
@@ -949,11 +998,11 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 ),
                 child: const Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
               ),
-              title: Text('Корова ${g.cowId}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text('${AppLocalizations.of(context).objectLabel} ${g.cowId}', style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  _historyCowGroupSubtitle(g.packages),
+                  _historyCowGroupSubtitle(context, g.packages),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -989,7 +1038,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  '${pkg.createdAt.toString().split('.').first} • фото: ${_extractImagePaths(pkg).length}\n${_historyPackageSubtitle(pkg)}',
+                  '${pkg.createdAt.toString().split('.').first} • ${AppLocalizations.of(context).photosLower}: ${_extractImagePaths(pkg).length}\n${_historyPackageSubtitle(context, pkg)}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
@@ -998,12 +1047,12 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   IconButton(
-                    tooltip: 'Скачать JSON манифеста',
+                    tooltip: AppLocalizations.of(context).downloadManifest,
                     icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                     onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                   ),
                   IconButton(
-                    tooltip: 'Удалить с устройства',
+                    tooltip: AppLocalizations.of(context).deleteFromDevice,
                     icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                     onPressed: () async {
                       await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -1023,27 +1072,28 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
   );
 }
 
-String _historyCowGroupSubtitle(List<Package> packages) {
+String _historyCowGroupSubtitle(BuildContext context, List<Package> packages) {
+  final loc = AppLocalizations.of(context);
   final n = packages.length;
   final photos = packages.fold<int>(0, (a, p) => a + _extractImagePaths(p).length);
   final pending = packages.where((p) => p.serverDeliveryState != 'completed').length;
   final failed = packages.where((p) => p.serverDeliveryState == 'failed').length;
-  final buf = StringBuffer('Пакетов: $n • Фото: $photos');
+  final buf = StringBuffer('${loc.packageWord}: $n • ${loc.photos}: $photos');
   if (failed > 0) {
-    buf.write('\nОшибка отправки: $failed');
+    buf.write('\n${loc.uploadFailed}: $failed');
   } else if (pending > 0) {
-    buf.write('\nНе на сервере: $pending из $n');
+    buf.write('\n${loc.notOnServer}: $pending / $n');
   } else {
-    buf.write('\nВсе пакеты на сервере');
+    buf.write('\n${loc.allPackagesOnServer}');
   }
   return buf.toString();
 }
 
-String _historyPackageSubtitle(Package pkg) {
+String _historyPackageSubtitle(BuildContext context, Package pkg) {
   final raw = unpackPackageFormData(pkg.dataJson);
   final n = raw['session_note']?.toString().trim() ?? '';
   final note = n.isEmpty ? '' : (n.length > 80 ? '${n.substring(0, 80)}…' : n);
-  final delivery = deliveryStateShortRu(pkg.serverDeliveryState);
+  final delivery = deliveryStateShort(context, pkg.serverDeliveryState);
   if (note.isEmpty) return delivery;
   return '$note\n$delivery';
 }
@@ -1056,7 +1106,7 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
       Padding(
         padding: const EdgeInsets.only(bottom: 8, top: 4),
         child: Text(
-          'Проект $projectId (нет в конфиге)',
+          '${AppLocalizations.of(context).project} $projectId (${AppLocalizations.of(context).projectMissingInConfig})',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.textMuted, fontWeight: FontWeight.w600),
         ),
       ),
@@ -1066,19 +1116,19 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
           child: ListTile(
             title: Text(pkg.id, style: const TextStyle(fontWeight: FontWeight.w600)),
             subtitle: Text(
-              '${pkg.createdAt.toString().split('.').first}\n${deliveryStateShortRu(pkg.serverDeliveryState)}',
+              '${pkg.createdAt.toString().split('.').first}\n${deliveryStateShort(context, pkg.serverDeliveryState)}',
             ),
             isThreeLine: true,
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 IconButton(
-                  tooltip: 'Скачать JSON манифеста',
+                  tooltip: AppLocalizations.of(context).downloadManifest,
                   icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                   onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                 ),
                 IconButton(
-                  tooltip: 'Удалить с устройства',
+                  tooltip: AppLocalizations.of(context).deleteFromDevice,
                   icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                   onPressed: () async {
                     await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -1124,7 +1174,7 @@ List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Packag
       } else {
         n = (v != null && v.toString().trim().isNotEmpty ? 1 : 0);
       }
-      rows.add(_packageHistoryFieldRow(context, f.title, n == 0 ? null : '$n файл(ов)'));
+      rows.add(_packageHistoryFieldRow(context, f.title, n == 0 ? null : '$n ${AppLocalizations.of(context).fileWord}'));
       continue;
     }
     final val = raw[f.fieldId];
@@ -1152,7 +1202,7 @@ List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic>
       if (v.isEmpty) {
         display = '—';
       } else if (v.every((x) => x is String && (x.contains('/') || x.contains('\\') || x.startsWith('blobs/')))) {
-        display = '${v.length} файл(ов)';
+        display = '${v.length} ${AppLocalizations.of(context).fileWord}';
       } else {
         display = v.map((x) => x.toString()).join(', ');
       }
@@ -1235,7 +1285,7 @@ String _extractCowId(Map<String, dynamic> data) {
     final value = data[k]?.toString().trim();
     if (value != null && value.isNotEmpty) return value;
   }
-  return 'без-id';
+  return 'no-id';
 }
 
 List<String> _extractImagePaths(Package pkg) {
@@ -1351,7 +1401,12 @@ Future<void> _showFullPhoto(BuildContext context, String path) async {
                       maxScale: 6,
                       child: Center(child: Image.file(file, fit: BoxFit.contain)),
                     )
-                  : const Center(child: Text('Файл не найден', style: TextStyle(color: Colors.white70))),
+                  : Center(
+                      child: Text(
+                        AppLocalizations.of(context).fileNotFound,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                    ),
             ),
             Positioned(
               right: 8,
@@ -1359,7 +1414,7 @@ Future<void> _showFullPhoto(BuildContext context, String path) async {
               child: IconButton(
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.close, color: Colors.white),
-                tooltip: 'Закрыть',
+                tooltip: AppLocalizations.of(context).close,
               ),
             ),
           ],

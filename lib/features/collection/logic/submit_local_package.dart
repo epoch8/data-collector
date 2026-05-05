@@ -4,6 +4,7 @@ import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/local_package_materializer.dart';
 import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -59,8 +60,8 @@ Future<void> submitLocalPackage({
   if (!context.mounted) return;
 
   ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Package securely saved to local database!'),
+    SnackBar(
+      content: Text(AppLocalizations.of(context).packageSavedLocal),
       behavior: SnackBarBehavior.floating,
     ),
   );

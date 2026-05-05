@@ -6,6 +6,8 @@ import 'package:data_collector/models/project_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
+import 'package:data_collector/l10n/app_localizations.dart';
+import 'package:data_collector/l10n/locale_controller.dart';
 
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 
@@ -24,10 +26,11 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         try {
           project = projects.firstWhere((p) => p.id == projectId);
         } catch (_) {
+          final loc = AppLocalizations.of(context);
           return Scaffold(
             backgroundColor: Epoch8Theme.bgDeep,
-            appBar: AppBar(title: const Text('Проект')),
-            body: const Center(child: Text('Проект не найден.')),
+            appBar: AppBar(title: Text(loc.project)),
+            body: Center(child: Text(loc.projectNotFoundShortDot)),
           );
         }
         return _ScrollFormLoaded(projectId: projectId, project: project);
@@ -38,7 +41,7 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: Center(child: Text('Ошибка: $e')),
+        body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
       ),
     );
   }
@@ -106,6 +109,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
 
   @override
   Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
     final project = widget.project;
     final answers = ref.watch(wizardStateProvider(widget.projectId));
 
@@ -113,6 +117,13 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
       backgroundColor: Epoch8Theme.bgDeep,
       appBar: AppBar(
         title: Text(project.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: [
+          IconButton(
+            tooltip: loc.languageToggleTooltip,
+            onPressed: toggleAppLocale,
+            icon: Text(loc.languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+          ),
+        ],
       ),
       body: Container(
         decoration: Epoch8Theme.screenGradient(),
@@ -145,7 +156,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                 answers: answers,
               );
             },
-            child: const Text('Submit Package', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(loc.submitPackage, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           ),
         ),
       ),
@@ -153,6 +164,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
   }
 
   Widget _buildFieldContent(ConfigField field, Map<String, dynamic> answers, int index) {
+    final loc = AppLocalizations.of(context);
     final hasFocus = _focusNodes[index].hasFocus;
 
     return AnimatedContainer(
@@ -219,13 +231,13 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                           }
                           _focusNodes[index].requestFocus();
                         },
-                        label: Text(field.multiple == true ? 'Take Another Photo' : 'Capture Photo'),
+                        label: Text(field.multiple == true ? loc.takeAnotherPhoto : loc.capturePhoto),
                       ),
                       if (answers[field.fieldId] != null) ...[
                         const SizedBox(height: 16),
                         if (field.multiple == true) ...[
                           Text(
-                            '${(answers[field.fieldId] as List).length} Photos Captured',
+                            '${(answers[field.fieldId] as List).length} ${loc.photosCaptured}',
                             style: const TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
@@ -270,7 +282,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                             }).toList(),
                           )
                         ] else ...[
-                          const Text('Photo Saved ✓', style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
+                          Text('${loc.photoSaved} ✓', style: const TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Stack(
                             children: [
@@ -308,7 +320,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
             )
           else
             Text(
-              'Тип поля «${field.type}» не поддерживается на этом экране. Допустимо: text_input, camera_photo.',
+              '${loc.unsupportedFieldType} ${loc.supportedFieldTypes} (${field.type})',
               style: const TextStyle(color: Epoch8Theme.danger),
             ),
           
@@ -320,7 +332,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                 child: FilledButton.icon(
                   onPressed: () => _focusNext(index),
                   icon: const Icon(Icons.check),
-                  label: Text(index == _fields.length - 1 ? 'Finish Focus' : 'Save & Next'),
+                  label: Text(index == _fields.length - 1 ? loc.finishFocus : loc.saveAndNext),
                 ),
               ),
             ),
