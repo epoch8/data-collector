@@ -135,7 +135,7 @@ class _DataCollectorAppState extends State<DataCollectorApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'Data Collector',
+      title: 'EPOCH8 Data Collector',
       theme: Epoch8Theme.dark,
       darkTheme: Epoch8Theme.dark,
       themeMode: ThemeMode.dark,
@@ -363,7 +363,22 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
-          title: const Text('Рабочее пространство'),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: Image.asset(
+                  'e8_logo.png',
+                  width: 22,
+                  height: 22,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Text('Рабочее пространство'),
+            ],
+          ),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(58),
             child: Padding(
