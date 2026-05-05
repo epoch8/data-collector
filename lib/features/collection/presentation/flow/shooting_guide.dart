@@ -153,7 +153,7 @@ class ShootingGuideBody extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('• ', style: TextStyle(color: Epoch8Theme.accent)),
+                  Text('• ', style: TextStyle(color: Epoch8Theme.accent)),
                   Expanded(child: Text(t, style: Theme.of(context).textTheme.bodyMedium)),
                 ],
               ),
@@ -224,7 +224,7 @@ class _PoseGuideCard extends StatelessWidget {
                   child: Text(
                     assetMissingHint.isNotEmpty ? assetMissingHint : emptyImagePlaceholder,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: Epoch8Theme.textMuted),
+                    style: TextStyle(color: Epoch8Theme.textMuted),
                   ),
                 ),
               ),
@@ -237,7 +237,7 @@ class _PoseGuideCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('– ', style: TextStyle(color: Epoch8Theme.textMuted)),
+                  Text('– ', style: TextStyle(color: Epoch8Theme.textMuted)),
                   Expanded(
                     child: Text(line, style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35)),
                   ),

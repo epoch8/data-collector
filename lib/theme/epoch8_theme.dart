@@ -1,91 +1,174 @@
 import 'package:flutter/material.dart';
 
-/// Тёмная тема в духе tech / data — чистые поверхности, бирюзовый акцент, без визуального шума.
-abstract final class Epoch8Theme {
-  static const Color bgDeep = Color(0xFF060A0E);
-  static const Color bgElevated = Color(0xFF0D1319);
-  static const Color card = Color(0xFF111A24);
-  static const Color border = Color(0xFF1E2A3A);
-  static const Color accent = Color(0xFF2DD4BF);
-  static const Color accentDim = Color(0xFF0D9488);
-  static const Color textPrimary = Color(0xFFF1F5F9);
-  static const Color textMuted = Color(0xFF94A3B8);
-  static const Color danger = Color(0xFFF87171);
-  static const Color success = Color(0xFF34D399);
+import 'theme_controller.dart';
 
-  static ThemeData get dark {
+/// Палитра одного цветового режима.
+class _Palette {
+  const _Palette({
+    required this.bgDeep,
+    required this.bgElevated,
+    required this.card,
+    required this.border,
+    required this.accent,
+    required this.accentDim,
+    required this.textPrimary,
+    required this.textMuted,
+    required this.danger,
+    required this.success,
+    required this.gradientTop,
+    required this.gradientBottom,
+  });
+
+  final Color bgDeep;
+  final Color bgElevated;
+  final Color card;
+  final Color border;
+  final Color accent;
+  final Color accentDim;
+  final Color textPrimary;
+  final Color textMuted;
+  final Color danger;
+  final Color success;
+  final Color gradientTop;
+  final Color gradientBottom;
+}
+
+/// Тема EPOCH8: одинаковая структура, разные цвета между светлой/тёмной.
+abstract final class Epoch8Theme {
+  static const _Palette _dark = _Palette(
+    bgDeep: Color(0xFF060A0E),
+    bgElevated: Color(0xFF0D1319),
+    card: Color(0xFF111A24),
+    border: Color(0xFF1E2A3A),
+    accent: Color(0xFF2DD4BF),
+    accentDim: Color(0xFF0D9488),
+    textPrimary: Color(0xFFF1F5F9),
+    textMuted: Color(0xFF94A3B8),
+    danger: Color(0xFFF87171),
+    success: Color(0xFF34D399),
+    gradientTop: Color(0xFF0D1A28),
+    gradientBottom: Color(0xFF05080C),
+  );
+
+  static const _Palette _light = _Palette(
+    bgDeep: Color(0xFFF3F7FB),
+    bgElevated: Color(0xFFFFFFFF),
+    card: Color(0xFFFFFFFF),
+    border: Color(0xFFD6DFEA),
+    accent: Color(0xFF0D9488),
+    accentDim: Color(0xFF14B8A6),
+    textPrimary: Color(0xFF0F172A),
+    textMuted: Color(0xFF475569),
+    danger: Color(0xFFDC2626),
+    success: Color(0xFF059669),
+    gradientTop: Color(0xFFE8F0F7),
+    gradientBottom: Color(0xFFFFFFFF),
+  );
+
+  static bool get _isLight => appThemeModeNotifier.value == ThemeMode.light;
+  static _Palette get _p => _isLight ? _light : _dark;
+
+  // --- Реактивные токены: используются в виджетах напрямую ---
+  static Color get bgDeep => _p.bgDeep;
+  static Color get bgElevated => _p.bgElevated;
+  static Color get card => _p.card;
+  static Color get border => _p.border;
+  static Color get accent => _p.accent;
+  static Color get accentDim => _p.accentDim;
+  static Color get textPrimary => _p.textPrimary;
+  static Color get textMuted => _p.textMuted;
+  static Color get danger => _p.danger;
+  static Color get success => _p.success;
+
+  static ThemeData get dark => _buildTheme(_dark, Brightness.dark);
+  static ThemeData get light => _buildTheme(_light, Brightness.light);
+
+  static ThemeData _buildTheme(_Palette p, Brightness brightness) {
     final base = ThemeData(
       useMaterial3: true,
-      brightness: Brightness.dark,
-      scaffoldBackgroundColor: bgDeep,
+      brightness: brightness,
+      scaffoldBackgroundColor: p.bgDeep,
     );
+    final colorScheme = brightness == Brightness.dark
+        ? ColorScheme.dark(
+            surface: p.bgElevated,
+            primary: p.accent,
+            onPrimary: p.bgDeep,
+            secondary: p.accentDim,
+            onSurface: p.textPrimary,
+            error: p.danger,
+            outline: p.border,
+            surfaceContainerHighest: p.card,
+          )
+        : ColorScheme.light(
+            surface: p.bgElevated,
+            primary: p.accent,
+            onPrimary: Colors.white,
+            secondary: p.accentDim,
+            onSurface: p.textPrimary,
+            error: p.danger,
+            outline: p.border,
+            surfaceContainerHighest: p.card,
+          );
+
     return base.copyWith(
-      colorScheme: ColorScheme.dark(
-        surface: bgElevated,
-        primary: accent,
-        onPrimary: bgDeep,
-        secondary: accentDim,
-        onSurface: textPrimary,
-        error: danger,
-        outline: border,
-        surfaceContainerHighest: card,
-      ),
-      appBarTheme: const AppBarTheme(
+      colorScheme: colorScheme,
+      appBarTheme: AppBarTheme(
         backgroundColor: Colors.transparent,
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        foregroundColor: textPrimary,
+        foregroundColor: p.textPrimary,
         surfaceTintColor: Colors.transparent,
         titleTextStyle: TextStyle(
-          color: textPrimary,
+          color: p.textPrimary,
           fontSize: 18,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
         ),
       ),
       tabBarTheme: TabBarThemeData(
-        labelColor: accent,
-        unselectedLabelColor: textMuted,
-        indicatorColor: accent,
+        labelColor: p.accent,
+        unselectedLabelColor: p.textMuted,
+        indicatorColor: p.accent,
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
-        overlayColor: MaterialStatePropertyAll(accent.withValues(alpha: 0.08)),
+        overlayColor: WidgetStatePropertyAll(p.accent.withValues(alpha: 0.08)),
       ),
       cardTheme: CardThemeData(
-        color: card,
+        color: p.card,
         elevation: 0,
         shadowColor: Colors.black54,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
-          side: const BorderSide(color: border, width: 1),
+          side: BorderSide(color: p.border, width: 1),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: bgElevated,
+        fillColor: p.bgElevated,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: border),
+          borderSide: BorderSide(color: p.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: border),
+          borderSide: BorderSide(color: p.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: accent, width: 1.5),
+          borderSide: BorderSide(color: p.accent, width: 1.5),
         ),
-        labelStyle: const TextStyle(color: textMuted),
-        hintStyle: TextStyle(color: textMuted.withValues(alpha: 0.72)),
+        labelStyle: TextStyle(color: p.textMuted),
+        hintStyle: TextStyle(color: p.textMuted.withValues(alpha: 0.72)),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: accent,
-          foregroundColor: bgDeep,
+          backgroundColor: p.accent,
+          foregroundColor: brightness == Brightness.dark ? p.bgDeep : Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -94,121 +177,130 @@ abstract final class Epoch8Theme {
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: bgElevated,
-          foregroundColor: accent,
+          backgroundColor: p.bgElevated,
+          foregroundColor: p.accent,
           elevation: 0,
-          side: const BorderSide(color: border),
+          side: BorderSide(color: p.border),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
-          foregroundColor: textPrimary,
-          side: const BorderSide(color: border),
+          foregroundColor: p.textPrimary,
+          side: BorderSide(color: p.border),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
         style: TextButton.styleFrom(
-          foregroundColor: accent,
+          foregroundColor: p.accent,
           textStyle: const TextStyle(fontWeight: FontWeight.w600),
         ),
       ),
       iconButtonTheme: IconButtonThemeData(
         style: IconButton.styleFrom(
-          foregroundColor: textMuted,
-          hoverColor: accent.withValues(alpha: 0.08),
-          highlightColor: accent.withValues(alpha: 0.12),
+          foregroundColor: p.textMuted,
+          hoverColor: p.accent.withValues(alpha: 0.08),
+          highlightColor: p.accent.withValues(alpha: 0.12),
         ),
       ),
-      textTheme: const TextTheme(
+      textTheme: TextTheme(
         headlineSmall: TextStyle(
-          color: textPrimary,
+          color: p.textPrimary,
           fontSize: 24,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.4,
           height: 1.25,
         ),
         titleLarge: TextStyle(
-          color: textPrimary,
+          color: p.textPrimary,
           fontSize: 22,
           fontWeight: FontWeight.w700,
           letterSpacing: -0.35,
           height: 1.25,
         ),
         titleMedium: TextStyle(
-          color: textPrimary,
+          color: p.textPrimary,
           fontSize: 17,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.1,
         ),
         titleSmall: TextStyle(
-          color: textPrimary,
+          color: p.textPrimary,
           fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
-        bodyLarge: TextStyle(color: textPrimary, height: 1.5, fontSize: 16),
-        bodyMedium: TextStyle(color: textMuted, height: 1.45, fontSize: 14),
-        bodySmall: TextStyle(color: textMuted, fontSize: 12, height: 1.35),
+        bodyLarge: TextStyle(color: p.textPrimary, height: 1.5, fontSize: 16),
+        bodyMedium: TextStyle(color: p.textMuted, height: 1.45, fontSize: 14),
+        bodySmall: TextStyle(color: p.textMuted, fontSize: 12, height: 1.35),
         labelLarge: TextStyle(
-          color: accent,
+          color: p.accent,
           fontWeight: FontWeight.w700,
           letterSpacing: 2,
           fontSize: 11,
         ),
         labelSmall: TextStyle(
-          color: textMuted,
+          color: p.textMuted,
           fontSize: 11,
           fontWeight: FontWeight.w600,
           letterSpacing: 0.5,
         ),
       ),
-      dividerTheme: DividerThemeData(color: border.withValues(alpha: 0.7), thickness: 1),
+      dividerTheme: DividerThemeData(color: p.border.withValues(alpha: 0.7), thickness: 1),
       snackBarTheme: SnackBarThemeData(
-        backgroundColor: bgElevated,
-        contentTextStyle: const TextStyle(color: textPrimary, fontSize: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14), side: const BorderSide(color: border)),
+        backgroundColor: p.bgElevated,
+        contentTextStyle: TextStyle(color: p.textPrimary, fontSize: 14),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14),
+          side: BorderSide(color: p.border),
+        ),
         behavior: SnackBarBehavior.floating,
-        elevation: 8,
+        elevation: brightness == Brightness.dark ? 8 : 4,
       ),
       dialogTheme: DialogThemeData(
-        backgroundColor: card,
-        surfaceTintColor: Colors.transparent,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22), side: const BorderSide(color: border)),
-        titleTextStyle: const TextStyle(color: textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
-      ),
-      bottomSheetTheme: const BottomSheetThemeData(
-        backgroundColor: bgDeep,
+        backgroundColor: p.card,
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: p.border),
+        ),
+        titleTextStyle: TextStyle(color: p.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: p.bgDeep,
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
         ),
-        dragHandleColor: border,
+        dragHandleColor: p.border,
       ),
-      progressIndicatorTheme: const ProgressIndicatorThemeData(color: accent, linearTrackColor: border),
+      progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent, linearTrackColor: p.border),
       listTileTheme: ListTileThemeData(
-        iconColor: accent,
-        textColor: textPrimary,
+        iconColor: p.accent,
+        textColor: p.textPrimary,
         titleTextStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        subtitleTextStyle: const TextStyle(color: textMuted, fontSize: 13, height: 1.35),
+        subtitleTextStyle: TextStyle(color: p.textMuted, fontSize: 13, height: 1.35),
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       ),
     );
   }
 
-  /// Фон экрана: лёгкий градиент + «пятно» акцента сверху.
-  static BoxDecoration screenGradient() => BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFF0D1A28).withValues(alpha: 0.98),
-            bgDeep,
-            const Color(0xFF05080C),
-          ],
-          stops: const [0.0, 0.42, 1.0],
-        ),
-      );
+  /// Фон экрана: лёгкий градиент под текущую тему.
+  static BoxDecoration screenGradient() {
+    final p = _p;
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [
+          p.gradientTop.withValues(alpha: _isLight ? 1.0 : 0.98),
+          p.bgDeep,
+          p.gradientBottom,
+        ],
+        stops: const [0.0, 0.42, 1.0],
+      ),
+    );
+  }
 }

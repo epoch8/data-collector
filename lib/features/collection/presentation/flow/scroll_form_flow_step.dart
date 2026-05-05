@@ -371,7 +371,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                           child: Text(
                             loc.flowCameraPoseExampleAssetMissing,
                             textAlign: TextAlign.center,
-                            style: const TextStyle(color: Epoch8Theme.textMuted),
+                            style: TextStyle(color: Epoch8Theme.textMuted),
                           ),
                         ),
                       ),
@@ -397,7 +397,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           totalPoses: total,
         );
       default:
-        return Text('${loc.unsupportedFieldType} (${f.type})', style: const TextStyle(color: Epoch8Theme.danger));
+        return Text('${loc.unsupportedFieldType} (${f.type})', style: TextStyle(color: Epoch8Theme.danger));
     }
   }
 }
@@ -551,7 +551,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
         if (paths.isNotEmpty)
           TextButton.icon(
             onPressed: _clear,
-            icon: const Icon(Icons.delete_sweep_outlined, color: Epoch8Theme.danger),
+            icon: Icon(Icons.delete_sweep_outlined, color: Epoch8Theme.danger),
             label: Text(loc.flowCameraPoseClearAll),
           ),
       ],
@@ -576,7 +576,7 @@ class _Thumb extends StatelessWidget {
           child: Image.file(File(path), width: 88, height: 88, fit: BoxFit.cover),
         ),
         Positioned(left: 4, top: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Epoch8Theme.bgDeep.withValues(alpha: 0.75), borderRadius: BorderRadius.circular(6)), child: Text('$index', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)))),
-        Positioned(right: -4, top: -4, child: Material(color: Epoch8Theme.danger, shape: const CircleBorder(), child: InkWell(onTap: onRemove, customBorder: const CircleBorder(), child: const Padding(padding: EdgeInsets.all(4), child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep))))),
+        Positioned(right: -4, top: -4, child: Material(color: Epoch8Theme.danger, shape: const CircleBorder(), child: InkWell(onTap: onRemove, customBorder: const CircleBorder(), child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep))))),
       ],
     );
   }

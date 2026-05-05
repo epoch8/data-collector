@@ -35,9 +35,9 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         }
         return _ScrollFormLoaded(projectId: projectId, project: project);
       },
-      loading: () => const Scaffold(
+      loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
@@ -238,7 +238,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                         if (field.multiple == true) ...[
                           Text(
                             '${(answers[field.fieldId] as List).length} ${loc.photosCaptured}',
-                            style: const TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
@@ -272,8 +272,8 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                       },
                                       child: Container(
                                         padding: const EdgeInsets.all(2),
-                                        decoration: const BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
-                                        child: const Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+                                        decoration: BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
+                                        child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
                                       ),
                                     ),
                                   )
@@ -282,7 +282,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                             }).toList(),
                           )
                         ] else ...[
-                          Text('${loc.photoSaved} ✓', style: const TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
+                          Text('${loc.photoSaved} ✓', style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
                           const SizedBox(height: 8),
                           Stack(
                             children: [
@@ -304,8 +304,8 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(2),
-                                    decoration: const BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
-                                    child: const Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+                                    decoration: BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
+                                    child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
                                   ),
                                 ),
                               )
@@ -321,7 +321,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
           else
             Text(
               '${loc.unsupportedFieldType} ${loc.supportedFieldTypes} (${field.type})',
-              style: const TextStyle(color: Epoch8Theme.danger),
+              style: TextStyle(color: Epoch8Theme.danger),
             ),
           
           if (hasFocus)

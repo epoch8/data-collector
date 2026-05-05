@@ -23,6 +23,7 @@ class AppLocalizations {
   String get appTitle => _isRu ? 'EPOCH8 Сборщик данных' : 'EPOCH8 Data Collector';
   String get languageCodeLabel => _isRu ? 'RU' : 'EN';
   String get languageToggleTooltip => _isRu ? 'Switch to English' : 'Переключить на русский';
+  String get themeToggleTooltip => _isRu ? 'Переключить тему' : 'Toggle theme';
   String get loginTitle => 'Data Collector';
   String get loginSubtitle => _isRu
       ? 'Сбор полевых данных и фото с офлайн-историей на устройстве'

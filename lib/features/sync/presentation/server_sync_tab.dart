@@ -179,7 +179,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
               );
             },
             loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
-            error: (e, _) => Text('${loc.dbError}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            error: (e, _) => Text('${loc.dbError}: $e', style: TextStyle(color: Epoch8Theme.danger)),
           ),
         ],
       ),

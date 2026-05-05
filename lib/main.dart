@@ -24,6 +24,7 @@ import 'features/history/package_delivery_style.dart';
 import 'features/history/package_manifest_export.dart';
 import 'features/help/presentation/help_screen.dart';
 import 'theme/epoch8_theme.dart';
+import 'theme/theme_controller.dart';
 import 'theme/epoch8_ui.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
@@ -92,9 +93,9 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                   }
                   return CollectionFlowScreen(projectId: id);
                 },
-                loading: () => const Scaffold(
+                loading: () => Scaffold(
                   backgroundColor: Epoch8Theme.bgDeep,
-                  body: Center(child: CircularProgressIndicator()),
+                  body: const Center(child: CircularProgressIndicator()),
                 ),
                 error: (e, _) => Scaffold(
                   backgroundColor: Epoch8Theme.bgDeep,
@@ -126,7 +127,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
 
 Widget _epoch8AppBarTitle(String title) {
   return Row(
-    mainAxisSize: MainAxisSize.min,
+    mainAxisSize: MainAxisSize.max,
     children: [
       ClipRRect(
         borderRadius: BorderRadius.circular(6),
@@ -138,7 +139,13 @@ Widget _epoch8AppBarTitle(String title) {
         ),
       ),
       const SizedBox(width: 8),
-      Text(title),
+      Expanded(
+        child: Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ),
     ],
   );
 }
@@ -174,23 +181,28 @@ class _DataCollectorAppState extends State<DataCollectorApp> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<Locale>(
-      valueListenable: appLocaleNotifier,
-      builder: (context, locale, _) => MaterialApp.router(
-        locale: locale,
-        onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-        theme: Epoch8Theme.dark,
-        darkTheme: Epoch8Theme.dark,
-        themeMode: ThemeMode.dark,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        supportedLocales: AppLocalizations.supportedLocales,
-        routerConfig: _router,
-        debugShowCheckedModeBanner: false,
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: appThemeModeNotifier,
+      builder: (context, themeMode, __) => ValueListenableBuilder<Locale>(
+        valueListenable: appLocaleNotifier,
+        builder: (context, locale, _) => MaterialApp.router(
+          locale: locale,
+          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+          theme: Epoch8Theme.light,
+          darkTheme: Epoch8Theme.dark,
+          themeMode: themeMode,
+          themeAnimationDuration: Duration.zero,
+          themeAnimationCurve: Curves.linear,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          routerConfig: _router,
+          debugShowCheckedModeBanner: false,
+        ),
       ),
     );
   }
@@ -427,6 +439,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
+          leading: IconButton(
+            tooltip: loc.themeToggleTooltip,
+            onPressed: toggleAppThemeMode,
+            icon: Icon(
+              isLightThemeEnabled ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            ),
+          ),
           title: _epoch8AppBarTitle(loc.workspaceTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(58),
@@ -504,7 +523,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                               color: Epoch8Theme.accent.withValues(alpha: 0.12),
                               border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                             ),
-                            child: const Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
+                            child: Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
                           ),
                           title: Text(
                             project.name,
@@ -537,7 +556,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                               color: Epoch8Theme.bgElevated,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                            child: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
                           ),
                           onTap: () => context.go('/project/${project.id}/wizard'),
                         ),
@@ -634,17 +653,17 @@ class CowHistoryScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         tooltip: loc.downloadManifest,
-                        icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                        icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                         onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                       ),
                       IconButton(
                         tooltip: loc.deleteFromDevice,
-                        icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                        icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                         onPressed: () async {
                           await confirmAndDeleteLocalPackage(context, ref, pkg);
                         },
                       ),
-                      const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
                     ],
                   ),
                   onTap: () => context.push('/history/package/${pkg.id}'),
@@ -657,7 +676,7 @@ class CowHistoryScreen extends ConsumerWidget {
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('${loc.errorPrefix}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            child: Text('${loc.errorPrefix}: $e', style: TextStyle(color: Epoch8Theme.danger)),
           ),
         ),
       ),
@@ -731,7 +750,7 @@ class PackageHistoryScreen extends ConsumerWidget {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('${loc.errorPrefix}: $e', style: const TextStyle(color: Epoch8Theme.danger)),
+            child: Text('${loc.errorPrefix}: $e', style: TextStyle(color: Epoch8Theme.danger)),
           ),
         ),
       ),
@@ -1006,7 +1025,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                   color: Epoch8Theme.accent.withValues(alpha: 0.12),
                   border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                 ),
-                child: const Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
+                child: Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
               ),
               title: Text('${AppLocalizations.of(context).objectLabel} ${g.cowId}', style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Padding(
@@ -1017,7 +1036,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 ),
               ),
               isThreeLine: true,
-              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+              trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
               onTap: () => context.push('/history/project/${proj.id}/cow/${Uri.encodeComponent(g.cowId)}'),
             ),
           ),
@@ -1058,17 +1077,17 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 children: [
                   IconButton(
                     tooltip: AppLocalizations.of(context).downloadManifest,
-                    icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                    icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                     onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                   ),
                   IconButton(
                     tooltip: AppLocalizations.of(context).deleteFromDevice,
-                    icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                    icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                     onPressed: () async {
                       await confirmAndDeleteLocalPackage(context, ref, pkg);
                     },
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
                 ],
               ),
               onTap: () => context.push('/history/package/${pkg.id}'),
@@ -1134,17 +1153,17 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
               children: [
                 IconButton(
                   tooltip: AppLocalizations.of(context).downloadManifest,
-                  icon: const Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
+                  icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
                   onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
                 ),
                 IconButton(
                   tooltip: AppLocalizations.of(context).deleteFromDevice,
-                  icon: const Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                  icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
                   onPressed: () async {
                     await confirmAndDeleteLocalPackage(context, ref, pkg);
                   },
                 ),
-                const Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
               ],
             ),
             onTap: () => context.push('/history/package/${pkg.id}'),

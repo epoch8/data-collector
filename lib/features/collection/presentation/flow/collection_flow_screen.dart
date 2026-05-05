@@ -136,9 +136,9 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
           resolvedFlow: flow,
         );
       },
-      loading: () => const Scaffold(
+      loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: Center(child: CircularProgressIndicator()),
+        body: const Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
@@ -705,7 +705,7 @@ class _FlowReviewStep extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 110, child: Text(label, style: const TextStyle(color: Epoch8Theme.textMuted))),
+          SizedBox(width: 110, child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted))),
           Expanded(child: Text(value)),
         ],
       ),
@@ -907,7 +907,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   List<Widget> _deviceRows(AppLocalizations loc, dynamic device) {
     if (device is! Map) {
       return [
-        Text(loc.flowReviewEmptyValue, style: const TextStyle(color: Epoch8Theme.textMuted)),
+        Text(loc.flowReviewEmptyValue, style: TextStyle(color: Epoch8Theme.textMuted)),
       ];
     }
     final m = <String, dynamic>{};
@@ -932,7 +932,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       return [
         Text(
           loc.flowCameraMetaNativeEmpty,
-          style: const TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
+          style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
         ),
       ];
     }
@@ -1035,7 +1035,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (fc is Map) ...[
         Text(
           loc.flowCameraMetaFrameCameraHeading,
-          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Epoch8Theme.accent),
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Epoch8Theme.accent),
         ),
         const SizedBox(height: 4),
         if (fc['fx_px'] != null) _selLine('fx_px', fc['fx_px']),
@@ -1051,7 +1051,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (derived != null) ...[
         Text(
           loc.flowCameraMetaDerivedHeading,
-          style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
+          style: TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
         ),
         const SizedBox(height: 4),
         if (derived['preferred_fx_px_estimate'] != null)
@@ -1076,7 +1076,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (exif != null && exif.isNotEmpty) ...[
         Text(
           loc.flowCameraMetaExifHeading,
-          style: const TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
+          style: TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
         ),
         const SizedBox(height: 4),
         ...exif.entries.take(12).map((e) => Padding(
@@ -1089,7 +1089,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         if (exif.length > 12)
           Text(
             loc.flowCameraMetaExifMore(exif.length - 12),
-            style: const TextStyle(fontSize: 11, color: Epoch8Theme.textMuted),
+            style: TextStyle(fontSize: 11, color: Epoch8Theme.textMuted),
           ),
       ],
     ];
