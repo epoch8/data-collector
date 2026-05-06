@@ -20,6 +20,8 @@ python manage.py runserver 0.0.0.0:8000
 
 Админка: `python manage.py createsuperuser`, в браузере откройте `http://127.0.0.1:8000/admin/`.
 
+Развёрнутый сервер (тот же Django, что и API): базовый URL `https://data-collector-app.korovas.ml.epoch8.dev` — админка: `/admin/`, API как в спеках — с этого же хоста (без завершающего `/` в `API_BASE_URL`).
+
 **Flutter** (из корня репозитория):
 
 ```bash

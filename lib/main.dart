@@ -29,6 +29,7 @@ import 'theme/theme_controller.dart';
 import 'theme/epoch8_ui.dart';
 import 'theme/epoch8_loader.dart';
 import 'theme/epoch8_error_screen.dart';
+import 'theme/epoch8_app_bar_controls.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
 
@@ -134,57 +135,27 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
 
 Widget _epoch8AppBarTitle(String title) {
   return Row(
-    mainAxisSize: MainAxisSize.max,
+    mainAxisSize: MainAxisSize.min,
     children: [
       ClipRRect(
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(7),
         child: Image.asset(
           'e8_logo.png',
-          width: 22,
-          height: 22,
+          width: 26,
+          height: 26,
           fit: BoxFit.cover,
         ),
       ),
-      const SizedBox(width: 8),
-      Expanded(
+      const SizedBox(width: 12),
+      Flexible(
         child: Text(
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
+          style: const TextStyle(fontWeight: FontWeight.w600, letterSpacing: -0.2),
         ),
       ),
     ],
-  );
-}
-
-Widget _languageSwitcherButton(BuildContext context) {
-  final loc = AppLocalizations.of(context);
-  return IconButton(
-    tooltip: loc.languageToggleTooltip,
-    onPressed: toggleAppLocale,
-    icon: Text(
-      loc.languageCodeLabel,
-      style: const TextStyle(fontWeight: FontWeight.w800, letterSpacing: 0.4),
-    ),
-  );
-}
-
-Widget _themeSwitcherButton(BuildContext context) {
-  final loc = AppLocalizations.of(context);
-  return ValueListenableBuilder<ThemeMode>(
-    valueListenable: appThemeModeNotifier,
-    builder: (context, mode, _) {
-      final tooltip = switch (mode) {
-        ThemeMode.system => loc.themeModeSystem,
-        ThemeMode.light => loc.themeModeLight,
-        ThemeMode.dark => loc.themeModeDark,
-      };
-      return IconButton(
-        tooltip: tooltip,
-        onPressed: toggleAppThemeMode,
-        icon: Icon(iconForThemeMode(mode)),
-      );
-    },
   );
 }
 
@@ -221,13 +192,8 @@ class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBinding
   }
 
   void _syncBrightness() {
-    final platform = WidgetsBinding.instance.platformDispatcher.platformBrightness;
     final mode = appThemeModeNotifier.value;
-    final effective = switch (mode) {
-      ThemeMode.system => platform,
-      ThemeMode.light => Brightness.light,
-      ThemeMode.dark => Brightness.dark,
-    };
+    final effective = mode == ThemeMode.light ? Brightness.light : Brightness.dark;
     if (appBrightnessNotifier.value != effective) {
       appBrightnessNotifier.value = effective;
     }
@@ -456,8 +422,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            _themeSwitcherButton(context),
-                            _languageSwitcherButton(context),
+                            const Epoch8ThemeSwitcher(),
+                            const Epoch8LanguageSwitcher(),
                           ],
                         ),
                       ),
@@ -516,12 +482,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
-          leading: _themeSwitcherButton(context),
+          leading: const Epoch8ThemeSwitcher(),
           title: _epoch8AppBarTitle(loc.workspaceTitle),
           bottom: PreferredSize(
-            preferredSize: const Size.fromHeight(58),
+            preferredSize: const Size.fromHeight(66),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
               child: Container(
                 decoration: BoxDecoration(
                   color: Epoch8Theme.tabBarSurface,
@@ -547,7 +513,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
             ),
           ),
           actions: [
-            _languageSwitcherButton(context),
+            const Epoch8LanguageSwitcher(),
+            const SizedBox(width: 2),
             IconButton(
               icon: const Icon(Icons.logout_outlined),
               tooltip: loc.logout,
@@ -781,7 +748,8 @@ class PackageHistoryScreen extends ConsumerWidget {
           appBar: AppBar(
             title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
             actions: [
-              _languageSwitcherButton(context),
+              const Epoch8LanguageSwitcher(),
+              const SizedBox(width: 2),
               if (pkg != null) ...[
                 IconButton(
                   tooltip: loc.downloadManifestAsServer,

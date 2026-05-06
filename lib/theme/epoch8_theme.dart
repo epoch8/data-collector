@@ -127,12 +127,16 @@ abstract final class Epoch8Theme {
         centerTitle: true,
         foregroundColor: p.textPrimary,
         surfaceTintColor: Colors.transparent,
+        toolbarHeight: 68,
+        titleSpacing: 4,
         titleTextStyle: TextStyle(
           color: p.textPrimary,
-          fontSize: 18,
+          fontSize: 19,
           fontWeight: FontWeight.w600,
           letterSpacing: -0.2,
         ),
+        actionsIconTheme: IconThemeData(color: p.textPrimary, size: 22),
+        iconTheme: IconThemeData(color: p.textPrimary, size: 22),
       ),
       tabBarTheme: TabBarThemeData(
         labelColor: p.accent,

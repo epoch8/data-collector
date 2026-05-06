@@ -12,6 +12,11 @@ DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
 
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 
+# Для HTTPS за пределами localhost (админка / формы): через запятую, со схемой.
+# Пример: DJANGO_CSRF_TRUSTED_ORIGINS=https://data-collector-app.korovas.ml.epoch8.dev
+_csrf = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
+CSRF_TRUSTED_ORIGINS = [x.strip() for x in _csrf.split(",") if x.strip()]
+
 APPEND_SLASH = False
 
 INSTALLED_APPS = [
