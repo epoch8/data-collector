@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'bootstrap.dart';
 import 'firebase_options.dart';
 import 'core/api/api_environment.dart';
+import 'core/preferences/app_preferences.dart';
 import 'features/projects/providers/project_providers.dart';
 import 'models/project_config.dart';
 import 'features/collection/logic/collection_flow_resolver.dart';
@@ -26,11 +27,17 @@ import 'features/help/presentation/help_screen.dart';
 import 'theme/epoch8_theme.dart';
 import 'theme/theme_controller.dart';
 import 'theme/epoch8_ui.dart';
+import 'theme/epoch8_loader.dart';
+import 'theme/epoch8_error_screen.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AppPreferences.ensureInitialized();
+  initAppLocale();
+  initAppThemeMode();
+  ErrorWidget.builder = (details) => Epoch8ErrorScreen(details: details);
   try {
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
     firebaseInitialized = true;
@@ -95,7 +102,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                 },
                 loading: () => Scaffold(
                   backgroundColor: Epoch8Theme.bgDeep,
-                  body: const Center(child: CircularProgressIndicator()),
+                  body: Epoch8Loader.center(),
                 ),
                 error: (e, _) => Scaffold(
                   backgroundColor: Epoch8Theme.bgDeep,
@@ -162,6 +169,25 @@ Widget _languageSwitcherButton(BuildContext context) {
   );
 }
 
+Widget _themeSwitcherButton(BuildContext context) {
+  final loc = AppLocalizations.of(context);
+  return ValueListenableBuilder<ThemeMode>(
+    valueListenable: appThemeModeNotifier,
+    builder: (context, mode, _) {
+      final tooltip = switch (mode) {
+        ThemeMode.system => loc.themeModeSystem,
+        ThemeMode.light => loc.themeModeLight,
+        ThemeMode.dark => loc.themeModeDark,
+      };
+      return IconButton(
+        tooltip: tooltip,
+        onPressed: toggleAppThemeMode,
+        icon: Icon(iconForThemeMode(mode)),
+      );
+    },
+  );
+}
+
 class DataCollectorApp extends StatefulWidget {
   const DataCollectorApp({super.key});
 
@@ -169,7 +195,7 @@ class DataCollectorApp extends StatefulWidget {
   State<DataCollectorApp> createState() => _DataCollectorAppState();
 }
 
-class _DataCollectorAppState extends State<DataCollectorApp> {
+class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBindingObserver {
   late final GoRouter _router;
 
   @override
@@ -177,31 +203,62 @@ class _DataCollectorAppState extends State<DataCollectorApp> {
     super.initState();
     final refresh = firebaseInitialized ? _AuthRefresh() : null;
     _router = _buildAppRouter(refresh);
+    WidgetsBinding.instance.addObserver(this);
+    _syncBrightness();
+    appThemeModeNotifier.addListener(_syncBrightness);
+  }
+
+  @override
+  void dispose() {
+    appThemeModeNotifier.removeListener(_syncBrightness);
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    _syncBrightness();
+  }
+
+  void _syncBrightness() {
+    final platform = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+    final mode = appThemeModeNotifier.value;
+    final effective = switch (mode) {
+      ThemeMode.system => platform,
+      ThemeMode.light => Brightness.light,
+      ThemeMode.dark => Brightness.dark,
+    };
+    if (appBrightnessNotifier.value != effective) {
+      appBrightnessNotifier.value = effective;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: appThemeModeNotifier,
-      builder: (context, themeMode, __) => ValueListenableBuilder<Locale>(
-        valueListenable: appLocaleNotifier,
-        builder: (context, locale, _) => MaterialApp.router(
-          locale: locale,
-          onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-          theme: Epoch8Theme.light,
-          darkTheme: Epoch8Theme.dark,
-          themeMode: themeMode,
-          themeAnimationDuration: Duration.zero,
-          themeAnimationCurve: Curves.linear,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          routerConfig: _router,
-          debugShowCheckedModeBanner: false,
+      builder: (context, themeMode, __) => ValueListenableBuilder<Brightness>(
+        valueListenable: appBrightnessNotifier,
+        builder: (context, _, __) => ValueListenableBuilder<Locale>(
+          valueListenable: appLocaleNotifier,
+          builder: (context, locale, _) => MaterialApp.router(
+            locale: locale,
+            onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+            theme: Epoch8Theme.light,
+            darkTheme: Epoch8Theme.dark,
+            themeMode: themeMode,
+            themeAnimationDuration: Duration.zero,
+            themeAnimationCurve: Curves.linear,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: AppLocalizations.supportedLocales,
+            routerConfig: _router,
+            debugShowCheckedModeBanner: false,
+          ),
         ),
       ),
     );
@@ -258,8 +315,15 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
-              return SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: Epoch8Layout.pagePadding),
+              return Stack(
+                children: [
+                  SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  Epoch8Layout.pagePadding,
+                  56,
+                  Epoch8Layout.pagePadding,
+                  0,
+                ),
                 child: ConstrainedBox(
                   constraints: BoxConstraints(minHeight: constraints.maxHeight),
                   child: Column(
@@ -319,9 +383,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                 controller: _email,
                                 keyboardType: TextInputType.emailAddress,
                                 autofillHints: const [AutofillHints.email],
-                                decoration: const InputDecoration(
-                                  labelText: 'Email',
-                                  border: OutlineInputBorder(),
+                                decoration: InputDecoration(
+                                  labelText: loc.email,
+                                  border: const OutlineInputBorder(),
                                 ),
                               ),
                               const SizedBox(height: 12),
@@ -377,16 +441,29 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                         ),
                       ],
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: toggleAppLocale,
-                        icon: Text(loc.languageCodeLabel),
-                        label: Text(loc.languageToggleTooltip),
-                      ),
                       const SizedBox(height: 32),
                     ],
                   ),
                 ),
+                  ),
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _themeSwitcherButton(context),
+                            _languageSwitcherButton(context),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               );
             },
           ),
@@ -439,21 +516,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
       child: Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
-          leading: IconButton(
-            tooltip: loc.themeToggleTooltip,
-            onPressed: toggleAppThemeMode,
-            icon: Icon(
-              isLightThemeEnabled ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
-            ),
-          ),
+          leading: _themeSwitcherButton(context),
           title: _epoch8AppBarTitle(loc.workspaceTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(58),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-              child: Material(
-                color: Epoch8Theme.card.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Epoch8Theme.tabBarSurface,
+                  borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
+                  border: Border.all(color: Epoch8Theme.tabBarBorder),
+                ),
                 child: TabBar(
                   padding: const EdgeInsets.all(4),
                   indicator: BoxDecoration(
@@ -586,7 +660,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     child: list,
                   );
                 },
-                loading: () => const Center(child: CircularProgressIndicator()),
+                loading: () => Epoch8Loader.center(),
                 error: (e, _) => Center(child: Text('${loc.configError}: $e')),
               ),
               const ServerSyncTab(),
@@ -672,7 +746,7 @@ class CowHistoryScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Epoch8Loader.center(),
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -742,7 +816,7 @@ class PackageHistoryScreen extends ConsumerWidget {
       loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
-        body: const Center(child: CircularProgressIndicator()),
+        body: Epoch8Loader.center(),
       ),
       error: (e, st) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
@@ -974,11 +1048,11 @@ Widget _historyTabBody(
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => Epoch8Loader.center(),
         error: (e, _) => Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
       );
     },
-    loading: () => const Center(child: CircularProgressIndicator()),
+    loading: () => Epoch8Loader.center(),
     error: (e, _) => Center(child: Text('${AppLocalizations.of(context).configError}: $e')),
   );
 }

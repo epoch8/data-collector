@@ -2,7 +2,9 @@ import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/theme_controller.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -15,6 +17,21 @@ class HelpScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.helpTitle),
         actions: [
+          ValueListenableBuilder<ThemeMode>(
+            valueListenable: appThemeModeNotifier,
+            builder: (context, mode, _) {
+              final tooltip = switch (mode) {
+                ThemeMode.system => loc.themeModeSystem,
+                ThemeMode.light => loc.themeModeLight,
+                ThemeMode.dark => loc.themeModeDark,
+              };
+              return IconButton(
+                tooltip: tooltip,
+                onPressed: toggleAppThemeMode,
+                icon: Icon(iconForThemeMode(mode)),
+              );
+            },
+          ),
           IconButton(
             tooltip: loc.languageToggleTooltip,
             onPressed: toggleAppLocale,
@@ -111,8 +128,47 @@ class HelpScreen extends StatelessWidget {
                 ],
               ),
             ),
+            const SizedBox(height: 24),
+            const _AppVersionFooter(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _AppVersionFooter extends StatefulWidget {
+  const _AppVersionFooter();
+
+  @override
+  State<_AppVersionFooter> createState() => _AppVersionFooterState();
+}
+
+class _AppVersionFooterState extends State<_AppVersionFooter> {
+  PackageInfo? _info;
+
+  @override
+  void initState() {
+    super.initState();
+    PackageInfo.fromPlatform().then((info) {
+      if (mounted) setState(() => _info = info);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final loc = AppLocalizations.of(context);
+    final info = _info;
+    final text = info == null
+        ? loc.appVersionLabel
+        : '${loc.appVersionLabel} ${info.version} (${info.buildNumber})';
+    return Center(
+      child: Text(
+        text,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Epoch8Theme.textMuted,
+              letterSpacing: 0.4,
+            ),
       ),
     );
   }

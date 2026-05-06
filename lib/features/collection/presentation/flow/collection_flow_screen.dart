@@ -14,6 +14,7 @@ import 'package:data_collector/features/collection/providers/wizard_state_provid
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
@@ -138,7 +139,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
       },
       loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Epoch8Loader.center(),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,

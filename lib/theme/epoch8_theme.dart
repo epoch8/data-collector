@@ -65,8 +65,15 @@ abstract final class Epoch8Theme {
     gradientBottom: Color(0xFFFFFFFF),
   );
 
-  static bool get _isLight => appThemeModeNotifier.value == ThemeMode.light;
+  static bool get _isLight => appBrightnessNotifier.value == Brightness.light;
   static _Palette get _p => _isLight ? _light : _dark;
+
+  /// Цвет «таблетки» под TabBar внутри AppBar — отдельный токен, чтобы
+  /// контейнер был хорошо виден на светлой теме (где scaffold почти белый).
+  static Color get tabBarSurface =>
+      _isLight ? _light.bgElevated : _dark.card.withValues(alpha: 0.55);
+  static Color get tabBarBorder =>
+      _isLight ? _light.border : Colors.transparent;
 
   // --- Реактивные токены: используются в виджетах напрямую ---
   static Color get bgDeep => _p.bgDeep;

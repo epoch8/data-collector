@@ -6,9 +6,11 @@ import 'package:data_collector/features/collection/logic/package_server_upload.d
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/features/projects/server_project_catalog.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
+import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Вкладка «Сервер»: синхронизация проектов и отправка пакетов на Django.
@@ -84,18 +86,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     if (!ApiEnvironment.isConfigured) {
-      return Epoch8ScreenBody(
-        child: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(
-              loc.serverSetupHint,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyLarge,
-            ),
-          ),
-        ),
-      );
+      return _ServerNotConfiguredView(loc: loc);
     }
 
     final dio = ref.watch(dioProvider);
@@ -178,8 +169,126 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                 ],
               );
             },
-            loading: () => const Center(child: Padding(padding: EdgeInsets.all(24), child: CircularProgressIndicator())),
+            loading: () => Padding(
+              padding: const EdgeInsets.all(24),
+              child: Epoch8Loader.center(),
+            ),
             error: (e, _) => Text('${loc.dbError}: $e', style: TextStyle(color: Epoch8Theme.danger)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServerNotConfiguredView extends StatelessWidget {
+  const _ServerNotConfiguredView({required this.loc});
+
+  final AppLocalizations loc;
+
+  static const String _command =
+      'flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000';
+
+  @override
+  Widget build(BuildContext context) {
+    return Epoch8ScreenBody(
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(
+          Epoch8Layout.pagePadding,
+          24,
+          Epoch8Layout.pagePadding,
+          24,
+        ),
+        children: [
+          Center(
+            child: Container(
+              width: 92,
+              height: 92,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Epoch8Theme.accent.withValues(alpha: 0.1),
+                border: Border.all(color: Epoch8Theme.border),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.cloud_off_outlined,
+                size: 46,
+                color: Epoch8Theme.accent.withValues(alpha: 0.85),
+              ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            loc.serverSetupTitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            loc.serverSetupSubtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Epoch8Theme.textMuted,
+                  height: 1.45,
+                ),
+          ),
+          const SizedBox(height: 20),
+          Epoch8Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  loc.serverSetupCommandLabel,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: Epoch8Theme.accent,
+                        letterSpacing: 1.2,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 10),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Epoch8Theme.bgElevated,
+                    borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
+                    border: Border.all(color: Epoch8Theme.border),
+                  ),
+                  child: SelectableText(
+                    _command,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontFamily: 'monospace',
+                          height: 1.4,
+                        ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () async {
+                      await Clipboard.setData(const ClipboardData(text: _command));
+                      if (!context.mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(loc.copiedToClipboard)),
+                      );
+                    },
+                    icon: const Icon(Icons.copy_outlined, size: 18),
+                    label: Text(loc.copyToClipboard),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Epoch8Card(
+            child: Text(
+              loc.serverSetupHintNote,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Epoch8Theme.textMuted,
+                    height: 1.45,
+                  ),
+            ),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:flutter/material.dart';
@@ -37,7 +38,7 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
       },
       loading: () => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Epoch8Loader.center(),
       ),
       error: (e, _) => Scaffold(
         backgroundColor: Epoch8Theme.bgDeep,

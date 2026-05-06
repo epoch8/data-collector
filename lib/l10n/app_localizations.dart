@@ -24,6 +24,28 @@ class AppLocalizations {
   String get languageCodeLabel => _isRu ? 'RU' : 'EN';
   String get languageToggleTooltip => _isRu ? 'Switch to English' : 'Переключить на русский';
   String get themeToggleTooltip => _isRu ? 'Переключить тему' : 'Toggle theme';
+  String get themeModeSystem => _isRu ? 'Тема: как в системе' : 'Theme: follow system';
+  String get themeModeLight => _isRu ? 'Тема: светлая' : 'Theme: light';
+  String get themeModeDark => _isRu ? 'Тема: тёмная' : 'Theme: dark';
+
+  String get serverSetupTitle => _isRu ? 'Подключение к серверу не настроено' : 'Server connection is not configured';
+  String get serverSetupSubtitle => _isRu
+      ? 'Запустите приложение, передав адрес сервера в параметре API_BASE_URL — после этого станет доступна синхронизация и отправка пакетов.'
+      : 'Launch the app with API_BASE_URL pointing to your server — sync and uploads will become available after that.';
+  String get serverSetupCommandLabel => _isRu ? 'Команда запуска' : 'Launch command';
+  String get serverSetupHintNote => _isRu
+      ? 'Из эмулятора Android используйте 10.0.2.2 вместо localhost. Войдите в приложение через Firebase. Если на сервере не включён Firebase Auth, можно дополнительно передать --dart-define=API_BEARER_TOKEN=...'
+      : 'From an Android emulator use 10.0.2.2 instead of localhost. Sign in via Firebase. If Firebase Auth is not enabled on the server, you can also pass --dart-define=API_BEARER_TOKEN=...';
+  String get copyToClipboard => _isRu ? 'Скопировать' : 'Copy';
+  String get copiedToClipboard => _isRu ? 'Скопировано в буфер обмена' : 'Copied to clipboard';
+
+  String get appVersionLabel => _isRu ? 'Версия' : 'Version';
+
+  String get errorScreenTitle => _isRu ? 'Что-то пошло не так' : 'Something went wrong';
+  String get errorScreenSubtitle => _isRu
+      ? 'Произошла непредвиденная ошибка. Попробуйте вернуться назад или перезапустить приложение.'
+      : 'An unexpected error occurred. Try going back or restarting the app.';
+  String get errorScreenDetailsLabel => _isRu ? 'Подробности (для разработчиков)' : 'Details (for developers)';
   String get loginTitle => 'Data Collector';
   String get loginSubtitle => _isRu
       ? 'Сбор полевых данных и фото с офлайн-историей на устройстве'
