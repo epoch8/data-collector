@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'epoch8_theme.dart';
+import 'theme_controller.dart';
 
 /// Брендированный лоадер: логотип в кольце спиннера. Используется как замена
 /// «голому» CircularProgressIndicator в местах загрузки данных приложения.
@@ -16,31 +17,34 @@ class Epoch8Loader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ringSize = size + 18;
-    return SizedBox(
-      width: ringSize,
-      height: ringSize,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: ringSize,
-            height: ringSize,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.4,
-              color: Epoch8Theme.accent,
-              backgroundColor: Epoch8Theme.border.withValues(alpha: 0.35),
+    return ValueListenableBuilder<Brightness>(
+      valueListenable: appBrightnessNotifier,
+      builder: (context, _, __) => SizedBox(
+        width: ringSize,
+        height: ringSize,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            SizedBox(
+              width: ringSize,
+              height: ringSize,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.4,
+                color: Epoch8Theme.accent,
+                backgroundColor: Epoch8Theme.border.withValues(alpha: 0.35),
+              ),
             ),
-          ),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(size / 4),
-            child: Image.asset(
-              'e8_logo.png',
-              width: size,
-              height: size,
-              fit: BoxFit.cover,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(size / 4),
+              child: Image.asset(
+                'e8_logo.png',
+                width: size,
+                height: size,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

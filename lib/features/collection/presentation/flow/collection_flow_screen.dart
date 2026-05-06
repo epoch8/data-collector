@@ -14,6 +14,7 @@ import 'package:data_collector/features/collection/providers/wizard_state_provid
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/theme_controller.dart';
 import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
@@ -114,7 +115,6 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
         } catch (_) {
           final loc = AppLocalizations.of(context);
           return Scaffold(
-            backgroundColor: Epoch8Theme.bgDeep,
             appBar: AppBar(
               title: Text(loc.projectNotFoundShort),
               actions: [
@@ -138,11 +138,9 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
         );
       },
       loading: () => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         body: Epoch8Loader.center(),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         body: Center(child: Text('${AppLocalizations.of(context).loadingConfigError}: $e')),
       ),
     );
@@ -257,7 +255,6 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
           if (!didPop) context.go('/dashboard');
         },
         child: Scaffold(
-          backgroundColor: Epoch8Theme.bgDeep,
           appBar: AppBar(
             title: Text(widget.project.name),
             actions: [
@@ -268,7 +265,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
               ),
             ],
           ),
-          body: const Center(child: CircularProgressIndicator()),
+          body: Epoch8Loader.center(),
         ),
       );
     }
@@ -317,13 +314,19 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
     _step = widget.initialFlowStepIndex;
     _packageId = widget.initialDraftPackageId;
     _createdAtForRow = widget.initialDraftCreatedAt;
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
   }
 
   @override
   void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
     _draftDebounce?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -403,7 +406,6 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
         if (!didPop) unawaited(_goBack());
       },
       child: Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),

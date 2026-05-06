@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'epoch8_theme.dart';
+import 'theme_controller.dart';
 
 /// Отступы и радиусы единообразно по всему приложению.
 abstract final class Epoch8Layout {
@@ -12,6 +13,7 @@ abstract final class Epoch8Layout {
 }
 
 /// Обёртка экрана: градиент + опциональный безопасный отступ.
+/// Подписан на смену темы — пересоздаёт фон при переключении light/dark.
 class Epoch8ScreenBody extends StatelessWidget {
   const Epoch8ScreenBody({super.key, required this.child, this.padding});
 
@@ -20,13 +22,16 @@ class Epoch8ScreenBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      height: double.infinity,
-      decoration: Epoch8Theme.screenGradient(),
-      child: padding != null
-          ? Padding(padding: padding!, child: child)
-          : child,
+    return ValueListenableBuilder<Brightness>(
+      valueListenable: appBrightnessNotifier,
+      builder: (context, _, __) => Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: Epoch8Theme.screenGradient(),
+        child: padding != null
+            ? Padding(padding: padding!, child: child)
+            : child,
+      ),
     );
   }
 }
@@ -53,58 +58,63 @@ class Epoch8Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final content = Padding(
-      padding: padding ?? const EdgeInsets.all(Epoch8Layout.cardPadding),
-      child: child,
+    return ValueListenableBuilder<Brightness>(
+      valueListenable: appBrightnessNotifier,
+      builder: (context, _, __) {
+        final content = Padding(
+          padding: padding ?? const EdgeInsets.all(Epoch8Layout.cardPadding),
+          child: child,
+        );
+
+        final Color borderColor;
+        final double borderW;
+        if (highlightBorderColor != null) {
+          borderColor = highlightBorderColor!;
+          borderW = highlightBorderWidth;
+        } else if (accentBorder) {
+          borderColor = Epoch8Theme.accent.withValues(alpha: 0.35);
+          borderW = 1.25;
+        } else {
+          borderColor = Epoch8Theme.border.withValues(alpha: 0.85);
+          borderW = 1;
+        }
+
+        final deco = BoxDecoration(
+          borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Epoch8Theme.card.withValues(alpha: 0.92),
+              Epoch8Theme.card.withValues(alpha: 0.65),
+            ],
+          ),
+          border: Border.all(
+            color: borderColor,
+            width: borderW,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        );
+
+        final box = DecoratedBox(decoration: deco, child: content);
+        if (onTap != null) {
+          return GestureDetector(
+            onTap: onTap,
+            child: MouseRegion(
+              cursor: SystemMouseCursors.click,
+              child: box,
+            ),
+          );
+        }
+        return box;
+      },
     );
-
-    final Color borderColor;
-    final double borderW;
-    if (highlightBorderColor != null) {
-      borderColor = highlightBorderColor!;
-      borderW = highlightBorderWidth;
-    } else if (accentBorder) {
-      borderColor = Epoch8Theme.accent.withValues(alpha: 0.35);
-      borderW = 1.25;
-    } else {
-      borderColor = Epoch8Theme.border.withValues(alpha: 0.85);
-      borderW = 1;
-    }
-
-    final deco = BoxDecoration(
-      borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
-      gradient: LinearGradient(
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-        colors: [
-          Epoch8Theme.card.withValues(alpha: 0.92),
-          Epoch8Theme.card.withValues(alpha: 0.65),
-        ],
-      ),
-      border: Border.all(
-        color: borderColor,
-        width: borderW,
-      ),
-      boxShadow: [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.35),
-          blurRadius: 20,
-          offset: const Offset(0, 10),
-        ),
-      ],
-    );
-
-    final box = DecoratedBox(decoration: deco, child: content);
-    if (onTap != null) {
-      return GestureDetector(
-        onTap: onTap,
-        child: MouseRegion(
-          cursor: SystemMouseCursors.click,
-          child: box,
-        ),
-      );
-    }
-    return box;
   }
 }
 

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/theme_controller.dart';
 import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
@@ -29,7 +30,6 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         } catch (_) {
           final loc = AppLocalizations.of(context);
           return Scaffold(
-            backgroundColor: Epoch8Theme.bgDeep,
             appBar: AppBar(title: Text(loc.project)),
             body: Center(child: Text(loc.projectNotFoundShortDot)),
           );
@@ -37,11 +37,9 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         return _ScrollFormLoaded(projectId: projectId, project: project);
       },
       loading: () => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         body: Epoch8Loader.center(),
       ),
       error: (e, _) => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
       ),
     );
@@ -75,6 +73,8 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
       return node;
     });
 
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
+
     // Auto-focus the first field
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_focusNodes.isNotEmpty) {
@@ -85,10 +85,15 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
 
   @override
   void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
     for (var node in _focusNodes) {
       node.dispose();
     }
     super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
   }
 
   void _focusNext(int currentIndex) {
@@ -115,7 +120,6 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
     final answers = ref.watch(wizardStateProvider(widget.projectId));
 
     return Scaffold(
-      backgroundColor: Epoch8Theme.bgDeep,
       appBar: AppBar(
         title: Text(project.name, maxLines: 1, overflow: TextOverflow.ellipsis),
         actions: [

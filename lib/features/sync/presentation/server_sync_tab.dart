@@ -8,6 +8,7 @@ import 'package:data_collector/features/projects/server_project_catalog.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/theme_controller.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -24,6 +25,22 @@ class ServerSyncTab extends ConsumerStatefulWidget {
 class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
   bool _syncing = false;
   String? _busyPackageId;
+
+  @override
+  void initState() {
+    super.initState();
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
+  }
+
+  @override
+  void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
+    super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
+  }
 
   Future<void> _syncProjects() async {
     final dio = ref.read(dioProvider);

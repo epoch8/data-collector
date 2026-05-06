@@ -10,6 +10,7 @@ import 'package:data_collector/features/collection/presentation/flow/project_exa
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/theme_controller.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -61,6 +62,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
         _dateTimes[f.fieldId] = _parseDt(s[f.fieldId]) ?? DateTime.now();
       }
     }
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
   }
 
   DateTime? _parseDt(dynamic v) {
@@ -72,10 +74,15 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
 
   @override
   void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
     for (final c in _textCtrls.values) {
       c.dispose();
     }
     super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
   }
 
   void _persistToWizard() {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -94,7 +95,6 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                     projects.firstWhere((p) => p.id == id);
                   } catch (_) {
                     return Scaffold(
-                      backgroundColor: Epoch8Theme.bgDeep,
                       appBar: AppBar(title: _epoch8AppBarTitle(loc.project)),
                       body: Center(child: Text(loc.projectNotFound)),
                     );
@@ -102,11 +102,9 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                   return CollectionFlowScreen(projectId: id);
                 },
                 loading: () => Scaffold(
-                  backgroundColor: Epoch8Theme.bgDeep,
                   body: Epoch8Loader.center(),
                 ),
                 error: (e, _) => Scaffold(
-                  backgroundColor: Epoch8Theme.bgDeep,
                   body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
                 ),
               );
@@ -177,11 +175,13 @@ class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBinding
     WidgetsBinding.instance.addObserver(this);
     _syncBrightness();
     appThemeModeNotifier.addListener(_syncBrightness);
+    appBrightnessNotifier.addListener(_applySystemChrome);
   }
 
   @override
   void dispose() {
     appThemeModeNotifier.removeListener(_syncBrightness);
+    appBrightnessNotifier.removeListener(_applySystemChrome);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -196,7 +196,31 @@ class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBinding
     final effective = mode == ThemeMode.light ? Brightness.light : Brightness.dark;
     if (appBrightnessNotifier.value != effective) {
       appBrightnessNotifier.value = effective;
+    } else {
+      // Даже если значение совпало — на некоторых вендорных прошивках
+      // (например, Samsung One UI) системный chrome не подхватывает
+      // изменение автоматически. Применяем явно.
+      _applySystemChrome();
     }
+  }
+
+  void _applySystemChrome() {
+    // Явно тянем стиль статус-бара/навигации под текущую тему,
+    // чтобы на Samsung/One UI не оставались светлые иконки на светлом фоне
+    // и наоборот.
+    final isLight = appBrightnessNotifier.value == Brightness.light;
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isLight ? Brightness.dark : Brightness.light,
+        statusBarBrightness: isLight ? Brightness.light : Brightness.dark,
+        systemNavigationBarColor: isLight
+            ? const Color(0xFFF7F8FB)
+            : const Color(0xFF0E1118),
+        systemNavigationBarIconBrightness:
+            isLight ? Brightness.dark : Brightness.light,
+      ),
+    );
   }
 
   @override
@@ -245,10 +269,21 @@ class _LoginScreenState extends State<LoginScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
+  }
+
+  @override
   void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
     _email.dispose();
     _password.dispose();
     super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
   }
 
   Future<void> _signInWithFirebase() async {
@@ -276,7 +311,6 @@ class _LoginScreenState extends State<LoginScreen> {
     final t = Theme.of(context).textTheme;
     final loc = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Epoch8Theme.bgDeep,
       body: Epoch8ScreenBody(
         child: SafeArea(
           child: LayoutBuilder(
@@ -451,12 +485,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Кастомные элементы внутри Dashboard (TabBar surface/border, FAB-цвета)
+    // используют глобальные токены Epoch8Theme.* и не подписаны на Theme.of.
+    // Триггерим ребилд при смене темы вручную.
+    appBrightnessNotifier.addListener(_onBrightnessChanged);
   }
 
   @override
   void dispose() {
+    appBrightnessNotifier.removeListener(_onBrightnessChanged);
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
+  }
+
+  void _onBrightnessChanged() {
+    if (mounted) setState(() {});
   }
 
   @override
@@ -480,7 +523,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
     return DefaultTabController(
       length: 3,
       child: Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(
           leading: const Epoch8ThemeSwitcher(),
           title: _epoch8AppBarTitle(loc.workspaceTitle),
@@ -651,7 +693,6 @@ class CowHistoryScreen extends ConsumerWidget {
     final loc = AppLocalizations.of(context);
     final packagesAsync = ref.watch(packagesStreamProvider);
     return Scaffold(
-      backgroundColor: Epoch8Theme.bgDeep,
       appBar: AppBar(title: _epoch8AppBarTitle('${loc.objectLabel} $cowId')),
       body: packagesAsync.when(
         data: (packages) {
@@ -744,7 +785,6 @@ class PackageHistoryScreen extends ConsumerWidget {
           }
         }
         return Scaffold(
-          backgroundColor: Epoch8Theme.bgDeep,
           appBar: AppBar(
             title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
             actions: [
@@ -782,12 +822,10 @@ class PackageHistoryScreen extends ConsumerWidget {
         );
       },
       loading: () => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
         body: Epoch8Loader.center(),
       ),
       error: (e, st) => Scaffold(
-        backgroundColor: Epoch8Theme.bgDeep,
         appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
         body: Center(
           child: Padding(

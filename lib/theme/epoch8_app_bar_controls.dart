@@ -14,33 +14,36 @@ class Epoch8LanguageSwitcher extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    return Tooltip(
-      message: loc.languageToggleTooltip,
-      child: SizedBox(
-        width: 62,
-        child: Center(
-          child: Material(
-            color: Epoch8Theme.accent.withValues(alpha: 0.10),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(
-                color: Epoch8Theme.accent.withValues(alpha: 0.30),
+    return ValueListenableBuilder<Brightness>(
+      valueListenable: appBrightnessNotifier,
+      builder: (context, _, __) => Tooltip(
+        message: loc.languageToggleTooltip,
+        child: SizedBox(
+          width: 62,
+          child: Center(
+            child: Material(
+              color: Epoch8Theme.accent.withValues(alpha: 0.10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: BorderSide(
+                  color: Epoch8Theme.accent.withValues(alpha: 0.30),
+                ),
               ),
-            ),
-            child: InkWell(
-              borderRadius: BorderRadius.circular(12),
-              onTap: toggleAppLocale,
-              child: SizedBox(
-                width: 52,
-                height: 36,
-                child: Center(
-                  child: Text(
-                    loc.languageCodeLabel,
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 13,
-                      letterSpacing: 0.8,
-                      color: Epoch8Theme.accent,
+              child: InkWell(
+                borderRadius: BorderRadius.circular(12),
+                onTap: toggleAppLocale,
+                child: SizedBox(
+                  width: 52,
+                  height: 36,
+                  child: Center(
+                    child: Text(
+                      loc.languageCodeLabel,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: 0.8,
+                        color: Epoch8Theme.accent,
+                      ),
                     ),
                   ),
                 ),

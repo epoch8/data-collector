@@ -12,7 +12,6 @@ class HelpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
     return Scaffold(
-      backgroundColor: Epoch8Theme.bgDeep,
       appBar: AppBar(
         title: Text(loc.helpTitle),
         actions: const [
