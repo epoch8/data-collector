@@ -292,6 +292,7 @@ class CameraMetadataCollector {
     double? cx;
     double? cy;
     double? skew;
+    var principalPointFallback = false;
 
     final natFx = _asDouble(derived['fx_px_from_native_mm']);
     final natFy = _asDouble(derived['fy_px_from_native_mm']);
@@ -339,6 +340,24 @@ class CameraMetadataCollector {
       }
     }
 
+    if (fx != null && imgW != null && imgH != null && _isInvalidPrincipalPoint(cx, cy, imgW, imgH)) {
+      // Some Android vendors expose LENS_INTRINSIC_CALIBRATION with cx/cy=0 placeholders.
+      final estCxNative = _asDouble(native?['estimated_cx_px']);
+      final estCyNative = _asDouble(native?['estimated_cy_px']);
+      if (estCxNative != null && estCyNative != null && natW != null && natH != null && natW > 0 && natH > 0) {
+        cx = estCxNative * (imgW / natW);
+        cy = estCyNative * (imgH / natH);
+      }
+      if (_isInvalidPrincipalPoint(cx, cy, imgW, imgH)) {
+        cx = imgW / 2.0;
+        cy = imgH / 2.0;
+      }
+      principalPointFallback = true;
+      if (source == 'lens_intrinsic_calibration') {
+        source = 'lens_intrinsic_calibration_with_principal_point_fallback';
+      }
+    }
+
     if (fx == null && source == 'incomplete') {
       final fb = DeviceSensorFallback.lookupSensorMm(deviceModel);
       if (fb != null && focalMm != null && imgW != null && imgH != null) {
@@ -373,6 +392,7 @@ class CameraMetadataCollector {
       if (sensorHmm != null) 'sensor_height_mm': sensorHmm,
       if (focal35 != null) 'focal_length_35mm_equiv': focal35,
       'intrinsics_source': source,
+      if (principalPointFallback) 'principal_point_fallback_applied': true,
       if (skew != null) 'skew': skew,
       if (orientation != null) 'image_orientation_exif': orientation,
     };
@@ -429,6 +449,15 @@ class CameraMetadataCollector {
       }
     }
     return null;
+  }
+
+  static bool _isInvalidPrincipalPoint(double? cx, double? cy, int imgW, int imgH) {
+    if (cx == null || cy == null) return true;
+    // Treat near-zero as invalid for smartphone camera calibration.
+    if (cx.abs() < 1.0 && cy.abs() < 1.0) return true;
+    if (cx < 0 || cx > imgW) return true;
+    if (cy < 0 || cy > imgH) return true;
+    return false;
   }
 
   static double? _asDouble(dynamic v) {
