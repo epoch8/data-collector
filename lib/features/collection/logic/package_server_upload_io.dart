@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:data_collector/core/package/package_paths.dart';
 import 'package:data_collector/core/storage/database.dart';
+import 'package:data_collector/features/collection/logic/local_package_materializer_payload_utils.dart';
 import 'package:data_collector/features/collection/logic/package_server_manifest.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
@@ -55,6 +56,10 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
+    final manifestMap = await loadPackagePayloadMap(pkg);
+    final requiredBlobs = <String>{};
+    collectBlobLogicalPathsFromPayload(manifestMap, requiredBlobs);
+
     final root = PackagePaths.packageRootFor(packageId);
     final blobsDir = Directory(p.join(root, 'blobs'));
     if (await blobsDir.exists()) {
@@ -62,6 +67,9 @@ Future<void> uploadDriftPackageToServer({
         if (entity is! File) continue;
         final name = p.basename(entity.path);
         final logical = 'blobs/$name';
+        if (!requiredBlobs.contains(logical)) {
+          continue;
+        }
         final bytes = await entity.readAsBytes();
         final pathSuffix = logical.split('/').map(Uri.encodeComponent).join('/');
         await dio.put(
@@ -75,7 +83,6 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
-    final manifestMap = await loadPackagePayloadMap(pkg);
     injectSubmittedByIntoServerManifest(manifestMap);
 
     final manifestBody = const JsonEncoder.withIndent('  ').convert(manifestMap);

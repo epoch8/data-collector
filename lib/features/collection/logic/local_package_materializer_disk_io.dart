@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:data_collector/features/collection/logic/local_package_materializer_models.dart';
 import 'package:data_collector/features/collection/logic/local_package_materializer_payload_utils.dart';
+import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
@@ -37,7 +38,11 @@ Future<MaterializedLocalPackage> materializeOnDisk({
   void collect(dynamic node) {
     if (node is Map) {
       for (final k in node.keys) {
-        final ks = k is String ? k : k.toString();
+        final fieldKey = k is String ? k : k.toString();
+        if (fieldKey == PackagePayloadKeys.cameraDebug) {
+          continue;
+        }
+        final ks = fieldKey;
         if (mightBeFilesystemPath(ks)) {
           candidates.add(ks);
         }

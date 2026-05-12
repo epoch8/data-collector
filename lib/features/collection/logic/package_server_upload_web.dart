@@ -10,7 +10,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
 import 'package:path/path.dart' as p;
 
-/// Загрузка пакета на Django API (спека 08) без локальной ФС: бинарники читаются из `blob:` / `data:` / URL.
+/// Загрузка пакета на Django API (спека 08) без локальной ФС.
 Future<void> uploadDriftPackageToServer({
   required Dio dio,
   required AppDatabase db,
@@ -64,7 +64,7 @@ Future<void> uploadDriftPackageToServer({
     final dynamic pathSubject =
         manifestMap.containsKey('package_id') && dataRaw is Map ? dataRaw : manifestMap;
 
-    final candidates = collectFilesystemLikePathsFromPayload(pathSubject);
+    final candidates = collectWebCaptureRefsFromPayloadShallow(pathSubject);
     final absToRel = <String, String>{};
     var blobCounter = 0;
 

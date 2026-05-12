@@ -15,7 +15,11 @@ def weak_etag(payload: str | bytes) -> str:
 
 def collect_blob_refs(obj: Any, out: set[str]) -> None:
     if isinstance(obj, dict):
-        for v in obj.values():
+        for k, v in obj.items():
+            if isinstance(k, str):
+                s = k.replace("\\", "/")
+                if s.startswith("blobs/"):
+                    out.add(s)
             collect_blob_refs(v, out)
     elif isinstance(obj, list):
         for v in obj:
