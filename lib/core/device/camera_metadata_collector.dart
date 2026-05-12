@@ -1,11 +1,9 @@
-import 'dart:io';
-
+import 'camera_exif_io.dart' if (dart.library.html) 'camera_exif_web.dart' as camera_exif;
 import 'package:data_collector/core/device/device_camera_channel.dart';
 import 'package:data_collector/core/device/device_sensor_fallback.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:exif/exif.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -24,8 +22,6 @@ class CameraMetadataCollector {
     required String poseFieldId,
     required String imagePath,
   }) async {
-    if (kIsWeb) return;
-
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
     final ctx = _cloneContext(state[PackagePayloadKeys.cameraCaptureContext]);
@@ -107,7 +103,7 @@ class CameraMetadataCollector {
       ctx['device'] = <String, dynamic>{'platform': 'web'};
       return;
     }
-    if (Platform.isAndroid) {
+    if (defaultTargetPlatform == TargetPlatform.android) {
       final a = await _deviceInfo.androidInfo;
       ctx['device'] = <String, dynamic>{
         'platform': 'android',
@@ -122,7 +118,7 @@ class CameraMetadataCollector {
       };
       return;
     }
-    if (Platform.isIOS) {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
       final i = await _deviceInfo.iosInfo;
       ctx['device'] = <String, dynamic>{
         'platform': 'ios',
@@ -140,33 +136,8 @@ class CameraMetadataCollector {
     ctx['native_back_camera'] = native;
   }
 
-  static const int _maxExifValueChars = 8000;
-
   static Future<Map<String, dynamic>> _readExifSubset(String path) async {
-    final out = <String, dynamic>{};
-    try {
-      final bytes = await File(path).readAsBytes();
-      final data = await readExifFromBytes(bytes);
-      if (data.isEmpty) return out;
-
-      for (final e in data.entries) {
-        final key = e.key.toString();
-        final tag = e.value;
-        try {
-          var s = tag.printable;
-          if (s.length > _maxExifValueChars) {
-            s = '${s.substring(0, _maxExifValueChars)}…(truncated, ${_maxExifValueChars} chars max)';
-            out['${key}__value_truncated'] = true;
-          }
-          out[key] = s;
-        } catch (_) {
-          out[key] = tag.toString();
-        }
-      }
-    } catch (_) {
-      // ignore corrupt / missing exif
-    }
-    return out;
+    return camera_exif.readExifSubsetFromFile(path);
   }
 
   /// Combines native sensor + lens data with EXIF when native is incomplete.

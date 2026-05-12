@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
+import 'package:data_collector/core/presentation/local_capture_thumb.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/collection_draft_store.dart';
 import 'package:data_collector/features/collection/logic/collection_flow_resolver.dart';
@@ -651,7 +651,7 @@ class _FlowReviewStep extends ConsumerWidget {
                         for (final p in CapturedPhotoPaths.list(a[f.fieldId]))
                           ClipRRect(
                             borderRadius: BorderRadius.circular(8),
-                            child: Image.file(File(p), width: 72, height: 72, fit: BoxFit.cover),
+                            child: localCaptureThumbnail(p, size: 72),
                           ),
                       ],
                     ),

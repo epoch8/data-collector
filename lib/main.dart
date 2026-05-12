@@ -1,10 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'dart:convert';
-import 'dart:io';
+import 'package:data_collector/core/presentation/local_capture_thumb.dart';
+import 'package:data_collector/core/presentation/local_disk_photo_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'bootstrap.dart';
@@ -913,36 +915,29 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: File(path).existsSync()
-                        ? InkWell(
-                            onTap: () => _showFullPhoto(context, path),
-                            child: Stack(
-                              children: [
-                                Image.file(File(path), height: 180, width: double.infinity, fit: BoxFit.cover),
-                                Positioned(
-                                  right: 8,
-                                  bottom: 8,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.55),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Text(
-                                      loc.openPhoto,
-                                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                    child: InkWell(
+                      onTap: () => showLocalDiskPhotoDialog(context, path),
+                      child: Stack(
+                        children: [
+                          localCaptureImageBox(path, height: 180, width: double.infinity),
+                          Positioned(
+                            right: 8,
+                            bottom: 8,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.55),
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Text(
+                                loc.openPhoto,
+                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
                             ),
-                          )
-                        : Container(
-                            height: 120,
-                            color: Epoch8Theme.bgElevated,
-                            alignment: Alignment.center,
-                            child: Text(loc.fileNotFoundOnDevice),
                           ),
+                        ],
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
@@ -1491,44 +1486,4 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
     }
   }
   return out;
-}
-
-Future<void> _showFullPhoto(BuildContext context, String path) async {
-  await showDialog<void>(
-    context: context,
-    builder: (context) {
-      final file = File(path);
-      return Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: const EdgeInsets.all(10),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: file.existsSync()
-                  ? InteractiveViewer(
-                      minScale: 0.8,
-                      maxScale: 6,
-                      child: Center(child: Image.file(file, fit: BoxFit.contain)),
-                    )
-                  : Center(
-                      child: Text(
-                        AppLocalizations.of(context).fileNotFound,
-                        style: const TextStyle(color: Colors.white70),
-                      ),
-                    ),
-            ),
-            Positioned(
-              right: 8,
-              top: 8,
-              child: IconButton(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.close, color: Colors.white),
-                tooltip: AppLocalizations.of(context).close,
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
 }

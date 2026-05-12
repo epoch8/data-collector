@@ -47,6 +47,10 @@ class ApiV1AuthMiddleware:
         if not request.path.startswith("/v1/"):
             return self.get_response(request)
 
+        # CORS preflight: без токена; ответ дополняет corsheaders (см. CorsMiddleware в settings).
+        if request.method == "OPTIONS":
+            return self.get_response(request)
+
         if firebase_auth_enabled():
             raw = _parse_bearer(request.headers.get("Authorization", ""))
             if not raw:

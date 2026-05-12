@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:data_collector/features/projects/project_asset_cache.dart';
+import 'project_asset_cache_delete_io.dart' if (dart.library.html) 'project_asset_cache_delete_web.dart' as cache_del;
 import 'package:data_collector/models/project_config.dart';
 import 'package:dio/dio.dart';
 
@@ -56,7 +56,7 @@ final class ServerProjectCatalog {
       } else {
         throw StateError('Unexpected project config response for $pid');
       }
-      await deleteCachedAssetsForProject(pid);
+      await cache_del.deleteCachedAssetsForProject(pid);
     }
     return out;
   }

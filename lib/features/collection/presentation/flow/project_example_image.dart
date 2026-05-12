@@ -1,77 +1,12 @@
 import 'package:data_collector/core/api/api_environment.dart';
-import 'package:data_collector/core/api/dio_provider.dart';
-import 'package:data_collector/features/projects/project_asset_cache.dart';
+import 'package:data_collector/features/collection/presentation/flow/project_example_media.dart';
+import 'project_example_resolve_rel_io.dart' if (dart.library.html) 'project_example_resolve_rel_web.dart' as rel_preview;
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Путь из Markdown `![](...)`: относительные `uploads/…`, `assets/…`, абсолютные URL.
-String? markdownImageRefFromUri(Uri uri) {
-  if (uri.scheme == 'http' || uri.scheme == 'https') {
-    return uri.toString();
-  }
-  if (uri.scheme == 'data') {
-    return null;
-  }
-  // `Uri.tryParse('uploads/a.jpg')` в Dart часто даёт host=`uploads`, path=`/a.jpg` — без этого
-  // теряется первый сегмент пути и ассет на сервере не находится.
-  final authoritySplitRelative = uri.scheme.isEmpty &&
-      uri.hasAuthority &&
-      uri.host.isNotEmpty &&
-      uri.userInfo.isEmpty;
-  String p;
-  if (authoritySplitRelative) {
-    final tail = uri.path;
-    final tailNorm = tail.isEmpty || tail == '/'
-        ? ''
-        : (tail.startsWith('/') ? tail.substring(1) : tail);
-    p = tailNorm.isEmpty ? uri.host : '${uri.host}/$tailNorm';
-  } else {
-    p = uri.path;
-    if (p.isEmpty) {
-      p = uri.hasAuthority ? '${uri.host}${uri.path}' : uri.toString();
-    }
-  }
-  p = p.trim().replaceAll(r'\', '/');
-  if (p.startsWith('./')) {
-    p = p.substring(2);
-  }
-  if (p.startsWith('/')) {
-    p = p.substring(1);
-  }
-  return p.isEmpty ? null : p;
-}
-
-/// URL файла из медиа проекта: `assets/…` (как в JSON), либо относительный путь из админки (`uploads/…`).
-/// При заданном [ApiEnvironment.baseUrl] → `GET /v1/projects/{id}/assets/{encoded}`.
-Uri? exampleGuideImageUri(Project project, String path) {
-  var p = path.trim().replaceAll(r'\', '/');
-  if (p.isEmpty) return null;
-  if (p.startsWith('./')) {
-    p = p.substring(2);
-  }
-  if (p.startsWith('http://') || p.startsWith('https://')) {
-    return Uri.tryParse(p);
-  }
-  final base = ApiEnvironment.normalizedBaseUrl();
-  if (base.isEmpty) return null;
-  if (p.startsWith('/v1/')) {
-    return Uri.parse('$base$p');
-  }
-  final rel = projectAssetStorageRelativePath(path);
-  if (rel == null) {
-    return null;
-  }
-  final enc = rel.split('/').where((s) => s.isNotEmpty).map(Uri.encodeComponent).join('/');
-  return Uri.parse('$base/v1/projects/${project.id}/assets/$enc');
-}
-
-Map<String, String>? _imageAuthHeaders() {
-  final t = ApiEnvironment.bearerToken.trim();
-  if (t.isEmpty) return null;
-  return {'Authorization': 'Bearer $t'};
-}
+export 'project_example_media.dart' show exampleGuideImageUri, markdownImageRefFromUri, projectAssetStorageRelativePath;
 
 /// Картинка примера: сначала локальный кэш (`server_project_cache/project_assets`), затем одна загрузка с API.
 Widget projectExampleImage({
@@ -139,7 +74,7 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
           _image = Image.network(
             u.toString(),
             fit: widget.fit,
-            headers: _imageAuthHeaders(),
+            headers: imageAuthHeadersForProjectExamples(),
             errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
           );
           _ready = true;
@@ -150,55 +85,20 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
 
     final rel = projectAssetStorageRelativePath(path);
     if (rel != null && ApiEnvironment.isConfigured) {
-      final file = await cachedProjectAssetFile(widget.project.id, rel);
-      if (await file.exists() && mounted) {
+      final w = await rel_preview.buildProjectRelAssetPreview(
+        ref: ref,
+        project: widget.project,
+        assetPath: path,
+        rel: rel,
+        fit: widget.fit,
+        errorPlaceholder: widget.errorPlaceholder,
+      );
+      if (w != null && mounted) {
         setState(() {
-          _image = Image.file(
-            file,
-            fit: widget.fit,
-            errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
-          );
+          _image = w;
           _ready = true;
         });
         return;
-      }
-
-      final dio = ref.read(dioProvider);
-      final uri = exampleGuideImageUri(widget.project, path);
-      if (dio != null && uri != null) {
-        try {
-          await ensureProjectAssetCached(
-            dio: dio,
-            projectId: widget.project.id,
-            relativePath: rel,
-            downloadUri: uri,
-          );
-        } catch (_) {
-          /* fallback: Image.network */
-        }
-        if (await file.exists() && mounted) {
-          setState(() {
-            _image = Image.file(
-              file,
-              fit: widget.fit,
-              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
-            );
-            _ready = true;
-          });
-          return;
-        }
-        if (mounted) {
-          setState(() {
-            _image = Image.network(
-              uri.toString(),
-              fit: widget.fit,
-              headers: _imageAuthHeaders(),
-              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
-            );
-            _ready = true;
-          });
-          return;
-        }
       }
     }
 

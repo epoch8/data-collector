@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
@@ -11,7 +9,10 @@ class DeviceCameraChannel {
 
   /// Returns serializable map; empty on web / unsupported / error.
   static Future<Map<String, dynamic>> getBackCameraIntrinsics() async {
-    if (kIsWeb || (!Platform.isAndroid && !Platform.isIOS)) {
+    if (kIsWeb) {
+      return {};
+    }
+    if (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS) {
       return {};
     }
     try {

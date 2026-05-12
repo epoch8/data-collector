@@ -1,5 +1,4 @@
-import 'dart:io';
-
+import 'package:data_collector/core/presentation/local_capture_thumb.dart';
 import 'package:data_collector/core/device/camera_metadata_collector.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/core/quality/image_quality_analyzer.dart';
@@ -580,7 +579,7 @@ class _Thumb extends StatelessWidget {
       children: [
         ClipRRect(
           borderRadius: BorderRadius.circular(8),
-          child: Image.file(File(path), width: 88, height: 88, fit: BoxFit.cover),
+          child: localCaptureThumbnail(path, size: 88),
         ),
         Positioned(left: 4, top: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Epoch8Theme.bgDeep.withValues(alpha: 0.75), borderRadius: BorderRadius.circular(6)), child: Text('$index', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)))),
         Positioned(right: -4, top: -4, child: Material(color: Epoch8Theme.danger, shape: const CircleBorder(), child: InkWell(onTap: onRemove, customBorder: const CircleBorder(), child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep))))),

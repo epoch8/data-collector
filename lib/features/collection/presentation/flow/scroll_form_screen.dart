@@ -1,17 +1,17 @@
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
-import 'package:data_collector/theme/theme_controller.dart';
-import 'package:data_collector/theme/epoch8_loader.dart';
-import 'package:data_collector/features/projects/providers/project_providers.dart';
-import 'package:data_collector/models/project_config.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:data_collector/core/presentation/local_capture_thumb.dart';
+import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
+import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
-
-import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
+import 'package:data_collector/models/project_config.dart';
+import 'package:data_collector/theme/epoch8_loader.dart';
+import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/theme_controller.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 
 /// Устаревший экран: все поля из [Project.config.fields] в порядке объявления в JSON.
 class ScrollFormCollectionScreen extends ConsumerWidget {
@@ -223,7 +223,10 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                         onPressed: () async {
                           final picker = ImagePicker();
                           final XFile? photo = await picker.pickImage(
-                            source: (Platform.isAndroid || Platform.isIOS) ? ImageSource.camera : ImageSource.gallery,
+                            source: (defaultTargetPlatform == TargetPlatform.android ||
+                                    defaultTargetPlatform == TargetPlatform.iOS)
+                                ? ImageSource.camera
+                                : ImageSource.gallery,
                             preferredCameraDevice: CameraDevice.rear,
                           );
                           if (photo == null) return;
@@ -259,7 +262,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                     decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
-                                      child: Image.file(File(item.value as String), width: 60, height: 60, fit: BoxFit.cover),
+                                      child: localCaptureThumbnail(item.value as String, size: 60),
                                     ),
                                   ),
                                   Positioned(
@@ -297,7 +300,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: Image.file(File(answers[field.fieldId] as String), width: 60, height: 60, fit: BoxFit.cover),
+                                  child: localCaptureThumbnail(answers[field.fieldId] as String, size: 60),
                                 ),
                               ),
                               Positioned(

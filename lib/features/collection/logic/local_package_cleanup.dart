@@ -1,19 +1,13 @@
-import 'dart:io';
-
-import 'package:data_collector/core/package/package_paths.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:flutter/foundation.dart';
+
+import 'local_package_cleanup_io.dart' if (dart.library.html) 'local_package_cleanup_web.dart' as cleanup_fs;
 
 /// Удаляет запись пакета в Drift и каталог `packages/<id>/` на диске (не web).
 Future<void> deleteLocalPackageStorage(AppDatabase db, String packageId) async {
   await (db.delete(db.packages)..where((t) => t.id.equals(packageId))).go();
   if (kIsWeb) return;
-  final root = PackagePaths.packageRootFor(packageId);
-  if (root.isEmpty) return;
-  try {
-    final dir = Directory(root);
-    if (await dir.exists()) await dir.delete(recursive: true);
-  } catch (_) {}
+  await cleanup_fs.deletePackageDirectoryIfExists(packageId);
 }
 
 /// Удаляет все пакеты со статусом «загружен на сервер» — запись и локальные файлы.

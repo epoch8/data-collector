@@ -26,11 +26,13 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "corsheaders",
     "api",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -128,3 +130,46 @@ ASSETS_CONFIG_ROOT = Path(
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800
 FILE_UPLOAD_MAX_MEMORY_SIZE = 2621440
+
+# --- CORS (Flutter Web / браузер) ---
+# Дополнительные точные origin через запятую, например:
+# DJANGO_CORS_ALLOWED_ORIGINS=https://app.example.com,http://127.0.0.1:3000
+_cors_origins = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS", "").strip()
+CORS_ALLOWED_ORIGINS = [x.strip() for x in _cors_origins.split(",") if x.strip()]
+
+# Локальный Flutter Web: порт меняется при каждом flutter run — разрешаем localhost / 127.0.0.1 с любым портом.
+# При DEBUG — ещё и частные LAN-адреса (телефон в той же Wi‑Fi: http://<IP_ПК>:<порт_приложения>).
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^http://localhost:\d+$",
+    r"^http://127\.0\.0\.1:\d+$",
+]
+if DEBUG:
+    CORS_ALLOWED_ORIGIN_REGEXES += [
+        r"^http://192\.168\.\d{1,3}\.\d{1,3}:\d+$",
+        r"^http://10\.\d{1,3}\.\d{1,3}\.\d{1,3}:\d+$",
+        r"^http://172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3}:\d+$",
+    ]
+
+# Явные методы и заголовки для preflight (Authorization шлёт браузер с Firebase).
+CORS_ALLOW_METHODS = (
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+)
+CORS_ALLOW_HEADERS = (
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+)
+
+# Не требуем cookie для API; при необходимости кук можно включить и настроить CORS_ALLOW_CREDENTIALS.
+CORS_ALLOW_CREDENTIALS = False
