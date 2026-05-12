@@ -1,3 +1,5 @@
+import 'package:data_collector/core/api/dio_provider.dart';
+import 'package:data_collector/features/collection/presentation/flow/project_example_dio_image.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_media.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:flutter/material.dart';
@@ -13,6 +15,22 @@ Future<Widget?> buildProjectRelAssetPreview({
 }) async {
   final uri = exampleGuideImageUri(project, assetPath);
   if (uri == null) return null;
+
+  final dio = ref.read(dioProvider);
+  if (dio != null) {
+    final bytes = await fetchProjectExampleImageBytes(dio, uri);
+    if (bytes != null) {
+      return Image.memory(
+        bytes,
+        fit: fit,
+        errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+      );
+    }
+    if (projectExampleUriSameApiOrigin(uri)) {
+      return null;
+    }
+  }
+
   return Image.network(
     uri.toString(),
     fit: fit,

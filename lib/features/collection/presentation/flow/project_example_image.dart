@@ -1,4 +1,6 @@
 import 'package:data_collector/core/api/api_environment.dart';
+import 'package:data_collector/core/api/dio_provider.dart';
+import 'package:data_collector/features/collection/presentation/flow/project_example_dio_image.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_media.dart';
 import 'project_example_resolve_rel_io.dart' if (dart.library.html) 'project_example_resolve_rel_web.dart' as rel_preview;
 import 'package:data_collector/models/project_config.dart';
@@ -69,7 +71,40 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
 
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       final u = Uri.tryParse(trimmed);
-      if (u != null && mounted) {
+      if (u == null) {
+        if (mounted) {
+          setState(() {
+            _image = null;
+            _ready = true;
+          });
+        }
+        return;
+      }
+      final dio = ref.read(dioProvider);
+      if (dio != null) {
+        final bytes = await fetchProjectExampleImageBytes(dio, u);
+        if (bytes != null && mounted) {
+          setState(() {
+            _image = Image.memory(
+              bytes,
+              fit: widget.fit,
+              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+            );
+            _ready = true;
+          });
+          return;
+        }
+        if (projectExampleUriSameApiOrigin(u)) {
+          if (mounted) {
+            setState(() {
+              _image = null;
+              _ready = true;
+            });
+          }
+          return;
+        }
+      }
+      if (mounted) {
         setState(() {
           _image = Image.network(
             u.toString(),
