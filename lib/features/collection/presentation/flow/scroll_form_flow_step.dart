@@ -74,6 +74,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   @override
   void dispose() {
     appBrightnessNotifier.removeListener(_onBrightnessChanged);
+    _persistToWizard();
     for (final c in _textCtrls.values) {
       c.dispose();
     }
@@ -92,6 +93,16 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     for (final e in _dateTimes.entries) {
       n.updateField(e.key, e.value.toIso8601String());
     }
+  }
+
+  /// Текст/дата должны попадать в [wizardStateProvider] при вводе — иначе черновик в БД
+  /// (слушатель в [CollectionFlowScreen]) не видит их до нажатия «Далее».
+  void _syncTextFieldToWizard(String fieldId, String text) {
+    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(fieldId, text);
+  }
+
+  void _syncDatetimeToWizard(String fieldId, DateTime dt) {
+    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(fieldId, dt.toIso8601String());
   }
 
   bool _stepValid(Map<String, dynamic> answers) {
@@ -168,6 +179,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           }
         }
       });
+      _persistToWizard();
     }
 
     return SingleChildScrollView(
@@ -263,7 +275,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                             : Epoch8Theme.textMuted,
                   ),
                 ),
-                onChanged: (_) => setState(() {}),
+                onChanged: (_) {
+                  _syncTextFieldToWizard(f.fieldId, c.text);
+                  setState(() {});
+                },
               ),
               if (typedCowId.isNotEmpty && hasAnyMatches) ...[
                 const SizedBox(height: 8),
@@ -283,6 +298,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                         if (cc != null) {
                           cc.text = id;
                           cc.selection = TextSelection.fromPosition(TextPosition(offset: cc.text.length));
+                          _syncTextFieldToWizard(f.fieldId, cc.text);
                         }
                         setState(() {});
                       },
@@ -309,7 +325,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
             TextField(
               controller: c,
               decoration: InputDecoration(hintText: f.instructions),
-              onChanged: (_) => setState(() {}),
+              onChanged: (_) {
+                _syncTextFieldToWizard(f.fieldId, c.text);
+                setState(() {});
+              },
             ),
           ],
         );
@@ -337,6 +356,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                     setState(() {
                       _dateTimes[f.fieldId] = DateTime(d.year, d.month, d.day, t.hour, t.minute);
                     });
+                    _syncDatetimeToWizard(f.fieldId, _dateTimes[f.fieldId]!);
                   },
                   child: Text(loc.flowFormDatetimeChange),
                 ),

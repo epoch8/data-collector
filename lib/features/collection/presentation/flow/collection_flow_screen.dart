@@ -183,6 +183,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
     if (!mounted) return;
 
     if (draft == null) {
+      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
       setState(() => _ready = true);
       return;
     }

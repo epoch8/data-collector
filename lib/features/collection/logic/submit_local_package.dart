@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
+import 'package:data_collector/features/collection/logic/collection_draft_store.dart';
 import 'package:data_collector/features/collection/logic/local_package_materializer.dart';
+import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/collection/logic/package_payload_codec.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
@@ -56,6 +58,10 @@ Future<void> submitLocalPackage({
           ),
         );
   }
+
+  await deleteAllDraftPackagesForProject(db, projectId);
+
+  ref.read(wizardStateProvider(projectId).notifier).reset();
 
   if (!context.mounted) return;
 

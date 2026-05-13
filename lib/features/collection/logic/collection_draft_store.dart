@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:data_collector/core/storage/database.dart';
+import 'package:data_collector/features/collection/logic/local_package_cleanup.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:drift/drift.dart' show OrderingTerm, Value;
 
@@ -16,6 +17,22 @@ Future<Package?> selectLatestDraftForProject(AppDatabase db, String projectId) a
         ..limit(1))
       .get();
   return rows.isEmpty ? null : rows.first;
+}
+
+/// Удаляет все локальные черновики по [projectId] (запись + каталог на диске при наличии).
+/// После завершённого пакета не должны оставаться «висячие» сессии, из‑за которых снова
+/// показывается диалог продолжения или подтягиваются старые данные.
+Future<int> deleteAllDraftPackagesForProject(AppDatabase db, String projectId) async {
+  final drafts = await (db.select(db.packages)
+        ..where((t) => t.projectId.equals(projectId))
+        ..where((t) => t.status.equals(kPackageStatusDraft)))
+      .get();
+  var n = 0;
+  for (final d in drafts) {
+    await deleteLocalPackageStorage(db, d.id);
+    n++;
+  }
+  return n;
 }
 
 int draftFlowStepFromUnpackedData(Map<String, dynamic> data) {
