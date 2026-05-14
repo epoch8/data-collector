@@ -108,6 +108,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
     ref.watch(wizardStateProvider(widget.projectId));
     final async = ref.watch(projectsProvider);
     return async.when(
+      skipLoadingOnReload: true,
       data: (projects) {
         late Project project;
         try {

@@ -20,7 +20,7 @@ final class WizardStateProvider
   }) : super(
          retry: null,
          name: r'wizardStateProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -75,7 +75,7 @@ final class WizardStateFamily extends $Family
         name: r'wizardStateProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   WizardStateProvider call(String projectId) =>

@@ -23,6 +23,7 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(projectsProvider);
     return async.when(
+      skipLoadingOnReload: true,
       data: (projects) {
         late Project project;
         try {

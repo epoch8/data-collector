@@ -91,6 +91,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
             builder: (context, ref, _) {
               final async = ref.watch(projectsProvider);
               return async.when(
+                skipLoadingOnReload: true,
                 data: (projects) {
                   final loc = AppLocalizations.of(context);
                   try {

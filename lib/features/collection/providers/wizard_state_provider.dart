@@ -2,7 +2,9 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'wizard_state_provider.g.dart';
 
-@riverpod
+/// [keepAlive]: сценарий сбора не должен терять ответы при кратковременной перезагрузке
+/// каталога проектов (`projectsProvider` → loading снимает весь subtree и autoDispose).
+@Riverpod(keepAlive: true)
 class WizardState extends _$WizardState {
   @override
   Map<String, dynamic> build(String projectId) {
