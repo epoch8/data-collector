@@ -341,6 +341,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   void _scheduleDraftSave() {
     _draftDebounce?.cancel();
     _draftDebounce = Timer(const Duration(milliseconds: 450), () {
+      if (!mounted) return;
       unawaited(_persistDraftNow());
     });
   }
@@ -362,6 +363,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
       flowStep: _step,
       createdAt: _createdAtForRow!,
     );
+    if (!mounted) return;
   }
 
   Future<void> _goBack() async {

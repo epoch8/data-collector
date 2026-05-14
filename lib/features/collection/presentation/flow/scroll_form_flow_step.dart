@@ -49,10 +49,13 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
 class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   final Map<String, TextEditingController> _textCtrls = {};
   final Map<String, DateTime> _dateTimes = {};
+  /// Нельзя вызывать `ref` из [dispose] — элемент уже «мертвый»; нотификатор держим с initState.
+  late final WizardState _wizardNotifier;
 
   @override
   void initState() {
     super.initState();
+    _wizardNotifier = ref.read(wizardStateProvider(widget.projectId).notifier);
     final s = ref.read(wizardStateProvider(widget.projectId));
     for (final f in widget.step.fields) {
       if (f.type == 'text_input') {
@@ -86,12 +89,11 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   }
 
   void _persistToWizard() {
-    final n = ref.read(wizardStateProvider(widget.projectId).notifier);
     for (final e in _textCtrls.entries) {
-      n.updateField(e.key, e.value.text.trim());
+      _wizardNotifier.updateField(e.key, e.value.text.trim());
     }
     for (final e in _dateTimes.entries) {
-      n.updateField(e.key, e.value.toIso8601String());
+      _wizardNotifier.updateField(e.key, e.value.toIso8601String());
     }
   }
 
