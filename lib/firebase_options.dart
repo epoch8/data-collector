@@ -24,12 +24,12 @@ class DefaultFirebaseOptions {
 
   /// Добавьте веб-приложение в Firebase и подставьте appId с суффиксом :web:…
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
-    appId: '1:181572319604:web:0000000000000000000000',
-    messagingSenderId: '181572319604',
-    projectId: 'data-collector-dev-e8',
-    authDomain: 'data-collector-dev-e8.firebaseapp.com',
-    storageBucket: 'data-collector-dev-e8.firebasestorage.app',
+    apiKey: 'AIzaSyCstrHMeGKyiWrdEbTuJFdgArl_TiTDoxc',
+    appId: '1:59903871663:web:00aa1f03e37174f652225a',
+    messagingSenderId: '59903871663',
+    projectId: 'e8-gke',
+    authDomain: 'e8-gke.firebaseapp.com',
+    storageBucket: 'e8-gke.firebasestorage.app',
   );
 
 

@@ -33,6 +33,7 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
     required this.step,
     required this.continueLabel,
     required this.onContinue,
+    this.onPhotoChanged,
   });
 
   final Project project;
@@ -41,6 +42,8 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
   final ResolvedCollectionStep step;
   final String continueLabel;
   final VoidCallback onContinue;
+  /// Триггер сохранения черновика после изменения снимков (на web игнорируется родителем).
+  final VoidCallback? onPhotoChanged;
 
   @override
   ConsumerState<ScrollFormFlowStep> createState() => _ScrollFormFlowStepState();
@@ -423,6 +426,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           field: f,
           poseIndex1Based: poseIdx,
           totalPoses: total,
+          onPhotoChanged: widget.onPhotoChanged,
         );
       default:
         return Text('${loc.unsupportedFieldType} (${f.type})', style: TextStyle(color: Epoch8Theme.danger));
@@ -457,6 +461,7 @@ class _ScrollCameraBlock extends ConsumerStatefulWidget {
     required this.field,
     required this.poseIndex1Based,
     required this.totalPoses,
+    this.onPhotoChanged,
   });
 
   final Project project;
@@ -464,6 +469,8 @@ class _ScrollCameraBlock extends ConsumerStatefulWidget {
   final ConfigField field;
   final int poseIndex1Based;
   final int totalPoses;
+  /// Сигнал родителю: пора зафиксировать состояние сборки на диск.
+  final VoidCallback? onPhotoChanged;
 
   @override
   ConsumerState<_ScrollCameraBlock> createState() => _ScrollCameraBlockState();
@@ -505,18 +512,22 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
       poseFieldId: _key,
       imagePath: x.path,
     );
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    setState(() {});
+    widget.onPhotoChanged?.call();
   }
 
   void _remove(String path) {
     CameraMetadataCollector.removePoseShotByPath(ref: ref, projectId: widget.projectId, poseFieldId: _key, imagePath: path);
     setState(() {});
+    widget.onPhotoChanged?.call();
   }
 
   void _clear() {
     CameraMetadataCollector.stripLegacyContextPoses(ref: ref, projectId: widget.projectId);
     ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, null);
     setState(() {});
+    widget.onPhotoChanged?.call();
   }
 
   @override

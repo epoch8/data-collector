@@ -19,6 +19,7 @@ import 'package:data_collector/theme/epoch8_loader.dart';
 import 'package:data_collector/theme/epoch8_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -179,6 +180,14 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
   }
 
   Future<void> _runGate() async {
+    // На web восстановление сессии отключено: нет надёжной ФС, blob-ссылки живут
+    // лишь в текущем документе, а гонки автосохранения раньше теряли «Отправленные» пакеты.
+    if (kIsWeb) {
+      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
+      if (mounted) setState(() => _ready = true);
+      return;
+    }
+
     final db = ref.read(databaseProvider);
     final draft = await selectLatestDraftForProject(db, widget.projectId);
     if (!mounted) return;
@@ -307,8 +316,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   late int _step;
   String? _packageId;
   DateTime? _createdAtForRow;
-  Timer? _draftDebounce;
-  /// После «Отправить» не писать черновик поверх `completed` (слушатель wizard + debounce).
+  /// После «Отправить» не писать черновик поверх `completed`.
   bool _draftSaveSuspended = false;
 
   @override
@@ -324,7 +332,6 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   @override
   void dispose() {
     appBrightnessNotifier.removeListener(_onBrightnessChanged);
-    _draftDebounce?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -340,18 +347,13 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
     }
   }
 
-  void _scheduleDraftSave() {
-    _draftDebounce?.cancel();
-    _draftDebounce = Timer(const Duration(milliseconds: 450), () {
-      if (!mounted) return;
-      unawaited(_persistDraftNow());
-    });
-  }
-
+  /// Точечное сохранение черновика. Вызывается только по явным триггерам
+  /// (фото добавлено/удалено, переход между шагами, lifecycle paused).
+  /// На web — no-op: черновики не поддерживаются (см. `_CollectionDraftGate`).
   Future<void> _persistDraftNow() async {
+    if (kIsWeb) return;
     if (!mounted || _draftSaveSuspended) return;
     final answers = ref.read(wizardStateProvider(widget.projectId));
-    // Только непустые ответы: иначе после reset() на review снова пишется draft поверх completed.
     if (answers.isEmpty) return;
 
     _packageId ??= 'pkg_${DateTime.now().millisecondsSinceEpoch}';
@@ -376,7 +378,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
       return;
     }
     setState(() => _step--);
-    _scheduleDraftSave();
+    unawaited(_persistDraftNow());
   }
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
@@ -401,10 +403,6 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   @override
   Widget build(BuildContext context) {
     ref.watch(wizardStateProvider(widget.projectId));
-    ref.listen(wizardStateProvider(widget.projectId), (previous, next) {
-      if (_draftSaveSuspended) return;
-      _scheduleDraftSave();
-    });
     final project = widget.project;
 
     return PopScope(
@@ -519,7 +517,10 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
           continueLabel: _scrollContinueLabel(context),
           onContinue: () {
             setState(() => _step++);
-            _scheduleDraftSave();
+            unawaited(_persistDraftNow());
+          },
+          onPhotoChanged: () {
+            unawaited(_persistDraftNow());
           },
         );
       case CollectionScreenKind.review:
@@ -530,10 +531,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
           projectId: widget.projectId,
           onEditScrollStep: (int stepIndex) {
             setState(() => _step = stepIndex);
-            _scheduleDraftSave();
+            unawaited(_persistDraftNow());
           },
           onSubmit: () async {
-            _draftDebounce?.cancel();
             await _persistDraftNow();
             if (!context.mounted) return;
             _draftSaveSuspended = true;
