@@ -308,6 +308,8 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   String? _packageId;
   DateTime? _createdAtForRow;
   Timer? _draftDebounce;
+  /// После «Отправить» не писать черновик поверх `completed` (слушатель wizard + debounce).
+  bool _draftSaveSuspended = false;
 
   @override
   void initState() {
@@ -347,10 +349,10 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   }
 
   Future<void> _persistDraftNow() async {
-    if (!mounted) return;
+    if (!mounted || _draftSaveSuspended) return;
     final answers = ref.read(wizardStateProvider(widget.projectId));
-    final meaningful = answers.isNotEmpty || _step > 0;
-    if (!meaningful && _packageId == null) return;
+    // Только непустые ответы: иначе после reset() на review снова пишется draft поверх completed.
+    if (answers.isEmpty) return;
 
     _packageId ??= 'pkg_${DateTime.now().millisecondsSinceEpoch}';
     _createdAtForRow ??= DateTime.now();
@@ -400,6 +402,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   Widget build(BuildContext context) {
     ref.watch(wizardStateProvider(widget.projectId));
     ref.listen(wizardStateProvider(widget.projectId), (previous, next) {
+      if (_draftSaveSuspended) return;
       _scheduleDraftSave();
     });
     final project = widget.project;
@@ -530,8 +533,10 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
             _scheduleDraftSave();
           },
           onSubmit: () async {
+            _draftDebounce?.cancel();
             await _persistDraftNow();
             if (!context.mounted) return;
+            _draftSaveSuspended = true;
             final answers = ref.read(wizardStateProvider(widget.projectId));
             await submitLocalPackage(
               ref: ref,

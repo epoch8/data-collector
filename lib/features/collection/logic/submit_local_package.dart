@@ -38,15 +38,27 @@ Future<void> submitLocalPackage({
     answers: answersForSave,
   );
 
+  final payloadJson = jsonEncode(materialized.payload);
   if (existingDraftPackageId != null) {
-    await (db.update(db.packages)..where((t) => t.id.equals(packageId))).write(
+    final rowsUpdated = await (db.update(db.packages)..where((t) => t.id.equals(packageId))).write(
           PackagesCompanion(
             status: const Value('completed'),
-            dataJson: Value(jsonEncode(materialized.payload)),
+            dataJson: Value(payloadJson),
             serverDeliveryState: const Value('pending'),
             serverDeliveryError: const Value.absent(),
           ),
         );
+    if (rowsUpdated == 0) {
+      await db.into(db.packages).insert(
+            PackagesCompanion.insert(
+              id: packageId,
+              projectId: projectId,
+              status: 'completed',
+              createdAt: createdAt,
+              dataJson: payloadJson,
+            ),
+          );
+    }
   } else {
     await db.into(db.packages).insert(
           PackagesCompanion.insert(
@@ -54,7 +66,7 @@ Future<void> submitLocalPackage({
             projectId: projectId,
             status: 'completed',
             createdAt: createdAt,
-            dataJson: jsonEncode(materialized.payload),
+            dataJson: payloadJson,
           ),
         );
   }

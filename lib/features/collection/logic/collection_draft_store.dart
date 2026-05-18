@@ -63,6 +63,10 @@ Future<void> upsertCollectionDraft({
 
   final existing =
       await (db.select(db.packages)..where((t) => t.id.equals(packageId))).get();
+  if (existing.isNotEmpty && existing.first.status != kPackageStatusDraft) {
+    // Не откатывать завершённый пакет в черновик (гонка debounce после submit на web/mobile).
+    return;
+  }
   if (existing.isEmpty) {
     await db.into(db.packages).insert(
           PackagesCompanion.insert(
