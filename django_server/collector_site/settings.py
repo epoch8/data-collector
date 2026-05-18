@@ -15,7 +15,9 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 # Для HTTPS за пределами localhost (админка / формы): через запятую, со схемой.
 # Пример: DJANGO_CSRF_TRUSTED_ORIGINS=https://data-collector-app.korovas.ml.epoch8.dev
 _csrf = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
+_cors = os.environ.get("DJANGO_CORS_TRUSTED_ORIGINS", "").strip()
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in _csrf.split(",") if x.strip()]
+CORS_ALLOWED_ORIGINS = [x.strip() for x in _cors.split(",") if x.strip()]
 
 APPEND_SLASH = False
 
@@ -27,11 +29,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "api",
+    "storages",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "api.middleware.ApiV1AuthMiddleware",
@@ -59,10 +64,26 @@ TEMPLATES = [
 WSGI_APPLICATION = "collector_site.wsgi.application"
 
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+    'default': {
+        "ENGINE": "django.db.backends.postgresql_psycopg2",
+        "NAME": os.environ.get("POSTGRES_DB"),
+        "USER": os.environ.get("POSTGRES_USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        "HOST": os.environ.get("POSTGRES_HOST"),
+        "PORT": os.environ.get("PGPORT"),
     }
+}
+
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        "OPTIONS": {
+            "bucket_name": os.environ.get("GS_STORAGE", "korovas-dc-prod"),
+        },
+    },
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
 }
 
 LANGUAGE_CODE = "ru-ru"
