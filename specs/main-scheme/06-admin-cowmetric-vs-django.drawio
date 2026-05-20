@@ -196,27 +196,33 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-a-flow" name="Путь A — adapter">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="800" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="880" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="t" value="Путь A: django_server принимает пакет → adapter → cowmetric" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                <mxCell id="t" value="Путь A: data collector принимает пакет → adapter → cowmetric" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="s1" value="1. POST packages + PUT blobs + manifest + commit&#10;(уже реализовано в django_server)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="88" width="340" height="64" as="geometry"/>
+                <mxCell id="entryA" value="&lt;b&gt;Точка входа A&lt;/b&gt;: событие &lt;code&gt;package commit completed&lt;/code&gt; в data→ запуск &lt;b&gt;Package Adapter&lt;/b&gt; (webhook / Celery / management command).&lt;br&gt;Мобилка и cowmetric adapter &lt;b&gt;не&lt;/b&gt; вызывают друг друга напрямую." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#8B9DC6;fontColor=#9EC5F7;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="72" width="832" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="1. POST packages + PUT blobs + manifest + commit&lt;br&gt;(уже реализовано в data collector +МП)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="148" width="340" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="s2" value="2. &lt;b&gt;Package Adapter&lt;/b&gt; (новый модуль)&#10;· парсит manifest JSON&#10;· маппинг field_id → CowScan / Item flags&#10;· создаёт/обновляет Cow + CowScan&#10;· копирует файлы в S3 cowmetric (или shared bucket)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="180" width="340" height="100" as="geometry"/>
+                    <mxGeometry x="48" y="240" width="340" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="s3" value="3. cowmetric: CowScanAdmin&#10;inference, compare_inference, CVAT pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="310" width="340" height="72" as="geometry"/>
+                    <mxGeometry x="48" y="370" width="340" height="72" as="geometry"/>
                 </mxCell>
-                <mxCell id="risk" value="&lt;b&gt;Риски A&lt;/b&gt;&lt;br&gt;· Две БД и идемпотентность (повтор commit → не дублировать CowScan)&lt;br&gt;· Двойное хранение медиа или сложный shared S3&lt;br&gt;· Конфиг korovas должен знать целевые поля CowScan&lt;br&gt;· Операторы: UI django для пакетов + UI cowmetric для ML" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="480" y="88" width="400" height="120" as="geometry"/>
+                <mxCell id="plusA2" value="&lt;b&gt;+&lt;/b&gt;&amp;nbsp;Не меняем коллектор · ML/CVAT reuse · быстрее merge" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="148" width="400" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="win" value="&lt;b&gt;Выигрыш A&lt;/b&gt;&lt;br&gt;· ML/CVAT/RQ без переноса&lt;br&gt;· Быстрее, чем full merge" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="480" y="230" width="400" height="88" as="geometry"/>
+                <mxCell id="minusA2" value="&lt;b&gt;−&lt;/b&gt; 2 системы · adapter · 2 UI · sync/дубли S3" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="480" y="220" width="400" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="risk" value="&lt;b&gt;Риски&lt;/b&gt;&lt;br&gt;· Идемпотентность: повтор commit → один CowScan&lt;br&gt;· Таблица маппинга package_id ↔ cow_scan_id&lt;br&gt;· Shared bucket vs копирование blob" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="300" width="400" height="88" as="geometry"/>
                 </mxCell>
                 <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="s1" target="s2" edge="1"/>
                 <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="s2" target="s3" edge="1"/>
@@ -224,33 +230,48 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-b-flow" name="Путь B — merge">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="800" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="920" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="t" value="Путь B: перенос подсистем cowmetric в django_server" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                <mxCell id="t" value="Путь B: перенос подсистем cowmetric в data collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="b1" value="Фаза 1 — инфра&#10;MinIO/S3 storage, Redis, RQ worker в docker django" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="88" width="280" height="64" as="geometry"/>
+                <mxCell id="entryB" value="&lt;b&gt;Точка входа B&lt;/b&gt;: тот же &lt;code&gt;package commit completed&lt;/code&gt; в django_server — но дальше обработка &lt;b&gt;не уходит&lt;/b&gt; в cowmetric.&lt;br&gt;Точка входа для &lt;b&gt;разработки&lt;/b&gt;: репозиторий &lt;code&gt;data collector&lt;/code&gt;&amp;nbsp;(+ перенос кода из cowmetric).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="72" width="904" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="b2" value="Фаза 2 — обогащение&#10;InferenceVersion, jobs, UI запуска на пакете/сессии" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="360" y="88" width="280" height="64" as="geometry"/>
+                <mxCell id="b0" value="0. Мобилка → django (как сейчас) → commit. &lt;b&gt;Развилка только здесь.&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="152" width="904" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="b1" value="Фаза 1 — инфра&#10;MinIO/S3 storage, Redis, RQ worker в docker django" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="220" width="280" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="b2" value="Фаза 2 — обогащение&lt;br&gt;ML/LLM Inference, jobs, UI запуска на пакете/сессии, визуализации" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="220" width="280" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="b3" value="Фаза 3 — CVAT&#10;pipeline как сервис или упрощённый триггер" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="672" y="88" width="280" height="64" as="geometry"/>
+                    <mxGeometry x="672" y="220" width="280" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="b4" value="Фаза 4 — домен UI&lt;br&gt;Визуализации, экраны для сканов, вывод дополнительной инфорации + придумать как это должно быть в абстрактном виде" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="200" width="904" height="56" as="geometry"/>
+                    <mxGeometry x="48" y="320" width="904" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="riskB" value="&lt;b&gt;Риски B&lt;/b&gt;&lt;br&gt;· Долгая миграция, регрессии inference&lt;br&gt;· Нужно адаптировать UX&lt;br&gt;· Возможно сложно адаптируемый Pipeline CVAT&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="290" width="440" height="96" as="geometry"/>
+                <mxCell id="plusB2" value="&lt;b&gt;+&lt;/b&gt; Одна админка · один контур данных · пакет end-to-end · roboflow-like" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c2d44;strokeColor=#9B7ED0;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="400" width="440" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="winB" value="&lt;b&gt;Выигрыш B&lt;/b&gt;&lt;br&gt;· Один URL админки, роли из 05-admin-roles&lt;br&gt;· Пакет = единица данных end-to-end&lt;br&gt;· Нет sync между системами&lt;br&gt;· Ближе к&amp;nbsp; &quot;нашему roboflow&quot;&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="512" y="290" width="440" height="96" as="geometry"/>
+                <mxCell id="minusB2" value="&lt;b&gt;−&lt;/b&gt; Долго · регрессии ML · новый UX · перенос CVAT pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="512" y="400" width="440" height="56" as="geometry"/>
                 </mxCell>
+                <mxCell id="eB0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;" edge="1" parent="1" source="b0" target="b1"/>
                 <mxCell id="eB" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b1" target="b2" edge="1"/>
                 <mxCell id="eB2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b2" target="b3" edge="1"/>
+                <mxCell id="eB3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=blockThin;" edge="1" parent="1" source="b3" target="b4">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="812" y="300"/>
+                            <mxPoint x="500" y="300"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
