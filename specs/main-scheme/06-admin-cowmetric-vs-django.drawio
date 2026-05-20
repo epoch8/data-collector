@@ -1,0 +1,283 @@
+<mxfile host="65bd71144e">
+    <diagram id="overview-two-paths" name="Два пути — обзор">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="920" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Две админки: django_server vs cowmetric выбор интеграции" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="28" width="900" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="mobile" value="&lt;b&gt;Мобильное приложение&lt;/b&gt; (Flutter)&#10;Firebase Auth · динамический конфиг · пакеты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="100" width="320" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="django" value="&lt;b&gt;django_server&lt;/b&gt; (новая админка)&lt;br&gt;· JSON-конфиг проекта + builder&lt;br&gt;· API приёма пакета&amp;nbsp;&lt;br&gt;· UI: проекты, пакеты, Firebase-пользователи" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="220" width="360" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="cow" value="&lt;b&gt;cowmetric&lt;/b&gt; (старая админка)&lt;br&gt;· Cow → CowScan → Image/Video&lt;br&gt;· S3 multipart, превью&lt;br&gt;· ML/LLM inference&amp;nbsp;&lt;br&gt;· CVAT + DataPipe pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="360" width="360" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="pathA" value="&lt;b&gt;Путь A&lt;/b&gt; — прокидывание в cowmetric&#10;Пакет принят в django → &lt;b&gt;adapter&lt;/b&gt; → CowScan + медиа в S3&#10;Дальше: inference, CVAT как сейчас" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="210" width="400" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="pathB" value="&lt;b&gt;Путь B&lt;/b&gt; — merge в django_server&#10;Перенос inference, S3, CVAT-триггеров, доменных экранов&#10;Одна админка и одна БД (долго, но проще эксплуатация)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="590" y="365" width="400" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="eM1" value="конфиг + upload API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;fontSize=10;fontColor=#9EC5F7;" parent="1" source="mobile" target="django" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="208" y="210"/>
+                            <mxPoint x="208" y="210"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eA2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#8B9DC6;endArrow=open;dashed=1;" parent="1" source="django" target="pathA" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="450" y="260"/>
+                            <mxPoint x="450" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="eB" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9B7ED0;endArrow=open;dashed=1;" parent="1" source="cow" target="pathB" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="550" y="415"/>
+                            <mxPoint x="550" y="415"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="capability-matrix" name="Матрица возможностей">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t" value="Матрица: что есть в старой / новой админке и пересечения" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="24" width="700" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="h0" value="Возможность" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#202733;strokeColor=#7f8ea3;fontColor=#e8eaef;fontStyle=1;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="72" width="360" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="h1" value="django_server" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontStyle=1;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="72" width="120" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="h2" value="cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontStyle=1;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="72" width="120" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="h3" value="Дубль?" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontStyle=1;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="72" width="200" height="32" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1a" value="Динамический JSON-конфиг проекта + builder" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="104" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1b" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="104" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1c" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="104" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r1d" value="Уникально django" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="104" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2a" value="Приём пакета с мобилки (session/blobs/manifest/commit)" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="140" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2b" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="140" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2c" value="❌*" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="140" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r2d" value="* только S3 multipart endpoints" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="140" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3a" value="Фото/видео + хранение" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="176" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3b" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="176" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3c" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="176" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r3d" value="⚠️ разные модели (Package vs CowScanItem)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="176" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4a" value="Пользователи коллекторов / доступ к проектам" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="212" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4b" value="✅ Firebase" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="212" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4c" value="✅ CustomUser" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="212" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r4d" value="⚠️ разные auth-модели" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="212" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5a" value="Ручной ввод 20+ метрик КРС (кг, см, баллы 1–5)" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="248" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5b" value="❌&lt;span style=&quot;color: rgb(245, 239, 224); font-size: 10px;&quot;&gt;✅&lt;/span&gt;&amp;nbsp;можно добавить через МП" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="248" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5c" value="✅ CowScan" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="248" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r5d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="248" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6a" value="Теги на медиа: для каких измерений файл" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="284" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6b" value="❌&lt;span style=&quot;color: rgb(245, 239, 224); font-size: 10px;&quot;&gt;✅&lt;/span&gt;можно добавить через МП" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="284" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6c" value="✅ bool на Item" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="284" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r6d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="284" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r7a" value="ML/LLM inference + очередь RQ + сравнение прогонов" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="320" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r7b" value="📋 спека" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="320" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r7c" value="✅ prod" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="320" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r7d" value="Главный повод к cowmetric / merge" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="320" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8a" value="CVAT + ETL pipeline (DataPipe)" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="356" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8c" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="356" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r8d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="356" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9a" value="Cow / Breed / иерархия сканов" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="392" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9b" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="392" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9c" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="392" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r9d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="392" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10a" value="Chunked S3 upload в админке (большие видео)" style="rounded=0;whiteSpace=wrap;html=1;align=left;spacingLeft=8;fillColor=#1e2438;strokeColor=#4a5568;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="428" width="360" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10b" value="❌ скорее не нужно в новой итерации" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="428" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10c" value="✅" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="520" y="428" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="r10d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="640" y="428" width="200" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="mobm8r9IllnojdqjpjeP-1" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="356" width="120" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="mobm8r9IllnojdqjpjeP-2" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" vertex="1" parent="1">
+                    <mxGeometry x="400" y="320" width="120" height="36" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="path-a-flow" name="Путь A — adapter">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="800" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t" value="Путь A: django_server принимает пакет → adapter → cowmetric" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="1. POST packages + PUT blobs + manifest + commit&#10;(уже реализовано в django_server)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="88" width="340" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" value="2. &lt;b&gt;Package Adapter&lt;/b&gt; (новый модуль)&#10;· парсит manifest JSON&#10;· маппинг field_id → CowScan / Item flags&#10;· создаёт/обновляет Cow + CowScan&#10;· копирует файлы в S3 cowmetric (или shared bucket)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="180" width="340" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" value="3. cowmetric: CowScanAdmin&#10;inference, compare_inference, CVAT pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="310" width="340" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="risk" value="&lt;b&gt;Риски A&lt;/b&gt;&lt;br&gt;· Две БД и идемпотентность (повтор commit → не дублировать CowScan)&lt;br&gt;· Двойное хранение медиа или сложный shared S3&lt;br&gt;· Конфиг korovas должен знать целевые поля CowScan&lt;br&gt;· Операторы: UI django для пакетов + UI cowmetric для ML" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="88" width="400" height="120" as="geometry"/>
+                </mxCell>
+                <mxCell id="win" value="&lt;b&gt;Выигрыш A&lt;/b&gt;&lt;br&gt;· ML/CVAT/RQ без переноса&lt;br&gt;· Быстрее, чем full merge" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="480" y="230" width="400" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="s1" target="s2" edge="1"/>
+                <mxCell id="e23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="s2" target="s3" edge="1"/>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="path-b-flow" name="Путь B — merge">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="800" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t" value="Путь B: перенос подсистем cowmetric в django_server" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="b1" value="Фаза 1 — инфра&#10;MinIO/S3 storage, Redis, RQ worker в docker django" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="88" width="280" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="b2" value="Фаза 2 — обогащение&#10;InferenceVersion, jobs, UI запуска на пакете/сессии" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="360" y="88" width="280" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="b3" value="Фаза 3 — CVAT&#10;pipeline как сервис или упрощённый триггер" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="672" y="88" width="280" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="b4" value="Фаза 4 — домен UI&lt;br&gt;Визуализации, экраны для сканов, вывод дополнительной инфорации + придумать как это должно быть в абстрактном виде" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="200" width="904" height="56" as="geometry"/>
+                </mxCell>
+                <mxCell id="riskB" value="&lt;b&gt;Риски B&lt;/b&gt;&lt;br&gt;· Долгая миграция, регрессии inference&lt;br&gt;· Нужно адаптировать UX&lt;br&gt;· Возможно сложно адаптируемый Pipeline CVAT&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="290" width="440" height="96" as="geometry"/>
+                </mxCell>
+                <mxCell id="winB" value="&lt;b&gt;Выигрыш B&lt;/b&gt;&lt;br&gt;· Один URL админки, роли из 05-admin-roles&lt;br&gt;· Пакет = единица данных end-to-end&lt;br&gt;· Нет sync между системами&lt;br&gt;· Ближе к&amp;nbsp; &quot;нашему roboflow&quot;&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1c2d44;strokeColor=#5b9bd5;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="512" y="290" width="440" height="96" as="geometry"/>
+                </mxCell>
+                <mxCell id="eB" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b1" target="b2" edge="1"/>
+                <mxCell id="eB2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b2" target="b3" edge="1"/>
+            </root>
+        </mxGraphModel>
+    </diagram>
+    <diagram id="cowmetric-deep" name="cowmetric — возможности">
+        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1000" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="t" value="cowmetric core-server-app — детальная карта возможностей админки" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="24" width="800" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="domain" value="&lt;b&gt;Домен&lt;/b&gt;&lt;br&gt;Breed · Cow (name, gender) · CowScan (months, scan_device)&lt;br&gt;12× int см/кг + 8× score 1–5 + _desc на скане" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="72" width="320" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="media" value="&lt;b&gt;Медиа&lt;/b&gt;&lt;br&gt;CowScanItemImage / Video&lt;br&gt;Boolean-теги «для какого измерения»&lt;br&gt;WebP preview (фото авто); видео preview по кнопке&lt;br&gt;S3: move uploads/ → structured path" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="400" y="72" width="360" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="upload" value="&lt;b&gt;Загрузка&lt;/b&gt;&lt;br&gt;Admin: ChunkedUploadField + presigned multipart&lt;br&gt;API: /upload/start-upload, get-all-part-urls, complete&lt;br&gt;Лимит ~5.5 GB, chunk 5 MB, video ext" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="184" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="inf" value="&lt;b&gt;Inference&lt;/b&gt;&lt;br&gt;InferenceVersion (ML/LLM, url, token, params JSON)&lt;br&gt;run-inference на CowScan → RQ → CowScanInference&lt;br&gt;Вкладка Compare: real vs N прогонов" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="440" y="184" width="360" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="cvat" value="&lt;b&gt;CVAT + Pipeline&lt;/b&gt;&lt;br&gt;DataPipe: core DB → pipeline DB → CVAT tasks&lt;br&gt;Admin: CowsCVATImage/Video (task_id readonly)&lt;br&gt;Отдельные контейнеры: pipeline, cvat, minio" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="288" width="760" height="72" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
