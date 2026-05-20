@@ -4,7 +4,7 @@
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="Две админки: django_server vs cowmetric выбор интеграции" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                <mxCell id="title" value="Две админки: data collector vs cowmetric выбор интеграции" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="48" y="28" width="900" height="48" as="geometry"/>
                 </mxCell>
                 <mxCell id="mobile" value="&lt;b&gt;Мобильное приложение&lt;/b&gt; (Flutter)&#10;Firebase Auth · динамический конфиг · пакеты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
@@ -237,10 +237,10 @@
                 <mxCell id="t" value="Путь B: перенос подсистем cowmetric в data collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="entryB" value="&lt;b&gt;Точка входа B&lt;/b&gt;: тот же &lt;code&gt;package commit completed&lt;/code&gt; в django_server — но дальше обработка &lt;b&gt;не уходит&lt;/b&gt; в cowmetric.&lt;br&gt;Точка входа для &lt;b&gt;разработки&lt;/b&gt;: репозиторий &lt;code&gt;data collector&lt;/code&gt;&amp;nbsp;(+ перенос кода из cowmetric).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;" vertex="1" parent="1">
+                <mxCell id="entryB" value="&lt;b&gt;Точка входа B&lt;/b&gt;: тот же &lt;code&gt;package commit completed&lt;/code&gt; в data collector но дальше обработка &lt;b&gt;не уходит&lt;/b&gt; в cowmetric.&lt;br&gt;Точка входа для &lt;b&gt;разработки&lt;/b&gt;: репозиторий &lt;code&gt;data collector&lt;/code&gt;&amp;nbsp;(+ перенос кода из cowmetric).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;" vertex="1" parent="1">
                     <mxGeometry x="48" y="72" width="904" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="b0" value="0. Мобилка → django (как сейчас) → commit. &lt;b&gt;Развилка только здесь.&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="1">
+                <mxCell id="b0" value="0. Мобилка → data_collector (как сейчас).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="1">
                     <mxGeometry x="48" y="152" width="904" height="48" as="geometry"/>
                 </mxCell>
                 <mxCell id="b1" value="Фаза 1 — инфра&#10;MinIO/S3 storage, Redis, RQ worker в docker django" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
@@ -252,7 +252,7 @@
                 <mxCell id="b3" value="Фаза 3 — CVAT&#10;pipeline как сервис или упрощённый триггер" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="672" y="220" width="280" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="b4" value="Фаза 4 — домен UI&lt;br&gt;Визуализации, экраны для сканов, вывод дополнительной инфорации + придумать как это должно быть в абстрактном виде" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                <mxCell id="b4" value="Фаза 4 — домен UI&lt;br&gt;Визуализации, экраны для сканов, вывод дополнительной инфорации + придумать как это должно быть в абстрактном виде и насколько абстрактно" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="48" y="320" width="904" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plusB2" value="&lt;b&gt;+&lt;/b&gt; Одна админка · один контур данных · пакет end-to-end · roboflow-like" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c2d44;strokeColor=#9B7ED0;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
