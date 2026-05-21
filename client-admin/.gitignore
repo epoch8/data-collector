@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+
+# Node (if added later)
+node_modules/
+dist/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Local data
+*.sqlite3
+media/
+staticfiles/
+
+# Secrets
+credentials.json
+*-firebase-adminsdk*.json

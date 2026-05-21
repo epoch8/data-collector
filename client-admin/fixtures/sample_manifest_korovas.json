@@ -1,0 +1,83 @@
+{
+  "package_id": "00000000-0000-4000-8000-000000000001",
+  "project_id": "korovas-2026",
+  "created_at": "2026-05-20T10:00:00Z",
+  "submitted_by": {
+    "firebase_uid": "fixture-uid",
+    "email": "operator@example.com"
+  },
+  "data": {
+    "scan_time": "2026-05-20T09:55:00Z",
+    "cow_identifier": "Bessie-99",
+    "cow_age": 36,
+    "cow_weight": 520,
+    "cow_breed": "holstein",
+    "pose_1": {
+      "blobs/pose_1/shot_0.jpg": {
+        "collected_at": "2026-05-20T09:56:00Z",
+        "frame_camera": {
+          "image_width_px": 4032,
+          "image_height_px": 3024,
+          "fx_px": 2800.0,
+          "fy_px": 2800.0,
+          "cx_px": 2016.0,
+          "cy_px": 1512.0,
+          "intrinsics_source": "exif_focal_sensor"
+        }
+      }
+    }
+  },
+  "pipeline_results": {
+    "inference": {
+      "runs": [
+        {
+          "run_id": "run-fixture-1",
+          "pipeline_id": "inference",
+          "version": "korovas-v3-dev",
+          "status": "done",
+          "started_at": "2026-05-20T10:01:00Z",
+          "finished_at": "2026-05-20T10:01:04Z",
+          "metrics": {
+            "withers_height_cm": 142,
+            "body_length_cm": 168
+          },
+          "raw": {
+            "model": "fixture",
+            "note": "Replace when platform inference is wired"
+          }
+        }
+      ],
+      "latest": "run-fixture-1"
+    },
+    "cvat": {
+      "task_id": 99901,
+      "project_slug": "korovas",
+      "status": "annotation",
+      "updated_at": "2026-05-20T10:05:00Z"
+    },
+    "annotations": {
+      "blobs/pose_1/shot_0.jpg": {
+        "format": "coco_keypoints",
+        "skeleton_id": "korovas_v1",
+        "source": "inference",
+        "revision": 1,
+        "points": [
+          [820.5, 1100.0, 2],
+          [1200.0, 1050.0, 2],
+          [900.0, 1400.0, 2]
+        ],
+        "labels": ["withers", "hook", "sacrum"]
+      }
+    }
+  },
+  "_ui_meta": {
+    "manifest_revision": 1,
+    "pipeline_log": [
+      {
+        "pipeline_id": "inference",
+        "status": "done",
+        "at": "2026-05-20T10:01:04Z"
+      }
+    ]
+  }
+}
