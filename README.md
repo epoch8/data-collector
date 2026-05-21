@@ -9,7 +9,7 @@
 
 ## Как запустить
 
-**Django** (из каталога `django_server/`): установите зависимости из `requirements.txt`, выполните миграции и поднимите сервер.
+**Django** (из каталога `django_server/`): локально по умолчанию SQLite и файлы в `media/` (режим `local`). Установите зависимости, выполните миграции и поднимите сервер.
 
 ```bash
 cd django_server
@@ -17,6 +17,8 @@ pip install -r requirements.txt
 python manage.py migrate
 python manage.py runserver 0.0.0.0:8000
 ```
+
+Продакшен (PostgreSQL + GCS): в окружении задайте `POSTGRES_*` (или явно `DJANGO_ENV=production`); зависимости те же — `requirements.txt`.
 
 Админка: `python manage.py createsuperuser`, в браузере откройте `http://127.0.0.1:8000/admin/`.
 

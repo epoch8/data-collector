@@ -3,6 +3,21 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Режим развёртывания:
+#   local      — SQLite + файлы в media/ (как до prod-деплоя)
+#   production — PostgreSQL + Google Cloud Storage (k8s / Docker)
+# Явно: DJANGO_ENV=local | production
+# По умолчанию: production, если задан POSTGRES_HOST; иначе local.
+_django_env = os.environ.get("DJANGO_ENV", "").strip().lower()
+if _django_env == "production":
+    DJANGO_ENV = "production"
+elif _django_env == "local":
+    DJANGO_ENV = "local"
+elif os.environ.get("POSTGRES_HOST", "").strip():
+    DJANGO_ENV = "production"
+else:
+    DJANGO_ENV = "local"
+
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "dev-only-change-in-production-not-for-production-use",
@@ -15,9 +30,7 @@ ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "*").split(",")
 # Для HTTPS за пределами localhost (админка / формы): через запятую, со схемой.
 # Пример: DJANGO_CSRF_TRUSTED_ORIGINS=https://data-collector-app.korovas.ml.epoch8.dev
 _csrf = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS", "").strip()
-_cors = os.environ.get("DJANGO_CORS_TRUSTED_ORIGINS", "").strip()
 CSRF_TRUSTED_ORIGINS = [x.strip() for x in _csrf.split(",") if x.strip()]
-CORS_ALLOWED_ORIGINS = [x.strip() for x in _cors.split(",") if x.strip()]
 
 APPEND_SLASH = False
 
@@ -30,15 +43,14 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "corsheaders",
     "api",
-    "storages",
-    "corsheaders",
 ]
+if DJANGO_ENV == "production":
+    INSTALLED_APPS.append("storages")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "api.middleware.ApiV1AuthMiddleware",
@@ -65,28 +77,35 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "collector_site.wsgi.application"
 
-DATABASES = {
-    'default': {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": os.environ.get("POSTGRES_DB"),
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
-        "HOST": os.environ.get("POSTGRES_HOST"),
-        "PORT": os.environ.get("PGPORT"),
+if DJANGO_ENV == "production":
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": os.environ.get("POSTGRES_DB"),
+            "USER": os.environ.get("POSTGRES_USER"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+            "HOST": os.environ.get("POSTGRES_HOST"),
+            "PORT": os.environ.get("PGPORT"),
+        }
     }
-}
-
-STORAGES = {
-    "default": {
-        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-        "OPTIONS": {
-            "bucket_name": os.environ.get("GS_STORAGE", "korovas-dc-prod"),
+    STORAGES = {
+        "default": {
+            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+            "OPTIONS": {
+                "bucket_name": os.environ.get("GS_STORAGE", "korovas-dc-prod"),
+            },
         },
-    },
-    "staticfiles": {
-        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
-    },
-}
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 LANGUAGE_CODE = "ru-ru"
 TIME_ZONE = "Europe/Moscow"
