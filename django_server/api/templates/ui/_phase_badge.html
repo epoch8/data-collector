@@ -1,0 +1,11 @@
+{% if phase == 'completed' %}
+<span class="ui-badge-phase ui-phase-completed"><i class="bi bi-check-circle me-1"></i>{{ label }}</span>
+{% elif phase == 'failed' %}
+<span class="ui-badge-phase ui-phase-failed"><i class="bi bi-exclamation-octagon me-1"></i>{{ label }}</span>
+{% elif phase == 'awaiting_blobs' %}
+<span class="ui-badge-phase ui-phase-awaiting"><i class="bi bi-hourglass-split me-1"></i>{{ label }}</span>
+{% elif phase == 'ready_to_commit' %}
+<span class="ui-badge-phase ui-phase-ready"><i class="bi bi-cloud-upload me-1"></i>{{ label }}</span>
+{% else %}
+<span class="ui-badge-phase ui-phase-awaiting">{{ label }}</span>
+{% endif %}

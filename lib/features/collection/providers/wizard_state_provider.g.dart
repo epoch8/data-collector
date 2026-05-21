@@ -20,7 +20,7 @@ final class WizardStateProvider
   }) : super(
          retry: null,
          name: r'wizardStateProvider',
-         isAutoDispose: true,
+         isAutoDispose: false,
          dependencies: null,
          $allTransitiveDependencies: null,
        );
@@ -58,7 +58,7 @@ final class WizardStateProvider
   }
 }
 
-String _$wizardStateHash() => r'4bb973870a5c3492aa0fbc51ed14940de6658939';
+String _$wizardStateHash() => r'ddced8b91e676c1906b9fdcf4bb654ac306c9b82';
 
 final class WizardStateFamily extends $Family
     with
@@ -75,7 +75,7 @@ final class WizardStateFamily extends $Family
         name: r'wizardStateProvider',
         dependencies: null,
         $allTransitiveDependencies: null,
-        isAutoDispose: true,
+        isAutoDispose: false,
       );
 
   WizardStateProvider call(String projectId) =>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="app.diagrams.net" modified="2026-04-27T12:30:00.000Z" agent="Mozilla/5.0" version="24.7.17" type="device" compressed="false">
+    <diagram id="abstract-config" name="Абстрактный конфиг — сущности и сценарии">
+        <mxGraphModel dx="1094" dy="799" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1320" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Абстрактный конфиг: как собираются формы проектов (текущая модель клиента)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="36" width="720" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="f" value="&lt;b&gt;1. Поля &lt;/b&gt;(&lt;code&gt;config.fields&lt;/code&gt;)&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Порядок задается порядком &lt;code&gt;field_ids&lt;/code&gt; в шаге &lt;code&gt;scroll_form&lt;/code&gt;. Каждое поле входит ровно в один шаг.&lt;br&gt;Можно сделать поле объязательным без его заполнения нельзя перейти на следующий шаг&lt;br&gt;&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="100" width="300" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="s" value="&lt;b&gt;2. Экраны&lt;/b&gt; (шаги &lt;code&gt;flow.steps&lt;/code&gt;)&lt;br&gt;Сейчас в приложении: только &lt;b&gt;scroll_form&lt;/b&gt; и &lt;b&gt;review&lt;/b&gt;.&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;&lt;code&gt;scroll_form&lt;/code&gt;&amp;nbsp;один скролл-экран; список &lt;code&gt;field_ids&lt;/code&gt;. &lt;code&gt;form_title&lt;/code&gt; (подпись на review)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="372" y="100" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="sc" value="&lt;b&gt;3. Сценарий&lt;/b&gt; (&lt;code&gt;config.flow&lt;/code&gt;)&lt;br&gt;Упорядоченный массив шагов — порядок экранов и кнопки «Далее».&lt;br&gt;&lt;font color=&quot;#9ca3af&quot;&gt;Несколько &lt;code&gt;scroll_form&lt;/code&gt; подряд = несколько экранов сбора; в конце при желании один &lt;code&gt;review&lt;/code&gt;.&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="716" y="100" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="p" value="&lt;b&gt;4. Сессия и пакет&lt;/b&gt;&lt;br&gt;Значения полей в состоянии мастера → итоговый payload пакета (в т.ч. пути к фото).&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Структура ответов согласована с API сохранения пакета и локальной БД. Проверка конфига валидатор JSON (клиент + Django).&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1060" y="100" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="ef" value="ссылаются по &lt;code&gt;field_id&lt;/code&gt;" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=classic;fontSize=10;fontColor=#9CA3AF;" parent="1" source="s" target="f" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="532" y="88"/>
+                            <mxPoint x="198" y="88"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="es" value="шаги flow" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=classic;fontSize=10;fontColor=#E8C078;" parent="1" source="sc" target="s" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="876" y="84"/>
+                            <mxPoint x="532" y="84"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="esc" value="порядок экранов" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=classic;fontSize=10;fontColor=#B8E8D0;" parent="1" source="p" target="sc" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1220" y="80"/>
+                            <mxPoint x="1220" y="60"/>
+                            <mxPoint x="876" y="60"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="17" value="" style="group" parent="1" vertex="1" connectable="0">
+                    <mxGeometry x="80" y="250" width="320" height="168" as="geometry"/>
+                </mxCell>
+                <mxCell id="fz" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;dashed=1;dashPattern=8 6;strokeColor=#5B8DEF;fillColor=#151b26;fontColor=#B8C5D9;fontSize=10;strokeWidth=1;" parent="17" vertex="1">
+                    <mxGeometry width="320" height="168" as="geometry"/>
+                </mxCell>
+                <mxCell id="lblTypes" value="Типы &lt;code&gt;fields[].type&lt;/code&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8BA3C4;" parent="17" vertex="1">
+                    <mxGeometry x="12" y="8" width="200" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="fb1" value="&lt;b&gt;text_input&lt;/b&gt;&lt;br&gt;Строка; Можно поставить поиск по полям в локальной базе" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="17" vertex="1">
+                    <mxGeometry x="14" y="32" width="140" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="fb2" value="&lt;b&gt;datetime&lt;/b&gt;&lt;br&gt;Дата и время." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="17" vertex="1">
+                    <mxGeometry x="166" y="32" width="140" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="fb3" value="&lt;b&gt;instruction&lt;/b&gt;&lt;br&gt;Markdown в &lt;code&gt;instructions&lt;/code&gt;; изображения из медиа проекта." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="17" vertex="1">
+                    <mxGeometry x="14" y="92" width="140" height="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="fb4" value="&lt;b&gt;camera_photo&lt;/b&gt;&lt;br&gt;Снимки, метаданные;&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="17" vertex="1">
+                    <mxGeometry x="166" y="92" width="140" height="62" as="geometry"/>
+                </mxCell>
+                <mxCell id="panel1" value="&lt;b&gt;Один экран = один &lt;code&gt;scroll_form&lt;/code&gt;&lt;/b&gt;&lt;br&gt;&lt;br&gt;Все виджеты на экране — это поля из &lt;code&gt;field_ids&lt;/code&gt; в порядке списка: текст, дата, блок инструкции (Markdown), камера, снова инструкция… как угодно комбинируя типы.&lt;br&gt;&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#241a32;strokeColor=#9B7ED0;strokeWidth=1;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="450" y="289" width="380" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="mdb" value="&lt;b&gt;БД и медиа на сервере&lt;/b&gt;&lt;br&gt;&lt;br&gt;• В &lt;b&gt;БД&lt;/b&gt; хранится JSON проекта (&lt;code&gt;raw_json&lt;/code&gt;): &lt;code&gt;fields&lt;/code&gt;, &lt;code&gt;flow&lt;/code&gt;, опционально &lt;code&gt;ui&lt;/code&gt;.&lt;br&gt;• &lt;b&gt;Файлы проекта&lt;/b&gt; (страница «Файлы»): загрузки → &lt;code&gt;uploads/…&lt;/code&gt;; отдача клиенту &lt;code&gt;GET /v1/projects/{id}/assets/…&lt;/code&gt;.&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Конфиг в приложении кэшируется с сервера в&amp;nbsp;&lt;code&gt;assets/config&lt;/code&gt;.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#15251f;strokeColor=#3DCC85;strokeWidth=2;fontColor=#E3F7EC;fontSize=10;" parent="1" vertex="1">
+                    <mxGeometry x="930" y="250" width="420" height="168" as="geometry"/>
+                </mxCell>
+                <mxCell id="eFieldsDb" value="JSON + файлы" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=classic;fontSize=9;fontColor=#B8E8D0;exitX=1;exitY=0.5;entryX=0;entryY=0.5;jumpStyle=arc;" parent="1" source="panel1" target="mdb" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="18" value="" style="group" parent="1" vertex="1" connectable="0">
+                    <mxGeometry x="90" y="470" width="1300" height="250" as="geometry"/>
+                </mxCell>
+                <mxCell id="exHead" value="&lt;b&gt;Пример сценария&lt;/b&gt; · Korovas 2026" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#F5EFE0;" parent="18" vertex="1">
+                    <mxGeometry width="1300" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="6" value="" style="group" parent="18" vertex="1" connectable="0">
+                    <mxGeometry y="28" width="1300" height="222" as="geometry"/>
+                </mxCell>
+                <mxCell id="exZone" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=10 8;strokeColor=#D4A84B;fillColor=#1a1510;fontColor=#9CA3AF;strokeWidth=1;opacity=85;" parent="6" vertex="1">
+                    <mxGeometry width="1300" height="206" as="geometry"/>
+                </mxCell>
+                <mxCell id="exF" value="&lt;b&gt;Справочник полей&lt;/b&gt;&amp;nbsp;&lt;br&gt;&lt;br&gt;· &lt;code&gt;text_input&lt;/code&gt;, &lt;code&gt;datetime&lt;/code&gt; — ввод&lt;br&gt;· &lt;code&gt;instruction&lt;/code&gt; — Markdown; картинки из &lt;b&gt;медиа проекта&lt;/b&gt; (&lt;code&gt;uploads/…&lt;/code&gt;)&lt;br&gt;· &lt;code&gt;camera_photo&lt;/code&gt; — съёмка, &lt;code&gt;multiple&lt;/code&gt; при необходимости" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=10;" parent="6" vertex="1">
+                    <mxGeometry x="24" y="36" width="335" height="84" as="geometry"/>
+                </mxCell>
+                <mxCell id="exFlowLbl" value="&lt;b&gt;Цепочка шагов &lt;code&gt;flow.steps&lt;/code&gt;&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#E8C078;" parent="6" vertex="1">
+                    <mxGeometry x="382" y="13" width="886" height="17" as="geometry"/>
+                </mxCell>
+                <mxCell id="exS0" value="&lt;b&gt;scroll_form&lt;/b&gt;&lt;br&gt;&lt;code&gt;form_title&lt;/code&gt; (опц.)&lt;br&gt;&lt;br&gt;&lt;code&gt;field_ids&lt;/code&gt;:&lt;br&gt;текст, дата,&lt;br&gt;…" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="6" vertex="1">
+                    <mxGeometry x="382" y="38" width="118" height="79" as="geometry"/>
+                </mxCell>
+                <mxCell id="exS1" value="&lt;b&gt;scroll_form&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;code&gt;field_ids&lt;/code&gt;:&lt;br&gt;instruction&lt;br&gt;Markdown" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="6" vertex="1">
+                    <mxGeometry x="520" y="38" width="118" height="79" as="geometry"/>
+                </mxCell>
+                <mxCell id="exS2" value="&lt;b&gt;scroll_form&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;code&gt;field_ids&lt;/code&gt;:&lt;br&gt;guide +&lt;br&gt;&lt;code&gt;camera_photo&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="6" vertex="1">
+                    <mxGeometry x="658" y="38" width="118" height="79" as="geometry"/>
+                </mxCell>
+                <mxCell id="exS3" value="&lt;b&gt;scroll_form&lt;/b&gt;&lt;br&gt;… ещё экраны с сбором фото ..." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="6" vertex="1">
+                    <mxGeometry x="796" y="38" width="118" height="79" as="geometry"/>
+                </mxCell>
+                <mxCell id="exS5" value="&lt;b&gt;review&lt;/b&gt;&lt;br&gt;&lt;br&gt;сводка&lt;br&gt;перед&lt;br&gt;отправкой" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=9;fontStyle=1;" parent="6" vertex="1">
+                    <mxGeometry x="934" y="38" width="118" height="79" as="geometry"/>
+                </mxCell>
+                <mxCell id="exE01" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="6" source="exS0" target="exS1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="exE12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="6" source="exS1" target="exS2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="exE23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="6" source="exS2" target="exS3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="exE34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="6" source="exS3" target="exS5" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

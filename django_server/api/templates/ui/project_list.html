@@ -1,0 +1,46 @@
+{% extends "ui/base.html" %}
+{% block title %}Проекты{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-folder2-open me-1"></i>Проекты</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Проекты</h1>
+    <p class="ui-page-sub mb-0">Каталог конфигов и медиа для мобильного клиента по API <code>/v1/projects/…</code></p>
+  </div>
+  <a class="btn btn-primary" href="{% url 'ui_project_new' %}"><i class="bi bi-plus-lg me-1"></i>Новый проект</a>
+</div>
+<div class="ui-table-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Название</th>
+          <th>Версия</th>
+          <th>Обновлён</th>
+          <th class="text-end">Действие</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in projects %}
+        <tr>
+          <td><code>{{ p.project_id }}</code></td>
+          <td class="fw-medium">{{ p.name }}</td>
+          <td><span class="badge rounded-pill bg-dark border border-secondary text-secondary">{{ p.config_version }}</span></td>
+          <td class="ui-muted small">{{ p.updated_at }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-light" href="{% url 'ui_project_detail' p.project_id %}">Открыть<i class="bi bi-arrow-right ms-1"></i></a></td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center py-5 ui-muted">Нет проектов — создайте первый.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

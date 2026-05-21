@@ -1,0 +1,54 @@
+{
+  "id": "test-scroll-2026",
+  "name": "Тест (scroll)",
+  "version": "1.1",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "main",
+          "screen": "scroll_form",
+          "field_ids": [
+            "session_note",
+            "test_extra",
+            "photos"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "session_note",
+        "type": "text_input",
+        "title": "Описание",
+        "instructions": "Кратко опишите, что снимаете или что нужно зафиксировать.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "test_extra",
+        "type": "text_input",
+        "title": "Доп. поле теста",
+        "instructions": "Любой текст для проверки конфига.",
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photos",
+        "type": "camera_photo",
+        "title": "Фотографии",
+        "instructions": "Добавьте один или несколько снимков (камера или галерея).",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      }
+    ]
+  }
+}

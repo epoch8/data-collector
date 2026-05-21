@@ -6,7 +6,7 @@ The **Data Collector** is a Flutter-based mobile application designed to securel
 ## 2. Core Concepts
 * **User:** Ground-truth data collector who logs into the system.
 * **Project:** A specific collection initiative. Users are assigned to one or more projects.
-* **Config:** A dynamic schema attached to a project that dictates *what* data must be collected (e.g., "Take 3 photos of an item, 1 video of it rotating, and enter its serial number").
+* **Config:** A dynamic schema attached to a project that dictates *what* data must be collected (e.g., "Take 3 photos of an item, 1 video of it rotating, and enter its serial number"). Authoring reference: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md).
 * **Package:** A compiled unit of work containing the specific media and structured info collected for a single instance according to the Config.
 * **Enriched Data:** Results, annotations, or ML predictions provided by the backend after a Package has been successfully uploaded and processed.
 
@@ -31,7 +31,7 @@ The **Data Collector** is a Flutter-based mobile application designed to securel
   * Integrated custom camera for photos and videos.
   * Real-time validation (e.g., length of video, number of required photos).
 * **Structured Info:**
-  * Forms supporting text inputs, numerical values, dropdowns, and checkboxes.
+  * Forms supporting text inputs, dates/times, photos, and related field types from the project config.
 * Local auto-save/draft functionality to prevent data loss during active collection.
 
 ### 3.4 Packaging & Upload Management

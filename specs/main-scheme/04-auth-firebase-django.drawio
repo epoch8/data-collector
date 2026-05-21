@@ -1,0 +1,78 @@
+<mxfile host="app.diagrams.net" modified="2026-04-27T12:00:00.000Z" agent="Mozilla/5.0" version="24.7.17" type="device">
+    <diagram id="auth-flow" name="Авторизация Firebase ↔ Django API">
+        <mxGraphModel dx="1200" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1360" pageHeight="1040" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Авторизация и доступ к API: Firebase Auth → мобильное приложение → Django /v1/*&#10;папка: specs/main-scheme" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="28" width="1180" height="48" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneF" value="FIREBASE AUTH" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#F9AB00;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="92" width="160" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="f1" value="&lt;b&gt;1.&lt;/b&gt; Пользователь входит (Email/Password).&lt;br&gt;Firebase выдаёт &lt;b&gt;ID token&lt;/b&gt; (JWT), сессия &lt;b&gt;персистентна&lt;/b&gt; на устройстве." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3020;strokeColor=#F9AB00;fontColor=#FFF8E8;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="124" width="380" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneM" value="МОБИЛЬНОЕ ПРИЛОЖЕНИЕ (Flutter)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="232" width="280" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="m1" value="&lt;b&gt;2.&lt;/b&gt; &lt;code&gt;Firebase.initializeApp&lt;/code&gt; + ожидание &lt;code&gt;authStateChanges&lt;/code&gt; → маршрут логин/дашборд." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="264" width="380" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="m2" value="&lt;b&gt;3.&lt;/b&gt; &lt;code&gt;Dio&lt;/code&gt; interceptor: для &lt;code&gt;API_BASE_URL&lt;/code&gt; к каждому запросу подставляется&lt;br&gt;&lt;b&gt;Authorization: Bearer &amp;lt;getIdToken()&amp;gt;&lt;/b&gt; (или общий &lt;code&gt;API_BEARER_TOKEN&lt;/code&gt;, если Firebase выключен на клиенте)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="264" width="440" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="m3" value="&lt;b&gt;4.&lt;/b&gt; Каталог проектов: &lt;code&gt;GET /v1/projects&lt;/code&gt; → список только доступных; перед &lt;b&gt;upload пакета&lt;/b&gt; проверка &lt;code&gt;projectId ∈ allowedProjectIds&lt;/code&gt; из того же провайдера." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="920" y="264" width="392" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="efm" value="токен" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;endArrow=blockThin;endFill=1;fontSize=10;fontColor=#F9AB00;exitX=0.5;exitY=1;entryX=0.25;entryY=0;" parent="1" source="f1" target="m1" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="emm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;endFill=1;" parent="1" source="m1" target="m2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="emm2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;endFill=1;" parent="1" source="m2" target="m3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneS" value="DJANGO (collector_site)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="388" width="220" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="&lt;b&gt;5.&lt;/b&gt; &lt;code&gt;ApiV1AuthMiddleware&lt;/code&gt; на путях &lt;code&gt;/v1/*&lt;/code&gt;: при &lt;code&gt;FIREBASE_AUTH_ENABLED&lt;/code&gt; —&lt;br&gt;парсинг Bearer → &lt;b&gt;verify_id_token&lt;/b&gt; (Admin SDK, сервисный аккаунт JSON)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="420" width="420" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" value="&lt;b&gt;6.&lt;/b&gt; &lt;code&gt;CollectorUser&lt;/code&gt; по &lt;code&gt;firebase_uid&lt;/code&gt; (&lt;code&gt;get_or_create&lt;/code&gt;). Новому пользователю — &lt;b&gt;DEFAULT_COLLECTOR_PROJECT_ID&lt;/b&gt; (напр. simple-photo-2026), если проект есть в БД.&lt;br&gt;На &lt;code&gt;request&lt;/code&gt;: &lt;code&gt;collector_user&lt;/code&gt;, &lt;code&gt;firebase_uid&lt;/code&gt;, &lt;code&gt;firebase_email&lt;/code&gt;." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="500" y="420" width="480" height="92" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" value="&lt;b&gt;7.&lt;/b&gt; Представления: каталог &lt;code&gt;/v1/projects&lt;/code&gt; — только &lt;code&gt;Project&lt;/code&gt; из M2M &lt;code&gt;collector_user.projects&lt;/code&gt;;&lt;br&gt;остальные ручки — &lt;code&gt;_require_project&lt;/code&gt;. &lt;b&gt;Права не в Firebase Custom Claims&lt;/b&gt; — только в Django." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2438;strokeColor=#6B9BD1;fontColor=#C8D4F0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="532" width="620" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="s4" value="&lt;b&gt;8.&lt;/b&gt; Пакет: &lt;code&gt;POST …/packages&lt;/code&gt; → в &lt;code&gt;PackageSession&lt;/code&gt; пишутся &lt;code&gt;uploader_uid&lt;/code&gt;, &lt;code&gt;uploader_email&lt;/code&gt;;&lt;br&gt;&lt;code&gt;PUT manifest&lt;/code&gt; → в JSON добавляется доверенный &lt;code&gt;submitted_by&lt;/code&gt; с сервера (подмена клиента)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="688" y="532" width="662" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="cross" value="HTTPS + Bearer ID token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=classic;dashed=1;fontSize=10;fontColor=#9EC5F7;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="m2" target="s1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="680" y="380"/>
+                            <mxPoint x="258" y="380"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="ss12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="1" source="s1" target="s2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ss23" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="1" source="s2" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ss34" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;" parent="1" source="s3" target="s4" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="note1" value="&lt;b&gt;Режимы:&lt;/b&gt; без сервисного аккаунта Firebase на Django — &lt;code&gt;FIREBASE_AUTH_ENABLED=false&lt;/code&gt;; можно &lt;code&gt;API_BEARER_TOKEN&lt;/code&gt; (тогда &lt;code&gt;collector_user&lt;/code&gt; = null, каталог всех проектов).&lt;br&gt;&lt;b&gt;Админка /ui&lt;/b&gt;: назначение проектов пользователю; синхронизация списка из Firebase Auth — опционально." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="656" width="1264" height="64" as="geometry"/>
+                </mxCell>
+                <mxCell id="note2" value="Ключевая мысль: &lt;b&gt;Firebase&lt;/b&gt; отвечает за личность (кто вошёл), &lt;b&gt;Django&lt;/b&gt; — за то, &lt;b&gt;какие проекты и API-операции&lt;/b&gt; этой личности разрешены. Мобилка не доверяет только локальному списку при upload — сверяется с актуальным каталогом с сервера." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#3DCC85;fontColor=#A7F3D0;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="736" width="1264" height="52" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

@@ -1,61 +1,28 @@
-import 'package:riverpod_annotation/riverpod_annotation.dart';
-import '../../../models/project_config.dart';
+import 'package:data_collector/core/api/api_environment.dart';
+import 'package:data_collector/core/api/dio_provider.dart';
+import 'package:data_collector/features/projects/project_catalog.dart';
+import 'package:data_collector/features/projects/server_project_catalog.dart';
+import 'package:data_collector/models/project_config.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-part 'project_providers.g.dart';
+/// Сбрасывает кэш каталога при смене сессии Firebase (другой пользователь — другой доступ к проектам).
+final firebaseAuthUserProvider = StreamProvider<User?>((ref) {
+  return FirebaseAuth.instance.authStateChanges();
+});
 
-@riverpod
-List<Project> mockProjects(Ref ref) {
-  return [
-    Project(
-      id: 'korovas-2026',
-      name: 'Korovas',
-      version: '1.0',
-      config: ProjectConfig(
-        fields: [
-          ConfigField(
-            fieldId: 'cow_identifier',
-            priority: 10,
-            type: 'text_input',
-            title: 'Cow Identifier',
-            instructions: 'Enter the unique string identifier for the cow.',
-            validation: {'required': true},
-          ),
-          ConfigField(
-            fieldId: 'front_photo',
-            priority: 20,
-            type: 'camera_photo',
-            title: 'Front Photo',
-            instructions:
-                'Take a clear photo of the front of the cow. Ensure the entire cow is visible.',
-            validation: {'required': true},
-          ),
-          ConfigField(
-            fieldId: 'annotated_photos',
-            priority: 40,
-            type: 'collection',
-            title: 'Annotated Photos',
-            instructions: 'Take photos of the cow and add a comment for each.',
-            validation: {'min_items': 1},
-            multiple: true,
-            subFields: [
-              ConfigField(
-                fieldId: 'image',
-                priority: 1,
-                type: 'camera_photo',
-                title: 'Photo',
-                instructions: '',
-              ),
-              ConfigField(
-                fieldId: 'comment',
-                priority: 2,
-                type: 'text_input',
-                title: 'Comment',
-                instructions: '',
-              ),
-            ],
-          ),
-        ],
-      ),
-    ),
-  ];
-}
+/// Без `API_BASE_URL` — только bundled JSON.
+/// При `API_BASE_URL` каталог и конфиги грузятся только с сервера.
+final projectsProvider = FutureProvider<List<Project>>((ref) async {
+  if (!ApiEnvironment.isConfigured) {
+    return ProjectCatalog.loadAll();
+  }
+
+  // Дождаться первого снимка сессии перед `/v1/projects`, иначе часто два запроса подряд (loading → user).
+  await ref.watch(firebaseAuthUserProvider.future);
+  final dio = ref.watch(dioProvider);
+  if (dio == null) {
+    throw StateError('API configured but Dio is not initialized');
+  }
+  return ServerProjectCatalog(dio).loadProjectsWithFallback();
+});

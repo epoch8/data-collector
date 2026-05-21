@@ -1,0 +1,125 @@
+{
+  "id": "retail-visit-2026",
+  "name": "Витрина: визит в магазин",
+  "version": "1.0",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "visit_meta",
+          "screen": "scroll_form",
+          "form_title": "Контекст визита",
+          "field_ids": [
+            "ix_visit_intro",
+            "outlet_name",
+            "visit_dt"
+          ]
+        },
+        {
+          "id": "facade_hall",
+          "screen": "scroll_form",
+          "form_title": "Экстерьер и зал",
+          "field_ids": [
+            "ix_facade_guide",
+            "photo_facade",
+            "photo_hall"
+          ]
+        },
+        {
+          "id": "promo_shelf",
+          "screen": "scroll_form",
+          "form_title": "Акции и полка",
+          "field_ids": [
+            "ix_promo_guide",
+            "photo_promo",
+            "merch_comment"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "ix_visit_intro",
+        "type": "instruction",
+        "title": "Перед началом",
+        "instructions": "Убедитесь, что съёмка на точке разрешена правилами сети. Зафиксируйте название точки и время, когда вы на месте."
+      },
+      {
+        "field_id": "outlet_name",
+        "type": "text_input",
+        "title": "Магазин / код точки",
+        "instructions": "Как в задании: название, адрес или внутренний код ТТ.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "visit_dt",
+        "type": "datetime",
+        "title": "Время визита",
+        "instructions": "Фактическое время осмотра.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "ix_facade_guide",
+        "type": "instruction",
+        "title": "Как снимать вход и зал",
+        "instructions": "Сначала **вход/вывеску** целиком, затем **общий план зала**, чтобы были видны основные витрины и проходы."
+      },
+      {
+        "field_id": "photo_facade",
+        "type": "camera_photo",
+        "title": "Вход и вывеска",
+        "instructions": "Кадр с улицы: вывеска и вход читаемы.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "photo_hall",
+        "type": "camera_photo",
+        "title": "Зал / витрины",
+        "instructions": "Общий план торгового зала или ключевой витринный ряд.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "ix_promo_guide",
+        "type": "instruction",
+        "title": "Акции и ценники",
+        "instructions": "Снимите **акционные материалы** или зону, где должны быть ценники. Если акций нет — зафиксируйте типовую полку с категорией из задания."
+      },
+      {
+        "field_id": "photo_promo",
+        "type": "camera_photo",
+        "title": "Акция или полка",
+        "instructions": "Крупно enough, чтобы читались цены или промо-текст.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "merch_comment",
+        "type": "text_input",
+        "title": "Заметки мерчандайзера",
+        "instructions": "Нарушения выкладки, отсутствие ценников, комментарий для офиса.",
+        "validation": {
+          "required": false
+        }
+      }
+    ]
+  }
+}

@@ -1,0 +1,157 @@
+{
+  "id": "product-shelf-shoot-2026",
+  "name": "Съёмка продуктов",
+  "version": "1.1",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "store",
+          "screen": "scroll_form",
+          "field_ids": [
+            "store_name",
+            "extra_info"
+          ]
+        },
+        {
+          "id": "photo_full_counter",
+          "screen": "scroll_form",
+          "field_ids": [
+            "photo_full_counter"
+          ]
+        },
+        {
+          "id": "photo_shelves",
+          "screen": "scroll_form",
+          "field_ids": [
+            "photo_shelves"
+          ]
+        },
+        {
+          "id": "photo_product",
+          "screen": "scroll_form",
+          "field_ids": [
+            "photo_product"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "fields": [
+      {
+        "field_id": "store_name",
+        "type": "text_input",
+        "title": "Магазин",
+        "instructions": "Название или адрес торговой точки.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "extra_info",
+        "type": "text_input",
+        "title": "Дополнительная информация",
+        "instructions": "Например: отдел, заметки по задаче, контакт ответственного.",
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_full_counter",
+        "type": "camera_photo",
+        "title": "Прилавок целиком",
+        "instructions": "Снимите весь прилавок одним или несколькими кадрами так, чтобы был виден весь витринный ряд.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "photo_shelves",
+        "type": "camera_photo",
+        "title": "Полки по отдельности",
+        "instructions": "Отдельный снимок на каждую интересующую полку.",
+        "multiple": true,
+        "validation": {
+          "required": true,
+          "min_items": 1
+        }
+      },
+      {
+        "field_id": "photo_product",
+        "type": "camera_photo",
+        "title": "Конкретный товар (по желанию)",
+        "instructions": "Крупный план товара — по желанию; шаг можно пропустить при отсутствии кадров.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      }
+    ],
+    "ui": {
+      "flow": {
+        "continue": {
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "ribbon": {
+          "pose_counter_sep": "·",
+          "review": "Проверка и отправка",
+          "scroll_form": "Шаг сбора",
+          "scroll_counter": "{cur} из {total}"
+        },
+        "camera_pose": {
+          "quality_dialog": {
+            "title": "Проверка качества кадра",
+            "use_anyway": "Всё равно использовать",
+            "retake": "Переснять"
+          },
+          "example_heading": "Ориентир по кадру",
+          "help_button": "Подсказки",
+          "example_asset_missing": "Пример изображения не задан",
+          "your_shots_heading": "Ваши кадры ({count})",
+          "empty_hint": "Добавьте кадры камерой или из галереи",
+          "add_more": "Добавить ещё (ещё одна полка / ещё один кадр)",
+          "camera": "Камера",
+          "gallery": "Галерея",
+          "clear_all_poses": "Удалить все кадры этого шага",
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "review": {
+          "header_overline": "Готово",
+          "header_title": "Проверка и отправка",
+          "header_subtitle": "Проверьте текстовые поля и фото. При необходимости вернитесь к любому шагу.",
+          "scroll_block_title": "Шаг {n}: {id}",
+          "instruction_fallback": "Инструкция",
+          "edit": "Изменить",
+          "no_frames": "Нет кадров",
+          "submit": "Отправить",
+          "empty_value": "—"
+        },
+        "camera_meta": {
+          "fx_estimate": "fₓ≈{value} px",
+          "expand_hint": "Нажмите, чтобы развернуть",
+          "empty_notice": "Мета-параметры камеры появятся после съёмки.",
+          "tile_title": "Мета-параметры камеры",
+          "section_device": "Устройство",
+          "section_native": "Нативная камера (задняя)",
+          "json_section": "Полный JSON (копирование)",
+          "dash": "—",
+          "native_empty": "Нет данных с нативного API",
+          "pose_shot_title": "Шаг {idx} — кадр {shot}",
+          "pose_derived_title": "Шаг {idx} — оценки",
+          "label_fx_exif": "fx_px (EXIF focal × сенсор)",
+          "label_fx_35mm": "fx_px (35mm equiv)",
+          "label_fx_native": "fx_px (натив)",
+          "exif_heading": "Фрагмент EXIF",
+          "exif_more": "… ещё {n} полей"
+        }
+      }
+    }
+  }
+}

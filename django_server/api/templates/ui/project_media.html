@@ -1,0 +1,69 @@
+{% extends "ui/base.html" %}
+{% block title %}Файлы — {{ project.project_id }}{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Файлы</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Файлы для API</h1>
+    <p class="ui-page-sub mb-0">
+      Выдаются как <code>/v1/projects/{{ project.project_id }}/assets/…</code>.
+      На диске: <code>project_assets/{{ project.project_id }}/</code>. В JSON клиента — пути <code>assets/…</code>.
+    </p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="card p-4">
+      <div class="ui-card-title"><i class="bi bi-cloud-upload me-1"></i>Загрузить</div>
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">Файл</label>
+          <input class="form-control" type="file" name="file" required>
+        </div>
+        <p class="form-text small ui-muted mb-4">
+          Путь на сервере задаётся автоматически: каталог <code>uploads/</code>, уникальный префикс и безопасное имя файла
+          (в JSON клиента — <code>assets/uploads/…</code>).
+        </p>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload me-2"></i>Загрузить</button>
+      </form>
+    </div>
+  </div>
+  <div class="col-lg-7">
+    <div class="ui-table-card">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead><tr><th>Путь</th><th>Размер</th><th class="text-end">Действие</th></tr></thead>
+          <tbody>
+            {% for rel, sz in media_files %}
+            <tr>
+              <td><code>{{ rel }}</code></td>
+              <td class="small ui-muted">{{ sz }} B</td>
+              <td class="text-end">
+                <form method="post" class="d-inline" onsubmit="return confirm('Удалить {{ rel }}?');">
+                  {% csrf_token %}
+                  <input type="hidden" name="delete" value="1">
+                  <input type="hidden" name="rel_path" value="{{ rel }}">
+                  <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash3"></i></button>
+                </form>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" class="text-center py-5 ui-muted">Нет файлов</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

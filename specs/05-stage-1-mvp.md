@@ -6,7 +6,7 @@ To avoid feature bloat, we strictly limit Stage 1.
 1. **Mock Authentication:** A simple dummy login screen (no real API call) that routes to the Dashboard.
 2. **Mock Projects & Configs:** Hardcode a realistic project Config into the app (e.g., loaded from a local JSON asset, bypassing backend sync for now).
 3. **Dynamic Wizard Logic (Basic Types):**
-   * Support only three types of steps: `text_input`, `dropdown`, and `camera_photo`.
+   * Support field types such as `text_input`, `datetime`, and `camera_photo` (see project config schema).
    * Basic required validations.
 4. **Local Saving:** 
    * Collect the data.

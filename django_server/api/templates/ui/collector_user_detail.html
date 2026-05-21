@@ -1,0 +1,42 @@
+{% extends "ui/base.html" %}
+{% block title %}Пользователь · {{ collector_user.email|default:collector_user.firebase_uid }}{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_collector_user_list' %}"><i class="bi bi-people me-1"></i>Пользователи</a></li>
+    <li class="breadcrumb-item active" aria-current="page">{{ collector_user.email|default:collector_user.firebase_uid }}</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Доступ к проектам</h1>
+    <p class="ui-page-sub mb-0"><code>{{ collector_user.firebase_uid }}</code>{% if collector_user.email %} · {{ collector_user.email }}{% endif %}</p>
+  </div>
+</div>
+<div class="ui-table-card p-4">
+  <form method="post">
+    {% csrf_token %}
+    <p class="text-secondary small mb-3">Отметьте проекты, которые пользователь видит в мобильном приложении и в которые может загружать пакеты.</p>
+    <div class="row row-cols-1 row-cols-md-2 g-2 mb-4">
+      {% for p in all_projects %}
+      <div class="col">
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" name="projects" value="{{ p.project_id }}" id="proj_{{ p.project_id }}"
+            {% if p.project_id in selected_project_ids %}checked{% endif %}>
+          <label class="form-check-label" for="proj_{{ p.project_id }}">
+            <span class="fw-medium">{{ p.name }}</span>
+            <span class="text-secondary small d-block"><code>{{ p.project_id }}</code></span>
+          </label>
+        </div>
+      </div>
+      {% empty %}
+      <p class="ui-muted">В системе ещё нет проектов — создайте их в разделе «Проекты».</p>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Сохранить</button>
+    <a class="btn btn-outline-secondary ms-2" href="{% url 'ui_collector_user_list' %}">К списку</a>
+  </form>
+</div>
+{% endblock %}

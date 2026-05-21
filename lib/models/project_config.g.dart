@@ -7,44 +7,78 @@ part of 'project_config.dart';
 // **************************************************************************
 
 ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
-  fieldId: json['fieldId'] as String,
-  priority: (json['priority'] as num).toInt(),
+  fieldId: json['field_id'] as String,
+  priority: (json['priority'] as num?)?.toInt() ?? 0,
   type: json['type'] as String,
   title: json['title'] as String,
   instructions: json['instructions'] as String,
   validation: json['validation'] as Map<String, dynamic>?,
-  options: (json['options'] as List<dynamic>?)
-      ?.map((e) => e as String)
-      .toList(),
   multiple: json['multiple'] as bool?,
-  subFields: (json['sub_fields'] as List<dynamic>?)
-      ?.map((e) => ConfigField.fromJson(e as Map<String, dynamic>))
-      .toList(),
 );
 
 Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
     <String, dynamic>{
-      'fieldId': instance.fieldId,
+      'field_id': instance.fieldId,
       'priority': instance.priority,
       'type': instance.type,
       'title': instance.title,
       'instructions': instance.instructions,
       'validation': instance.validation,
-      'options': instance.options,
       'multiple': instance.multiple,
-      'sub_fields': instance.subFields?.map((e) => e.toJson()).toList(),
     };
+
+CollectionFlowStepDecl _$CollectionFlowStepDeclFromJson(
+  Map<String, dynamic> json,
+) => CollectionFlowStepDecl(
+  id: json['id'] as String,
+  screen: json['screen'] as String,
+  fieldIds: (json['field_ids'] as List<dynamic>?)
+      ?.map((e) => e as String)
+      .toList(),
+  fieldId: json['field_id'] as String?,
+  cowIdHints: json['cow_id_hints'] as bool?,
+  cowIdFieldId: json['cow_id_field_id'] as String?,
+  formTitle: json['form_title'] as String?,
+);
+
+Map<String, dynamic> _$CollectionFlowStepDeclToJson(
+  CollectionFlowStepDecl instance,
+) => <String, dynamic>{
+  'id': instance.id,
+  'screen': instance.screen,
+  'field_ids': instance.fieldIds,
+  'field_id': instance.fieldId,
+  'cow_id_hints': instance.cowIdHints,
+  'cow_id_field_id': instance.cowIdFieldId,
+  'form_title': instance.formTitle,
+};
+
+CollectionFlowDecl _$CollectionFlowDeclFromJson(Map<String, dynamic> json) =>
+    CollectionFlowDecl(
+      steps: (json['steps'] as List<dynamic>)
+          .map(
+            (e) => CollectionFlowStepDecl.fromJson(e as Map<String, dynamic>),
+          )
+          .toList(),
+    );
+
+Map<String, dynamic> _$CollectionFlowDeclToJson(CollectionFlowDecl instance) =>
+    <String, dynamic>{'steps': instance.steps.map((e) => e.toJson()).toList()};
 
 ProjectConfig _$ProjectConfigFromJson(Map<String, dynamic> json) =>
     ProjectConfig(
       fields: (json['fields'] as List<dynamic>)
           .map((e) => ConfigField.fromJson(e as Map<String, dynamic>))
           .toList(),
+      flow: CollectionFlowDecl.fromJson(json['flow'] as Map<String, dynamic>),
+      ui: json['ui'] as Map<String, dynamic>?,
     );
 
 Map<String, dynamic> _$ProjectConfigToJson(ProjectConfig instance) =>
     <String, dynamic>{
       'fields': instance.fields.map((e) => e.toJson()).toList(),
+      'flow': instance.flow.toJson(),
+      'ui': instance.ui,
     };
 
 Project _$ProjectFromJson(Map<String, dynamic> json) => Project(

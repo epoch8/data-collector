@@ -59,6 +59,29 @@ class $PackagesTable extends Packages with TableInfo<$PackagesTable, Package> {
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _serverDeliveryStateMeta =
+      const VerificationMeta('serverDeliveryState');
+  @override
+  late final GeneratedColumn<String> serverDeliveryState =
+      GeneratedColumn<String>(
+    'server_delivery_state',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant<String>('pending'),
+  );
+  static const VerificationMeta _serverDeliveryErrorMeta =
+      const VerificationMeta('serverDeliveryError');
+  @override
+  late final GeneratedColumn<String> serverDeliveryError =
+      GeneratedColumn<String>(
+    'server_delivery_error',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -66,6 +89,8 @@ class $PackagesTable extends Packages with TableInfo<$PackagesTable, Package> {
     status,
     createdAt,
     dataJson,
+    serverDeliveryState,
+    serverDeliveryError,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -116,6 +141,24 @@ class $PackagesTable extends Packages with TableInfo<$PackagesTable, Package> {
     } else if (isInserting) {
       context.missing(_dataJsonMeta);
     }
+    if (data.containsKey('server_delivery_state')) {
+      context.handle(
+        _serverDeliveryStateMeta,
+        serverDeliveryState.isAcceptableOrUnknown(
+          data['server_delivery_state']!,
+          _serverDeliveryStateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('server_delivery_error')) {
+      context.handle(
+        _serverDeliveryErrorMeta,
+        serverDeliveryError.isAcceptableOrUnknown(
+          data['server_delivery_error']!,
+          _serverDeliveryErrorMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -145,6 +188,14 @@ class $PackagesTable extends Packages with TableInfo<$PackagesTable, Package> {
         DriftSqlType.string,
         data['${effectivePrefix}data_json'],
       )!,
+      serverDeliveryState: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_delivery_state'],
+      )!,
+      serverDeliveryError: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}server_delivery_error'],
+      ),
     );
   }
 
@@ -160,12 +211,16 @@ class Package extends DataClass implements Insertable<Package> {
   final String status;
   final DateTime createdAt;
   final String dataJson;
+  final String serverDeliveryState;
+  final String? serverDeliveryError;
   const Package({
     required this.id,
     required this.projectId,
     required this.status,
     required this.createdAt,
     required this.dataJson,
+    required this.serverDeliveryState,
+    this.serverDeliveryError,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -175,6 +230,10 @@ class Package extends DataClass implements Insertable<Package> {
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['data_json'] = Variable<String>(dataJson);
+    map['server_delivery_state'] = Variable<String>(serverDeliveryState);
+    if (!nullToAbsent || serverDeliveryError != null) {
+      map['server_delivery_error'] = Variable<String>(serverDeliveryError);
+    }
     return map;
   }
 
@@ -185,6 +244,10 @@ class Package extends DataClass implements Insertable<Package> {
       status: Value(status),
       createdAt: Value(createdAt),
       dataJson: Value(dataJson),
+      serverDeliveryState: Value(serverDeliveryState),
+      serverDeliveryError: serverDeliveryError == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverDeliveryError),
     );
   }
 
@@ -199,6 +262,12 @@ class Package extends DataClass implements Insertable<Package> {
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       dataJson: serializer.fromJson<String>(json['dataJson']),
+      serverDeliveryState: serializer.fromJson<String>(
+        json['serverDeliveryState'],
+      ),
+      serverDeliveryError: serializer.fromJson<String?>(
+        json['serverDeliveryError'],
+      ),
     );
   }
   @override
@@ -210,6 +279,8 @@ class Package extends DataClass implements Insertable<Package> {
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'dataJson': serializer.toJson<String>(dataJson),
+      'serverDeliveryState': serializer.toJson<String>(serverDeliveryState),
+      'serverDeliveryError': serializer.toJson<String?>(serverDeliveryError),
     };
   }
 
@@ -219,12 +290,18 @@ class Package extends DataClass implements Insertable<Package> {
     String? status,
     DateTime? createdAt,
     String? dataJson,
+    String? serverDeliveryState,
+    Value<String?> serverDeliveryError = const Value.absent(),
   }) => Package(
     id: id ?? this.id,
     projectId: projectId ?? this.projectId,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
     dataJson: dataJson ?? this.dataJson,
+    serverDeliveryState: serverDeliveryState ?? this.serverDeliveryState,
+    serverDeliveryError: serverDeliveryError.present
+        ? serverDeliveryError.value
+        : this.serverDeliveryError,
   );
   Package copyWithCompanion(PackagesCompanion data) {
     return Package(
@@ -233,6 +310,12 @@ class Package extends DataClass implements Insertable<Package> {
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       dataJson: data.dataJson.present ? data.dataJson.value : this.dataJson,
+      serverDeliveryState: data.serverDeliveryState.present
+          ? data.serverDeliveryState.value
+          : this.serverDeliveryState,
+      serverDeliveryError: data.serverDeliveryError.present
+          ? data.serverDeliveryError.value
+          : this.serverDeliveryError,
     );
   }
 
@@ -243,13 +326,23 @@ class Package extends DataClass implements Insertable<Package> {
           ..write('projectId: $projectId, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
-          ..write('dataJson: $dataJson')
+          ..write('dataJson: $dataJson, ')
+          ..write('serverDeliveryState: $serverDeliveryState, ')
+          ..write('serverDeliveryError: $serverDeliveryError')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, projectId, status, createdAt, dataJson);
+  int get hashCode => Object.hash(
+    id,
+    projectId,
+    status,
+    createdAt,
+    dataJson,
+    serverDeliveryState,
+    serverDeliveryError,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -258,7 +351,9 @@ class Package extends DataClass implements Insertable<Package> {
           other.projectId == this.projectId &&
           other.status == this.status &&
           other.createdAt == this.createdAt &&
-          other.dataJson == this.dataJson);
+          other.dataJson == this.dataJson &&
+          other.serverDeliveryState == this.serverDeliveryState &&
+          other.serverDeliveryError == this.serverDeliveryError);
 }
 
 class PackagesCompanion extends UpdateCompanion<Package> {
@@ -267,6 +362,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
   final Value<String> status;
   final Value<DateTime> createdAt;
   final Value<String> dataJson;
+  final Value<String> serverDeliveryState;
+  final Value<String?> serverDeliveryError;
   final Value<int> rowid;
   const PackagesCompanion({
     this.id = const Value.absent(),
@@ -274,6 +371,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.dataJson = const Value.absent(),
+    this.serverDeliveryState = const Value.absent(),
+    this.serverDeliveryError = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PackagesCompanion.insert({
@@ -282,6 +381,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
     required String status,
     required DateTime createdAt,
     required String dataJson,
+    this.serverDeliveryState = const Value.absent(),
+    this.serverDeliveryError = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        projectId = Value(projectId),
@@ -294,6 +395,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
     Expression<String>? status,
     Expression<DateTime>? createdAt,
     Expression<String>? dataJson,
+    Expression<String>? serverDeliveryState,
+    Expression<String>? serverDeliveryError,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -302,6 +405,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (dataJson != null) 'data_json': dataJson,
+      if (serverDeliveryState != null) 'server_delivery_state': serverDeliveryState,
+      if (serverDeliveryError != null) 'server_delivery_error': serverDeliveryError,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -312,6 +417,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
     Value<String>? status,
     Value<DateTime>? createdAt,
     Value<String>? dataJson,
+    Value<String>? serverDeliveryState,
+    Value<String?>? serverDeliveryError,
     Value<int>? rowid,
   }) {
     return PackagesCompanion(
@@ -320,6 +427,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
       dataJson: dataJson ?? this.dataJson,
+      serverDeliveryState: serverDeliveryState ?? this.serverDeliveryState,
+      serverDeliveryError: serverDeliveryError ?? this.serverDeliveryError,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -342,6 +451,12 @@ class PackagesCompanion extends UpdateCompanion<Package> {
     if (dataJson.present) {
       map['data_json'] = Variable<String>(dataJson.value);
     }
+    if (serverDeliveryState.present) {
+      map['server_delivery_state'] = Variable<String>(serverDeliveryState.value);
+    }
+    if (serverDeliveryError.present) {
+      map['server_delivery_error'] = Variable<String>(serverDeliveryError.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -356,6 +471,8 @@ class PackagesCompanion extends UpdateCompanion<Package> {
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
           ..write('dataJson: $dataJson, ')
+          ..write('serverDeliveryState: $serverDeliveryState, ')
+          ..write('serverDeliveryError: $serverDeliveryError, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -380,6 +497,8 @@ typedef $$PackagesTableCreateCompanionBuilder =
       required String status,
       required DateTime createdAt,
       required String dataJson,
+      Value<String> serverDeliveryState,
+      Value<String?> serverDeliveryError,
       Value<int> rowid,
     });
 typedef $$PackagesTableUpdateCompanionBuilder =
@@ -389,6 +508,8 @@ typedef $$PackagesTableUpdateCompanionBuilder =
       Value<String> status,
       Value<DateTime> createdAt,
       Value<String> dataJson,
+      Value<String> serverDeliveryState,
+      Value<String?> serverDeliveryError,
       Value<int> rowid,
     });
 
@@ -423,6 +544,16 @@ class $$PackagesTableFilterComposer
 
   ColumnFilters<String> get dataJson => $composableBuilder(
     column: $table.dataJson,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverDeliveryState => $composableBuilder(
+    column: $table.serverDeliveryState,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get serverDeliveryError => $composableBuilder(
+    column: $table.serverDeliveryError,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -460,6 +591,16 @@ class $$PackagesTableOrderingComposer
     column: $table.dataJson,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get serverDeliveryState => $composableBuilder(
+    column: $table.serverDeliveryState,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get serverDeliveryError => $composableBuilder(
+    column: $table.serverDeliveryError,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$PackagesTableAnnotationComposer
@@ -485,6 +626,12 @@ class $$PackagesTableAnnotationComposer
 
   GeneratedColumn<String> get dataJson =>
       $composableBuilder(column: $table.dataJson, builder: (column) => column);
+
+  GeneratedColumn<String> get serverDeliveryState =>
+      $composableBuilder(column: $table.serverDeliveryState, builder: (column) => column);
+
+  GeneratedColumn<String> get serverDeliveryError =>
+      $composableBuilder(column: $table.serverDeliveryError, builder: (column) => column);
 }
 
 class $$PackagesTableTableManager
@@ -520,6 +667,8 @@ class $$PackagesTableTableManager
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<String> dataJson = const Value.absent(),
+                Value<String> serverDeliveryState = const Value.absent(),
+                Value<String?> serverDeliveryError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PackagesCompanion(
                 id: id,
@@ -527,6 +676,8 @@ class $$PackagesTableTableManager
                 status: status,
                 createdAt: createdAt,
                 dataJson: dataJson,
+                serverDeliveryState: serverDeliveryState,
+                serverDeliveryError: serverDeliveryError,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -536,6 +687,8 @@ class $$PackagesTableTableManager
                 required String status,
                 required DateTime createdAt,
                 required String dataJson,
+                Value<String> serverDeliveryState = const Value.absent(),
+                Value<String?> serverDeliveryError = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => PackagesCompanion.insert(
                 id: id,
@@ -543,6 +696,8 @@ class $$PackagesTableTableManager
                 status: status,
                 createdAt: createdAt,
                 dataJson: dataJson,
+                serverDeliveryState: serverDeliveryState,
+                serverDeliveryError: serverDeliveryError,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

@@ -64,6 +64,27 @@ Instead of treating a field like `camera_photo` simply as an array of strings (p
 }
 ```
 
+### 4.3. Camera intrinsics (primary vs supplement)
+
+After package save (materialization), the payload separates **geometry consumers** from **debug dumps**:
+
+- **`data.camera_session`** — compact session snapshot: `device`, `native_back_camera` **without** `camera2_characteristics` (only numeric intrinsics, sensor size, focal lengths, estimated fx/fy/cx/cy in native pixel-array space).
+- **`data.camera_debug`** — full `camera_capture_context` as captured during the wizard (includes Android `camera2_characteristics` and any legacy blobs).
+
+**Per photo blob** (each map entry under a `camera_photo` pose field: path → metadata):
+
+- **`frame_camera`** — primary intrinsics for the **saved image file** (EXIF width/height coordinate system):
+  - `image_width_px`, `image_height_px`
+  - `fx_px`, `fy_px`, `cx_px`, `cy_px` (pinhole K in pixel units for that file)
+  - `focal_length_mm`, `sensor_width_mm`, `sensor_height_mm`, optional `focal_length_35mm_equiv`
+  - `intrinsics_source`: `lens_intrinsic_calibration` | `exif_focal_sensor` | `native_pinhole` | `35mm_equiv` | `fallback_device_db` | `incomplete`
+  - optional `skew`, `lens_distortion`, `image_orientation_exif`
+  - `collected_at` remains alongside at shot level (or duplicate inside `frame_camera` — app writes shot-level `collected_at`).
+
+- **`camera_supplement`** — heavy or alternate data: full **`exif`** map, all **`derived`** focal variants and **`notes`**.
+
+On-device draft state may still use `camera_capture_context` until submit; the materializer rewrites to `camera_session` + `camera_debug` and hoists `exif`/`derived` into `camera_supplement` per shot.
+
 ## 5. Binary Blob Handling Lifecycle
 How binary properties like `"image": "blobs/item_001_image.jpg"` are resolved efficiently across the user session:
 
@@ -77,4 +98,4 @@ How binary properties like `"image": "blobs/item_001_image.jpg"` are resolved ef
    - The nested JSON tree is walked, and absolute cache paths are scrubbed and replaced with their *strictly relative blob paths*.
    - The `payload.json` file is securely written. (Note: SQLite could still independently hold an index of `package_id` and its `status` string for ultra-fast dashboard rendering).
 3. **Upload Phase (Networking):**
-   - Working cohesively with the `06-upload-lifecycle.md` protocol, a background queue easily reads `payload.json`, uploads it natively to gain a sync ledger, and independently begins sequentially grabbing files located in `/blobs/` to ensure robust, chunky uploading without memory blowouts.
+   - Working cohesively with `06-upload-lifecycle.md` and [08-server-api-package-upload.md](08-server-api-package-upload.md), a background queue **first** uploads each file under `/blobs/` (one HTTP request per file, with a per-blob progress ledger), **then** uploads the JSON manifest derived from `payload.json`, **then** calls `commit`. This order avoids server-side manifests that reference missing blobs; uploads are **push** from the client when connectivity exists.

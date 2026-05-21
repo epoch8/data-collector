@@ -1,0 +1,47 @@
+{% extends "ui/base.html" %}
+{% block title %}Конфиг — {{ project.project_id }}{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">JSON</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Конфигурация (JSON)</h1>
+    <p class="ui-page-sub mb-0">Поле <code>id</code> в корне должно совпадать с <code>{{ project.project_id }}</code>. Перед сохранением конфиг проверяется теми же правилами, что и мобильный клиент. У каждого элемента <code>config.fields</code> поле <code>type</code> должно быть одним из: <code>text_input</code>, <code>datetime</code>, <code>instruction</code>, <code>camera_photo</code>.</p>
+  </div>
+  <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>Визуальный редактор</a>
+</div>
+{% if validation_errors %}
+<div class="alert alert-danger mb-3">
+  <strong>Исправьте ошибки и сохраните снова:</strong>
+  <ul class="mb-0 small">{% for e in validation_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+</div>
+{% endif %}
+<form method="post">
+  {% csrf_token %}
+  <div class="card p-4 mb-3">
+    <div class="row g-3 align-items-end">
+      <div class="col-sm-auto">
+        <label class="form-label">config_version</label>
+        <input class="form-control" name="config_version" value="{{ project.config_version }}" style="min-width: 12rem;" placeholder="Пусто = авто">
+        <div class="form-text ui-muted">Пусто: +1 к числу или суффикс.</div>
+      </div>
+    </div>
+  </div>
+  <div class="card p-0 overflow-hidden mb-3">
+    <div class="px-4 py-2 border-bottom border-secondary bg-dark bg-opacity-25">
+      <span class="ui-card-title mb-0 d-inline"><i class="bi bi-filetype-json me-1"></i>Тело JSON</span>
+    </div>
+    <div class="p-3">
+      <textarea class="form-control json-block border-0" name="raw_json" rows="26" required>{{ pretty_json }}</textarea>
+    </div>
+  </div>
+  <button type="submit" class="btn btn-primary btn-lg"><i class="bi bi-save me-2"></i>Сохранить</button>
+</form>
+{% endblock %}

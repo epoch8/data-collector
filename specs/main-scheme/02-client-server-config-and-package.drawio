@@ -1,0 +1,62 @@
+<mxfile host="app.diagrams.net" modified="2026-04-27T12:00:00.000Z" agent="Mozilla/5.0" version="24.7.17" type="device">
+    <diagram id="client-server" name="Клиент — сервер: конфиг и приём пакета">
+        <mxGraphModel dx="1094" dy="799" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="919" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Клиент ↔ сервер: один конфиг-сценарий и приём результата&#10;папка: specs/main-scheme" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="32" width="720" height="44" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneS" value="СЕРВЕР" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="96" width="120" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="laneM" value="МОБИЛЬНОЕ ПРИЛОЖЕНИЕ" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#5B8DEF;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="306" width="220" height="24" as="geometry"/>
+                </mxCell>
+                <mxCell id="s1" value="&lt;b&gt;1. Создание JSON конфига на сервере&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="132" width="320" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="s2" value="&lt;b&gt;2.&lt;/b&gt;&amp;nbsp;На сервере создаётся / обновляется&amp;nbsp;&lt;b&gt;таблица в БД&lt;/b&gt;&lt;br&gt;под этот проект (куда потом лягут пакеты)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="460" y="132" width="360" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="s3" value="&lt;b&gt;3.&lt;/b&gt;&amp;nbsp;При нажатии на кнопку синхронизации JSON конфиг &lt;b&gt;отправляется на мобилку там сохраняется локально&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="980" y="132" width="360" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="e12" value="после приёмки" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;fontSize=10;fontColor=#9CA3AF;" parent="1" source="s1" target="s2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="e23" value="готово к выдаче клиенту" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;endFill=1;fontSize=10;fontColor=#9CA3AF;" parent="1" source="s2" target="s3" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="down" value="HTTP: передача конфига" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=classic;dashed=1;fontSize=10;fontColor=#9EC5F7;exitX=0.5;exitY=1;entryX=0.5;entryY=0;" parent="1" source="s3" target="m1" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="1160" y="260"/>
+                            <mxPoint x="228" y="260"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="m1" value="&lt;b&gt;4.&lt;/b&gt; Мобилка показывает сбор по сценарию&#10;опирается на поля и экраны из конфига" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="330" width="360" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="3" value="" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="m2" target="s4" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="900" y="371" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="m2" value="&lt;b&gt;5.&lt;/b&gt; Оператор проходит шаги&amp;nbsp;&lt;br&gt;формируется &lt;b&gt;результирующий пакет&lt;/b&gt; (поля + файлы), пакет сохраняется сначала локально, и может быть загружен на сервер по нажатию кнопки загрузки" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="470" y="330" width="380" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="m12" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;endFill=1;" parent="1" source="m1" target="m2" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="s4" value="&lt;b&gt;6.&lt;/b&gt; Сервер &lt;b&gt;ждёт&lt;/b&gt; по соответствующей &lt;b&gt;API-ручке&lt;/b&gt;&lt;br&gt;данные результирующего пакета → запись в &lt;b&gt;ту же БД-таблицу&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2438;strokeColor=#6B9BD1;fontColor=#C8D4F0;fontSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="960" y="330" width="390" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="one" value="Ключевая мысль: &lt;b&gt;один&lt;/b&gt; опубликованный конфиг-сценарий на сервере → &lt;b&gt;одна&lt;/b&gt; схема приёма в БД → мобилка собирает ровно то → сервер принимает пакет той же формы." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="450" width="1104" height="52" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
