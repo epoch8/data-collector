@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="overview-two-paths" name="Три пути — обзор">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1474" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -22,7 +22,7 @@
                 <mxCell id="pathB" value="&lt;b&gt;Путь B&lt;/b&gt; — merge в django_server&#10;Перенос inference, S3, CVAT-триггеров, доменных экранов&#10;Одна админка и одна БД (долго, но проще эксплуатация)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="590" y="365" width="400" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="pathC" value="&lt;b&gt;Путь C&lt;/b&gt; — гибрид&#10;ETL + inference + DataPipe → &lt;b&gt;data-collector&lt;/b&gt; (платформа)&#10;Клиентская админка = просмотр / визуализация / правки + проектные плагины (АИС монолит)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e3338;strokeColor=#5BC9B8;fontColor=#D8F5F0;fontSize=11;" vertex="1" parent="1">
+                <mxCell id="pathC" value="&lt;b&gt;Путь C&lt;/b&gt; — гибрид&#10;ETL + inference + DataPipe → &lt;b&gt;data-collector&lt;/b&gt; (платформа)&#10;Клиентская админка = просмотр / визуализация / правки + проектные плагины (АИС монолит)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e3338;strokeColor=#5BC9B8;fontColor=#D8F5F0;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="640" y="530" width="400" height="100" as="geometry"/>
                 </mxCell>
                 <mxCell id="eM1" value="конфиг + upload API" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;fontSize=10;fontColor=#9EC5F7;" parent="1" source="mobile" target="django" edge="1">
@@ -49,7 +49,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="eC1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=open;dashed=1;" edge="1" parent="1" source="django" target="pathC">
+                <mxCell id="eC1" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=open;dashed=1;" parent="1" source="django" target="pathC" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="450" y="300"/>
@@ -57,7 +57,7 @@
                         </Array>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="eC2" value="ETL / pipe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=open;dashed=1;fontSize=10;fontColor=#7DD4C8;" edge="1" parent="1" source="cow" target="pathC">
+                <mxCell id="eC2" value="ETL / pipe" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=open;dashed=1;fontSize=10;fontColor=#7DD4C8;" parent="1" source="cow" target="pathC" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="228" y="590"/>
@@ -294,7 +294,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-c-flow" name="Путь C — гибрид">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="614" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -350,14 +350,17 @@
                         <mxPoint x="500" y="360" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="eC4a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=blockThin;" parent="1" source="c3" target="c4a" edge="1"/>
+                <mxCell id="eC4a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=blockThin;" parent="1" target="c4a" edge="1"/>
                 <mxCell id="eC4b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="c4a" target="c4b" edge="1"/>
                 <mxCell id="eC4c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="c4b" target="c4c" edge="1"/>
+                <mxCell id="kbDMAAgEcuhdQTI42X10-1" value="&lt;b&gt;Что уже есть в cowmetric (UI-слой)&lt;/b&gt;&lt;br&gt;· Домен КРС: Breed → Cow → CowScan, 20+ метрик (см/кг, баллы 1–5)&lt;br&gt;· Медиа: Image/Video, bool-теги «для какого измерения», WebP/preview, S3&lt;br&gt;· Загрузка в админке: chunked multipart S3 (~5.5 GB)&lt;br&gt;· Inference: ML/LLM, RQ, сравнение прогонов (Compare)&lt;br&gt;· CVAT + DataPipe (отдельные контуры БД/контейнеров)&lt;br&gt;· CustomUser, экраны CowScanAdmin «из коробки»&lt;br&gt;&lt;br&gt;&lt;b&gt;Чего нет под Путь C в старой админке&lt;/b&gt;&lt;br&gt;· Единый manifest JSON пакета data-collector&lt;br&gt;· Динамический конфиг проекта (абстрактность)&lt;br&gt;· Firebase-пользователи коллекторов&lt;br&gt;&lt;br&gt;&lt;b&gt;Выбор: как делать клиентскую админку&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. Новая админка&lt;/b&gt; (client-admin / django_server UI)&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Сразу под manifest JSON платформы&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Абстрактный просмотрщик → потом плагин под КРС и интеграции (АИС монолит) =&amp;gt; Сохраняем идею с платформой E8&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Не трогаем legacy UI cowmetric; ETL/inference&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Почти с нуля: списки, виджеты, правки, визуализации&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Риск не перенести нюансы старых экранов&lt;br&gt;&lt;br&gt;&lt;b&gt;2. Адаптация cowmetric&lt;/b&gt;&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Переиспользуем готовые экраны: метрики, медиа&amp;nbsp;&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Модель CowScan ≠ Package; нет единого JSON&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Хардкод привязок полей/флагов; много legacy-связей&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Всё равно нужны: маппинг на API платформы, визуализация, АИС" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1010" y="50" width="440" height="590" as="geometry"/>
+                </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="cowmetric-deep" name="cowmetric — возможности">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1000" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1474" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1000" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
