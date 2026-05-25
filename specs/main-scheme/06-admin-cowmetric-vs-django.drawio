@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="overview-two-paths" name="Три пути — обзор">
-        <mxGraphModel dx="1358" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -294,7 +294,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-c-flow" name="Путь C — гибрид">
-        <mxGraphModel dx="1358" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1101" dy="555" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -355,9 +355,6 @@
                 <mxCell id="eC4c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="c4b" target="c4c" edge="1"/>
                 <mxCell id="kbDMAAgEcuhdQTI42X10-1" value="&lt;b&gt;Что уже есть в старой админке&lt;/b&gt;&lt;br&gt;· Домен КРС: Breed → Cow → CowScan, 20+ метрик (см/кг, баллы 1–5)&lt;br&gt;· Медиа: Image/Video, bool-теги «для какого измерения», WebP/preview, S3&lt;br&gt;· Загрузка в админке: chunked multipart S3 (~5.5 GB)&lt;br&gt;· Inference: ML/LLM, RQ, сравнение прогонов (Compare)&lt;br&gt;· CVAT + DataPipe (отдельные контуры БД/контейнеров)&lt;br&gt;· CustomUser, экраны CowScanAdmin «из коробки»&lt;br&gt;&lt;br&gt;&lt;b&gt;Чего нет под Путь C в старой админке&lt;/b&gt;&lt;br&gt;· Единый manifest JSON пакета data-collector&lt;br&gt;· Динамический конфиг проекта (абстрактность)&lt;br&gt;· Firebase-пользователи коллекторов&lt;br&gt;&lt;br&gt;&lt;b&gt;Выбор: как делать клиентскую админку&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. Новая админка&lt;/b&gt; (client-admin / django_server UI)&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Сразу под manifest JSON платформы&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Абстрактный просмотрщик → потом плагин под КРС и интеграции (АИС монолит) =&amp;gt; Сохраняем идею с платформой E8&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Не трогаем legacy UI cowmetric; ETL/inference&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Почти с нуля: списки, виджеты, правки, визуализации&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Риск не перенести нюансы старых экранов&lt;br&gt;&lt;br&gt;&lt;b&gt;2. Адаптация cowmetric&lt;/b&gt;&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Переиспользуем готовые экраны: метрики, медиа&amp;nbsp;&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Модель CowScan ≠ Package; нет единого JSON&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Хардкод привязок полей/флагов; много legacy-связей&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Всё равно нужны: маппинг на API платформы, визуализация, АИС" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="1000" y="64" width="440" height="590" as="geometry"/>
-                </mxCell>
-                <mxCell id="jLO4zPpu4afH4TIi02XK-1" value="&lt;b&gt;Схема с конфигом которая конфигурирует не только МП но и админку&lt;br&gt;Выписать все потенциальные плагины и надстройки&amp;nbsp;&lt;br&gt;И понять что заранее а что свреху&lt;br&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c3d44;strokeColor=#5BC9B8;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="100" y="620" width="440" height="64" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

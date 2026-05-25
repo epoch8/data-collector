@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="unified-config" name="Единый конфиг — сущности (Путь C)">
-        <mxGraphModel dx="1080" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="2722" dy="555" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -41,38 +41,41 @@
                 <mxCell id="ftBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 6;strokeColor=#5B8DEF;fillColor=#151b26;fontSize=10;strokeWidth=1;" parent="ftGrp" vertex="1">
                     <mxGeometry width="330" height="150" as="geometry"/>
                 </mxCell>
-                <mxCell id="ftLbl" value="Типы &lt;code&gt;fields[].type&lt;/code&gt; (МП + админ)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8BA3C4;" parent="ftGrp" vertex="1">
-                    <mxGeometry x="12" y="6" width="300" height="15" as="geometry"/>
+                <mxCell id="ftLbl" value="Типы &lt;code&gt;fields[].type&lt;/code&gt; (МП или внеший источник)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8BA3C4;" parent="ftGrp" vertex="1">
+                    <mxGeometry x="12" y="5.600000000000001" width="300" height="14" as="geometry"/>
                 </mxCell>
-                <mxCell id="ft1" value="&lt;b&gt;text_input&lt;/b&gt;&lt;br&gt;МП: поле ввода&lt;br&gt;Админ: readonly / правка" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
-                    <mxGeometry x="14" y="25.5" width="146" height="37.5" as="geometry"/>
+                <mxCell id="6blNGUu-5O8ICbWkilFJ-8" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ftGrp" source="ft1" target="ft3">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="ft2" value="&lt;b&gt;datetime&lt;/b&gt;&lt;br&gt;МП: пикер&lt;br&gt;Админ: дата readonly/edit" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
-                    <mxGeometry x="170" y="25.5" width="146" height="37.5" as="geometry"/>
+                <mxCell id="ft1" value="&lt;b&gt;text_input&lt;/b&gt;&lt;br&gt;Любые текстовые поля атрибуты к данным" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
+                    <mxGeometry x="14" y="23.800000000000004" width="146" height="35" as="geometry"/>
                 </mxCell>
-                <mxCell id="ft3" value="&lt;b&gt;camera_photo&lt;/b&gt;&lt;br&gt;МП: съёмка&lt;br&gt;Админ: галерея + keypoints" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
-                    <mxGeometry x="14" y="69" width="146" height="37.5" as="geometry"/>
+                <mxCell id="ft2" value="&lt;b&gt;datetime&lt;/b&gt;&lt;br&gt;Время создания пакета" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
+                    <mxGeometry x="170" y="23.800000000000004" width="146" height="35" as="geometry"/>
                 </mxCell>
-                <mxCell id="ft4" value="&lt;b&gt;instruction&lt;/b&gt;&lt;br&gt;МП: Markdown&lt;br&gt;Админ: readonly подсказка" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
-                    <mxGeometry x="170" y="69" width="146" height="37.5" as="geometry"/>
+                <mxCell id="ft3" value="&lt;b&gt;camera_photo&lt;/b&gt;&lt;br&gt;Медиа файл" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
+                    <mxGeometry x="14" y="64.4" width="146" height="35" as="geometry"/>
+                </mxCell>
+                <mxCell id="ft4" value="&lt;b&gt;instruction&lt;/b&gt;&lt;br&gt;МП: Markdown - как будто бы акутально только для МП" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
+                    <mxGeometry x="170" y="64.4" width="146" height="35" as="geometry"/>
                 </mxCell>
                 <mxCell id="ppGrp" value="" style="group" parent="1" vertex="1" connectable="0">
-                    <mxGeometry x="398" y="410" width="300" height="160" as="geometry"/>
+                    <mxGeometry x="390" y="410" width="300" height="150" as="geometry"/>
                 </mxCell>
                 <mxCell id="ppBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 6;strokeColor=#D4A84B;fillColor=#1a1510;fontSize=10;strokeWidth=1;" parent="ppGrp" vertex="1">
-                    <mxGeometry width="300" height="160" as="geometry"/>
+                    <mxGeometry width="300" height="150" as="geometry"/>
                 </mxCell>
                 <mxCell id="ppLbl" value="Типы &lt;code&gt;pipelines[].type&lt;/code&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#E8C078;" parent="ppGrp" vertex="1">
-                    <mxGeometry x="12" y="6.4" width="280" height="16" as="geometry"/>
+                    <mxGeometry x="12" y="6" width="280" height="15" as="geometry"/>
                 </mxCell>
                 <mxCell id="pp1" value="&lt;b&gt;inference&lt;/b&gt;&lt;br&gt;ML/LLM на пакете&lt;br&gt;→ pipeline_results.inference" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
-                    <mxGeometry x="14" y="27.200000000000003" width="130" height="48" as="geometry"/>
+                    <mxGeometry x="14" y="25.500000000000004" width="130" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="pp2" value="&lt;b&gt;cvat&lt;/b&gt;&lt;br&gt;Создание CVAT task&lt;br&gt;→ pipeline_results.cvat" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
-                    <mxGeometry x="154" y="27.200000000000003" width="130" height="48" as="geometry"/>
+                <mxCell id="pp2" value="&lt;b&gt;annotation&lt;/b&gt;&lt;br&gt;Создание CVAT task&lt;br&gt;→ pipeline_results.cvat" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
+                    <mxGeometry x="154" y="25.500000000000004" width="130" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="pp3" value="&lt;b&gt;annotation_sync&lt;/b&gt;&lt;br&gt;CVAT → annotations" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
-                    <mxGeometry x="14" y="81.60000000000001" width="130" height="38.400000000000006" as="geometry"/>
+                <mxCell id="6blNGUu-5O8ICbWkilFJ-7" value="&lt;b&gt;data&lt;/b&gt;&lt;br&gt;Скачать данные с манифестом" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" vertex="1" parent="ppGrp">
+                    <mxGeometry x="85" y="80" width="130" height="36.00000000000001" as="geometry"/>
                 </mxCell>
                 <mxCell id="auGrp" value="" style="group" parent="1" vertex="1" connectable="0">
                     <mxGeometry x="718" y="410" width="300" height="150" as="geometry"/>
@@ -83,65 +86,56 @@
                 <mxCell id="auLbl" value="Секции &lt;code&gt;admin_ui&lt;/code&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#7DD4C8;" parent="auGrp" vertex="1">
                     <mxGeometry x="12" y="6" width="280" height="15" as="geometry"/>
                 </mxCell>
-                <mxCell id="au1" value="&lt;b&gt;разметка&lt;/b&gt;&lt;br&gt;Keypoints: точки,&lt;br&gt;рёбра, labels" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
+                <mxCell id="au1" value="&lt;b&gt;media&lt;/b&gt;&lt;br&gt;Просмотр media пакетов&lt;b&gt;&amp;nbsp;&lt;/b&gt;&lt;br&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
                     <mxGeometry x="14" y="25.499999999999996" width="130" height="42" as="geometry"/>
                 </mxCell>
-                <mxCell id="au2" value="&lt;b&gt;metrics_table&lt;/b&gt;&lt;br&gt;GT (data.*) ↔&lt;br&gt;inference (metrics.*)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
+                <mxCell id="au2" value="&lt;b&gt;metrics_table&lt;/b&gt;&lt;br&gt;GT (data из манифеста) ↔&lt;br&gt;inference (результат инференса)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
                     <mxGeometry x="154" y="25.499999999999996" width="130" height="42" as="geometry"/>
                 </mxCell>
-                <mxCell id="au3" value="&lt;b&gt;custom_tabs&lt;/b&gt;&lt;br&gt;Доп. вкладки workspace&lt;br&gt;(Compare, QA ...)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
+                <mxCell id="au3" value="&lt;b&gt;admin plugins&lt;/b&gt;&lt;br&gt;кастомная логика под клиента" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
                     <mxGeometry x="14" y="73.5" width="130" height="42" as="geometry"/>
                 </mxCell>
-                <mxCell id="au4" value="&lt;b&gt;widget_overrides&lt;/b&gt;&lt;br&gt;Переопределение виджета&lt;br&gt;для конкретного field_id" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
+                <mxCell id="au4" value="&lt;b&gt;widget_overrides&lt;/b&gt;&lt;br&gt;Редактирование полей конкретного field_id" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e3338;strokeColor=#3a6b64;fontColor=#D8F5F0;fontSize=9;" parent="auGrp" vertex="1">
                     <mxGeometry x="154" y="73.5" width="130" height="42" as="geometry"/>
                 </mxCell>
                 <mxCell id="mnBg" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
                     <mxGeometry x="1038" y="380" width="270" height="200" as="geometry"/>
                 </mxCell>
-                <mxCell id="mnLbl" value="&lt;b&gt;Данные пакета (manifest)&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#3DCC85&quot;&gt;&lt;b&gt;data&lt;/b&gt;&lt;/span&gt; — ответы формы (МП пишет, админ правит)&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;pipeline_results&lt;/b&gt;&lt;/span&gt;&lt;br&gt;· inference — метрики ML&lt;br&gt;· cvat — статус задачи&lt;br&gt;· annotations — разметка&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#5BC9B8&quot;&gt;&lt;b&gt;_ui_meta&lt;/b&gt;&lt;/span&gt; — hints, ошибки, лог" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#E8EAED;" parent="1" vertex="1">
+                <mxCell id="mnLbl" value="&lt;b&gt;Данные пакета (manifest)&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#3DCC85&quot;&gt;&lt;b&gt;data&lt;/b&gt;&lt;/span&gt; — ответы формы (МП пишет, админ правит)&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;pipeline_results&lt;/b&gt;&lt;/span&gt;&lt;br&gt;· inference — метрики ML, дата&lt;br&gt;· cvat — статус задачи,разметка&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#5BC9B8&quot;&gt;&lt;b&gt;_ui_meta&lt;/b&gt;&lt;/span&gt; — hints, ошибки, лог" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="1048" y="388" width="250" height="184" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgGrp" value="" style="group" parent="1" vertex="1" connectable="0">
-                    <mxGeometry x="50" y="630" width="1260" height="350" as="geometry"/>
+                    <mxGeometry x="-50" y="630" width="1260" height="350" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=10 8;strokeColor=#c97a7e;fillColor=#1a1012;fontSize=10;strokeWidth=1;opacity=90;" parent="plgGrp" vertex="1">
-                    <mxGeometry width="1260" height="350" as="geometry"/>
+                    <mxGeometry width="1170" height="350" as="geometry"/>
                 </mxCell>
-                <mxCell id="plgLbl" value="&lt;b&gt;5. Плагины проекта&lt;/b&gt; (&lt;code&gt;config.admin_plugins&lt;/code&gt;) — потенциальный каталог" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#e8b4b8;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="14" y="8" width="700" height="22" as="geometry"/>
-                </mxCell>
-                <mxCell id="plgDesc" value="&lt;span style=&quot;color:#9CA3AF&quot;&gt;Плагин = UI-блок + хук в API платформы. Не лезет в БД напрямую. Подключается в конфиге: &lt;code&gt;admin_plugins: [{ id, hooks: [...] }]&lt;/code&gt;&lt;/span&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#9CA3AF;" parent="plgGrp" vertex="1">
+                <mxCell id="plgLbl" value="&lt;b&gt;Плагины проекта&lt;/b&gt; (&lt;code&gt;config.admin_plugins&lt;/code&gt;)&amp;nbsp; потенциальный каталог под коров" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#e8b4b8;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="30" width="700" height="22" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgH1" value="Доменные / проектные" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#E8C078;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="58" width="200" height="18" as="geometry"/>
                 </mxCell>
-                <mxCell id="plg1" value="&lt;b&gt;korovas_ais&lt;/b&gt;&lt;br&gt;Интеграция с АИС «монолит»:&lt;br&gt;поиск коровы по ID, подтяжка" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;" parent="plgGrp" vertex="1">
+                <mxCell id="plg1" value="&lt;b&gt;korovas_ais&lt;/b&gt;&lt;br&gt;Интеграция с АИС «монолит»:&lt;br&gt;поиск коровы по ID, подтяжка нужных данных&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="78" width="190" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="plg2" value="&lt;b&gt;breed_lookup&lt;/b&gt;&lt;br&gt;Справочник пород:&lt;br&gt;автодополнение, валидация" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="214" y="78" width="190" height="56" as="geometry"/>
-                </mxCell>
                 <mxCell id="plg3" value="&lt;b&gt;compare_sessions&lt;/b&gt;&lt;br&gt;Сравнение сканов одного&lt;br&gt;объекта (динамика во времени)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="414" y="78" width="190" height="56" as="geometry"/>
+                    <mxGeometry x="224" y="78" width="190" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plg4" value="&lt;b&gt;entity_hierarchy&lt;/b&gt;&lt;br&gt;Группировка пакетов по объекту&lt;br&gt;(корова → все сканы)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="614" y="78" width="190" height="56" as="geometry"/>
+                    <mxGeometry x="430" y="78" width="190" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgH2" value="ML и обработка" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#B8A0D8;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="144" width="200" height="18" as="geometry"/>
                 </mxCell>
-                <mxCell id="plg5" value="&lt;b&gt;batch_inference&lt;/b&gt;&lt;br&gt;Массовый запуск inference&lt;br&gt;по выборке пакетов" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="14" y="164" width="190" height="56" as="geometry"/>
+                <mxCell id="plg6" value="&lt;b&gt;keypoint_editor&lt;/b&gt;&lt;br&gt;Возможность редактирования&amp;nbsp; результатов инференсов&amp;nbsp;&lt;br&gt;keypoint - скоре всего через ссылку CVAT" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
+                    <mxGeometry x="19" y="165" width="190" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="plg6" value="&lt;b&gt;annotation_editor&lt;/b&gt;&lt;br&gt;Inline canvas keypoints/bbox&lt;br&gt;(Konva / Fabric / Label Studio)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="214" y="164" width="190" height="56" as="geometry"/>
+                <mxCell id="plg7" value="&lt;b&gt;VLM&amp;nbsp;&lt;/b&gt;&lt;br&gt;Возможность редактирования бальной оценки&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
+                    <mxGeometry x="230" y="165" width="190" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="plg7" value="&lt;b&gt;quality_gate&lt;/b&gt;&lt;br&gt;QA-контроль перед экспортом:&lt;br&gt;чеклист, статусы, approve" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="414" y="164" width="190" height="56" as="geometry"/>
-                </mxCell>
-                <mxCell id="plg8" value="&lt;b&gt;metrics_dashboard&lt;/b&gt;&lt;br&gt;Сводка по проекту: графики,&lt;br&gt;агрегаты, тренды" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="614" y="164" width="190" height="56" as="geometry"/>
+                <mxCell id="plg8" value="&lt;b&gt;metrics&lt;/b&gt;&lt;br&gt;Редактирование полей рассчитанных метрик,&amp;nbsp;&lt;br&gt;Возможность автоматического перерасчета,&lt;br&gt;Возможность отправки на повторный инференс (?)&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
+                    <mxGeometry x="430" y="165" width="240" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgH3" value="Интеграции и экспорт" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#7DD4C8;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="230" width="200" height="18" as="geometry"/>
@@ -156,13 +150,13 @@
                     <mxGeometry x="414" y="250" width="190" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgNote" value="&lt;b&gt;Базовое ядро&lt;/b&gt; (без плагинов):&lt;br&gt;· Просмотр manifest JSON&lt;br&gt;· Галерея медиа + превью&lt;br&gt;· Правка data.*&lt;br&gt;· Статусы пайплайнов&lt;br&gt;&lt;br&gt;&lt;b&gt;Плагины расширяют&lt;/b&gt;:&lt;br&gt;· Доменные экраны&lt;br&gt;· Визуализации&lt;br&gt;· Внешние интеграции&lt;br&gt;· Экспорт и отчёты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="840" y="58" width="400" height="270" as="geometry"/>
+                    <mxGeometry x="700" y="52" width="400" height="270" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="ESs5xENAsvI63vkP-Ig_" name="Page-2">
-        <mxGraphModel dx="1080" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="919" math="0" shadow="0">
+        <mxGraphModel dx="1080" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1320" pageHeight="919" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
