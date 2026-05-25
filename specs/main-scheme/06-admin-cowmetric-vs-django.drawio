@@ -248,17 +248,17 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-b-flow" name="Путь B — merge">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="920" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="920" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="t" value="Путь B: перенос подсистем cowmetric в data collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
                     <mxGeometry x="48" y="28" width="720" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="entryB" value="&lt;b&gt;Точка входа B&lt;/b&gt;: тот же &lt;code&gt;package commit completed&lt;/code&gt; в data collector но дальше обработка &lt;b&gt;не уходит&lt;/b&gt; в cowmetric.&lt;br&gt;Точка входа для &lt;b&gt;разработки&lt;/b&gt;: репозиторий &lt;code&gt;data collector&lt;/code&gt;&amp;nbsp;(+ перенос кода из cowmetric).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;" vertex="1" parent="1">
+                <mxCell id="entryB" value="&lt;b&gt;Точка входа B&lt;/b&gt;: тот же &lt;code&gt;package commit completed&lt;/code&gt; в data collector но дальше обработка &lt;b&gt;не уходит&lt;/b&gt; в cowmetric.&lt;br&gt;Точка входа для &lt;b&gt;разработки&lt;/b&gt;: репозиторий &lt;code&gt;data collector&lt;/code&gt;&amp;nbsp;(+ перенос кода из cowmetric).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#9B7ED0;fontColor=#E8EAED;fontSize=10;" parent="1" vertex="1">
                     <mxGeometry x="48" y="72" width="904" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="b0" value="0. Мобилка → data_collector (как сейчас).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="1">
+                <mxCell id="b0" value="0. Мобилка → data_collector (как сейчас).&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="48" y="152" width="904" height="48" as="geometry"/>
                 </mxCell>
                 <mxCell id="b1" value="Фаза 1 — инфра&#10;MinIO/S3 storage, Redis, RQ worker в docker django" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
@@ -273,16 +273,16 @@
                 <mxCell id="b4" value="Фаза 4 — домен UI&lt;br&gt;Визуализации, экраны для сканов, вывод дополнительной инфорации + придумать как это должно быть в абстрактном виде и насколько абстрактно" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="48" y="320" width="904" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="plusB2" value="&lt;b&gt;+&lt;/b&gt; Одна админка · один контур данных · пакет end-to-end · roboflow-like" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c2d44;strokeColor=#9B7ED0;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                <mxCell id="plusB2" value="&lt;b&gt;+&lt;/b&gt; Одна админка · один контур данных · пакет end-to-end · roboflow-like" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c2d44;strokeColor=#9B7ED0;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="48" y="400" width="440" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="minusB2" value="&lt;b&gt;−&lt;/b&gt; Долго · регрессии ML · новый UX · перенос CVAT pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" vertex="1" parent="1">
+                <mxCell id="minusB2" value="&lt;b&gt;−&lt;/b&gt; Долго · регрессии ML · новый UX · перенос CVAT pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="512" y="400" width="440" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="eB0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;" edge="1" parent="1" source="b0" target="b1"/>
+                <mxCell id="eB0" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;" parent="1" source="b0" target="b1" edge="1"/>
                 <mxCell id="eB" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b1" target="b2" edge="1"/>
                 <mxCell id="eB2" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="b2" target="b3" edge="1"/>
-                <mxCell id="eB3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=blockThin;" edge="1" parent="1" source="b3" target="b4">
+                <mxCell id="eB3" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC99A;endArrow=blockThin;" parent="1" source="b3" target="b4" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <Array as="points">
                             <mxPoint x="812" y="300"/>
@@ -294,7 +294,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-c-flow" name="Путь C — гибрид">
-        <mxGraphModel dx="1101" dy="555" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>

@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="unified-config" name="Единый конфиг — сущности (Путь C)">
-        <mxGraphModel dx="2722" dy="555" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -44,7 +44,7 @@
                 <mxCell id="ftLbl" value="Типы &lt;code&gt;fields[].type&lt;/code&gt; (МП или внеший источник)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8BA3C4;" parent="ftGrp" vertex="1">
                     <mxGeometry x="12" y="5.600000000000001" width="300" height="14" as="geometry"/>
                 </mxCell>
-                <mxCell id="6blNGUu-5O8ICbWkilFJ-8" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="ftGrp" source="ft1" target="ft3">
+                <mxCell id="6blNGUu-5O8ICbWkilFJ-8" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="ftGrp" source="ft1" target="ft3" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="ft1" value="&lt;b&gt;text_input&lt;/b&gt;&lt;br&gt;Любые текстовые поля атрибуты к данным" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="ftGrp" vertex="1">
@@ -74,7 +74,7 @@
                 <mxCell id="pp2" value="&lt;b&gt;annotation&lt;/b&gt;&lt;br&gt;Создание CVAT task&lt;br&gt;→ pipeline_results.cvat" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
                     <mxGeometry x="154" y="25.500000000000004" width="130" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="6blNGUu-5O8ICbWkilFJ-7" value="&lt;b&gt;data&lt;/b&gt;&lt;br&gt;Скачать данные с манифестом" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" vertex="1" parent="ppGrp">
+                <mxCell id="6blNGUu-5O8ICbWkilFJ-7" value="&lt;b&gt;data&lt;/b&gt;&lt;br&gt;Скачать данные с манифестом" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#3d3420;strokeColor=#6a5a40;fontColor=#F5EFE0;fontSize=9;" parent="ppGrp" vertex="1">
                     <mxGeometry x="85" y="80" width="130" height="36.00000000000001" as="geometry"/>
                 </mxCell>
                 <mxCell id="auGrp" value="" style="group" parent="1" vertex="1" connectable="0">
@@ -105,10 +105,10 @@
                     <mxGeometry x="1048" y="388" width="250" height="184" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgGrp" value="" style="group" parent="1" vertex="1" connectable="0">
-                    <mxGeometry x="-50" y="630" width="1260" height="350" as="geometry"/>
+                    <mxGeometry x="60" y="610" width="1260" height="450" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=10 8;strokeColor=#c97a7e;fillColor=#1a1012;fontSize=10;strokeWidth=1;opacity=90;" parent="plgGrp" vertex="1">
-                    <mxGeometry width="1170" height="350" as="geometry"/>
+                    <mxGeometry width="1170" height="450" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgLbl" value="&lt;b&gt;Плагины проекта&lt;/b&gt; (&lt;code&gt;config.admin_plugins&lt;/code&gt;)&amp;nbsp; потенциальный каталог под коров" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#e8b4b8;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="30" width="700" height="22" as="geometry"/>
@@ -150,7 +150,22 @@
                     <mxGeometry x="414" y="250" width="190" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgNote" value="&lt;b&gt;Базовое ядро&lt;/b&gt; (без плагинов):&lt;br&gt;· Просмотр manifest JSON&lt;br&gt;· Галерея медиа + превью&lt;br&gt;· Правка data.*&lt;br&gt;· Статусы пайплайнов&lt;br&gt;&lt;br&gt;&lt;b&gt;Плагины расширяют&lt;/b&gt;:&lt;br&gt;· Доменные экраны&lt;br&gt;· Визуализации&lt;br&gt;· Внешние интеграции&lt;br&gt;· Экспорт и отчёты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="700" y="52" width="400" height="270" as="geometry"/>
+                    <mxGeometry x="690" y="30" width="350" height="290" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgH4" value="Визуализация" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#8BC9F7;" vertex="1" parent="plgGrp">
+                    <mxGeometry x="14" y="320" width="200" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgViz1" value="&lt;b&gt;skeleton_overlay&lt;/b&gt;&lt;br&gt;Наложение keypoints + рёбер&lt;br&gt;скелета на кадр (canvas);&lt;br&gt;GT, keypoint inference + VLM&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                    <mxGeometry x="14" y="340" width="190" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgViz2" value="&lt;b&gt;metrics_chart&lt;/b&gt;&lt;br&gt;Графики метрик по проекту:&lt;br&gt;гистограммы, scatter,&lt;br&gt;тренды и агрегаты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                    <mxGeometry x="214" y="340" width="190" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgViz3" value="&lt;b&gt;error_heatmap&lt;/b&gt;&lt;br&gt;Тепловая карта отклонений&lt;br&gt;GT ↔ inference по точкам&lt;br&gt;скелета или регионам кадра" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                    <mxGeometry x="414" y="340" width="190" height="66" as="geometry"/>
+                </mxCell>
+                <mxCell id="2" value="&lt;b&gt;depth&amp;nbsp;&lt;/b&gt;&lt;br&gt;отрисовка карты глубины" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                    <mxGeometry x="610" y="338" width="140" height="66" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
