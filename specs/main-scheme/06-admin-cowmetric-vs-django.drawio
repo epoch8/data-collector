@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="overview-two-paths" name="Три пути — обзор">
-        <mxGraphModel dx="1474" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1358" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -68,7 +68,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="capability-matrix" name="Матрица возможностей">
-        <mxGraphModel dx="1334" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1800" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1100" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -204,10 +204,10 @@
                 <mxCell id="r10d" value="Уникально cowmetric" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
                     <mxGeometry x="640" y="428" width="200" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="mobm8r9IllnojdqjpjeP-1" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" vertex="1" parent="1">
+                <mxCell id="mobm8r9IllnojdqjpjeP-1" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
                     <mxGeometry x="400" y="356" width="120" height="36" as="geometry"/>
                 </mxCell>
-                <mxCell id="mobm8r9IllnojdqjpjeP-2" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" vertex="1" parent="1">
+                <mxCell id="mobm8r9IllnojdqjpjeP-2" value="❌" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#2a2220;strokeColor=#6a5a40;fontColor=#9CA3AF;fontSize=12;" parent="1" vertex="1">
                     <mxGeometry x="400" y="320" width="120" height="36" as="geometry"/>
                 </mxCell>
             </root>
@@ -294,7 +294,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-c-flow" name="Путь C — гибрид">
-        <mxGraphModel dx="614" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1358" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -319,14 +319,14 @@
                 <mxCell id="c4b" value="Фаза 2 — тонкий UI&lt;br&gt;Экраны просмотра/правки, визуализации inference, статусы pipeline" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="372" y="380" width="280" height="72" as="geometry"/>
                 </mxCell>
-                <mxCell id="c4c" value="Фаза 3 — проектные плагины&lt;br&gt;Контракт расширений: домен (КРС), внешние системы (АИС), кастомные поля/экраны" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
+                <mxCell id="c4c" value="Фаза 3 — проектные плагины&lt;br&gt;Контракт расширений: домен (КРС), внешние системы (АИС), кастомные поля/экраны, добавить инференс&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="684" y="380" width="280" height="72" as="geometry"/>
                 </mxCell>
                 <mxCell id="plusC" value="&lt;b&gt;+&lt;/b&gt; Платформа единая для всех проектов · ETL/inference reuse · клиентская кастомизация - сохранение абстракции" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c3d44;strokeColor=#5BC9B8;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="540" width="440" height="64" as="geometry"/>
+                    <mxGeometry x="48" y="510" width="440" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="minusC" value="&lt;b&gt;−&lt;/b&gt; Два слоя (платформа + UI) · контракт API/событий&amp;nbsp; · перенос ETL всё равно объёмный" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="512" y="540" width="440" height="64" as="geometry"/>
+                    <mxGeometry x="500" y="510" width="440" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="eC01" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;" parent="1" source="c0" target="c1" edge="1"/>
                 <mxCell id="eC12" value="API / events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=blockThin;fontSize=10;fontColor=#7DD4C8;dashed=1;" parent="1" source="c1" target="c2" edge="1">
@@ -353,14 +353,17 @@
                 <mxCell id="eC4a" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=blockThin;" parent="1" target="c4a" edge="1"/>
                 <mxCell id="eC4b" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#7D8FA9;endArrow=blockThin;" parent="1" source="c4a" target="c4b" edge="1"/>
                 <mxCell id="eC4c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="c4b" target="c4c" edge="1"/>
-                <mxCell id="kbDMAAgEcuhdQTI42X10-1" value="&lt;b&gt;Что уже есть в cowmetric (UI-слой)&lt;/b&gt;&lt;br&gt;· Домен КРС: Breed → Cow → CowScan, 20+ метрик (см/кг, баллы 1–5)&lt;br&gt;· Медиа: Image/Video, bool-теги «для какого измерения», WebP/preview, S3&lt;br&gt;· Загрузка в админке: chunked multipart S3 (~5.5 GB)&lt;br&gt;· Inference: ML/LLM, RQ, сравнение прогонов (Compare)&lt;br&gt;· CVAT + DataPipe (отдельные контуры БД/контейнеров)&lt;br&gt;· CustomUser, экраны CowScanAdmin «из коробки»&lt;br&gt;&lt;br&gt;&lt;b&gt;Чего нет под Путь C в старой админке&lt;/b&gt;&lt;br&gt;· Единый manifest JSON пакета data-collector&lt;br&gt;· Динамический конфиг проекта (абстрактность)&lt;br&gt;· Firebase-пользователи коллекторов&lt;br&gt;&lt;br&gt;&lt;b&gt;Выбор: как делать клиентскую админку&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. Новая админка&lt;/b&gt; (client-admin / django_server UI)&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Сразу под manifest JSON платформы&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Абстрактный просмотрщик → потом плагин под КРС и интеграции (АИС монолит) =&amp;gt; Сохраняем идею с платформой E8&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Не трогаем legacy UI cowmetric; ETL/inference&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Почти с нуля: списки, виджеты, правки, визуализации&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Риск не перенести нюансы старых экранов&lt;br&gt;&lt;br&gt;&lt;b&gt;2. Адаптация cowmetric&lt;/b&gt;&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Переиспользуем готовые экраны: метрики, медиа&amp;nbsp;&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Модель CowScan ≠ Package; нет единого JSON&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Хардкод привязок полей/флагов; много legacy-связей&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Всё равно нужны: маппинг на API платформы, визуализация, АИС" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="1010" y="50" width="440" height="590" as="geometry"/>
+                <mxCell id="kbDMAAgEcuhdQTI42X10-1" value="&lt;b&gt;Что уже есть в старой админке&lt;/b&gt;&lt;br&gt;· Домен КРС: Breed → Cow → CowScan, 20+ метрик (см/кг, баллы 1–5)&lt;br&gt;· Медиа: Image/Video, bool-теги «для какого измерения», WebP/preview, S3&lt;br&gt;· Загрузка в админке: chunked multipart S3 (~5.5 GB)&lt;br&gt;· Inference: ML/LLM, RQ, сравнение прогонов (Compare)&lt;br&gt;· CVAT + DataPipe (отдельные контуры БД/контейнеров)&lt;br&gt;· CustomUser, экраны CowScanAdmin «из коробки»&lt;br&gt;&lt;br&gt;&lt;b&gt;Чего нет под Путь C в старой админке&lt;/b&gt;&lt;br&gt;· Единый manifest JSON пакета data-collector&lt;br&gt;· Динамический конфиг проекта (абстрактность)&lt;br&gt;· Firebase-пользователи коллекторов&lt;br&gt;&lt;br&gt;&lt;b&gt;Выбор: как делать клиентскую админку&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. Новая админка&lt;/b&gt; (client-admin / django_server UI)&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Сразу под manifest JSON платформы&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Абстрактный просмотрщик → потом плагин под КРС и интеграции (АИС монолит) =&amp;gt; Сохраняем идею с платформой E8&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Не трогаем legacy UI cowmetric; ETL/inference&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Почти с нуля: списки, виджеты, правки, визуализации&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Риск не перенести нюансы старых экранов&lt;br&gt;&lt;br&gt;&lt;b&gt;2. Адаптация cowmetric&lt;/b&gt;&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Переиспользуем готовые экраны: метрики, медиа&amp;nbsp;&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Модель CowScan ≠ Package; нет единого JSON&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Хардкод привязок полей/флагов; много legacy-связей&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Всё равно нужны: маппинг на API платформы, визуализация, АИС" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="1000" y="64" width="440" height="590" as="geometry"/>
+                </mxCell>
+                <mxCell id="jLO4zPpu4afH4TIi02XK-1" value="&lt;b&gt;Схема с конфигом которая конфигурирует не только МП но и админку&lt;br&gt;Выписать все потенциальные плагины и надстройки&amp;nbsp;&lt;br&gt;И понять что заранее а что свреху&lt;br&gt;&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c3d44;strokeColor=#5BC9B8;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="100" y="620" width="440" height="64" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
     </diagram>
     <diagram id="cowmetric-deep" name="cowmetric — возможности">
-        <mxGraphModel dx="1474" dy="722" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1000" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1358" dy="927" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1000" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
