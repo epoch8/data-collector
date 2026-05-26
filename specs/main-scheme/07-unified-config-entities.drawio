@@ -99,10 +99,10 @@
                     <mxGeometry x="154" y="73.5" width="130" height="42" as="geometry"/>
                 </mxCell>
                 <mxCell id="mnBg" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="1" vertex="1">
-                    <mxGeometry x="1038" y="380" width="270" height="200" as="geometry"/>
+                    <mxGeometry x="1038" y="410" width="270" height="150" as="geometry"/>
                 </mxCell>
                 <mxCell id="mnLbl" value="&lt;b&gt;Данные пакета (manifest)&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#3DCC85&quot;&gt;&lt;b&gt;data&lt;/b&gt;&lt;/span&gt; — ответы формы (МП пишет, админ правит)&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;pipeline_results&lt;/b&gt;&lt;/span&gt;&lt;br&gt;· inference — метрики ML, дата&lt;br&gt;· cvat — статус задачи,разметка&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#5BC9B8&quot;&gt;&lt;b&gt;_ui_meta&lt;/b&gt;&lt;/span&gt; — hints, ошибки, лог" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontColor=#E8EAED;" parent="1" vertex="1">
-                    <mxGeometry x="1048" y="388" width="250" height="184" as="geometry"/>
+                    <mxGeometry x="1048" y="426" width="250" height="184" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgGrp" value="" style="group" parent="1" vertex="1" connectable="0">
                     <mxGeometry x="60" y="610" width="1260" height="450" as="geometry"/>
@@ -150,21 +150,21 @@
                     <mxGeometry x="414" y="250" width="190" height="56" as="geometry"/>
                 </mxCell>
                 <mxCell id="plgNote" value="&lt;b&gt;Базовое ядро&lt;/b&gt; (без плагинов):&lt;br&gt;· Просмотр manifest JSON&lt;br&gt;· Галерея медиа + превью&lt;br&gt;· Правка data.*&lt;br&gt;· Статусы пайплайнов&lt;br&gt;&lt;br&gt;&lt;b&gt;Плагины расширяют&lt;/b&gt;:&lt;br&gt;· Доменные экраны&lt;br&gt;· Визуализации&lt;br&gt;· Внешние интеграции&lt;br&gt;· Экспорт и отчёты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="plgGrp" vertex="1">
-                    <mxGeometry x="690" y="30" width="350" height="290" as="geometry"/>
+                    <mxGeometry x="690" y="76" width="350" height="230" as="geometry"/>
                 </mxCell>
-                <mxCell id="plgH4" value="Визуализация" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#8BC9F7;" vertex="1" parent="plgGrp">
+                <mxCell id="plgH4" value="Визуализация" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=10;fontStyle=5;fontColor=#8BC9F7;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="320" width="200" height="18" as="geometry"/>
                 </mxCell>
-                <mxCell id="plgViz1" value="&lt;b&gt;skeleton_overlay&lt;/b&gt;&lt;br&gt;Наложение keypoints + рёбер&lt;br&gt;скелета на кадр (canvas);&lt;br&gt;GT, keypoint inference + VLM&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                <mxCell id="plgViz1" value="&lt;b&gt;skeleton_overlay&lt;/b&gt;&lt;br&gt;Наложение keypoints + рёбер&lt;br&gt;скелета на кадр (canvas);&lt;br&gt;GT, keypoint inference + VLM&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
                     <mxGeometry x="14" y="340" width="190" height="66" as="geometry"/>
                 </mxCell>
-                <mxCell id="plgViz2" value="&lt;b&gt;metrics_chart&lt;/b&gt;&lt;br&gt;Графики метрик по проекту:&lt;br&gt;гистограммы, scatter,&lt;br&gt;тренды и агрегаты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                <mxCell id="plgViz2" value="&lt;b&gt;metrics_chart&lt;/b&gt;&lt;br&gt;Графики метрик по проекту:&lt;br&gt;гистограммы, scatter,&lt;br&gt;тренды и агрегаты" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
                     <mxGeometry x="214" y="340" width="190" height="66" as="geometry"/>
                 </mxCell>
-                <mxCell id="plgViz3" value="&lt;b&gt;error_heatmap&lt;/b&gt;&lt;br&gt;Тепловая карта отклонений&lt;br&gt;GT ↔ inference по точкам&lt;br&gt;скелета или регионам кадра" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                <mxCell id="plgViz3" value="&lt;b&gt;error_heatmap&lt;/b&gt;&lt;br&gt;Тепловая карта отклонений&lt;br&gt;GT ↔ inference по точкам&lt;br&gt;скелета или регионам кадра" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
                     <mxGeometry x="414" y="340" width="190" height="66" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="&lt;b&gt;depth&amp;nbsp;&lt;/b&gt;&lt;br&gt;отрисовка карты глубины" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="plgGrp">
+                <mxCell id="2" value="&lt;b&gt;depth&amp;nbsp;&lt;/b&gt;&lt;br&gt;отрисовка карты глубины" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1a2233;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" parent="plgGrp" vertex="1">
                     <mxGeometry x="610" y="338" width="140" height="66" as="geometry"/>
                 </mxCell>
             </root>
