@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="overview-two-paths" name="Три пути — обзор">
-        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1863" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1040" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -294,7 +294,7 @@
         </mxGraphModel>
     </diagram>
     <diagram id="path-c-flow" name="Путь C — гибрид">
-        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1242" dy="555" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="980" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -323,10 +323,10 @@
                     <mxGeometry x="684" y="380" width="280" height="72" as="geometry"/>
                 </mxCell>
                 <mxCell id="plusC" value="&lt;b&gt;+&lt;/b&gt; Платформа единая для всех проектов · ETL/inference reuse · клиентская кастомизация - сохранение абстракции" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#1c3d44;strokeColor=#5BC9B8;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="48" y="510" width="440" height="64" as="geometry"/>
+                    <mxGeometry x="52" y="654" width="440" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="minusC" value="&lt;b&gt;−&lt;/b&gt; Два слоя (платформа + UI) · контракт API/событий&amp;nbsp; · перенос ETL всё равно объёмный" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="500" y="510" width="440" height="64" as="geometry"/>
+                    <mxGeometry x="504" y="654" width="440" height="64" as="geometry"/>
                 </mxCell>
                 <mxCell id="eC01" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;" parent="1" source="c0" target="c1" edge="1"/>
                 <mxCell id="eC12" value="API / events" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5BC9B8;endArrow=blockThin;fontSize=10;fontColor=#7DD4C8;dashed=1;" parent="1" source="c1" target="c2" edge="1">
@@ -355,6 +355,18 @@
                 <mxCell id="eC4c" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;" parent="1" source="c4b" target="c4c" edge="1"/>
                 <mxCell id="kbDMAAgEcuhdQTI42X10-1" value="&lt;b&gt;Что уже есть в старой админке&lt;/b&gt;&lt;br&gt;· Домен КРС: Breed → Cow → CowScan, 20+ метрик (см/кг, баллы 1–5)&lt;br&gt;· Медиа: Image/Video, bool-теги «для какого измерения», WebP/preview, S3&lt;br&gt;· Загрузка в админке: chunked multipart S3 (~5.5 GB)&lt;br&gt;· Inference: ML/LLM, RQ, сравнение прогонов (Compare)&lt;br&gt;· CVAT + DataPipe (отдельные контуры БД/контейнеров)&lt;br&gt;· CustomUser, экраны CowScanAdmin «из коробки»&lt;br&gt;&lt;br&gt;&lt;b&gt;Чего нет под Путь C в старой админке&lt;/b&gt;&lt;br&gt;· Единый manifest JSON пакета data-collector&lt;br&gt;· Динамический конфиг проекта (абстрактность)&lt;br&gt;· Firebase-пользователи коллекторов&lt;br&gt;&lt;br&gt;&lt;b&gt;Выбор: как делать клиентскую админку&lt;/b&gt;&lt;br&gt;&lt;br&gt;&lt;b&gt;1. Новая админка&lt;/b&gt; (client-admin / django_server UI)&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Сразу под manifest JSON платформы&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Абстрактный просмотрщик → потом плагин под КРС и интеграции (АИС монолит) =&amp;gt; Сохраняем идею с платформой E8&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Не трогаем legacy UI cowmetric; ETL/inference&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Почти с нуля: списки, виджеты, правки, визуализации&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Риск не перенести нюансы старых экранов&lt;br&gt;&lt;br&gt;&lt;b&gt;2. Адаптация cowmetric&lt;/b&gt;&lt;br&gt;&lt;b&gt;+&lt;/b&gt; Переиспользуем готовые экраны: метрики, медиа&amp;nbsp;&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Модель CowScan ≠ Package; нет единого JSON&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Хардкод привязок полей/флагов; много legacy-связей&lt;br&gt;&lt;b&gt;−&lt;/b&gt; Всё равно нужны: маппинг на API платформы, визуализация, АИС" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;fillColor=#3a2224;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="1000" y="64" width="440" height="590" as="geometry"/>
+                </mxCell>
+                <mxCell id="BQmUF1qv857YDWUsUIFx-1" value="&lt;b&gt;Потребители конфига&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#F5EFE0;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="490" width="300" height="22" as="geometry"/>
+                </mxCell>
+                <mxCell id="BQmUF1qv857YDWUsUIFx-2" value="&lt;b&gt;МП&lt;/b&gt; (Flutter)&lt;br&gt;· fields + flow → экраны сбора&lt;br&gt;· Только запись: data + blobs" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="40" y="520" width="280" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="BQmUF1qv857YDWUsUIFx-3" value="&lt;b&gt;Платформа&lt;/b&gt; (django_server)&lt;br&gt;· fields → валидация&amp;nbsp; и прием manifest&lt;br&gt;· pipelines →&amp;nbsp; ETL пайплайны&lt;br&gt;· Пишет: pipeline_results, _ui_meta" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#15251f;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;strokeWidth=2;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="520" width="320" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="BQmUF1qv857YDWUsUIFx-4" value="&lt;b&gt;Клиентская админка&lt;/b&gt; (client-admin)&lt;br&gt;· fields → виджеты просмотра/правки&lt;br&gt;· admin_plugins → проектные расширения" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="700" y="516" width="260" height="84" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
