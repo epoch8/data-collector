@@ -2,23 +2,60 @@
 
 Веб-админка для просмотра и правки **принятых пакетов** data-collector.
 
-**Платформа** (`django_server`) — приём пакетов, пайплайны (inference, CVAT), дописывает `pipeline_results` в manifest.  
-**client-admin** — UI: `data` с формы, результаты пайплайнов, разметка, правки JSON.
+**Платформа** (`django_server`) — приём пакетов, хранение manifest и blobs.  
+**client-admin** — UI ядра: поля формы (`data`) по `config.fields`, галерея медиа (`blobs/*`).
+
+## v1 — что реализовано
+
+- Вкладки **Data** и **Media** (без Pipelines, JSON, плагинов)
+- Widget Resolver: `text_input`, `datetime`, `instruction`, `camera_photo`
+- Правка `manifest.data` для пакетов в статусе `completed`
+- API `/admin-api/v1/*` в django_server (dev без auth)
+- Mock-режим для offline UI
+
+## Запуск
+
+**1. Django (платформа)**
+
+```bash
+cd django_server
+python manage.py migrate
+python manage.py load_projects_from_assets   # если проекты ещё не в БД
+python manage.py runserver
+```
+
+**2. client-admin**
+
+```bash
+cd client-admin
+npm install
+npm run dev
+```
+
+Открыть http://localhost:5173 — Vite проксирует `/admin-api` на `http://127.0.0.1:8000`.
+
+**Mock без django:**
+
+```bash
+VITE_USE_MOCK=true npm run dev
+```
 
 ## Документы
 
 | Файл | О чём |
 |------|--------|
 | [00-overview.md](docs/00-overview.md) | Зачем и общая схема |
-| [01-manifest-and-pipelines.md](docs/01-manifest-and-pipelines.md) | JSON пакета, пайплайны в config |
-| [02-package-workspace.md](docs/02-package-workspace.md) | Экран пакета, вкладки |
-| [03-field-widgets.md](docs/03-field-widgets.md) | Виджеты и плагины |
-| [04-annotations.md](docs/04-annotations.md) | Keypoints, canvas / CVAT / LS |
+| [01-manifest-and-pipelines.md](docs/01-manifest-and-pipelines.md) | JSON пакета |
+| [02-package-workspace.md](docs/02-package-workspace.md) | Экран пакета |
+| [03-field-widgets.md](docs/03-field-widgets.md) | Виджеты |
 | [05-api-contract.md](docs/05-api-contract.md) | HTTP API |
-| [06-roadmap.md](docs/06-roadmap.md) | План работ |
 
-См. также в монорепе: [07-package-payload-structure.md](../specs/07-package-payload-structure.md), [08-server-api-package-upload.md](../specs/08-server-api-package-upload.md).
+## API (dev)
 
-## Статус
-
-Спеки — да. Код UI — ещё нет (см. roadmap).
+| Метод | Путь |
+|-------|------|
+| GET | `/admin-api/v1/projects` |
+| GET | `/admin-api/v1/projects/{id}/packages?phase=` |
+| GET | `/admin-api/v1/projects/{id}/packages/{pkg}/workspace` |
+| PATCH | `/admin-api/v1/projects/{id}/packages/{pkg}/manifest` |
+| GET | `/admin-api/v1/projects/{id}/packages/{pkg}/blobs/{pk}/preview` |

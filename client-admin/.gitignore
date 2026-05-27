@@ -1,28 +1,21 @@
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-.env
-.env.*
+# Logs
+logs
+*.log
+npm-debug.log*
 
-# Node (if added later)
-node_modules/
-dist/
+node_modules
+dist
+dist-ssr
+*.local
 
-# IDE / OS
-.idea/
-.vscode/
-*.swp
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
 .DS_Store
-Thumbs.db
 
-# Local data
-*.sqlite3
-media/
-staticfiles/
-
-# Secrets
-credentials.json
-*-firebase-adminsdk*.json
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?

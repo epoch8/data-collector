@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="unified-config" name="Единый конфиг — сущности (Путь C)">
-        <mxGraphModel dx="1651" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1500" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1139" dy="574" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1500" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -91,9 +91,6 @@
                 </mxCell>
                 <mxCell id="au2" value="&lt;b&gt;Media Viewer&lt;/b&gt;&lt;br&gt;Галерея &lt;code&gt;blobs/*&lt;/code&gt;&lt;br&gt;превью, скачивание" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="auGrp" vertex="1">
                     <mxGeometry x="154" y="26" width="130" height="42" as="geometry"/>
-                </mxCell>
-                <mxCell id="au3" value="&lt;b&gt;Pipeline Status&lt;/b&gt;&lt;br&gt;Статусы и результаты&lt;br&gt;&lt;code&gt;pipeline_results&lt;/code&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=4;fillColor=#1e2a3d;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=9;" parent="auGrp" vertex="1">
-                    <mxGeometry x="14" y="76" width="130" height="42" as="geometry"/>
                 </mxCell>
                 <mxCell id="mnBg" value="" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="ppGrp" vertex="1">
                     <mxGeometry x="638" y="6" width="270" height="150" as="geometry"/>
