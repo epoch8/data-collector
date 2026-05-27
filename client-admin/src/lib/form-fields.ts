@@ -63,6 +63,16 @@ export function flattenSections(sections: FlowFormSection[]): ConfigField[] {
   return sections.flatMap(s => s.fields);
 }
 
+/** Поля для поиска в списке пакетов (из config.fields JSON). */
+export function searchableConfigFields(fields: ConfigField[]): ConfigField[] {
+  return fields.filter(isDataTabField);
+}
+
+export function formatFieldValueForSearch(value: unknown): string {
+  if (value == null) return '';
+  return String(value).toLowerCase();
+}
+
 /** Shots collected for a camera_photo field — only paths under manifest.data[field_id]. */
 export function extractFormShots(value: unknown): FormShot[] {
   if (value == null || typeof value !== 'object') return [];

@@ -43,6 +43,39 @@ def _has_pipeline_flag(manifest: dict | None, key: str) -> bool:
     return key in pr and pr[key] is not None
 
 
+def _searchable_field_ids(project: Project) -> set[str]:
+    try:
+        cfg_root = json.loads(project.raw_json)
+    except json.JSONDecodeError:
+        return set()
+    fields = (cfg_root.get("config") or {}).get("fields") or []
+    ids: set[str] = set()
+    for f in fields:
+        if not isinstance(f, dict):
+            continue
+        fid = f.get("field_id")
+        ftype = f.get("type")
+        if isinstance(fid, str) and ftype in ("text_input", "datetime"):
+            ids.add(fid)
+    return ids
+
+
+def _data_fields_for_search(manifest: dict | None, field_ids: set[str]) -> dict[str, str | int | float | bool | None]:
+    if not manifest or not field_ids:
+        return {}
+    data = manifest.get("data")
+    if not isinstance(data, dict):
+        return {}
+    out: dict[str, str | int | float | bool | None] = {}
+    for fid in field_ids:
+        v = data.get(fid)
+        if v is None:
+            out[fid] = None
+        elif isinstance(v, (str, int, float, bool)):
+            out[fid] = v
+    return out
+
+
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminProjectsListView(View):
     def get(self, _request):
@@ -60,11 +93,26 @@ class AdminProjectsListView(View):
 
 
 @method_decorator(csrf_exempt, name="dispatch")
+class AdminProjectConfigView(View):
+    def get(self, _request, project_id: str):
+        project = Project.objects.filter(project_id=project_id).first()
+        if not project:
+            return JsonResponse(_err("not_found", "Unknown project"), status=404)
+        try:
+            body = json.loads(project.raw_json)
+        except json.JSONDecodeError:
+            return JsonResponse(_err("invalid_config", "Project config is not valid JSON"), status=500)
+        return JsonResponse(body)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageListView(View):
     def get(self, request, project_id: str):
-        if not Project.objects.filter(project_id=project_id).exists():
+        project = Project.objects.filter(project_id=project_id).first()
+        if not project:
             return JsonResponse(_err("not_found", "Unknown project"), status=404)
 
+        searchable = _searchable_field_ids(project)
         qs = PackageSession.objects.filter(project__project_id=project_id).order_by("-created_at")
         phase = (request.GET.get("phase") or "").strip()
         if phase:
@@ -83,6 +131,7 @@ class AdminPackageListView(View):
                     "uploader_email": s.uploader_email or "",
                     "has_inference": _has_pipeline_flag(manifest, "inference"),
                     "has_cvat": _has_pipeline_flag(manifest, "cvat"),
+                    "data_fields": _data_fields_for_search(manifest, searchable),
                 },
             )
         return JsonResponse(items, safe=False)

@@ -161,6 +161,13 @@ export const MOCK_PACKAGES: PackageSession[] = [
     uploader_email: 'operator@example.com',
     has_inference: true,
     has_cvat: true,
+    data_fields: {
+      cow_identifier: 'Bessie-99',
+      cow_age: 36,
+      cow_weight: 520,
+      cow_breed: 'holstein',
+      scan_time: '2026-05-20T09:55:00Z',
+    },
   },
   {
     package_id: '00000000-0000-4000-8000-000000000002',
@@ -170,6 +177,13 @@ export const MOCK_PACKAGES: PackageSession[] = [
     uploader_email: 'field-user@example.com',
     has_inference: true,
     has_cvat: false,
+    data_fields: {
+      cow_identifier: 'Daisy-12',
+      cow_age: 24,
+      cow_weight: 480,
+      cow_breed: 'jersey',
+      scan_time: '2026-05-21T08:25:00Z',
+    },
   },
   {
     package_id: '00000000-0000-4000-8000-000000000003',
@@ -179,6 +193,7 @@ export const MOCK_PACKAGES: PackageSession[] = [
     uploader_email: 'field-user@example.com',
     has_inference: false,
     has_cvat: false,
+    data_fields: {},
   },
 ];
 

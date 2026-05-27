@@ -74,6 +74,8 @@ export interface PackageSession {
   uploader_email: string;
   has_inference?: boolean;
   has_cvat?: boolean;
+  /** Scalar values from manifest.data for searchable config fields */
+  data_fields?: Record<string, string | number | boolean | null>;
 }
 
 export interface PackageWorkspace {

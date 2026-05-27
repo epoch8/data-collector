@@ -1,5 +1,5 @@
 import type { PackageSession, PackageWorkspace, Manifest } from '@/types/manifest';
-import type { ProjectSummary } from '@/types/config';
+import type { ProjectConfig, ProjectSummary } from '@/types/config';
 import { MOCK_PACKAGES, MOCK_WORKSPACE, MOCK_PROJECTS } from './mock-data';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -49,6 +49,14 @@ export const api = {
     }
     const data = await fetchJson<{ projects: ProjectSummary[] }>('/admin-api/v1/projects');
     return data.projects;
+  },
+
+  async getProjectConfig(projectId: string): Promise<ProjectConfig> {
+    if (USE_MOCK) {
+      await delay(150);
+      return structuredClone(MOCK_WORKSPACE.project_config);
+    }
+    return fetchJson<ProjectConfig>(`/admin-api/v1/projects/${projectId}/config`);
   },
 
   async listPackages(projectId: string, phase?: string): Promise<PackageSession[]> {

@@ -57,6 +57,7 @@ VITE_USE_MOCK=true npm run dev
 | Метод | Путь |
 |-------|------|
 | GET | `/admin-api/v1/projects` |
+| GET | `/admin-api/v1/projects/{id}/config` |
 | GET | `/admin-api/v1/projects/{id}/packages?phase=` |
 | GET | `/admin-api/v1/projects/{id}/packages/{pkg}/workspace` |
 | PATCH | `/admin-api/v1/projects/{id}/packages/{pkg}/manifest` |
