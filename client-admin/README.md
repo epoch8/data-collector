@@ -7,8 +7,10 @@
 
 ## v1 — что реализовано
 
-- Вкладки **Data** и **Media** (без Pipelines, JSON, плагинов)
-- Widget Resolver: `text_input`, `datetime`, `instruction`, `camera_photo`
+- Вкладки **Данные** и **Медиа** (без Pipelines, JSON, плагинов)
+- **Данные:** только `text_input` / `datetime` по шагам `config.flow` (заголовок = `form_title`), без instruction и без фото
+- **Медиа:** все `blobs` пакета, бейдж «в форме» для файлов из `data`
+- Widget Resolver, lightbox, навигация по полям, Ctrl+S, toast
 - Правка `manifest.data` для пакетов в статусе `completed`
 - API `/admin-api/v1/*` в django_server (dev без auth)
 - Mock-режим для offline UI

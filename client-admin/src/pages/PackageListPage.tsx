@@ -1,266 +1,179 @@
-import { useEffect, useState } from 'react';
-
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-
 import { api } from '@/api/client';
-
 import type { PackageSession } from '@/types/manifest';
-
 import type { ProjectSummary } from '@/types/config';
+import { PageHeader } from '@/components/ui/PageHeader';
+import { PhaseBadge } from '@/components/ui/Badge';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { TableSkeleton } from '@/components/ui/Spinner';
+import { phaseLabel } from '@/lib/phase-labels';
+import { formatDateTime, formatRelativeTime, shortPackageId } from '@/lib/format';
 
-
+const STORAGE_KEY = 'client-admin:last-project-id';
 
 export function PackageListPage() {
-
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
-
-  const [projectId, setProjectId] = useState<string>('');
-
+  const [projectId, setProjectId] = useState('');
   const [packages, setPackages] = useState<PackageSession[]>([]);
-
-  const [loading, setLoading] = useState(true);
-
-  const [phaseFilter, setPhaseFilter] = useState<string>('all');
-
-
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingPackages, setLoadingPackages] = useState(false);
+  const [phaseFilter, setPhaseFilter] = useState<string>('completed');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
-
     api.listProjects().then(list => {
-
       setProjects(list);
-
-      if (list.length > 0) {
-
-        setProjectId(list[0].project_id);
-
-      }
-
-      setLoading(false);
-
+      const saved = localStorage.getItem(STORAGE_KEY);
+      const initial =
+        saved && list.some(p => p.project_id === saved)
+          ? saved
+          : list[0]?.project_id ?? '';
+      setProjectId(initial);
+      setLoadingProjects(false);
     });
-
   }, []);
 
-
-
   useEffect(() => {
-
     if (!projectId) return;
-
-    setLoading(true);
-
+    localStorage.setItem(STORAGE_KEY, projectId);
+    setLoadingPackages(true);
     api.listPackages(projectId).then(pkgs => {
-
       setPackages(pkgs);
-
-      setLoading(false);
-
+      setLoadingPackages(false);
     });
-
   }, [projectId]);
 
+  const phases = useMemo(() => {
+    const set = new Set(packages.map(p => p.phase));
+    return ['all', 'completed', ...Array.from(set).filter(p => p !== 'completed')];
+  }, [packages]);
 
+  const filtered = useMemo(() => {
+    let list = phaseFilter === 'all' ? packages : packages.filter(p => p.phase === phaseFilter);
+    const q = search.trim().toLowerCase();
+    if (q) {
+      list = list.filter(
+        p =>
+          p.package_id.toLowerCase().includes(q) ||
+          (p.uploader_email ?? '').toLowerCase().includes(q),
+      );
+    }
+    return list;
+  }, [packages, phaseFilter, search]);
 
-  const filtered = phaseFilter === 'all'
-
-    ? packages
-
-    : packages.filter(p => p.phase === phaseFilter);
-
-
-
-  const phases = ['all', ...new Set(packages.map(p => p.phase))];
-
-
+  const loading = loadingProjects || loadingPackages;
 
   return (
-
-    <div className="p-6 max-w-5xl">
-
-      <h2 className="text-xl font-semibold text-gray-100 mb-1">Пакеты</h2>
-
-      <p className="text-sm text-gray-500 mb-5">Просмотр принятых пакетов data-collector</p>
-
-
+    <div className="p-6 max-w-5xl mx-auto">
+      <PageHeader
+        title="Пакеты"
+        subtitle="Просмотр и правка принятых пакетов data-collector"
+      />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
-
         {projects.length > 0 && (
-
           <select
-
             value={projectId}
-
             onChange={e => setProjectId(e.target.value)}
-
-            className="bg-gray-800 border border-gray-700 rounded-md px-3 py-1.5 text-sm text-gray-200 focus:outline-none focus:border-blue-500/60"
-
+            className="ui-input w-auto min-w-[200px] py-1.5"
           >
-
             {projects.map(p => (
-
               <option key={p.project_id} value={p.project_id}>
-
-                {p.name} ({p.project_id})
-
+                {p.name}
               </option>
-
             ))}
-
           </select>
-
         )}
-
-        <div className="flex gap-2">
-
+        <input
+          type="search"
+          placeholder="Поиск по ID или email…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="ui-input w-auto flex-1 min-w-[180px] max-w-xs py-1.5"
+        />
+        <div className="flex flex-wrap gap-1.5">
           {phases.map(ph => (
-
             <button
-
               key={ph}
-
+              type="button"
               onClick={() => setPhaseFilter(ph)}
-
-              className={`px-3 py-1 text-xs rounded-full transition-colors ${
-
+              className={`px-3 py-1 text-xs rounded-full border transition-colors ${
                 phaseFilter === ph
-
-                  ? 'bg-blue-600 text-white'
-
-                  : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-
+                  ? 'bg-blue-600/30 text-blue-200 border-blue-500/40'
+                  : 'bg-gray-800/50 text-gray-400 border-gray-700/50 hover:border-gray-600'
               }`}
-
             >
-
-              {ph === 'all' ? 'Все' : ph}
-
+              {ph === 'all' ? 'Все' : phaseLabel(ph)}
             </button>
-
           ))}
-
         </div>
-
       </div>
 
-
-
-      {loading ? (
-
-        <div className="text-gray-500 text-sm py-8">Загрузка...</div>
-
-      ) : projects.length === 0 ? (
-
-        <div className="text-gray-500 text-sm py-8">Нет проектов в django_server</div>
-
-      ) : filtered.length === 0 ? (
-
-        <div className="text-gray-500 text-sm py-8">Нет пакетов</div>
-
-      ) : (
-
-        <div className="border border-gray-800 rounded-lg overflow-hidden">
-
-          <table className="w-full text-sm">
-
-            <thead>
-
-              <tr className="bg-gray-800/50 text-gray-400 text-left text-xs uppercase tracking-wider">
-
-                <th className="px-4 py-3">Package ID</th>
-
-                <th className="px-4 py-3">Phase</th>
-
-                <th className="px-4 py-3">Дата</th>
-
-                <th className="px-4 py-3">Загрузил</th>
-
-              </tr>
-
-            </thead>
-
-            <tbody className="divide-y divide-gray-800/60">
-
-              {filtered.map(pkg => (
-
-                <tr key={pkg.package_id} className="hover:bg-gray-800/30 transition-colors">
-
-                  <td className="px-4 py-3">
-
-                    <Link
-
-                      to={`/projects/${pkg.project_id}/packages/${pkg.package_id}`}
-
-                      className="text-blue-400 hover:text-blue-300 font-mono text-xs"
-
-                    >
-
-                      {pkg.package_id.slice(0, 8)}…
-
-                    </Link>
-
-                  </td>
-
-                  <td className="px-4 py-3">
-
-                    <PhaseBadge phase={pkg.phase} />
-
-                  </td>
-
-                  <td className="px-4 py-3 text-gray-400">
-
-                    {new Date(pkg.created_at).toLocaleString('ru-RU')}
-
-                  </td>
-
-                  <td className="px-4 py-3 text-gray-400">{pkg.uploader_email || '—'}</td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
+      {!loading && packages.length > 0 && (
+        <p className="text-xs text-gray-500 mb-3">
+          Показано {filtered.length} из {packages.length}
+        </p>
       )}
 
+      {loading ? (
+        <TableSkeleton rows={6} />
+      ) : projects.length === 0 ? (
+        <EmptyState
+          title="Нет проектов"
+          description="Запустите django_server и выполните load_projects_from_assets."
+        />
+      ) : filtered.length === 0 ? (
+        <EmptyState title="Нет пакетов" description="Измените фильтр или выберите другой проект." />
+      ) : (
+        <div className="ui-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-800/40 text-gray-400 text-left text-xs uppercase tracking-wider">
+                <th className="px-4 py-3">Package ID</th>
+                <th className="px-4 py-3">Статус</th>
+                <th className="px-4 py-3">Дата</th>
+                <th className="px-4 py-3">Загрузил</th>
+                <th className="px-4 py-3 w-10" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-800/50">
+              {filtered.map(pkg => (
+                <tr key={pkg.package_id} className="hover:bg-gray-800/25 transition-colors">
+                  <td className="px-4 py-3">
+                    <Link
+                      to={`/projects/${pkg.project_id}/packages/${pkg.package_id}`}
+                      className="text-blue-400 hover:text-blue-300 font-mono text-xs"
+                      title={pkg.package_id}
+                    >
+                      {shortPackageId(pkg.package_id)}
+                    </Link>
+                  </td>
+                  <td className="px-4 py-3">
+                    <PhaseBadge phase={pkg.phase} />
+                  </td>
+                  <td className="px-4 py-3 text-gray-400" title={formatDateTime(pkg.created_at)}>
+                    {formatRelativeTime(pkg.created_at)}
+                  </td>
+                  <td className="px-4 py-3 text-gray-400 truncate max-w-[200px]">
+                    {pkg.uploader_email || '—'}
+                  </td>
+                  <td className="px-4 py-3">
+                    <button
+                      type="button"
+                      title="Копировать ID"
+                      onClick={() => navigator.clipboard.writeText(pkg.package_id)}
+                      className="text-gray-600 hover:text-gray-400 text-xs"
+                    >
+                      ⧉
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
-
   );
-
 }
-
-
-
-function PhaseBadge({ phase }: { phase: string }) {
-
-  const colors: Record<string, string> = {
-
-    completed: 'bg-green-900/40 text-green-400 border-green-700/50',
-
-    uploading: 'bg-yellow-900/40 text-yellow-400 border-yellow-700/50',
-
-    awaiting_blobs: 'bg-yellow-900/40 text-yellow-400 border-yellow-700/50',
-
-    ready_to_commit: 'bg-blue-900/40 text-blue-400 border-blue-700/50',
-
-    failed: 'bg-red-900/40 text-red-400 border-red-700/50',
-
-  };
-
-  return (
-
-    <span className={`text-xs px-2 py-0.5 rounded border ${colors[phase] ?? 'bg-gray-800 text-gray-400 border-gray-700'}`}>
-
-      {phase}
-
-    </span>
-
-  );
-
-}
-

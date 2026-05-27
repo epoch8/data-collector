@@ -1,388 +1,225 @@
 import { useEffect, useState, useCallback } from 'react';
-
 import { useParams, useNavigate } from 'react-router-dom';
-
 import { api, ApiError } from '@/api/client';
-
 import type { PackageWorkspace } from '@/types/manifest';
-
 import { DataTab } from '@/components/tabs/DataTab';
-
 import { MediaTab } from '@/components/tabs/MediaTab';
+import { TabBar, type WorkspaceTab } from '@/components/ui/TabBar';
+import { Button } from '@/components/ui/Button';
+import { PhaseBadge } from '@/components/ui/Badge';
+import { WorkspaceSkeleton } from '@/components/ui/Spinner';
+import { useToast } from '@/components/ui/Toast';
+import { collectFormBlobPaths } from '@/lib/form-fields';
+import { formatDateTime, shortPackageId } from '@/lib/format';
 
-
-
-type TabId = 'data' | 'media';
-
-
-
-const TABS: { id: TabId; label: string }[] = [
-
-  { id: 'data', label: 'Data' },
-
-  { id: 'media', label: 'Media' },
-
+const TABS = [
+  { id: 'data' as const, label: 'Данные' },
+  { id: 'media' as const, label: 'Медиа' },
 ];
 
-
-
 export function PackageWorkspacePage() {
-
   const { projectId, packageId } = useParams<{ projectId: string; packageId: string }>();
-
   const navigate = useNavigate();
-
+  const toast = useToast();
   const [ws, setWs] = useState<PackageWorkspace | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
-
-  const [activeTab, setActiveTab] = useState<TabId>('data');
-
+  const [activeTab, setActiveTab] = useState<WorkspaceTab>('data');
   const [dirty, setDirty] = useState(false);
-
   const [saving, setSaving] = useState(false);
-
   const [saveError, setSaveError] = useState<string | null>(null);
 
-
-
   const loadWorkspace = useCallback(() => {
-
     if (!projectId || !packageId) return;
-
     setLoading(true);
-
     setError(null);
-
-    api.getWorkspace(projectId, packageId)
-
+    api
+      .getWorkspace(projectId, packageId)
       .then(data => {
-
         setWs(data);
-
         setLoading(false);
-
       })
-
       .catch(err => {
-
         setLoading(false);
-
-        if (err instanceof ApiError) {
-
-          setError(err.message);
-
-        } else {
-
-          setError('Не удалось загрузить пакет');
-
-        }
-
+        setError(err instanceof ApiError ? err.message : 'Не удалось загрузить пакет');
       });
-
   }, [projectId, packageId]);
 
-
-
   useEffect(() => {
-
     loadWorkspace();
-
   }, [loadWorkspace]);
-
-
 
   const isEditable = ws?.session.phase === 'completed';
 
-
-
-  const handleDataChange = useCallback((fieldId: string, value: unknown) => {
-
-    if (!isEditable) return;
-
-    setWs(prev => {
-
-      if (!prev) return prev;
-
-      return {
-
-        ...prev,
-
-        manifest: {
-
-          ...prev.manifest,
-
-          data: { ...prev.manifest.data, [fieldId]: value },
-
-        },
-
-      };
-
-    });
-
-    setDirty(true);
-
-    setSaveError(null);
-
-  }, [isEditable]);
-
-
-
-  const handleSave = useCallback(async () => {
-
-    if (!ws || !projectId || !packageId || !isEditable) return;
-
-    setSaving(true);
-
-    setSaveError(null);
-
-    try {
-
-      await api.patchManifest(projectId, packageId, ws.manifest);
-
-      setDirty(false);
-
-    } catch (err) {
-
-      setSaveError(err instanceof ApiError ? err.message : 'Ошибка сохранения');
-
-    } finally {
-
-      setSaving(false);
-
-    }
-
-  }, [ws, projectId, packageId, isEditable]);
-
-
-
-  const handleReset = useCallback(() => {
-
-    if (!projectId || !packageId) return;
-
-    setDirty(false);
-
-    setSaveError(null);
-
-    loadWorkspace();
-
-  }, [projectId, packageId, loadWorkspace]);
-
-
-
-  if (loading) {
-
-    return <div className="p-6 text-gray-500 text-sm">Загрузка пакета...</div>;
-
-  }
-
-
-
-  if (error || !ws) {
-
-    return (
-
-      <div className="p-6">
-
-        <button
-
-          onClick={() => navigate('/packages')}
-
-          className="text-gray-500 hover:text-gray-300 text-sm mb-4"
-
-        >
-
-          &larr; Пакеты
-
-        </button>
-
-        <div className="text-red-400 text-sm">{error ?? 'Пакет не найден'}</div>
-
-      </div>
-
-    );
-
-  }
-
-
-
-  const { session, manifest, blobs, project_config } = ws;
-
-  const fields = project_config.config?.fields ?? [];
-
-
-
-  return (
-
-    <div className="flex flex-col h-full">
-
-      <header className="flex-shrink-0 px-6 py-4 border-b border-gray-800 bg-[#13151d]/80 backdrop-blur">
-
-        <div className="flex items-center justify-between">
-
-          <div className="flex items-center gap-4">
-
-            <button
-
-              onClick={() => navigate('/packages')}
-
-              className="text-gray-500 hover:text-gray-300 text-sm"
-
-            >
-
-              &larr; Пакеты
-
-            </button>
-
-            <div>
-
-              <h2 className="text-base font-semibold text-gray-100 font-mono">
-
-                {session.package_id.slice(0, 8)}…
-
-              </h2>
-
-              <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-
-                <span>{project_config.name}</span>
-
-                <span className="text-gray-700">|</span>
-
-                <span>{session.phase}</span>
-
-                <span className="text-gray-700">|</span>
-
-                <span>{session.uploader_email || '—'}</span>
-
-                <span className="text-gray-700">|</span>
-
-                <span>{new Date(session.created_at).toLocaleString('ru-RU')}</span>
-
-              </div>
-
-            </div>
-
-          </div>
-
-          <div className="flex gap-2">
-
-            <button
-
-              onClick={handleReset}
-
-              disabled={!dirty}
-
-              className="px-3 py-1.5 text-xs rounded-md border border-gray-700 text-gray-400 hover:bg-gray-800 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-
-            >
-
-              Откатить
-
-            </button>
-
-            <button
-
-              onClick={handleSave}
-
-              disabled={!dirty || saving || !isEditable}
-
-              className="px-4 py-1.5 text-xs rounded-md bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-
-            >
-
-              {saving ? 'Сохранение...' : 'Сохранить'}
-
-            </button>
-
-          </div>
-
-        </div>
-
-        {!isEditable && (
-
-          <div className="mt-3 text-xs text-amber-500/90 bg-amber-950/20 border border-amber-800/40 rounded-md px-3 py-2">
-
-            Только просмотр: правки доступны для пакетов в статусе completed.
-
-          </div>
-
-        )}
-
-        {saveError && (
-
-          <div className="mt-3 text-xs text-red-400 bg-red-950/20 border border-red-800/40 rounded-md px-3 py-2">
-
-            {saveError}
-
-          </div>
-
-        )}
-
-      </header>
-
-
-
-      <div className="flex-shrink-0 px-6 pt-3 border-b border-gray-800 flex gap-1">
-
-        {TABS.map(tab => (
-
-          <button
-
-            key={tab.id}
-
-            onClick={() => setActiveTab(tab.id)}
-
-            className={`px-4 py-2 text-sm rounded-t-md transition-colors ${
-
-              activeTab === tab.id
-
-                ? 'bg-gray-800/60 text-gray-100 border-b-2 border-blue-500'
-
-                : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800/30'
-
-            }`}
-
-          >
-
-            {tab.label}
-
-          </button>
-
-        ))}
-
-      </div>
-
-
-
-      <div className="flex-1 overflow-auto p-6">
-
-        {activeTab === 'data' && (
-
-          <DataTab
-
-            fields={fields}
-
-            data={manifest.data ?? {}}
-
-            blobs={blobs}
-
-            onChange={handleDataChange}
-
-            readOnly={!isEditable}
-
-          />
-
-        )}
-
-        {activeTab === 'media' && <MediaTab blobs={blobs} />}
-
-      </div>
-
-    </div>
-
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, [dirty]);
+
+  const handleDataChange = useCallback(
+    (fieldId: string, value: unknown) => {
+      if (!isEditable) return;
+      setWs(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          manifest: {
+            ...prev.manifest,
+            data: { ...prev.manifest.data, [fieldId]: value },
+          },
+        };
+      });
+      setDirty(true);
+      setSaveError(null);
+    },
+    [isEditable],
   );
 
-}
+  const handleSave = useCallback(async () => {
+    if (!ws || !projectId || !packageId || !isEditable) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await api.patchManifest(projectId, packageId, ws.manifest);
+      setDirty(false);
+      toast.show('Изменения сохранены');
+    } catch (err) {
+      const msg = err instanceof ApiError ? err.message : 'Ошибка сохранения';
+      setSaveError(msg);
+      toast.show(msg, 'error');
+    } finally {
+      setSaving(false);
+    }
+  }, [ws, projectId, packageId, isEditable, toast]);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (dirty && isEditable && ws && projectId && packageId) {
+          void handleSave();
+        }
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [dirty, isEditable, ws, projectId, packageId, handleSave]);
+
+  const handleReset = useCallback(() => {
+    if (dirty && !window.confirm('Отменить несохранённые изменения?')) return;
+    setDirty(false);
+    setSaveError(null);
+    loadWorkspace();
+  }, [dirty, loadWorkspace]);
+
+  const handleBack = () => {
+    if (dirty && !window.confirm('Есть несохранённые изменения. Уйти со страницы?')) return;
+    navigate('/packages');
+  };
+
+  if (loading) {
+    return <WorkspaceSkeleton />;
+  }
+
+  if (error || !ws) {
+    return (
+      <div className="p-6 max-w-lg">
+        <button type="button" onClick={() => navigate('/packages')} className="text-sm text-gray-500 hover:text-gray-300 mb-4">
+          ← Пакеты
+        </button>
+        <p className="text-red-400 text-sm">{error ?? 'Пакет не найден'}</p>
+      </div>
+    );
+  }
+
+  const { session, manifest, blobs, project_config } = ws;
+  const fields = project_config.config?.fields ?? [];
+  const formBlobPaths = collectFormBlobPaths(manifest.data ?? {});
+
+  return (
+    <div className="flex flex-col min-h-full">
+      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md">
+        <div className="px-6 py-4">
+          <nav className="text-xs text-gray-500 mb-2 flex items-center gap-1.5 flex-wrap">
+            <button type="button" onClick={handleBack} className="hover:text-gray-300">
+              Пакеты
+            </button>
+            <span className="text-gray-700">/</span>
+            <span className="text-gray-400">{project_config.name}</span>
+            <span className="text-gray-700">/</span>
+            <span className="font-mono text-gray-400" title={session.package_id}>
+              {shortPackageId(session.package_id)}
+            </span>
+          </nav>
+
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-3 flex-wrap">
+                <h2 className="text-lg font-semibold text-gray-100 font-mono" title={session.package_id}>
+                  {shortPackageId(session.package_id)}
+                </h2>
+                <PhaseBadge phase={session.phase} />
+                {dirty && (
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/50 text-amber-400 border border-amber-700/40">
+                    не сохранено
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5">
+                {session.uploader_email || '—'} · {formatDateTime(session.created_at)}
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={handleReset} disabled={!dirty}>
+                Откатить
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                disabled={!dirty || saving || !isEditable}
+                loading={saving}
+              >
+                Сохранить
+              </Button>
+            </div>
+          </div>
+
+          {!isEditable && (
+            <p className="mt-3 text-xs text-amber-500/90 bg-amber-950/30 border border-amber-800/40 rounded-md px-3 py-2">
+              Только просмотр: правки доступны для пакетов в статусе «Завершён».
+            </p>
+          )}
+          {saveError && (
+            <p className="mt-3 text-xs text-red-400 bg-red-950/30 border border-red-800/40 rounded-md px-3 py-2">
+              {saveError}
+            </p>
+          )}
+        </div>
+
+        <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
+      </header>
+
+      <div className="flex-1 p-6">
+        {activeTab === 'data' && (
+          <DataTab
+            fields={fields}
+            flow={project_config.config?.flow}
+            data={manifest.data ?? {}}
+            blobs={blobs}
+            onChange={handleDataChange}
+            readOnly={!isEditable}
+          />
+        )}
+        {activeTab === 'media' && (
+          <MediaTab blobs={blobs} formBlobPaths={formBlobPaths} />
+        )}
+      </div>
+    </div>
+  );
+}
