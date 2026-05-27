@@ -143,9 +143,9 @@ export function PackageWorkspacePage() {
   const formBlobPaths = collectFormBlobPaths(manifest.data ?? {});
 
   return (
-    <div className="flex flex-col min-h-full">
+    <div className={`flex flex-col min-h-full ${dirty ? 'pb-20' : ''}`}>
       <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md">
-        <div className="px-6 py-4">
+        <div className="px-4 sm:px-6 py-3 sm:py-4 max-w-7xl mx-auto w-full">
           <nav className="text-xs text-gray-500 mb-2 flex items-center gap-1.5 flex-wrap">
             <button type="button" onClick={handleBack} className="hover:text-gray-300">
               Пакеты
@@ -175,7 +175,7 @@ export function PackageWorkspacePage() {
                 {session.uploader_email || '—'} · {formatDateTime(session.created_at)}
               </p>
             </div>
-            <div className="flex gap-2">
+            <div className="hidden sm:flex gap-2">
               <Button variant="ghost" onClick={handleReset} disabled={!dirty}>
                 Откатить
               </Button>
@@ -205,7 +205,7 @@ export function PackageWorkspacePage() {
         <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
       </header>
 
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-4 sm:p-6">
         {activeTab === 'data' && (
           <DataTab
             fields={fields}
@@ -217,9 +217,36 @@ export function PackageWorkspacePage() {
           />
         )}
         {activeTab === 'media' && (
-          <MediaTab blobs={blobs} formBlobPaths={formBlobPaths} />
+          <div className="max-w-7xl mx-auto w-full">
+            <MediaTab blobs={blobs} formBlobPaths={formBlobPaths} />
+          </div>
         )}
       </div>
+
+      {dirty && isEditable && (
+        <div className="fixed bottom-0 left-60 right-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <p className="text-xs text-amber-400/90">
+              Есть несохранённые изменения
+              <span className="hidden sm:inline text-gray-600"> · Ctrl+S</span>
+            </p>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button variant="ghost" onClick={handleReset} className="flex-1 sm:flex-none">
+                Откатить
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleSave}
+                disabled={saving}
+                loading={saving}
+                className="flex-1 sm:flex-none"
+              >
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

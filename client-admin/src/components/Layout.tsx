@@ -22,7 +22,7 @@ export function Layout() {
           Ядро v1.1 · Data + Media
         </div>
       </aside>
-      <main className="flex-1 overflow-auto min-w-0">
+      <main className="flex-1 overflow-auto min-w-0 bg-[var(--color-surface)]">
         <Outlet />
       </main>
     </div>

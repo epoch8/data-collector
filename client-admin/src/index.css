@@ -90,4 +90,42 @@ body {
     background: rgb(26 51 41 / 0.5);
     border-bottom: 2px solid var(--color-media);
   }
+
+  .ui-panel {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgb(19 22 30 / 0.85);
+    backdrop-filter: blur(8px);
+  }
+
+  .ui-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.75rem;
+    font-size: 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid var(--color-border);
+    background: rgb(31 35 48 / 0.6);
+    color: #9ca3af;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+  }
+
+  .ui-chip:hover {
+    color: #e8eaed;
+    border-color: rgb(75 85 99 / 0.8);
+  }
+
+  .ui-chip--active {
+    background: rgb(37 99 235 / 0.25);
+    border-color: rgb(59 130 246 / 0.5);
+    color: #bfdbfe;
+  }
+
+  .ui-nav-rail {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    background: rgb(19 22 30 / 0.6);
+    padding: 0.75rem;
+  }
 }

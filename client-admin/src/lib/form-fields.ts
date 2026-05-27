@@ -73,6 +73,37 @@ export function formatFieldValueForSearch(value: unknown): string {
   return String(value).toLowerCase();
 }
 
+/** ISO или epoch из manifest.data. */
+export function parseManifestDatetime(value: unknown): Date | null {
+  if (value == null || value === '') return null;
+  if (typeof value === 'number') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  if (typeof value === 'string') {
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
+  return null;
+}
+
+/** YYYY-MM-DD в локальной таймзоне браузера. */
+export function localDateKeyFromManifestValue(value: unknown): string | null {
+  const d = parseManifestDatetime(value);
+  if (!d) return null;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+/** Совпадение календарного дня с выбранной датой (input type=date). */
+export function matchesDatetimeDayFilter(value: unknown, filterYmd: string): boolean {
+  if (!filterYmd) return true;
+  const key = localDateKeyFromManifestValue(value);
+  return key === filterYmd;
+}
+
 /** Shots collected for a camera_photo field — only paths under manifest.data[field_id]. */
 export function extractFormShots(value: unknown): FormShot[] {
   if (value == null || typeof value !== 'object') return [];

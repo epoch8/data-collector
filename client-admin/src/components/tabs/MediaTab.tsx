@@ -30,10 +30,13 @@ export function MediaTab({ blobs, formBlobPaths }: Props) {
 
   return (
     <div>
-      <p className="text-xs text-gray-500 mb-4">
-        Все файлы пакета ({blobs.length}). Снимки с формы отмечены бейджем.
-      </p>
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+      <div className="flex flex-wrap items-baseline justify-between gap-2 mb-5">
+        <h3 className="text-base font-semibold text-gray-100">Медиа</h3>
+        <p className="text-xs text-gray-500">
+          {blobs.length} файл(ов) · снимки с формы отмечены
+        </p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 sm:gap-4">
         {blobs.map((blob, idx) => {
           const inForm = formBlobPaths?.has(blob.logical_path);
           return (
