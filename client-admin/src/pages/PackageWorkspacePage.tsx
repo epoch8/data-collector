@@ -1,21 +1,18 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/api/client';
 import type { PackageWorkspace } from '@/types/manifest';
 import { DataTab } from '@/components/tabs/DataTab';
 import { MediaTab } from '@/components/tabs/MediaTab';
-import { TabBar, type WorkspaceTab } from '@/components/ui/TabBar';
+import { VisualisationTab } from '@/components/tabs/VisualisationTab';
+import type { WorkspaceTab } from '@/components/ui/TabBar';
 import { Button } from '@/components/ui/Button';
-import { PhaseBadge } from '@/components/ui/Badge';
+import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
 import { WorkspaceSkeleton } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { collectFormBlobPaths } from '@/lib/form-fields';
-import { formatDateTime, shortPackageId } from '@/lib/format';
-
-const TABS = [
-  { id: 'data' as const, label: 'Данные' },
-  { id: 'media' as const, label: 'Медиа' },
-];
+import { getCowKeypointAnnotationsForPackage } from '@/lib/datapipe-mock';
+import { getCowInferenceForPackage } from '@/lib/datapipe-inference-mock';
 
 export function PackageWorkspacePage() {
   const { projectId, packageId } = useParams<{ projectId: string; packageId: string }>();
@@ -123,6 +120,33 @@ export function PackageWorkspacePage() {
     navigate('/packages');
   };
 
+  const gtRecords = useMemo(() => {
+    if (!ws) return [];
+    return getCowKeypointAnnotationsForPackage(ws.session.project_id, ws.session.package_id);
+  }, [ws]);
+
+  const inferenceRecords = useMemo(() => {
+    if (!ws) return [];
+    return getCowInferenceForPackage(ws.session.project_id, ws.session.package_id);
+  }, [ws]);
+
+  const hasVisualisation = gtRecords.length > 0 || inferenceRecords.length > 0;
+
+  const tabs = useMemo(
+    () => [
+      { id: 'data' as const, label: 'Данные' },
+      { id: 'media' as const, label: 'Медиа' },
+      ...(hasVisualisation ? [{ id: 'visualisation' as const, label: 'Визуализация' }] : []),
+    ],
+    [hasVisualisation],
+  );
+
+  useEffect(() => {
+    if (activeTab === 'visualisation' && !hasVisualisation) {
+      setActiveTab('data');
+    }
+  }, [activeTab, hasVisualisation]);
+
   if (loading) {
     return <WorkspaceSkeleton />;
   }
@@ -144,66 +168,24 @@ export function PackageWorkspacePage() {
 
   return (
     <div className={`flex flex-col min-h-full ${dirty ? 'pb-20' : ''}`}>
-      <header className="sticky top-0 z-20 border-b border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md">
-        <div className="px-4 sm:px-6 py-3 sm:py-4 max-w-7xl mx-auto w-full">
-          <nav className="text-xs text-gray-500 mb-2 flex items-center gap-1.5 flex-wrap">
-            <button type="button" onClick={handleBack} className="hover:text-gray-300">
-              Пакеты
-            </button>
-            <span className="text-gray-700">/</span>
-            <span className="text-gray-400">{project_config.name}</span>
-            <span className="text-gray-700">/</span>
-            <span className="font-mono text-gray-400" title={session.package_id}>
-              {shortPackageId(session.package_id)}
-            </span>
-          </nav>
-
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-lg font-semibold text-gray-100 font-mono" title={session.package_id}>
-                  {shortPackageId(session.package_id)}
-                </h2>
-                <PhaseBadge phase={session.phase} />
-                {dirty && (
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/50 text-amber-400 border border-amber-700/40">
-                    не сохранено
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-gray-500 mt-1.5">
-                {session.uploader_email || '—'} · {formatDateTime(session.created_at)}
-              </p>
-            </div>
-            <div className="hidden sm:flex gap-2">
-              <Button variant="ghost" onClick={handleReset} disabled={!dirty}>
-                Откатить
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                disabled={!dirty || saving || !isEditable}
-                loading={saving}
-              >
-                Сохранить
-              </Button>
-            </div>
-          </div>
-
-          {!isEditable && (
-            <p className="mt-3 text-xs text-amber-500/90 bg-amber-950/30 border border-amber-800/40 rounded-md px-3 py-2">
-              Только просмотр: правки доступны для пакетов в статусе «Завершён».
-            </p>
-          )}
-          {saveError && (
-            <p className="mt-3 text-xs text-red-400 bg-red-950/30 border border-red-800/40 rounded-md px-3 py-2">
-              {saveError}
-            </p>
-          )}
-        </div>
-
-        <TabBar tabs={TABS} active={activeTab} onChange={setActiveTab} />
-      </header>
+      <WorkspaceHeader
+        projectName={project_config.name}
+        packageId={session.package_id}
+        phase={session.phase}
+        uploaderEmail={session.uploader_email}
+        createdAt={session.created_at}
+        dirty={dirty}
+        isEditable={isEditable}
+        saving={saving}
+        saveError={saveError}
+        readOnlyHint={!isEditable}
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        onBack={handleBack}
+        onReset={handleReset}
+        onSave={() => void handleSave()}
+      />
 
       <div className="flex-1 p-4 sm:p-6">
         {activeTab === 'data' && (
@@ -221,10 +203,17 @@ export function PackageWorkspacePage() {
             <MediaTab blobs={blobs} formBlobPaths={formBlobPaths} />
           </div>
         )}
+        {activeTab === 'visualisation' && (
+          <VisualisationTab
+            blobs={blobs}
+            gtRecords={gtRecords}
+            inferenceRecords={inferenceRecords}
+          />
+        )}
       </div>
 
       {dirty && isEditable && (
-        <div className="fixed bottom-0 left-60 right-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
+        <div className="fixed bottom-0 inset-x-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
             <p className="text-xs text-amber-400/90">
               Есть несохранённые изменения

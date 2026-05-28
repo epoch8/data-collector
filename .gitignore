@@ -75,6 +75,8 @@ django_server/db.sqlite3-journal
 django_server/media/
 django_server/staticfiles/
 
+datapipe_test/
+
 # --- Секреты (сервисный аккаунт — только локально / CI) ---
 # google-services.json / GoogleService-Info.plist обычно коммитят для сборки клиента.
 django_server/firebase-service-account.json

@@ -1,4 +1,4 @@
-export type WorkspaceTab = 'data' | 'media';
+export type WorkspaceTab = 'data' | 'media' | 'visualisation';
 
 interface Tab {
   id: WorkspaceTab;
@@ -11,28 +11,27 @@ interface Props {
   onChange: (id: WorkspaceTab) => void;
 }
 
+const ACTIVE_CLASS: Record<WorkspaceTab, string> = {
+  data: 'ui-tab ui-tab--active-data',
+  media: 'ui-tab ui-tab--active-media',
+  visualisation: 'ui-tab ui-tab--active-visualisation',
+};
+
 export function TabBar({ tabs, active, onChange }: Props) {
   return (
-    <div className="flex gap-1 border-b border-[var(--color-border)] px-6 pt-2">
-      {tabs.map(tab => {
-        const isActive = tab.id === active;
-        const activeClass =
-          tab.id === 'data'
-            ? 'ui-tab ui-tab--active-data'
-            : tab.id === 'media'
-              ? 'ui-tab ui-tab--active-media'
-              : 'ui-tab';
-        return (
+    <div className="workspace-tabs border-t border-[var(--color-border)]">
+      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex gap-1 sm:gap-2">
+        {tabs.map(tab => (
           <button
             key={tab.id}
             type="button"
             onClick={() => onChange(tab.id)}
-            className={isActive ? activeClass : 'ui-tab'}
+            className={tab.id === active ? ACTIVE_CLASS[tab.id] : 'ui-tab'}
           >
             {tab.label}
           </button>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }
