@@ -10,8 +10,8 @@ export function Layout() {
               DC
             </span>
             <div>
-              <h1 className="text-sm font-bold tracking-wide text-gray-100">Data Collector</h1>
-              <span className="text-[10px] text-gray-500">client-admin</span>
+              <h1 className="text-sm font-bold tracking-wide text-gray-100">client admin</h1>
+              <span className="text-[10px] text-gray-500">data collector</span>
             </div>
           </div>
         </div>
