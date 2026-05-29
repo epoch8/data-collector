@@ -146,12 +146,12 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
         setDepthProbe(null);
         return;
       }
-      const depthCm = sampleDepth(depthData, coords.x, coords.y);
-      if (depthCm == null) {
+      const depthM = sampleDepth(depthData, coords.x, coords.y);
+      if (depthM == null) {
         setDepthProbe(null);
         return;
       }
-      setDepthProbe({ x: coords.x, y: coords.y, depthCm });
+      setDepthProbe({ x: coords.x, y: coords.y, depthM });
     },
     [showDepth, depthData, probeImageSize.width, probeImageSize.height],
   );

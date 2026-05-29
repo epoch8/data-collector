@@ -75,6 +75,8 @@ export interface CowInferenceRecord {
     width: number;
     height: number;
     format?: 'npy' | 'png';
+    /** Единица значений в массиве глубины (mock: метры). */
+    unit?: 'm' | 'cm';
   };
 }
 

@@ -21,7 +21,8 @@ export interface DepthMapData {
 export interface DepthProbe {
   x: number;
   y: number;
-  depthCm: number;
+  /** Расстояние до камеры, метры (сырое значение из .npy). */
+  depthM: number;
 }
 
 export function resolveDepthMapUrl(assetPath: string): string | undefined {

@@ -1,4 +1,4 @@
-/** Типичное «пустое» значение в mock .npy (далеко за пределами коровы). */
+/** Типичное «пустое» значение в mock .npy. */
 export const DEPTH_INVALID_SENTINEL = 126.72;
 
 const INVALID_HIGH = 120;
@@ -14,34 +14,31 @@ function clamp01(x: number): number {
   return Math.min(1, Math.max(0, x));
 }
 
-/** Google Turbo (полиномиальная аппроксимация). */
+/**
+ * Палитра глубины: ближе к камере — холодные тона, дальше — тёплые.
+ * t ∈ [0, 1] после нормализации vmin…vmax.
+ */
 export function depthToRgb(t: number): [number, number, number] {
   const x = clamp01(t);
-  const r =
-    255 *
-    clamp01(
-      0.13572138 +
-        x *
-          (4.6153926 +
-            x * (-42.66032258 + x * (132.13108234 + x * (-152.94239396 + x * 59.28637943)))),
-    );
-  const g =
-    255 *
-    clamp01(
-      0.09140261 +
-        x *
-          (2.19418839 +
-            x * (4.84296658 + x * (-14.18503333 + x * (4.27729857 + x * 2.82956604)))),
-    );
-  const b =
-    255 *
-    clamp01(
-      0.1066733 +
-        x *
-          (12.64194608 +
-            x * (-60.58204836 + x * (110.36276771 + x * (-89.90310912 + x * 27.34824973)))),
-    );
-  return [Math.round(r), Math.round(g), Math.round(b)];
+  // #2E5BFF → #00C9C9 → #F5D547 → #F04E4E
+  if (x < 0.33) {
+    const f = x / 0.33;
+    return lerpRgb([46, 91, 255], [0, 201, 201], f);
+  }
+  if (x < 0.66) {
+    const f = (x - 0.33) / 0.33;
+    return lerpRgb([0, 201, 201], [245, 213, 71], f);
+  }
+  const f = (x - 0.66) / 0.34;
+  return lerpRgb([245, 213, 71], [240, 78, 78], f);
+}
+
+function lerpRgb(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
+  return [
+    Math.round(a[0] + (b[0] - a[0]) * t),
+    Math.round(a[1] + (b[1] - a[1]) * t),
+    Math.round(a[2] + (b[2] - a[2]) * t),
+  ];
 }
 
 export function normalizeDepth(value: number, min: number, max: number): number {
@@ -49,7 +46,6 @@ export function normalizeDepth(value: number, min: number, max: number): number 
   return clamp01((value - min) / (max - min));
 }
 
-/** Диапазон только по валидным пикселям (без 126.72 и фона). */
 export function depthValueRange(
   values: Float32Array,
   lowPct = 5,
@@ -66,13 +62,17 @@ export function depthValueRange(
   const lo = sample[Math.floor((sample.length * lowPct) / 100)] ?? sample[0];
   const hi =
     sample[Math.floor((sample.length * highPct) / 100)] ?? sample[sample.length - 1];
-  if (hi <= lo) return { min: lo, max: lo + 1 };
+  if (hi <= lo) return { min: lo, max: lo + 0.01 };
   return { min: lo, max: hi };
 }
 
 export type DepthRasterMode = 'opaque' | 'overlay';
 
-/** Растеризация карты: валидные — turbo, невалидные — прозрачные или серые. */
+function invalidPixelRgb(x: number, y: number): [number, number, number] {
+  const check = ((x >> 2) ^ (y >> 2)) & 1;
+  return check ? [22, 26, 36] : [16, 19, 28];
+}
+
 export function rasterizeDepthMap(
   values: Float32Array,
   gridWidth: number,
@@ -83,7 +83,6 @@ export function rasterizeDepthMap(
 ): ImageData {
   const img = new ImageData(gridWidth, gridHeight);
   const d = img.data;
-  const invalidRgb: [number, number, number] = [22, 24, 32];
 
   for (let y = 0; y < gridHeight; y++) {
     for (let x = 0; x < gridWidth; x++) {
@@ -96,9 +95,10 @@ export function rasterizeDepthMap(
           d[i + 2] = 0;
           d[i + 3] = 0;
         } else {
-          d[i] = invalidRgb[0];
-          d[i + 1] = invalidRgb[1];
-          d[i + 2] = invalidRgb[2];
+          const [r, g, b] = invalidPixelRgb(x, y);
+          d[i] = r;
+          d[i + 1] = g;
+          d[i + 2] = b;
           d[i + 3] = 255;
         }
         continue;

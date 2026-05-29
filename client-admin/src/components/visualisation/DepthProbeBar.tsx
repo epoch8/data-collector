@@ -1,4 +1,5 @@
 import type { DepthProbe } from '@/lib/depth-npy';
+import { formatDepthMeters } from '@/lib/depth-format';
 import type { DepthDisplayMode } from '@/components/visualisation/DepthMapViewer';
 
 interface Props {
@@ -22,52 +23,59 @@ export function DepthProbeBar({
 }: Props) {
   return (
     <div className="depth-probe-bar">
-      <div className="depth-probe-bar__modes" role="group" aria-label="Режим глубины">
-        <button
-          type="button"
-          className={`depth-mode-btn ${mode === 'split' ? 'depth-mode-btn--on' : ''}`}
-          onClick={() => onModeChange('split')}
-        >
-          Рядом
-        </button>
-        <button
-          type="button"
-          className={`depth-mode-btn ${mode === 'overlay' ? 'depth-mode-btn--on' : ''}`}
-          onClick={() => onModeChange('overlay')}
-        >
-          Наложение
-        </button>
+      <div className="depth-probe-bar__left">
+        <span className="depth-probe-bar__label">Глубина</span>
+        <div className="depth-probe-bar__modes" role="group" aria-label="Режим отображения">
+          <button
+            type="button"
+            className={`depth-mode-btn ${mode === 'split' ? 'depth-mode-btn--on' : ''}`}
+            onClick={() => onModeChange('split')}
+          >
+            Рядом
+          </button>
+          <button
+            type="button"
+            className={`depth-mode-btn ${mode === 'overlay' ? 'depth-mode-btn--on' : ''}`}
+            onClick={() => onModeChange('overlay')}
+          >
+            Наложение
+          </button>
+        </div>
+        {mode === 'overlay' && (
+          <label className="depth-probe-bar__opacity">
+            <span className="sr-only">Прозрачность наложения</span>
+            <input
+              type="range"
+              min={15}
+              max={85}
+              value={Math.round(overlayOpacity * 100)}
+              onChange={e => onOverlayOpacityChange(Number(e.target.value) / 100)}
+              className="depth-range"
+              title="Прозрачность"
+            />
+            <span className="depth-probe-bar__opacity-val">{Math.round(overlayOpacity * 100)}%</span>
+          </label>
+        )}
       </div>
 
-      {mode === 'overlay' && (
-        <label className="depth-probe-bar__opacity">
-          <span>Прозрачность</span>
-          <input
-            type="range"
-            min={15}
-            max={85}
-            value={Math.round(overlayOpacity * 100)}
-            onChange={e => onOverlayOpacityChange(Number(e.target.value) / 100)}
-            className="depth-range"
-          />
-          <span className="tabular-nums text-gray-400">{Math.round(overlayOpacity * 100)}%</span>
-        </label>
-      )}
-
       <div className="depth-probe-bar__readout">
-        {loading && <span className="text-gray-500">Загрузка…</span>}
-        {error && <span className="text-red-400">{error}</span>}
+        {loading && (
+          <span className="depth-probe-bar__status depth-probe-bar__status--loading">
+            Загрузка карты…
+          </span>
+        )}
+        {error && <span className="depth-probe-bar__status depth-probe-bar__status--error">{error}</span>}
         {!loading && !error && probe && (
-          <>
-            <span className="text-gray-500">Пиксель</span>
-            <span className="font-mono tabular-nums text-gray-300">
-              {probe.x}, {probe.y}
+          <div className="depth-probe-bar__measure">
+            <span className="depth-probe-bar__measure-label">Расстояние</span>
+            <span className="depth-probe-bar__depth">{formatDepthMeters(probe.depthM)}</span>
+            <span className="depth-probe-bar__coords font-mono tabular-nums">
+              ({probe.x}, {probe.y})
             </span>
-            <span className="depth-probe-bar__depth">{probe.depthCm.toFixed(1)} см</span>
-          </>
+          </div>
         )}
         {!loading && !error && !probe && (
-          <span className="text-gray-600">Наведите курсор на карту или фото</span>
+          <span className="depth-probe-bar__status">Наведите на фото или карту глубины</span>
         )}
       </div>
     </div>
