@@ -8,9 +8,13 @@ import type {
 import { AnnotationCanvas } from '@/components/visualisation/AnnotationCanvas';
 import { DepthMapViewer, type DepthDisplayMode } from '@/components/visualisation/DepthMapViewer';
 import { DepthProbeBar } from '@/components/visualisation/DepthProbeBar';
+import { VizExportMenu, type VizExportAction } from '@/components/visualisation/VizExportMenu';
 import { VizFilmstrip } from '@/components/visualisation/VizFilmstrip';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { useToast } from '@/components/ui/Toast';
 import { blobFileName } from '@/lib/format';
+import { downloadAnnotatedFrame } from '@/lib/export-annotated-frame';
+import { downloadBlob, renderVizFrameToBlob } from '@/lib/export-viz-frame';
 import {
   clientToImageCoords,
   depthMapUrlForRecord,
@@ -68,6 +72,8 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
     layerId: string;
     index: number;
   } | null>(null);
+  const [exportBusy, setExportBusy] = useState<VizExportAction | null>(null);
+  const toast = useToast();
 
   const safeIndex = Math.min(index, Math.max(0, slides.length - 1));
   const current = slides[safeIndex];
@@ -154,6 +160,101 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
       setDepthProbe({ x: coords.x, y: coords.y, depthM });
     },
     [showDepth, depthData, probeImageSize.width, probeImageSize.height],
+  );
+
+  const handleExportFrame = useCallback(async () => {
+    const slide = slides[safeIndex];
+    if (!slide) return;
+    const { blob, gt, inference } = slide;
+    const size = gt?.image_size ?? inference?.image_size ?? { width: 1024, height: 640 };
+
+    setExportBusy('png');
+    try {
+      const exportLayers: AnnotationLayer[] = [];
+      if (gt && showGt) {
+        exportLayers.push({
+          id: 'gt',
+          palette: 'gt',
+          visible: true,
+          boxes: gt.annotation.boxes,
+          points: gt.annotation.points,
+        });
+      }
+      if (inference && showInference) {
+        exportLayers.push({
+          id: 'inference',
+          palette: 'inference',
+          visible: true,
+          boxes: inference.inference.annotation.boxes,
+          points: inference.inference.annotation.keypoints,
+          segments: inference.inference.annotation.segments,
+        });
+      }
+
+      const png = await renderVizFrameToBlob({
+        imageUrl: blob.preview_url,
+        width: size.width,
+        height: size.height,
+        layers: exportLayers,
+        showBoxes,
+        showLabels,
+        depth:
+          showDepth && depthData
+            ? {
+                data: depthData,
+                opacity: depthOpacity,
+                vmin: depthVmin,
+                vmax: depthVmax,
+              }
+            : undefined,
+      });
+
+      const baseName = blobFileName(blob.logical_path).replace(/\.[^.]+$/i, '') || 'frame';
+      downloadBlob(png, `${baseName}_viz.png`);
+      toast.show('Кадр сохранён в PNG');
+    } catch (err) {
+      toast.show(err instanceof Error ? err.message : 'Не удалось экспортировать кадр', 'error');
+    } finally {
+      setExportBusy(null);
+    }
+  }, [
+    slides,
+    safeIndex,
+    showGt,
+    showInference,
+    showBoxes,
+    showLabels,
+    showDepth,
+    depthData,
+    depthOpacity,
+    depthVmin,
+    depthVmax,
+    toast,
+  ]);
+
+  const handleDownloadWithAnnotations = useCallback(async () => {
+    const slide = slides[safeIndex];
+    if (!slide) return;
+    setExportBusy('annotated');
+    try {
+      await downloadAnnotatedFrame(slide, depthData);
+      toast.show('Изображение и JSON с разметкой сохранены');
+    } catch (err) {
+      toast.show(
+        err instanceof Error ? err.message : 'Не удалось скачать кадр с разметкой',
+        'error',
+      );
+    } finally {
+      setExportBusy(null);
+    }
+  }, [slides, safeIndex, depthData, toast]);
+
+  const handleExportAction = useCallback(
+    (action: VizExportAction) => {
+      if (action === 'png') void handleExportFrame();
+      else void handleDownloadWithAnnotations();
+    },
+    [handleExportFrame, handleDownloadWithAnnotations],
   );
 
   if (gtRecords.length === 0 && inferenceRecords.length === 0) {
@@ -266,6 +367,13 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
                 <span aria-hidden>↗</span>
               </a>
             )}
+
+            <VizExportMenu
+              busy={exportBusy}
+              disabled={exportBusy != null}
+              pngDisabled={showDepth && depthLoading}
+              onExport={handleExportAction}
+            />
 
             <div className="viz-nav-group" role="group" aria-label="Переключение кадра">
               <button type="button" onClick={goPrev} disabled={slides.length <= 1} className="viz-nav-btn" aria-label="Предыдущий кадр">
