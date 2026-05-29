@@ -2,12 +2,15 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/api/client';
 import type { PackageWorkspace } from '@/types/manifest';
+import type { PackageSession } from '@/types/manifest';
+import type { ProjectConfig } from '@/types/config';
 import { DataTab } from '@/components/tabs/DataTab';
 import { MediaTab } from '@/components/tabs/MediaTab';
 import { VisualisationTab } from '@/components/tabs/VisualisationTab';
 import type { WorkspaceTab } from '@/components/ui/TabBar';
 import { Button } from '@/components/ui/Button';
 import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
+import { PackageSidebar } from '@/components/workspace/PackageSidebar';
 import { WorkspaceSkeleton } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { collectFormBlobPaths } from '@/lib/form-fields';
@@ -19,12 +22,27 @@ export function PackageWorkspacePage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [ws, setWs] = useState<PackageWorkspace | null>(null);
+  const [packages, setPackages] = useState<PackageSession[]>([]);
+  const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [listLoading, setListLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<WorkspaceTab>('data');
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!projectId) return;
+    setListLoading(true);
+    Promise.all([api.getProjectConfig(projectId), api.listPackages(projectId)])
+      .then(([config, pkgs]) => {
+        setProjectConfig(config);
+        setPackages(pkgs);
+        setListLoading(false);
+      })
+      .catch(() => setListLoading(false));
+  }, [projectId]);
 
   const loadWorkspace = useCallback(() => {
     if (!projectId || !packageId) return;
@@ -115,10 +133,24 @@ export function PackageWorkspacePage() {
     loadWorkspace();
   }, [dirty, loadWorkspace]);
 
+  const confirmLeave = useCallback(() => {
+    if (!dirty) return true;
+    return window.confirm('Есть несохранённые изменения. Уйти без сохранения?');
+  }, [dirty]);
+
   const handleBack = () => {
-    if (dirty && !window.confirm('Есть несохранённые изменения. Уйти со страницы?')) return;
+    if (!confirmLeave()) return;
     navigate('/packages');
   };
+
+  const handleNavigatePackage = useCallback(
+    (targetId: string) => {
+      if (!projectId || targetId === packageId) return;
+      if (!confirmLeave()) return;
+      navigate(`/projects/${projectId}/packages/${targetId}`);
+    },
+    [projectId, packageId, confirmLeave, navigate],
+  );
 
   const gtRecords = useMemo(() => {
     if (!ws) return [];
@@ -147,95 +179,105 @@ export function PackageWorkspacePage() {
     }
   }, [activeTab, hasVisualisation]);
 
-  if (loading) {
-    return <WorkspaceSkeleton />;
-  }
-
-  if (error || !ws) {
-    return (
-      <div className="p-6 max-w-lg">
-        <button type="button" onClick={() => navigate('/packages')} className="text-sm text-gray-500 hover:text-gray-300 mb-4">
-          ← Пакеты
-        </button>
-        <p className="text-red-400 text-sm">{error ?? 'Пакет не найден'}</p>
-      </div>
-    );
-  }
-
-  const { session, manifest, blobs, project_config } = ws;
-  const fields = project_config.config?.fields ?? [];
-  const formBlobPaths = collectFormBlobPaths(manifest.data ?? {});
+  const projectName = projectConfig?.name ?? ws?.project_config.name ?? projectId ?? 'Проект';
 
   return (
-    <div className={`flex flex-col min-h-full ${dirty ? 'pb-20' : ''}`}>
-      <WorkspaceHeader
-        projectName={project_config.name}
-        packageId={session.package_id}
-        phase={session.phase}
-        uploaderEmail={session.uploader_email}
-        createdAt={session.created_at}
-        dirty={dirty}
-        isEditable={isEditable}
-        saving={saving}
-        saveError={saveError}
-        readOnlyHint={!isEditable}
-        tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onBack={handleBack}
-        onReset={handleReset}
-        onSave={() => void handleSave()}
-      />
+    <div className={`workspace-shell ${dirty ? 'workspace-shell--dirty' : ''}`}>
+      {projectId && packageId && (
+        <PackageSidebar
+          projectId={projectId}
+          projectName={projectName}
+          packageId={packageId}
+          packages={packages}
+          projectConfig={projectConfig}
+          loading={listLoading}
+          onNavigatePackage={handleNavigatePackage}
+        />
+      )}
 
-      <div className="flex-1 p-4 sm:p-6">
-        {activeTab === 'data' && (
-          <DataTab
-            fields={fields}
-            flow={project_config.config?.flow}
-            data={manifest.data ?? {}}
-            blobs={blobs}
-            onChange={handleDataChange}
-            readOnly={!isEditable}
-          />
-        )}
-        {activeTab === 'media' && (
-          <div className="max-w-7xl mx-auto w-full">
-            <MediaTab blobs={blobs} formBlobPaths={formBlobPaths} />
+      <div className="workspace-shell__main">
+        {loading ? (
+          <WorkspaceSkeleton />
+        ) : error || !ws ? (
+          <div className="p-6 max-w-lg">
+            <p className="text-red-400 text-sm">{error ?? 'Пакет не найден'}</p>
           </div>
-        )}
-        {activeTab === 'visualisation' && (
-          <VisualisationTab
-            blobs={blobs}
-            gtRecords={gtRecords}
-            inferenceRecords={inferenceRecords}
-          />
+        ) : (
+          <>
+            <WorkspaceHeader
+              projectName={projectName}
+              packageId={ws.session.package_id}
+              phase={ws.session.phase}
+              uploaderEmail={ws.session.uploader_email}
+              createdAt={ws.session.created_at}
+              dirty={dirty}
+              isEditable={isEditable}
+              saving={saving}
+              saveError={saveError}
+              readOnlyHint={!isEditable}
+              tabs={tabs}
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              onBack={handleBack}
+              onReset={handleReset}
+              onSave={() => void handleSave()}
+            />
+
+            <div className="flex-1 p-4 sm:p-6">
+              {activeTab === 'data' && (
+                <DataTab
+                  fields={ws.project_config.config?.fields ?? []}
+                  flow={ws.project_config.config?.flow}
+                  data={ws.manifest.data ?? {}}
+                  blobs={ws.blobs}
+                  onChange={handleDataChange}
+                  readOnly={!isEditable}
+                />
+              )}
+              {activeTab === 'media' && (
+                <div className="max-w-7xl mx-auto w-full">
+                  <MediaTab
+                    blobs={ws.blobs}
+                    formBlobPaths={collectFormBlobPaths(ws.manifest.data ?? {})}
+                  />
+                </div>
+              )}
+              {activeTab === 'visualisation' && (
+                <VisualisationTab
+                  blobs={ws.blobs}
+                  gtRecords={gtRecords}
+                  inferenceRecords={inferenceRecords}
+                />
+              )}
+            </div>
+
+            {dirty && isEditable && (
+              <div className="workspace-save-bar">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-xs text-amber-400/90">
+                    Есть несохранённые изменения
+                    <span className="hidden sm:inline text-gray-600"> · Ctrl+S</span>
+                  </p>
+                  <div className="flex gap-2 w-full sm:w-auto">
+                    <Button variant="ghost" onClick={handleReset} className="flex-1 sm:flex-none">
+                      Откатить
+                    </Button>
+                    <Button
+                      variant="primary"
+                      onClick={handleSave}
+                      disabled={saving}
+                      loading={saving}
+                      className="flex-1 sm:flex-none"
+                    >
+                      Сохранить
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {dirty && isEditable && (
-        <div className="fixed bottom-0 inset-x-0 z-30 border-t border-[var(--color-border)] bg-[var(--color-surface-raised)]/95 backdrop-blur-md shadow-[0_-8px_24px_rgba(0,0,0,0.35)]">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs text-amber-400/90">
-              Есть несохранённые изменения
-              <span className="hidden sm:inline text-gray-600"> · Ctrl+S</span>
-            </p>
-            <div className="flex gap-2 w-full sm:w-auto">
-              <Button variant="ghost" onClick={handleReset} className="flex-1 sm:flex-none">
-                Откатить
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleSave}
-                disabled={saving}
-                loading={saving}
-                className="flex-1 sm:flex-none"
-              >
-                Сохранить
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -10,11 +10,12 @@ import { TableSkeleton } from '@/components/ui/Spinner';
 import { FilterPanel, FilterRow, SegmentedControl } from '@/components/ui/FilterPanel';
 import { phaseLabel } from '@/lib/phase-labels';
 import { formatDateTime, formatRelativeTime, shortPackageId } from '@/lib/format';
+import { searchableConfigFields } from '@/lib/form-fields';
 import {
-  searchableConfigFields,
-  formatFieldValueForSearch,
-  matchesDatetimeDayFilter,
-} from '@/lib/form-fields';
+  filterPackages,
+  packagePhaseOptions,
+  initialSearchFieldId,
+} from '@/lib/package-list-filters';
 import { fieldLabel } from '@/lib/config-field';
 
 const STORAGE_KEY = 'client-admin:last-project-id';
@@ -65,13 +66,8 @@ export function PackageListPage() {
         setProjectConfig(config);
         setPackages(pkgs);
         setLoadingPackages(false);
-        const fields = searchableConfigFields(config.config?.fields ?? []);
-        const savedField = localStorage.getItem(`${SEARCH_FIELD_KEY}:${projectId}`);
-        const initialField =
-          savedField && fields.some(f => f.field_id === savedField)
-            ? savedField
-            : fields[0]?.field_id ?? '';
-        setSearchFieldId(initialField);
+        const fields = config.config?.fields ?? [];
+        setSearchFieldId(initialSearchFieldId(fields, projectId));
         if (fields.length > 0) setSearchMode('field');
       },
     );
@@ -83,10 +79,7 @@ export function PackageListPage() {
     }
   }, [projectId, searchFieldId]);
 
-  const phases = useMemo(() => {
-    const set = new Set(packages.map(p => p.phase));
-    return ['all', 'completed', ...Array.from(set).filter(p => p !== 'completed')];
-  }, [packages]);
+  const phases = useMemo(() => packagePhaseOptions(packages), [packages]);
 
   const selectedField = searchableFields.find(f => f.field_id === searchFieldId);
   const isDatetimeField = selectedField?.type === 'datetime';
@@ -99,44 +92,25 @@ export function PackageListPage() {
     }
   }, [searchFieldId, isDatetimeField]);
 
-  const filtered = useMemo(() => {
-    let list = phaseFilter === 'all' ? packages : packages.filter(p => p.phase === phaseFilter);
-
-    if (searchMode === 'field' && searchFieldId) {
-      if (isDatetimeField) {
-        if (searchDate) {
-          list = list.filter(p =>
-            matchesDatetimeDayFilter(p.data_fields?.[searchFieldId], searchDate),
-          );
-        }
-      } else {
-        const q = searchText.trim().toLowerCase();
-        if (q) {
-          list = list.filter(p => {
-            const raw = p.data_fields?.[searchFieldId];
-            return formatFieldValueForSearch(raw).includes(q);
-          });
-        }
-      }
-      return list;
-    }
-
-    const q = searchText.trim().toLowerCase();
-    if (!q) return list;
-    return list.filter(
-      p =>
-        p.package_id.toLowerCase().includes(q) ||
-        (p.uploader_email ?? '').toLowerCase().includes(q),
-    );
-  }, [
-    packages,
-    phaseFilter,
-    searchText,
-    searchDate,
-    searchMode,
-    searchFieldId,
-    isDatetimeField,
-  ]);
+  const filtered = useMemo(
+    () =>
+      filterPackages(packages, projectConfig?.config?.fields ?? [], {
+        phaseFilter,
+        searchMode,
+        searchFieldId,
+        searchText,
+        searchDate,
+      }),
+    [
+      packages,
+      projectConfig,
+      phaseFilter,
+      searchText,
+      searchDate,
+      searchMode,
+      searchFieldId,
+    ],
+  );
 
   const hasActiveFieldFilter =
     searchMode === 'field' &&
