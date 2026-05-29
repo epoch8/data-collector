@@ -4,7 +4,7 @@ from .request_auth import authenticate_collector_request
 class ApiV1AuthMiddleware:
     """
     /v1/* и /admin-api/*:
-    - Firebase: Bearer = ID token, CollectorUser, доступ к проектам через M2M projects.
+    - Firebase: Bearer = ID token, CollectorUser; mobile_projects для /v1/*, admin_projects для /admin-api/*.
     - Иначе API_BEARER_TOKEN или без проверки (локальная разработка).
     """
 

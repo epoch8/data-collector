@@ -128,7 +128,8 @@ STATIC_URL = "static/"
 
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
 
-# Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id, если он есть в БД.
+# Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id
+# в mobile_projects, если проект есть в БД. admin_projects назначаются вручную в админке.
 DEFAULT_COLLECTOR_PROJECT_ID = (
     os.environ.get("DEFAULT_COLLECTOR_PROJECT_ID", "").strip() or "simple-photo-2026"
 )

@@ -173,7 +173,7 @@ export function PackageListPage() {
       {!loadingProjects && projects.length === 0 && !loadError && (
         <EmptyState
           title="Нет доступных проектов"
-          description="Администратор должен выдать доступ в Django: Пользователи (Firebase) → Доступные проекты."
+          description="Администратор должен выдать доступ в Django: Пользователи → Client-admin."
         />
       )}
 

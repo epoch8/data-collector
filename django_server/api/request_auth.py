@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Literal
 
 from django.conf import settings
 from django.http import JsonResponse
@@ -12,6 +13,8 @@ from .firebase_verify import firebase_auth_enabled, verify_id_token
 from .models import CollectorUser, Project
 
 logger = logging.getLogger(__name__)
+
+ProjectAccessScope = Literal["mobile", "admin"]
 
 
 def auth_error(code: str, message: str, status: int = 401) -> JsonResponse:
@@ -36,21 +39,31 @@ def legacy_bearer_ok(request) -> bool:
     return got == token
 
 
-def project_ids_for_request(request) -> set[str] | None:
+def project_ids_for_request(
+    request,
+    *,
+    scope: ProjectAccessScope = "mobile",
+) -> set[str] | None:
     """
-    Firebase-режим: только project_id из M2M CollectorUser.
+    Firebase-режим: project_id из M2M CollectorUser (mobile_projects или admin_projects).
     Dev без Firebase: None = все проекты.
     """
     user = getattr(request, "collector_user", None)
     if user is not None:
-        return set(user.projects.values_list("project_id", flat=True))
+        rel = user.admin_projects if scope == "admin" else user.mobile_projects
+        return set(rel.values_list("project_id", flat=True))
     return None
 
 
-def forbid_if_no_project_access(request, project_id: str) -> JsonResponse | None:
+def forbid_if_no_project_access(
+    request,
+    project_id: str,
+    *,
+    scope: ProjectAccessScope = "mobile",
+) -> JsonResponse | None:
     if not Project.objects.filter(project_id=project_id).exists():
         return auth_error("not_found", "Unknown project", status=404)
-    allowed = project_ids_for_request(request)
+    allowed = project_ids_for_request(request, scope=scope)
     if allowed is not None and project_id not in allowed:
         return auth_error("forbidden", "No access to this project", status=403)
     return None

@@ -11,11 +11,19 @@ class CollectorUser(models.Model):
 
     firebase_uid = models.CharField("Firebase UID", max_length=128, unique=True, db_index=True)
     email = models.CharField("Email (из токена / для отображения)", max_length=254, blank=True, db_index=True)
-    projects = models.ManyToManyField(
+    mobile_projects = models.ManyToManyField(
         "Project",
         blank=True,
-        related_name="collector_users",
-        verbose_name="Доступные проекты",
+        related_name="mobile_collector_users",
+        verbose_name="Доступные проекты (мобильное приложение)",
+        help_text="Каталог /v1/projects и загрузка пакетов с телефона.",
+    )
+    admin_projects = models.ManyToManyField(
+        "Project",
+        blank=True,
+        related_name="admin_collector_users",
+        verbose_name="Доступные проекты (client-admin)",
+        help_text="Веб-админка пакетов /admin-api — просмотр и правка.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

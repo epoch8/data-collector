@@ -433,7 +433,9 @@ def package_blob_download(request, project_id: str, package_id: str, blob_pk: in
 @staff_only
 @login_required
 def collector_user_list(request):
-    users = CollectorUser.objects.prefetch_related("projects").order_by("email", "firebase_uid")
+    users = CollectorUser.objects.prefetch_related("mobile_projects", "admin_projects").order_by(
+        "email", "firebase_uid"
+    )
     return render(request, "ui/collector_user_list.html", {"collector_users": users})
 
 
@@ -457,21 +459,33 @@ def collector_user_sync_firebase(request):
 @login_required
 @require_http_methods(["GET", "POST"])
 def collector_user_detail(request, pk: int):
-    cu = get_object_or_404(CollectorUser.objects.prefetch_related("projects"), pk=pk)
+    cu = get_object_or_404(
+        CollectorUser.objects.prefetch_related("mobile_projects", "admin_projects"),
+        pk=pk,
+    )
     all_projects = list(Project.objects.all().order_by("name"))
     if request.method == "POST":
-        ids = request.POST.getlist("projects")
-        allowed = set(Project.objects.filter(project_id__in=ids).values_list("project_id", flat=True))
-        cu.projects.set(Project.objects.filter(project_id__in=allowed))
-        messages.success(request, "Доступные проекты сохранены.")
+        mobile_ids = request.POST.getlist("mobile_projects")
+        admin_ids = request.POST.getlist("admin_projects")
+        mobile_allowed = set(
+            Project.objects.filter(project_id__in=mobile_ids).values_list("project_id", flat=True)
+        )
+        admin_allowed = set(
+            Project.objects.filter(project_id__in=admin_ids).values_list("project_id", flat=True)
+        )
+        cu.mobile_projects.set(Project.objects.filter(project_id__in=mobile_allowed))
+        cu.admin_projects.set(Project.objects.filter(project_id__in=admin_allowed))
+        messages.success(request, "Права доступа сохранены.")
         return redirect("ui_collector_user_detail", pk=cu.pk)
-    selected = list(cu.projects.values_list("project_id", flat=True))
+    selected_mobile = list(cu.mobile_projects.values_list("project_id", flat=True))
+    selected_admin = list(cu.admin_projects.values_list("project_id", flat=True))
     return render(
         request,
         "ui/collector_user_detail.html",
         {
             "collector_user": cu,
             "all_projects": all_projects,
-            "selected_project_ids": selected,
+            "selected_mobile_project_ids": selected_mobile,
+            "selected_admin_project_ids": selected_admin,
         },
     )

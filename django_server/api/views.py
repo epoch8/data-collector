@@ -18,7 +18,7 @@ from .utils import collect_blob_refs, parse_json_body, validate_blob_logical_pat
 
 
 def _require_project(request, project_id: str) -> JsonResponse | None:
-    return forbid_if_no_project_access(request, project_id)
+    return forbid_if_no_project_access(request, project_id, scope="mobile")
 
 
 def _err(code: str, message: str, details=None):
@@ -36,7 +36,7 @@ def health(_request):
 class ProjectsCatalogView(View):
     def get(self, request):
         qs = Project.objects.all().order_by("name")
-        allowed = project_ids_for_request(request)
+        allowed = project_ids_for_request(request, scope="mobile")
         if allowed is not None:
             qs = qs.filter(project_id__in=allowed)
         rows = list(qs)

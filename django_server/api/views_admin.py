@@ -1,4 +1,4 @@
-"""SPA API для client-admin: та же Firebase-авторизация и доступ к проектам, что и /v1/*."""
+"""SPA API для client-admin: Firebase-авторизация и доступ через admin_projects."""
 
 from __future__ import annotations
 
@@ -81,7 +81,7 @@ def _data_fields_for_search(manifest: dict | None, field_ids: set[str]) -> dict[
 class AdminProjectsListView(View):
     def get(self, request):
         qs = Project.objects.all().order_by("name")
-        allowed = project_ids_for_request(request)
+        allowed = project_ids_for_request(request, scope="admin")
         if allowed is not None:
             qs = qs.filter(project_id__in=allowed)
         rows = list(qs)
@@ -100,7 +100,7 @@ class AdminProjectsListView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminProjectConfigView(View):
     def get(self, request, project_id: str):
-        denied = forbid_if_no_project_access(request, project_id)
+        denied = forbid_if_no_project_access(request, project_id, scope="admin")
         if denied is not None:
             return denied
         project = Project.objects.filter(project_id=project_id).first()
@@ -116,7 +116,7 @@ class AdminProjectConfigView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageListView(View):
     def get(self, request, project_id: str):
-        denied = forbid_if_no_project_access(request, project_id)
+        denied = forbid_if_no_project_access(request, project_id, scope="admin")
         if denied is not None:
             return denied
         project = Project.objects.filter(project_id=project_id).first()
@@ -151,7 +151,7 @@ class AdminPackageListView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageWorkspaceView(View):
     def get(self, request, project_id: str, package_id: str):
-        denied = forbid_if_no_project_access(request, project_id)
+        denied = forbid_if_no_project_access(request, project_id, scope="admin")
         if denied is not None:
             return denied
         project = Project.objects.filter(project_id=project_id).first()
@@ -206,7 +206,7 @@ class AdminPackageWorkspaceView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageManifestPatchView(View):
     def patch(self, request, project_id: str, package_id: str):
-        denied = forbid_if_no_project_access(request, project_id)
+        denied = forbid_if_no_project_access(request, project_id, scope="admin")
         if denied is not None:
             return denied
         session = PackageSession.objects.filter(
@@ -266,7 +266,7 @@ class AdminPackageManifestPatchView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminBlobPreviewView(View):
     def get(self, request, project_id: str, package_id: str, blob_pk: int):
-        denied = forbid_if_no_project_access(request, project_id)
+        denied = forbid_if_no_project_access(request, project_id, scope="admin")
         if denied is not None:
             return denied
         blob = UploadedBlob.objects.filter(

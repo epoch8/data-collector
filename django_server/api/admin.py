@@ -11,14 +11,19 @@ from .models import CollectorUser, PackageSession, Project, UploadedBlob
 @admin.register(CollectorUser)
 class CollectorUserAdmin(admin.ModelAdmin):
     change_list_template = "admin/api/collectoruser/change_list.html"
-    list_display = ("email", "firebase_uid", "projects_summary", "created_at")
-    list_filter = ("projects",)
+    list_display = (
+        "email",
+        "firebase_uid",
+        "mobile_projects_summary",
+        "admin_projects_summary",
+        "created_at",
+    )
     search_fields = ("email", "firebase_uid")
-    filter_horizontal = ("projects",)
+    filter_horizontal = ("mobile_projects", "admin_projects")
     ordering = ("email", "firebase_uid")
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("projects")
+        return super().get_queryset(request).prefetch_related("mobile_projects", "admin_projects")
 
     def get_urls(self):
         info = self.model._meta.app_label, self.model._meta.model_name
@@ -55,22 +60,43 @@ class CollectorUserAdmin(admin.ModelAdmin):
         (
             None,
             {
-                "fields": ("firebase_uid", "email", "projects"),
+                "fields": ("firebase_uid", "email"),
+            },
+        ),
+        (
+            "Мобильное приложение",
+            {
+                "fields": ("mobile_projects",),
                 "description": (
-                    "«Доступные проекты» — для мобильного приложения (/v1) и веб-админки пакетов (/admin-api). "
-                    "Без проектов каталог пустой, загрузка и админка вернут 403. "
-                    "Список пользователей из Firebase: «Синхронизировать с Firebase» на списке "
-                    "или первый вход в приложение / client-admin. "
-                    "Вручную: Firebase Console → Authentication → Users → UID."
+                    "Каталог проектов и загрузка пакетов через API <code>/v1/…</code>. "
+                    "Без проектов каталог пустой, загрузка вернёт 403."
+                ),
+            },
+        ),
+        (
+            "Client-admin",
+            {
+                "fields": ("admin_projects",),
+                "description": (
+                    "Веб-админка пакетов через API <code>/admin-api/…</code> — просмотр и правка. "
+                    "Можно выдать доступ только в админку, без мобильного приложения, и наоборот."
                 ),
             },
         ),
     )
 
-    @admin.display(description="Проекты")
-    def projects_summary(self, obj: CollectorUser) -> str:
-        qs = obj.projects.order_by("name").values_list("name", flat=True)
-        names = list(qs[:5])
+    @admin.display(description="Мобильное")
+    def mobile_projects_summary(self, obj: CollectorUser) -> str:
+        return self._projects_summary(obj.mobile_projects)
+
+    @admin.display(description="Client-admin")
+    def admin_projects_summary(self, obj: CollectorUser) -> str:
+        return self._projects_summary(obj.admin_projects)
+
+    @staticmethod
+    def _projects_summary(rel) -> str:
+        qs = rel.order_by("name").values_list("name", flat=True)
+        names = list(qs[:4])
         tail = len(qs) - len(names)
         s = ", ".join(names)
         if tail > 0:

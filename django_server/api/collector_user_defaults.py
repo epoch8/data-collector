@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 def assign_default_collector_project(user: CollectorUser) -> None:
     """
-    Добавляет проект из DEFAULT_COLLECTOR_PROJECT_ID, если запись есть в БД.
+    Добавляет проект из DEFAULT_COLLECTOR_PROJECT_ID в mobile_projects, если запись есть в БД.
     Безопасно вызывать повторно (M2M не дублирует связь).
     """
     pid = (getattr(settings, "DEFAULT_COLLECTOR_PROJECT_ID", None) or "").strip()
@@ -26,4 +26,4 @@ def assign_default_collector_project(user: CollectorUser) -> None:
             pid,
         )
         return
-    user.projects.add(proj)
+    user.mobile_projects.add(proj)
