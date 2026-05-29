@@ -16,7 +16,7 @@ export function Layout() {
     <div className="min-h-screen bg-[var(--color-surface)] text-gray-200">
       {(firebaseAuthEnabled || email) && (
         <header className="app-topbar">
-          <span className="app-topbar__title">Data Collector · Admin</span>
+          <span className="app-topbar__title">client-admin</span>
           <div className="app-topbar__user">
             {email && <span className="app-topbar__email">{email}</span>}
             {firebaseAuthEnabled && (

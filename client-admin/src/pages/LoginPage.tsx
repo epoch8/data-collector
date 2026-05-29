@@ -40,8 +40,8 @@ export function LoginPage() {
   return (
     <div className="login-page">
       <div className="login-card">
-        <p className="login-card__brand">EPOCH8</p>
-        <h1 className="login-card__title">Data Collector Admin</h1>
+        <p className="login-card__brand">client-admin</p>
+        <h1 className="login-card__title">Вход</h1>
         <p className="login-card__sub">
           Вход тем же аккаунтом Firebase, что и в мобильном приложении. Доступ к проектам — в Django →
           Пользователи (Firebase).
