@@ -154,7 +154,7 @@ export function PackageListPage() {
   const showFieldColumn = searchMode === 'field' && !!selectedField;
 
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto w-full">
+    <div className="app-container">
       <PageHeader
         title="Пакеты"
         subtitle={
@@ -203,7 +203,7 @@ export function PackageListPage() {
             <select
               value={projectId}
               onChange={e => setProjectId(e.target.value)}
-              className="ui-input max-w-md py-2"
+              className="ui-input max-w-full sm:max-w-md py-2"
             >
               {projects.map(p => (
                 <option key={p.project_id} value={p.project_id}>
@@ -252,13 +252,13 @@ export function PackageListPage() {
                 <button
                   type="button"
                   onClick={() => setSearchDate('')}
-                  className="text-xs text-gray-500 hover:text-gray-300 px-2 py-1 rounded border border-gray-700"
+                  className="text-sm text-gray-500 hover:text-gray-300 px-2.5 py-1.5 rounded border border-gray-700"
                 >
                   Сбросить дату
                 </button>
               )}
               {!searchDate && (
-                <span className="text-xs text-gray-600">Выберите день — покажем пакеты за эту дату</span>
+                <span className="text-sm text-gray-600">Выберите день — покажем пакеты за эту дату</span>
               )}
             </div>
           ) : (
@@ -310,17 +310,15 @@ export function PackageListPage() {
         />
       ) : (
         <div className="ui-panel overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto ui-scrollbar">
+            <table className="packages-table">
               <thead>
-                <tr className="bg-gray-800/50 text-gray-400 text-left text-[11px] uppercase tracking-wider">
-                  <th className="px-4 py-3 font-medium">Пакет</th>
-                  {showFieldColumn && (
-                    <th className="px-4 py-3 font-medium">{fieldLabel(selectedField!)}</th>
-                  )}
-                  <th className="px-4 py-3 font-medium">Статус</th>
-                  <th className="px-4 py-3 font-medium">Дата</th>
-                  <th className="px-4 py-3 font-medium hidden md:table-cell">Загрузил</th>
+                <tr className="text-left">
+                  <th>Пакет</th>
+                  {showFieldColumn && <th>{fieldLabel(selectedField!)}</th>}
+                  <th>Статус</th>
+                  <th>Дата</th>
+                  <th className="hidden md:table-cell">Загрузил</th>
                   <th className="w-10" />
                 </tr>
               </thead>
@@ -332,41 +330,41 @@ export function PackageListPage() {
                       i % 2 === 0 ? 'bg-transparent' : 'bg-gray-900/20'
                     }`}
                   >
-                    <td className="px-4 py-3">
+                    <td>
                       <Link
                         to={`/projects/${pkg.project_id}/packages/${pkg.package_id}`}
                         className="block"
                       >
-                        <span className="text-blue-400 group-hover:text-blue-300 font-mono text-xs">
+                        <span className="packages-table__id group-hover:text-blue-300">
                           {shortPackageId(pkg.package_id)}
                         </span>
-                        <span className="block text-[10px] text-gray-600 md:hidden mt-0.5 truncate max-w-[180px]">
+                        <span className="packages-table__sub md:hidden">
                           {pkg.uploader_email || '—'}
                         </span>
                       </Link>
                     </td>
                     {showFieldColumn && (
-                      <td className="px-4 py-3 text-gray-300 text-xs max-w-[220px]">
+                      <td className="text-gray-300 max-w-[min(100vw-3rem,16rem)] sm:max-w-xs">
                         <span className="line-clamp-2" title={String(pkg.data_fields?.[searchFieldId] ?? '')}>
                           {formatCellValue(pkg.data_fields?.[searchFieldId])}
                         </span>
                       </td>
                     )}
-                    <td className="px-4 py-3">
+                    <td>
                       <PhaseBadge phase={pkg.phase} />
                     </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap" title={formatDateTime(pkg.created_at)}>
+                    <td className="text-gray-400 whitespace-nowrap" title={formatDateTime(pkg.created_at)}>
                       {formatRelativeTime(pkg.created_at)}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs truncate max-w-[180px] hidden md:table-cell">
+                    <td className="text-gray-500 truncate max-w-[14rem] hidden md:table-cell">
                       {pkg.uploader_email || '—'}
                     </td>
-                    <td className="px-2 py-3">
+                    <td>
                       <button
                         type="button"
                         title="Копировать ID"
                         onClick={() => navigator.clipboard.writeText(pkg.package_id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 text-xs transition-opacity"
+                        className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-2 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 text-sm transition-opacity"
                       >
                         ⧉
                       </button>

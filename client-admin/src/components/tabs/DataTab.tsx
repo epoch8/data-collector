@@ -66,7 +66,7 @@ export function DataTab({ fields, flow, data, blobs, onChange, readOnly }: Props
   }
 
   return (
-    <div className="flex flex-col xl:flex-row gap-5 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col xl:flex-row gap-5 w-full">
       {/* Мобильная: горизонтальные чипы форм */}
       <div className="xl:hidden -mx-1 overflow-x-auto pb-1">
         <div className="flex gap-2 px-1 min-w-min">
@@ -86,14 +86,14 @@ export function DataTab({ fields, flow, data, blobs, onChange, readOnly }: Props
       {/* Десктоп: боковая навигация */}
       <nav className="hidden xl:block w-56 shrink-0">
         <div className="ui-nav-rail sticky top-[7.5rem] max-h-[calc(100vh-9rem)] overflow-y-auto">
-          <p className="text-[10px] uppercase tracking-wider text-gray-500 mb-3 px-1">Формы</p>
+          <p className="text-xs uppercase tracking-wider text-gray-500 mb-3 px-1">Формы</p>
           <ul className="space-y-4">
             {sections.map(section => (
               <li key={section.id}>
                 <button
                   type="button"
                   onClick={() => scrollToSection(section.id)}
-                  className={`w-full text-left px-2 py-1 text-xs font-semibold truncate rounded-md transition-colors ${
+                  className={`w-full text-left px-2 py-1.5 text-sm font-semibold truncate rounded-md transition-colors ${
                     activeSectionId === section.id
                       ? 'text-blue-300 bg-blue-600/10'
                       : 'text-gray-400 hover:text-gray-200'
@@ -107,7 +107,7 @@ export function DataTab({ fields, flow, data, blobs, onChange, readOnly }: Props
                       <button
                         type="button"
                         onClick={() => scrollToField(f.field_id)}
-                        className={`w-full text-left px-2 py-1 text-[11px] rounded-md truncate transition-colors ${
+                        className={`w-full text-left px-2 py-1 text-sm rounded-md truncate transition-colors ${
                           activeFieldId === f.field_id
                             ? 'bg-blue-600/25 text-blue-200'
                             : 'text-gray-500 hover:text-gray-300'
@@ -133,8 +133,8 @@ export function DataTab({ fields, flow, data, blobs, onChange, readOnly }: Props
           >
             <div className="flex items-center gap-3 mb-4">
               <span className="w-1 h-6 rounded-full bg-blue-500/80" />
-              <h3 className="text-base font-semibold text-gray-100">{section.title}</h3>
-              <span className="text-[10px] text-gray-600 tabular-nums">
+              <h3 className="text-lg font-semibold text-gray-100">{section.title}</h3>
+              <span className="text-xs text-gray-600 tabular-nums">
                 {section.fields.length} пол.
               </span>
             </div>

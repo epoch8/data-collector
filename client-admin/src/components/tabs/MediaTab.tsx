@@ -33,8 +33,8 @@ export function MediaTab({ blobs, formBlobPaths }: Props) {
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-2 mb-5">
-        <h3 className="text-base font-semibold text-gray-100">Медиа</h3>
-        <p className="text-xs text-gray-500">
+        <h3 className="text-lg font-semibold text-gray-100">Медиа</h3>
+        <p className="text-sm text-gray-500">
           {blobs.length} файл(ов) · снимки с формы отмечены
         </p>
       </div>
@@ -65,18 +65,18 @@ export function MediaTab({ blobs, formBlobPaths }: Props) {
                 <div className="flex items-center gap-1 flex-wrap mb-1">
                   {inForm && <Tag className="bg-emerald-950/60 text-emerald-400">в форме</Tag>}
                 </div>
-                <p className="text-[11px] text-gray-400 font-mono truncate" title={blob.logical_path}>
+                <p className="text-sm text-gray-400 font-mono truncate" title={blob.logical_path}>
                   {blobFileName(blob.logical_path)}
                 </p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-gray-600">{formatBytes(blob.size_bytes)}</span>
+                  <span className="text-xs text-gray-600">{formatBytes(blob.size_bytes)}</span>
                   <button
                     type="button"
                     onClick={e => {
                       e.stopPropagation();
                       void downloadAuthenticatedFile(blob.preview_url, blobFileName(blob.logical_path));
                     }}
-                    className="text-[10px] text-emerald-400/90 hover:text-emerald-300"
+                    className="text-xs text-emerald-400/90 hover:text-emerald-300"
                   >
                     скачать
                   </button>

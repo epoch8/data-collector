@@ -21,6 +21,8 @@ interface Props {
   projectConfig: ProjectConfig | null;
   loading: boolean;
   onNavigatePackage: (targetPackageId: string) => void;
+  mobileOpen?: boolean;
+  onMobileClose?: () => void;
 }
 
 export function PackageSidebar({
@@ -31,6 +33,8 @@ export function PackageSidebar({
   projectConfig,
   loading,
   onNavigatePackage,
+  mobileOpen = false,
+  onMobileClose,
 }: Props) {
   const [phaseFilter, setPhaseFilter] = useState('completed');
   const [searchMode, setSearchMode] = useState<PackageSearchMode>('meta');
@@ -89,9 +93,20 @@ export function PackageSidebar({
   }, [packageId, filtered.length]);
 
   return (
-    <aside className="package-sidebar" aria-label="Список пакетов">
+    <>
+      <button
+        type="button"
+        className={`package-sidebar__backdrop ${mobileOpen ? 'package-sidebar__backdrop--visible' : ''}`}
+        aria-label="Закрыть список пакетов"
+        tabIndex={mobileOpen ? 0 : -1}
+        onClick={onMobileClose}
+      />
+      <aside
+        className={`package-sidebar ${mobileOpen ? 'package-sidebar--open' : ''}`}
+        aria-label="Список пакетов"
+      >
       <div className="package-sidebar__head">
-        <Link to="/packages" className="package-sidebar__back">
+        <Link to="/packages" className="package-sidebar__back" onClick={onMobileClose}>
           ← Все пакеты
         </Link>
         <p className="package-sidebar__project" title={projectName}>
@@ -183,7 +198,10 @@ export function PackageSidebar({
                 key={pkg.package_id}
                 ref={active ? activeRef : undefined}
                 type="button"
-                onClick={() => onNavigatePackage(pkg.package_id)}
+                onClick={() => {
+                  onNavigatePackage(pkg.package_id);
+                  onMobileClose?.();
+                }}
                 className={`package-sidebar__item ${active ? 'package-sidebar__item--active' : ''}`}
               >
                 <div className="package-sidebar__item-top">
@@ -200,5 +218,6 @@ export function PackageSidebar({
         )}
       </nav>
     </aside>
+    </>
   );
 }

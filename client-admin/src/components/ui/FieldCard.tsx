@@ -22,20 +22,20 @@ export function FieldCard({ field, children, variant = 'data', id }: Props) {
         <FieldTypeIcon type={field.type} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="text-sm font-medium text-gray-200">{fieldLabel(field)}</h4>
+            <h4 className="text-base font-medium text-gray-200">{fieldLabel(field)}</h4>
             {fieldRequired(field) && (
-              <span className="text-[10px] text-red-400/90 uppercase tracking-wide">обязательно</span>
+              <span className="text-xs text-red-400/90 uppercase tracking-wide">обязательно</span>
             )}
           </div>
         </div>
       </header>
       {children}
       <details className="mt-3 group">
-        <summary className="text-[10px] text-gray-600 cursor-pointer hover:text-gray-500 list-none">
+        <summary className="text-xs text-gray-600 cursor-pointer hover:text-gray-500 list-none">
           <span className="group-open:hidden">Техническое</span>
           <span className="hidden group-open:inline">Скрыть</span>
         </summary>
-        <p className="mt-1 text-[10px] font-mono text-gray-600">{field.field_id}</p>
+        <p className="mt-1 text-xs font-mono text-gray-600">{field.field_id}</p>
       </details>
     </section>
   );

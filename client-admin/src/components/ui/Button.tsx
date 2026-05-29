@@ -26,7 +26,7 @@ export function Button({
     <button
       type="button"
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 px-3 py-1.5 text-xs font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${VARIANT[variant]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 px-3.5 py-2 text-sm font-medium rounded-md transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${VARIANT[variant]} ${className}`}
       {...rest}
     >
       {loading && (

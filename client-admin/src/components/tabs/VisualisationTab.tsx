@@ -305,12 +305,12 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
   const infKpCount = inference?.inference.annotation.keypoints.length ?? 0;
 
   return (
-    <div className="max-w-7xl mx-auto w-full">
+    <div className="w-full">
       <div className="ui-panel overflow-hidden flex flex-col">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-b border-[var(--color-border)]">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-gray-100">Визуализация</h3>
-            <p className="text-[11px] text-gray-500 mt-0.5 truncate" title={blob.logical_path}>
+            <h3 className="text-base font-semibold text-gray-100">Визуализация</h3>
+            <p className="text-sm text-gray-500 mt-0.5 truncate" title={blob.logical_path}>
               {blobFileName(blob.logical_path)}
               {gt && ` · GT ${gtPointCount}`}
               {inference && ` · Inf ${infKpCount}`}
@@ -332,7 +332,7 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
               onChange={setShowInference}
               colorClass="viz-layer-toggle--inf"
             />
-            <label className="viz-toggle text-[11px]">
+            <label className="viz-toggle">
               <input
                 type="checkbox"
                 checked={showBoxes}
@@ -340,7 +340,7 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
               />
               BBox
             </label>
-            <label className="viz-toggle text-[11px]">
+            <label className="viz-toggle">
               <input
                 type="checkbox"
                 checked={showLabels}
@@ -497,8 +497,8 @@ export function VisualisationTab({ blobs, gtRecords, inferenceRecords }: Props) 
                   showConfidence
                 />
                 {inference.inference.distances && (
-                  <div className="p-3 border-t border-[var(--color-border)] text-[11px] text-gray-500 space-y-1">
-                    <p className="uppercase tracking-wider text-[10px] text-gray-600 mb-1">
+                  <div className="p-3 border-t border-[var(--color-border)] text-sm text-gray-500 space-y-1">
+                    <p className="uppercase tracking-wider text-xs text-gray-600 mb-1">
                       Метрики (см)
                     </p>
                     {Object.entries(inference.inference.distances).map(([k, v]) => (
@@ -564,7 +564,7 @@ function PointList({
 }) {
   return (
     <>
-      <p className="text-[10px] uppercase tracking-wider text-gray-500 px-4 py-3 border-b border-[var(--color-border)] shrink-0">
+      <p className="text-xs uppercase tracking-wider text-gray-500 px-4 py-3 border-b border-[var(--color-border)] shrink-0">
         {title}
       </p>
       <ul className="p-2 space-y-0.5">
@@ -586,8 +586,8 @@ function PointList({
               }`}
             >
               <span className="viz-point-row__dot" aria-hidden />
-              <span className="flex-1 min-w-0 text-xs text-gray-300 truncate">{pt.label}</span>
-              <span className="text-[10px] text-gray-600 font-mono tabular-nums shrink-0">
+              <span className="flex-1 min-w-0 text-sm text-gray-300 truncate">{pt.label}</span>
+              <span className="text-xs text-gray-600 font-mono tabular-nums shrink-0">
                 {Math.round(pt.x)},{Math.round(pt.y)}
                 {showConfidence && pt.confidence != null && (
                   <span className="text-cyan-600"> · {(pt.confidence * 100).toFixed(0)}%</span>

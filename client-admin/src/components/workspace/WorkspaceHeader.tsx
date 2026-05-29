@@ -48,7 +48,7 @@ export function WorkspaceHeader({
 }: Props) {
   return (
     <header className="workspace-header sticky top-0 z-20">
-      <div className="workspace-header__top max-w-7xl mx-auto w-full px-4 sm:px-6">
+      <div className="workspace-header__top workspace-inner">
         <nav className="workspace-header__crumb" aria-label="Навигация">
           <button type="button" onClick={onBack} className="workspace-header__crumb-link">
             Пакеты

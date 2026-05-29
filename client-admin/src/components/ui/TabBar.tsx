@@ -20,7 +20,7 @@ const ACTIVE_CLASS: Record<WorkspaceTab, string> = {
 export function TabBar({ tabs, active, onChange }: Props) {
   return (
     <div className="workspace-tabs border-t border-[var(--color-border)]">
-      <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 flex gap-1 sm:gap-2">
+      <div className="workspace-inner flex gap-1 sm:gap-2 overflow-x-auto ui-scrollbar">
         {tabs.map(tab => (
           <button
             key={tab.id}

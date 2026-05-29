@@ -15,6 +15,7 @@ import { PackageSidebar } from '@/components/workspace/PackageSidebar';
 import { WorkspaceSkeleton } from '@/components/ui/Spinner';
 import { useToast } from '@/components/ui/Toast';
 import { collectFormBlobPaths } from '@/lib/form-fields';
+import { shortPackageId } from '@/lib/format';
 import { getCowKeypointAnnotationsForPackage } from '@/lib/datapipe-mock';
 import { getCowInferenceForPackage } from '@/lib/datapipe-inference-mock';
 
@@ -33,6 +34,7 @@ export function PackageWorkspacePage() {
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!ready || !projectId) return;
@@ -76,6 +78,19 @@ export function PackageWorkspacePage() {
   useEffect(() => {
     loadWorkspace();
   }, [loadWorkspace]);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [packageId]);
+
+  useEffect(() => {
+    if (!sidebarOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [sidebarOpen]);
 
   const isEditable = ws?.session.phase === 'completed';
 
@@ -205,6 +220,8 @@ export function PackageWorkspacePage() {
           projectConfig={projectConfig}
           loading={listLoading}
           onNavigatePackage={handleNavigatePackage}
+          mobileOpen={sidebarOpen}
+          onMobileClose={() => setSidebarOpen(false)}
         />
       )}
 
@@ -217,6 +234,19 @@ export function PackageWorkspacePage() {
           </div>
         ) : (
           <>
+            <div className="workspace-mobile-bar">
+              <button
+                type="button"
+                className="workspace-mobile-bar__btn"
+                onClick={() => setSidebarOpen(true)}
+              >
+                ☰ Пакеты
+              </button>
+              <span className="workspace-mobile-bar__hint">
+                {shortPackageId(ws.session.package_id)}
+              </span>
+            </div>
+
             <WorkspaceHeader
               projectName={projectName}
               packageId={ws.session.package_id}
@@ -236,38 +266,38 @@ export function PackageWorkspacePage() {
               onSave={() => void handleSave()}
             />
 
-            <div className="flex-1 p-4 sm:p-6">
-              {activeTab === 'data' && (
-                <DataTab
-                  fields={ws.project_config.config?.fields ?? []}
-                  flow={ws.project_config.config?.flow}
-                  data={ws.manifest.data ?? {}}
-                  blobs={ws.blobs}
-                  onChange={handleDataChange}
-                  readOnly={!isEditable}
-                />
-              )}
-              {activeTab === 'media' && (
-                <div className="max-w-7xl mx-auto w-full">
+            <div className="workspace-content">
+              <div className="workspace-inner">
+                {activeTab === 'data' && (
+                  <DataTab
+                    fields={ws.project_config.config?.fields ?? []}
+                    flow={ws.project_config.config?.flow}
+                    data={ws.manifest.data ?? {}}
+                    blobs={ws.blobs}
+                    onChange={handleDataChange}
+                    readOnly={!isEditable}
+                  />
+                )}
+                {activeTab === 'media' && (
                   <MediaTab
                     blobs={ws.blobs}
                     formBlobPaths={collectFormBlobPaths(ws.manifest.data ?? {})}
                   />
-                </div>
-              )}
-              {activeTab === 'visualisation' && (
-                <VisualisationTab
-                  blobs={ws.blobs}
-                  gtRecords={gtRecords}
-                  inferenceRecords={inferenceRecords}
-                />
-              )}
+                )}
+                {activeTab === 'visualisation' && (
+                  <VisualisationTab
+                    blobs={ws.blobs}
+                    gtRecords={gtRecords}
+                    inferenceRecords={inferenceRecords}
+                  />
+                )}
+              </div>
             </div>
 
             {dirty && isEditable && (
               <div className="workspace-save-bar">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-xs text-amber-400/90">
+                <div className="workspace-inner py-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm text-amber-400/90">
                     Есть несохранённые изменения
                     <span className="hidden sm:inline text-gray-600"> · Ctrl+S</span>
                   </p>
