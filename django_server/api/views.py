@@ -13,31 +13,12 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import PackageSession, Project, UploadedBlob
+from .request_auth import forbid_if_no_project_access, project_ids_for_request
 from .utils import collect_blob_refs, parse_json_body, validate_blob_logical_path, weak_etag
 
 
-def _project_ids_for_request(request) -> set[str] | None:
-    """Если Firebase-режим — только явно выданные project_id; иначе None = все проекты."""
-    user = getattr(request, "collector_user", None)
-    if user is not None:
-        return set(user.projects.values_list("project_id", flat=True))
-    return None
-
-
-def _forbidden_project():
-    return JsonResponse(
-        _err("forbidden", "No access to this project"),
-        status=403,
-    )
-
-
 def _require_project(request, project_id: str) -> JsonResponse | None:
-    if not Project.objects.filter(project_id=project_id).exists():
-        return JsonResponse(_err("not_found", "Unknown project"), status=404)
-    allowed = _project_ids_for_request(request)
-    if allowed is not None and project_id not in allowed:
-        return _forbidden_project()
-    return None
+    return forbid_if_no_project_access(request, project_id)
 
 
 def _err(code: str, message: str, details=None):
@@ -55,7 +36,7 @@ def health(_request):
 class ProjectsCatalogView(View):
     def get(self, request):
         qs = Project.objects.all().order_by("name")
-        allowed = _project_ids_for_request(request)
+        allowed = project_ids_for_request(request)
         if allowed is not None:
             qs = qs.filter(project_id__in=allowed)
         rows = list(qs)

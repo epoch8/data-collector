@@ -1,5 +1,6 @@
 import type { PackageSession, PackageWorkspace, Manifest } from '@/types/manifest';
 import type { ProjectConfig, ProjectSummary } from '@/types/config';
+import { fetchWithAuth } from '@/lib/authenticated-media';
 import { MOCK_PACKAGES, MOCK_WORKSPACE, MOCK_PROJECTS } from './mock-data';
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK === 'true';
@@ -18,7 +19,7 @@ class ApiError extends Error {
 }
 
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(path, {
+  const res = await fetchWithAuth(path, {
     ...init,
     headers: {
       'Content-Type': 'application/json',

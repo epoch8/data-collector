@@ -1,4 +1,4 @@
-"""Staff SPA API for client-admin (dev: no auth; /admin-api/* not covered by ApiV1AuthMiddleware)."""
+"""SPA API для client-admin: та же Firebase-авторизация и доступ к проектам, что и /v1/*."""
 
 from __future__ import annotations
 
@@ -12,6 +12,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from .models import PackageSession, Project, UploadedBlob
+from .request_auth import forbid_if_no_project_access, project_ids_for_request
 from .utils import collect_blob_refs, parse_json_body
 from .views import _err
 
@@ -78,8 +79,12 @@ def _data_fields_for_search(manifest: dict | None, field_ids: set[str]) -> dict[
 
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminProjectsListView(View):
-    def get(self, _request):
-        rows = Project.objects.all().order_by("name")
+    def get(self, request):
+        qs = Project.objects.all().order_by("name")
+        allowed = project_ids_for_request(request)
+        if allowed is not None:
+            qs = qs.filter(project_id__in=allowed)
+        rows = list(qs)
         items = [
             {
                 "project_id": p.project_id,
@@ -94,7 +99,10 @@ class AdminProjectsListView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminProjectConfigView(View):
-    def get(self, _request, project_id: str):
+    def get(self, request, project_id: str):
+        denied = forbid_if_no_project_access(request, project_id)
+        if denied is not None:
+            return denied
         project = Project.objects.filter(project_id=project_id).first()
         if not project:
             return JsonResponse(_err("not_found", "Unknown project"), status=404)
@@ -108,6 +116,9 @@ class AdminProjectConfigView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageListView(View):
     def get(self, request, project_id: str):
+        denied = forbid_if_no_project_access(request, project_id)
+        if denied is not None:
+            return denied
         project = Project.objects.filter(project_id=project_id).first()
         if not project:
             return JsonResponse(_err("not_found", "Unknown project"), status=404)
@@ -139,7 +150,10 @@ class AdminPackageListView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageWorkspaceView(View):
-    def get(self, _request, project_id: str, package_id: str):
+    def get(self, request, project_id: str, package_id: str):
+        denied = forbid_if_no_project_access(request, project_id)
+        if denied is not None:
+            return denied
         project = Project.objects.filter(project_id=project_id).first()
         if not project:
             return JsonResponse(_err("not_found", "Unknown project"), status=404)
@@ -192,6 +206,9 @@ class AdminPackageWorkspaceView(View):
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminPackageManifestPatchView(View):
     def patch(self, request, project_id: str, package_id: str):
+        denied = forbid_if_no_project_access(request, project_id)
+        if denied is not None:
+            return denied
         session = PackageSession.objects.filter(
             project__project_id=project_id,
             package_id=package_id,
@@ -248,7 +265,10 @@ class AdminPackageManifestPatchView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class AdminBlobPreviewView(View):
-    def get(self, _request, project_id: str, package_id: str, blob_pk: int):
+    def get(self, request, project_id: str, package_id: str, blob_pk: int):
+        denied = forbid_if_no_project_access(request, project_id)
+        if denied is not None:
+            return denied
         blob = UploadedBlob.objects.filter(
             pk=blob_pk,
             session__project__project_id=project_id,

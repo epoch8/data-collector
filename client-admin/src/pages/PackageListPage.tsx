@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
-import { api } from '@/api/client';
+import { Link, useNavigate } from 'react-router-dom';
+import { api, ApiError } from '@/api/client';
+import { useAuth } from '@/auth/useAuth';
 import type { PackageSession } from '@/types/manifest';
 import type { ProjectConfig, ProjectSummary } from '@/types/config';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -24,12 +25,15 @@ const SEARCH_FIELD_KEY = 'client-admin:last-search-field';
 type SearchMode = 'field' | 'meta';
 
 export function PackageListPage() {
+  const { ready, user, bypass } = useAuth();
+  const navigate = useNavigate();
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [projectId, setProjectId] = useState('');
   const [projectConfig, setProjectConfig] = useState<ProjectConfig | null>(null);
   const [packages, setPackages] = useState<PackageSession[]>([]);
   const [loadingProjects, setLoadingProjects] = useState(true);
   const [loadingPackages, setLoadingPackages] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [phaseFilter, setPhaseFilter] = useState<string>('completed');
   const [searchMode, setSearchMode] = useState<SearchMode>('field');
   const [searchFieldId, setSearchFieldId] = useState('');
@@ -44,34 +48,63 @@ export function PackageListPage() {
   const currentProject = projects.find(p => p.project_id === projectId);
 
   useEffect(() => {
-    api.listProjects().then(list => {
-      setProjects(list);
-      const saved = localStorage.getItem(STORAGE_KEY);
-      const initial =
-        saved && list.some(p => p.project_id === saved)
-          ? saved
-          : list[0]?.project_id ?? '';
-      setProjectId(initial);
-      setLoadingProjects(false);
-    });
-  }, []);
+    if (!ready) return;
+    if (!bypass && !user) return;
+
+    setLoadingProjects(true);
+    setLoadError(null);
+    api
+      .listProjects()
+      .then(list => {
+        setProjects(list);
+        const saved = localStorage.getItem(STORAGE_KEY);
+        const initial =
+          saved && list.some(p => p.project_id === saved)
+            ? saved
+            : list[0]?.project_id ?? '';
+        setProjectId(initial);
+        setLoadingProjects(false);
+      })
+      .catch(err => {
+        setLoadingProjects(false);
+        setProjects([]);
+        setProjectId('');
+        if (err instanceof ApiError && err.status === 401) {
+          setLoadError('Сессия недействительна — войдите снова');
+          navigate('/login', { replace: true });
+          return;
+        }
+        setLoadError(err instanceof ApiError ? err.message : 'Не удалось загрузить проекты');
+      });
+  }, [ready, user, bypass, navigate]);
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!ready || !projectId) return;
+    if (!bypass && !user) return;
+
     localStorage.setItem(STORAGE_KEY, projectId);
     setLoadingPackages(true);
     setProjectConfig(null);
-    Promise.all([api.getProjectConfig(projectId), api.listPackages(projectId)]).then(
-      ([config, pkgs]) => {
+    setLoadError(null);
+    Promise.all([api.getProjectConfig(projectId), api.listPackages(projectId)])
+      .then(([config, pkgs]) => {
         setProjectConfig(config);
         setPackages(pkgs);
         setLoadingPackages(false);
         const fields = config.config?.fields ?? [];
         setSearchFieldId(initialSearchFieldId(fields, projectId));
         if (fields.length > 0) setSearchMode('field');
-      },
-    );
-  }, [projectId]);
+      })
+      .catch(err => {
+        setLoadingPackages(false);
+        setPackages([]);
+        if (err instanceof ApiError && err.status === 401) {
+          navigate('/login', { replace: true });
+          return;
+        }
+        setLoadError(err instanceof ApiError ? err.message : 'Не удалось загрузить пакеты');
+      });
+  }, [ready, user, bypass, projectId, navigate]);
 
   useEffect(() => {
     if (projectId && searchFieldId) {
@@ -131,6 +164,21 @@ export function PackageListPage() {
         }
       />
 
+      {loadError && (
+        <p className="mb-4 text-sm text-red-400 bg-red-950/30 border border-red-900/40 rounded-lg px-3 py-2">
+          {loadError}
+        </p>
+      )}
+
+      {!loadingProjects && projects.length === 0 && !loadError && (
+        <EmptyState
+          title="Нет доступных проектов"
+          description="Администратор должен выдать доступ в Django: Пользователи (Firebase) → Доступные проекты."
+        />
+      )}
+
+      {(projects.length > 0 || loading) && (
+      <>
       <FilterPanel
         footer={
           !loading && packages.length > 0 ? (
@@ -246,11 +294,6 @@ export function PackageListPage() {
 
       {loading ? (
         <TableSkeleton rows={6} />
-      ) : projects.length === 0 ? (
-        <EmptyState
-          title="Нет проектов"
-          description="Запустите django_server и выполните load_projects_from_assets."
-        />
       ) : searchableFields.length === 0 && searchMode === 'field' ? (
         <EmptyState
           title="Нет полей для поиска"
@@ -334,6 +377,8 @@ export function PackageListPage() {
             </table>
           </div>
         </div>
+      )}
+      </>
       )}
     </div>
   );

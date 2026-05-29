@@ -1,4 +1,5 @@
 import type { AnnotationLayer } from '@/types/datapipe';
+import { resolveAuthenticatedImageUrl } from '@/lib/authenticated-media';
 import type { DepthMapData } from '@/lib/depth-npy';
 import { rasterizeDepthMap } from '@/lib/depth-colormap';
 import {
@@ -41,13 +42,14 @@ export interface VizExportOptions {
   };
 }
 
-function loadImage(url: string): Promise<HTMLImageElement> {
+async function loadImage(url: string): Promise<HTMLImageElement> {
+  const resolved = await resolveAuthenticatedImageUrl(url);
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('Не удалось загрузить изображение'));
-    img.src = url;
+    img.src = resolved;
   });
 }
 

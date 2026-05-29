@@ -12,7 +12,8 @@
 - **Медиа:** все `blobs` пакета, бейдж «в форме» для файлов из `data`
 - Widget Resolver, lightbox, навигация по полям, Ctrl+S, toast
 - Правка `manifest.data` для пакетов в статусе `completed`
-- API `/admin-api/v1/*` в django_server (dev без auth)
+- Firebase Auth (тот же аккаунт, что в мобильном приложении) + доступ к проектам через `CollectorUser.projects` в Django
+- API `/admin-api/v1/*` с `Authorization: Bearer <Firebase ID token>`
 - Mock-режим для offline UI
 
 ## Запуск
@@ -42,6 +43,14 @@ npm run dev
 VITE_USE_MOCK=true npm run dev
 ```
 
+**Локально без Firebase** (Django тоже без `FIREBASE_AUTH_ENABLED`):
+
+```bash
+VITE_FIREBASE_AUTH_ENABLED=false npm run dev
+```
+
+**С Firebase** — нужен `firebase-service-account.json` в `django_server/` (или env), пользователь с доступом к проектам в `/ui/users/` или Django Admin → Пользователи (Firebase).
+
 ## Документы
 
 | Файл | О чём |
@@ -52,7 +61,9 @@ VITE_USE_MOCK=true npm run dev
 | [03-field-widgets.md](docs/03-field-widgets.md) | Виджеты |
 | [05-api-contract.md](docs/05-api-contract.md) | HTTP API |
 
-## API (dev)
+## API
+
+Все запросы (кроме mock) требуют `Authorization: Bearer <Firebase ID token>`, если на Django включён Firebase Auth. Список проектов фильтруется по M2M `CollectorUser.projects` (как `/v1/projects` в приложении).
 
 | Метод | Путь |
 |-------|------|

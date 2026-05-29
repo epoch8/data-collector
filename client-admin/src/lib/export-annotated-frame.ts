@@ -1,6 +1,7 @@
 import type { BlobInfo } from '@/types/manifest';
 import type { CowInferenceRecord, CowKeypointAnnotationRecord } from '@/types/datapipe';
 import { downloadBlob } from '@/lib/export-viz-frame';
+import { fetchWithAuth } from '@/lib/authenticated-media';
 import { depthMapUrlForRecord, loadDepthMap, type DepthMapData } from '@/lib/depth-npy';
 import { getInferencePipelineExport } from '@/lib/inference-pipeline-export';
 import { blobFileName } from '@/lib/format';
@@ -60,7 +61,7 @@ function serializeDepth(
 }
 
 async function fetchImageBlob(url: string): Promise<Blob> {
-  const res = await fetch(url);
+  const res = await fetchWithAuth(url);
   if (!res.ok) throw new Error('Не удалось загрузить изображение');
   return res.blob();
 }

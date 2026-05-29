@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/api/client';
+import { useAuth } from '@/auth/useAuth';
 import type { PackageWorkspace } from '@/types/manifest';
 import type { PackageSession } from '@/types/manifest';
 import type { ProjectConfig } from '@/types/config';
@@ -19,6 +20,7 @@ import { getCowInferenceForPackage } from '@/lib/datapipe-inference-mock';
 
 export function PackageWorkspacePage() {
   const { projectId, packageId } = useParams<{ projectId: string; packageId: string }>();
+  const { ready, user, bypass } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
   const [ws, setWs] = useState<PackageWorkspace | null>(null);
@@ -33,7 +35,8 @@ export function PackageWorkspacePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!projectId) return;
+    if (!ready || !projectId) return;
+    if (!bypass && !user) return;
     setListLoading(true);
     Promise.all([api.getProjectConfig(projectId), api.listPackages(projectId)])
       .then(([config, pkgs]) => {
@@ -41,11 +44,17 @@ export function PackageWorkspacePage() {
         setPackages(pkgs);
         setListLoading(false);
       })
-      .catch(() => setListLoading(false));
-  }, [projectId]);
+      .catch(err => {
+        setListLoading(false);
+        if (err instanceof ApiError && err.status === 401) {
+          navigate('/login', { replace: true });
+        }
+      });
+  }, [ready, user, bypass, projectId, navigate]);
 
   const loadWorkspace = useCallback(() => {
-    if (!projectId || !packageId) return;
+    if (!ready || !projectId || !packageId) return;
+    if (!bypass && !user) return;
     setLoading(true);
     setError(null);
     api
@@ -56,9 +65,13 @@ export function PackageWorkspacePage() {
       })
       .catch(err => {
         setLoading(false);
+        if (err instanceof ApiError && err.status === 401) {
+          navigate('/login', { replace: true });
+          return;
+        }
         setError(err instanceof ApiError ? err.message : 'Не удалось загрузить пакет');
       });
-  }, [projectId, packageId]);
+  }, [ready, user, bypass, projectId, packageId, navigate]);
 
   useEffect(() => {
     loadWorkspace();

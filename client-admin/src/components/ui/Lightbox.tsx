@@ -1,4 +1,5 @@
 import { useEffect, useCallback } from 'react';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { blobFileName } from '@/lib/format';
 
 export interface LightboxSlide {
@@ -75,7 +76,7 @@ export function Lightbox({ slides, index, onClose, onIndexChange }: Props) {
             ‹
           </button>
         )}
-        <img
+        <AuthenticatedImage
           src={slide.src}
           alt={slide.title}
           className="max-h-[calc(100vh-8rem)] max-w-full object-contain mx-4"

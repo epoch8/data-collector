@@ -2,6 +2,7 @@ import { useMemo, useState, type ReactNode } from 'react';
 import type { AnnotationLayer } from '@/types/datapipe';
 import { layoutSegmentLabels, pointLabelAnchor } from '@/components/visualisation/annotation-label-layout';
 import { SegmentLineLabel, YoloLabel } from '@/components/visualisation/YoloLabel';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 
 const PALETTE = {
   gt: {
@@ -82,7 +83,7 @@ export function AnnotationCanvas({
         onPointerMove={onFramePointerMove}
         onPointerLeave={onFramePointerLeave}
       >
-        <img src={src} alt={alt} className="annotation-stage__img" draggable={false} />
+        <AuthenticatedImage src={src} alt={alt} className="annotation-stage__img" draggable={false} />
         <svg
           className="annotation-stage__svg"
           viewBox={`0 0 ${width} ${height}`}

@@ -5,6 +5,7 @@ import { fieldHint } from '@/lib/config-field';
 import { extractFormShots } from '@/lib/form-fields';
 import { blobFileName } from '@/lib/format';
 import { FieldCard } from '@/components/ui/FieldCard';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { Lightbox, type LightboxSlide } from '@/components/ui/Lightbox';
 
 interface Props {
@@ -46,7 +47,7 @@ export function CameraPhotoWidget({ field, value, blobs }: Props) {
                 className="group relative aspect-[4/3] rounded-lg overflow-hidden border border-gray-700/60 bg-gray-800/60 hover:border-blue-500/40 transition-colors text-left disabled:cursor-default"
               >
                 {blob ? (
-                  <img
+                  <AuthenticatedImage
                     src={blob.preview_url}
                     alt={shot.path}
                     className="w-full h-full object-cover"

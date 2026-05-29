@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import type { BlobInfo } from '@/types/manifest';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
+import { downloadAuthenticatedFile } from '@/lib/authenticated-media';
 import { formatBytes, blobFileName } from '@/lib/format';
 import { Tag } from '@/components/ui/Badge';
 import { Lightbox, type LightboxSlide } from '@/components/ui/Lightbox';
@@ -49,23 +51,11 @@ export function MediaTab({ blobs, formBlobPaths }: Props) {
                 onClick={() => setLightboxIndex(idx)}
                 className="w-full aspect-[4/3] bg-gray-900 relative block"
               >
-                <img
+                <AuthenticatedImage
                   src={blob.preview_url}
                   alt={blob.logical_path}
                   className="w-full h-full object-cover"
                   loading="lazy"
-                  onError={e => {
-                    const img = e.target as HTMLImageElement;
-                    img.style.display = 'none';
-                    const parent = img.parentElement;
-                    if (parent && !parent.querySelector('[data-fallback]')) {
-                      const fb = document.createElement('div');
-                      fb.dataset.fallback = '1';
-                      fb.className = 'absolute inset-0 flex items-center justify-center text-gray-600 text-xs p-2 text-center';
-                      fb.textContent = 'Не удалось загрузить';
-                      parent.appendChild(fb);
-                    }
-                  }}
                 />
                 <span className="absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity text-xs text-white font-medium">
                   Открыть
@@ -80,15 +70,16 @@ export function MediaTab({ blobs, formBlobPaths }: Props) {
                 </p>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-[10px] text-gray-600">{formatBytes(blob.size_bytes)}</span>
-                  <a
-                    href={blob.preview_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={e => e.stopPropagation()}
+                  <button
+                    type="button"
+                    onClick={e => {
+                      e.stopPropagation();
+                      void downloadAuthenticatedFile(blob.preview_url, blobFileName(blob.logical_path));
+                    }}
                     className="text-[10px] text-emerald-400/90 hover:text-emerald-300"
                   >
                     скачать
-                  </a>
+                  </button>
                 </div>
               </div>
             </article>

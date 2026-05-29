@@ -3,6 +3,15 @@
 Платформа = `django_server` (пакеты, blobs, manifest, config).  
 client-admin только читает/пишет через HTTP. Префикс для staff: **`/admin-api/v1/`** (мобилка по-прежнему `/v1/...`, spec 08).
 
+## Авторизация
+
+Та же схема, что у мобильного приложения:
+
+- Firebase Auth → `Authorization: Bearer <ID token>` на каждый запрос `/admin-api/v1/*`
+- Django создаёт/обновляет `CollectorUser` по UID из токена
+- Список проектов и доступ к `{project_id}` — только из M2M **`CollectorUser.projects`** (настраивается в Django UI `/ui/users/` или Admin → Пользователи (Firebase))
+- Локальная разработка без Firebase: если на Django не включён `FIREBASE_AUTH_ENABLED`, API работает без токена (все проекты)
+
 ## Чтение
 
 **Список пакетов**

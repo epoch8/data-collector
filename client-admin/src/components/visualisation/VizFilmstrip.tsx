@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { AuthenticatedImage } from '@/components/AuthenticatedImage';
 import { blobFileName } from '@/lib/format';
 
 export interface FilmstripSlide {
@@ -52,7 +53,7 @@ export function VizFilmstrip({ slides, activeIndex, onSelect }: Props) {
               className={`viz-filmstrip__item ${isActive ? 'viz-filmstrip__item--active' : ''}`}
             >
               <span className="viz-filmstrip__frame">
-                <img src={slide.previewUrl} alt="" className="viz-filmstrip__img" />
+                <AuthenticatedImage src={slide.previewUrl} alt="" className="viz-filmstrip__img" />
                 <span className="viz-filmstrip__index">{i + 1}</span>
               </span>
               <span className="viz-filmstrip__caption" title={slide.caption}>

@@ -11,7 +11,7 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">Пользователи</h1>
-    <p class="ui-page-sub mb-0">Учётные записи Firebase Auth и доступ к проектам для API <code>/v1/projects/…</code>. Подтяните список из консоли Firebase или дождитесь первого входа в приложение.</p>
+    <p class="ui-page-sub mb-0">Учётные записи Firebase Auth и доступ к проектам для мобильного приложения (<code>/v1/…</code>) и веб-админки пакетов (<code>/admin-api/…</code>). Подтяните список из консоли Firebase или дождитесь первого входа.</p>
   </div>
   <form method="post" action="{% url 'ui_collector_user_sync_firebase' %}" class="d-inline">
     {% csrf_token %}
