@@ -1,75 +1,67 @@
 # client-admin
 
-Веб-админка **client-admin** для просмотра и правки **принятых пакетов** на платформе.
+Веб-UI для просмотра и правки **принятых пакетов** (manifest, blobs). Статический SPA; бэкенд — только `django_server`.
 
-**Платформа** (`django_server`) — приём пакетов, хранение manifest и blobs.  
-**client-admin** — UI ядра: поля формы (`data`) по `config.fields`, галерея медиа (`blobs/*`).
+## Связь с django_server
 
-## v1 — что реализовано
-
-- Вкладки **Данные** и **Медиа** (без Pipelines, JSON, плагинов)
-- **Данные:** только `text_input` / `datetime` по шагам `config.flow` (заголовок = `form_title`), без instruction и без фото
-- **Медиа:** все `blobs` пакета, бейдж «в форме» для файлов из `data`
-- Widget Resolver, lightbox, навигация по полям, Ctrl+S, toast
-- Правка `manifest.data` для пакетов в статусе `completed`
-- Firebase Auth (тот же аккаунт, что в мобильном приложении) + доступ к проектам через `CollectorUser.admin_projects` в Django
-- API `/admin-api/v1/*` с `Authorization: Bearer <Firebase ID token>`
-- Mock-режим для offline UI
-
-## Запуск
-
-**1. Django (платформа)**
-
-```bash
-cd django_server
-python manage.py migrate
-python manage.py load_projects_from_assets   # если проекты ещё не в БД
-python manage.py runserver
+```mermaid
+flowchart LR
+  subgraph browser["Браузер"]
+    CA["client-admin SPA"]
+  end
+  subgraph django["django_server"]
+    API["/admin-api/v1/*"]
+    AUTH["Firebase ID token"]
+    DB[(Project, PackageSession, Blobs)]
+    CU["CollectorUser.admin_projects"]
+  end
+  subgraph stub["datapipe_test — заглушка"]
+    MOCK["mock_*.json + .npy"]
+  end
+  CA -->|"Bearer token"| AUTH
+  AUTH --> CU
+  CA --> API
+  API --> DB
+  CA -.->|"bundled import, dev/demo"| MOCK
 ```
 
-**2. client-admin**
+| Аспект | django_server | client-admin | datapipe_test |
+|--------|---------------|--------------|---------------|
+| Авторизация | Проверка Firebase token, `CollectorUser` | `Authorization: Bearer` | — |
+| Список проектов / пакетов | `/admin-api/v1/projects`, `…/packages` | `api/client.ts` | `VITE_USE_MOCK` → `mock-data.ts` |
+| Конфиг полей, manifest, blobs | workspace + PATCH manifest | Вкладки **Данные**, **Медиа** | — |
+| Превью файлов | `…/blobs/{id}/preview` | `AuthenticatedImage` | — |
+| GT / inference / depth | *пока нет в API* | Вкладка **Визуализация** | **заглушка** (JSON + npy) |
+| История правок полей | *пока нет* | вкладка в dev | `field_changelog.json` + Vite `/local-api` |
+
+Права: в Django отдельно **`admin_projects`** (client-admin) и **`mobile_projects`** (приложение). Настройка: `/ui/users/` или Admin → Пользователи (Firebase).
+
+## Сборка и деплой
 
 ```bash
 cd client-admin
-npm install
-npm run dev
+npm ci
+npm run build    # артефакт: dist/
 ```
 
-Открыть http://localhost:5173 — Vite проксирует `/admin-api` на `http://127.0.0.1:8000`.
+Прокси `/admin-api` есть только в `npm run dev`. В проде nginx (или аналог) отдаёт `dist/` и проксирует `/admin-api` → Django.
 
-**Mock без django:**
+| Переменная | Назначение |
+|------------|------------|
+| `VITE_FIREBASE_*` | Web SDK (см. `.env.example`) |
+| `VITE_USE_MOCK=true` | UI без Django |
+| `VITE_FIREBASE_AUTH_ENABLED=false` | Dev без Firebase (Django тоже без Firebase) |
+
+## Локальная разработка
 
 ```bash
-VITE_USE_MOCK=true npm run dev
+# терминал 1
+cd django_server && python manage.py runserver
+
+# терминал 2
+cd client-admin && npm run dev   # http://localhost:5173
 ```
 
-**Локально без Firebase** (Django тоже без `FIREBASE_AUTH_ENABLED`):
+Демо визуализации: пакет `korovas-2026` / `pkg_1779969797246` в БД + файлы в [`../datapipe_test/README.md`](../datapipe_test/README.md).
 
-```bash
-VITE_FIREBASE_AUTH_ENABLED=false npm run dev
-```
-
-**С Firebase** — нужен `firebase-service-account.json` в `django_server/` (или env), пользователь с доступом к проектам в `/ui/users/` или Django Admin → Пользователи (Firebase).
-
-## Документы
-
-| Файл | О чём |
-|------|--------|
-| [00-overview.md](docs/00-overview.md) | Зачем и общая схема |
-| [01-manifest-and-pipelines.md](docs/01-manifest-and-pipelines.md) | JSON пакета |
-| [02-package-workspace.md](docs/02-package-workspace.md) | Экран пакета |
-| [03-field-widgets.md](docs/03-field-widgets.md) | Виджеты |
-| [05-api-contract.md](docs/05-api-contract.md) | HTTP API |
-
-## API
-
-Все запросы (кроме mock) требуют `Authorization: Bearer <Firebase ID token>`, если на Django включён Firebase Auth. Список проектов фильтруется по M2M `CollectorUser.admin_projects` (отдельно от прав мобильного приложения `mobile_projects`).
-
-| Метод | Путь |
-|-------|------|
-| GET | `/admin-api/v1/projects` |
-| GET | `/admin-api/v1/projects/{id}/config` |
-| GET | `/admin-api/v1/projects/{id}/packages?phase=` |
-| GET | `/admin-api/v1/projects/{id}/packages/{pkg}/workspace` |
-| PATCH | `/admin-api/v1/projects/{id}/packages/{pkg}/manifest` |
-| GET | `/admin-api/v1/projects/{id}/packages/{pkg}/blobs/{pk}/preview` |
+Подробный контракт API: [docs/05-api-contract.md](docs/05-api-contract.md).

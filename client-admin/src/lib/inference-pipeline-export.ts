@@ -9,6 +9,7 @@ const EXCLUDED_JSON = new Set([
   'mock_datapipe_inference.json',
   'mock_datapipe_annotations.json',
   'inference.json',
+  'field_changelog.json',
 ]);
 
 export function getInferencePipelineExport(filename: string): unknown | null {
