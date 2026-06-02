@@ -1,13 +1,13 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api, ApiError } from '@/api/client';
 import { useAuth } from '@/auth/useAuth';
-import type { PackageWorkspace } from '@/types/manifest';
-import type { PackageSession } from '@/types/manifest';
+import type { FieldChangeLogEntry, PackageSession, PackageWorkspace } from '@/types/manifest';
 import type { ProjectConfig } from '@/types/config';
 import { DataTab } from '@/components/tabs/DataTab';
 import { MediaTab } from '@/components/tabs/MediaTab';
 import { VisualisationTab } from '@/components/tabs/VisualisationTab';
+import { ChangeHistoryTab } from '@/components/tabs/ChangeHistoryTab';
 import type { WorkspaceTab } from '@/components/ui/TabBar';
 import { Button } from '@/components/ui/Button';
 import { WorkspaceHeader } from '@/components/workspace/WorkspaceHeader';
@@ -35,6 +35,15 @@ export function PackageWorkspacePage() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [historyEntries, setHistoryEntries] = useState<FieldChangeLogEntry[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [reasonDialogOpen, setReasonDialogOpen] = useState(false);
+  const [reasonChoice, setReasonChoice] = useState<'input_error' | 'stale_data' | 'invalid_format' | 'custom'>(
+    'input_error',
+  );
+  const [customReason, setCustomReason] = useState('');
+  const pendingReasonRef = useRef<string | null>(null);
+  const initialDataRef = useRef<Record<string, unknown>>({});
 
   useEffect(() => {
     if (!ready || !projectId) return;
@@ -63,6 +72,7 @@ export function PackageWorkspacePage() {
       .getWorkspace(projectId, packageId)
       .then(data => {
         setWs(data);
+        initialDataRef.current = { ...(data.manifest.data ?? {}) };
         setLoading(false);
       })
       .catch(err => {
@@ -124,13 +134,84 @@ export function PackageWorkspacePage() {
     [isEditable],
   );
 
+  const loadHistory = useCallback(async () => {
+    if (!projectId || !packageId) return;
+    setHistoryLoading(true);
+    try {
+      const rows = await api.getFieldChangelog(projectId, packageId);
+      setHistoryEntries(rows);
+    } catch {
+      setHistoryEntries([]);
+    } finally {
+      setHistoryLoading(false);
+    }
+  }, [projectId, packageId]);
+
+  useEffect(() => {
+    void loadHistory();
+  }, [loadHistory]);
+
+  const getChanges = useCallback(() => {
+    if (!ws) return [];
+    const currentData = ws.manifest.data ?? {};
+    const previousData = initialDataRef.current;
+    const changedFieldIds = new Set<string>([...Object.keys(previousData), ...Object.keys(currentData)]);
+    return Array.from(changedFieldIds)
+      .filter(fieldId => JSON.stringify(previousData[fieldId]) !== JSON.stringify(currentData[fieldId]))
+      .map(fieldId => ({
+        field_id: fieldId,
+        before: previousData[fieldId] ?? null,
+        after: currentData[fieldId] ?? null,
+      }));
+  }, [ws]);
+
+  const startSaveFlow = useCallback(() => {
+    if (!dirty || !isEditable || !ws || !projectId || !packageId) return;
+    const changes = getChanges();
+    if (!changes.length) {
+      setDirty(false);
+      return;
+    }
+    pendingReasonRef.current = null;
+    setCustomReason('');
+    setReasonChoice('input_error');
+    setReasonDialogOpen(true);
+  }, [dirty, isEditable, ws, projectId, packageId, getChanges]);
+
+  const resolveReason = useCallback(() => {
+    if (reasonChoice === 'input_error') return 'ошибка в введенных данных';
+    if (reasonChoice === 'stale_data') return 'устаревшие данные';
+    if (reasonChoice === 'invalid_format') return 'неправильный формат данных';
+    return customReason.trim();
+  }, [reasonChoice, customReason]);
+
   const handleSave = useCallback(async () => {
     if (!ws || !projectId || !packageId || !isEditable) return;
+    const changes = getChanges();
+    if (!changes.length) {
+      setDirty(false);
+      return;
+    }
+    const reason = pendingReasonRef.current?.trim();
+    if (!reason) {
+      startSaveFlow();
+      return;
+    }
     setSaving(true);
     setSaveError(null);
     try {
       await api.patchManifest(projectId, packageId, ws.manifest);
+      await api.appendFieldChangelog({
+        project_id: projectId,
+        package_id: packageId,
+        reason,
+        verifier_email: user?.email ?? undefined,
+        changes,
+      });
+      initialDataRef.current = { ...(ws.manifest.data ?? {}) };
       setDirty(false);
+      pendingReasonRef.current = null;
+      await loadHistory();
       toast.show('Изменения сохранены');
     } catch (err) {
       const msg = err instanceof ApiError ? err.message : 'Ошибка сохранения';
@@ -139,20 +220,31 @@ export function PackageWorkspacePage() {
     } finally {
       setSaving(false);
     }
-  }, [ws, projectId, packageId, isEditable, toast]);
+  }, [ws, projectId, packageId, isEditable, toast, getChanges, startSaveFlow, user?.email, loadHistory]);
+
+  const confirmReasonAndSave = useCallback(() => {
+    const reason = resolveReason();
+    if (!reason) {
+      toast.show('Укажите причину изменения', 'error');
+      return;
+    }
+    pendingReasonRef.current = reason;
+    setReasonDialogOpen(false);
+    void handleSave();
+  }, [resolveReason, toast, handleSave]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         if (dirty && isEditable && ws && projectId && packageId) {
-          void handleSave();
+          startSaveFlow();
         }
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [dirty, isEditable, ws, projectId, packageId, handleSave]);
+  }, [dirty, isEditable, ws, projectId, packageId, startSaveFlow]);
 
   const handleReset = useCallback(() => {
     if (dirty && !window.confirm('Отменить несохранённые изменения?')) return;
@@ -197,6 +289,7 @@ export function PackageWorkspacePage() {
       { id: 'data' as const, label: 'Данные' },
       { id: 'media' as const, label: 'Медиа' },
       ...(hasVisualisation ? [{ id: 'visualisation' as const, label: 'Визуализация' }] : []),
+      { id: 'change_history' as const, label: 'История изменений' },
     ],
     [hasVisualisation],
   );
@@ -263,7 +356,7 @@ export function PackageWorkspacePage() {
               onTabChange={setActiveTab}
               onBack={handleBack}
               onReset={handleReset}
-              onSave={() => void handleSave()}
+              onSave={startSaveFlow}
             />
 
             <div className="workspace-content">
@@ -291,6 +384,9 @@ export function PackageWorkspacePage() {
                     inferenceRecords={inferenceRecords}
                   />
                 )}
+                {activeTab === 'change_history' && (
+                  <ChangeHistoryTab entries={historyEntries} loading={historyLoading} />
+                )}
               </div>
             </div>
 
@@ -307,7 +403,7 @@ export function PackageWorkspacePage() {
                     </Button>
                     <Button
                       variant="primary"
-                      onClick={handleSave}
+                      onClick={startSaveFlow}
                       disabled={saving}
                       loading={saving}
                       className="flex-1 sm:flex-none"
@@ -321,6 +417,76 @@ export function PackageWorkspacePage() {
           </>
         )}
       </div>
+      {reasonDialogOpen && (
+        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
+          <div className="ui-card w-full max-w-xl p-5">
+            <h3 className="text-lg font-semibold text-gray-100 mb-3">Причина ручной корректировки</h3>
+            <div className="space-y-2 text-sm text-gray-200">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reason"
+                  value="input_error"
+                  checked={reasonChoice === 'input_error'}
+                  onChange={() => setReasonChoice('input_error')}
+                />
+                ошибка в введенных данных
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reason"
+                  value="stale_data"
+                  checked={reasonChoice === 'stale_data'}
+                  onChange={() => setReasonChoice('stale_data')}
+                />
+                устаревшие данные
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reason"
+                  value="invalid_format"
+                  checked={reasonChoice === 'invalid_format'}
+                  onChange={() => setReasonChoice('invalid_format')}
+                />
+                неправильный формат данных
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="reason"
+                  value="custom"
+                  checked={reasonChoice === 'custom'}
+                  onChange={() => setReasonChoice('custom')}
+                />
+                своя причина
+              </label>
+            </div>
+            <textarea
+              className="ui-input w-full mt-3 min-h-24"
+              placeholder="Опишите причину..."
+              value={customReason}
+              onChange={e => setCustomReason(e.target.value)}
+              disabled={reasonChoice !== 'custom'}
+            />
+            <div className="flex justify-end gap-2 mt-4">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  pendingReasonRef.current = null;
+                  setReasonDialogOpen(false);
+                }}
+              >
+                Отмена
+              </Button>
+              <Button variant="primary" onClick={confirmReasonAndSave}>
+                Сохранить
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import type { PackageSession, PackageWorkspace, Manifest } from '@/types/manifest';
+import type { PackageSession, PackageWorkspace, Manifest, FieldChangeLogEntry } from '@/types/manifest';
 import type { ProjectConfig, ProjectSummary } from '@/types/config';
 import { fetchWithAuth } from '@/lib/authenticated-media';
 import { MOCK_PACKAGES, MOCK_WORKSPACE, MOCK_PROJECTS } from './mock-data';
@@ -100,6 +100,34 @@ export const api = {
       `/admin-api/v1/projects/${projectId}/packages/${packageId}/manifest`,
       { method: 'PATCH', body: JSON.stringify(manifest) },
     );
+  },
+
+  async appendFieldChangelog(payload: {
+    project_id: string;
+    package_id: string;
+    reason: string;
+    verifier_email?: string;
+    changes: Array<{ field_id: string; before: unknown; after: unknown }>;
+  }): Promise<{ ok: boolean; entries_count: number }> {
+    const res = await fetch('/local-api/field-changelog', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      throw new ApiError('field_changelog_failed', 'Не удалось записать историю изменений', res.status);
+    }
+    return res.json() as Promise<{ ok: boolean; entries_count: number }>;
+  },
+
+  async getFieldChangelog(projectId: string, packageId: string): Promise<FieldChangeLogEntry[]> {
+    const qs = new URLSearchParams({ project_id: projectId, package_id: packageId });
+    const res = await fetch(`/local-api/field-changelog?${qs.toString()}`);
+    if (!res.ok) {
+      throw new ApiError('field_changelog_failed', 'Не удалось загрузить историю изменений', res.status);
+    }
+    const data = (await res.json()) as { entries?: FieldChangeLogEntry[] };
+    return data.entries ?? [];
   },
 };
 

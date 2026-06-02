@@ -1,4 +1,4 @@
-export type WorkspaceTab = 'data' | 'media' | 'visualisation';
+export type WorkspaceTab = 'data' | 'media' | 'visualisation' | 'change_history';
 
 interface Tab {
   id: WorkspaceTab;
@@ -15,6 +15,7 @@ const ACTIVE_CLASS: Record<WorkspaceTab, string> = {
   data: 'ui-tab ui-tab--active-data',
   media: 'ui-tab ui-tab--active-media',
   visualisation: 'ui-tab ui-tab--active-visualisation',
+  change_history: 'ui-tab ui-tab--active-visualisation',
 };
 
 export function TabBar({ tabs, active, onChange }: Props) {

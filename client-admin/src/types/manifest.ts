@@ -84,3 +84,14 @@ export interface PackageWorkspace {
   blobs: BlobInfo[];
   project_config: import('./config').ProjectConfig;
 }
+
+export interface FieldChangeLogEntry {
+  project_id: string;
+  package_id: string;
+  field_id: string;
+  before: unknown;
+  after: unknown;
+  reason: string;
+  verifier_email?: string;
+  changed_at: string;
+}
