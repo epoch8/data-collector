@@ -1,374 +1,406 @@
 <mxfile host="65bd71144e">
     <diagram id="hmkAEeSmkjy_PIBVzAzb" name="Страница — 1">
-        <mxGraphModel dx="2569" dy="1488" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1111" dy="676" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="5" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="2" target="4">
+                <mxCell id="5" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="2" target="4" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="2" value="App" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="2" value="App" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="180" y="470" width="40" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="3" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="3" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="930" y="330" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="13" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="4" target="7">
+                <mxCell id="13" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="4" target="7" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="35" style="edgeStyle=none;html=1;exitX=0.917;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" edge="1" parent="1" source="7" target="9">
+                <mxCell id="35" style="edgeStyle=none;html=1;exitX=0.917;exitY=1;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="7" target="9" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="4" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="270" y="280" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="7" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="7" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="255" y="217.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="9" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="9" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="850" y="250" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="11" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="10" target="9">
+                <mxCell id="11" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="10" target="9" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" style="edgeStyle=none;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="10" target="2">
+                <mxCell id="12" style="edgeStyle=none;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="10" target="2" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="10" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="360" y="370" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="15" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="14" target="7">
+                <mxCell id="15" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="14" target="7" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="14" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="14" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="600" y="20" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="17" value="datapipe eng" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="17" value="datapipe eng" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="770" y="20" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="22" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="22" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="140" y="535" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="24" value="admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="24" value="admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="460" y="460" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="26" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="26" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="510" y="450" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="27" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="27" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="100" y="490" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="28" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="28" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1010" y="290" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="29" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;4&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="29" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;4&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="550" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="30" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="30" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="50" y="720" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="32" value="&lt;span style=&quot;color: rgb(0, 0, 0); white-space: nowrap;&quot;&gt;Приходит admin, настраивает конфиг для сбора и визуализаций,&lt;br&gt;&amp;nbsp;юзеров и проекты, запускает сбор данных&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="32" value="&lt;span style=&quot;color: rgb(0, 0, 0); white-space: nowrap;&quot;&gt;Приходит admin, настраивает конфиг для сбора и визуализаций,&lt;br&gt;&amp;nbsp;юзеров и проекты, запускает сбор данных&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="140" y="705" width="340" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="33" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="33" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="50" y="780" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="34" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;User - client начинает сбор&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="34" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;User - client начинает сбор&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="90" y="760" width="340" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="36" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="36" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="50" y="840" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="37" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="220" y="110" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Данные оседают в БД (коллекторской админки)&amp;nbsp;&lt;br&gt;Данные отображаются в клиентской админке согласно конфигу&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="38" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Данные оседают в БД (коллекторской админки)&amp;nbsp;&lt;br&gt;Данные отображаются в клиентской админке согласно конфигу&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="65" y="810" width="425" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="39" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;4&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="39" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;4&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="50" y="900" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="40" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Datapipe eng приходит настраивать пайплайны&lt;br&gt;При необходимости включает плагины отображения в клиентской админке&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="40" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Datapipe eng приходит настраивать пайплайны&lt;br&gt;При необходимости включает плагины отображения в клиентской админке&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="85" y="880" width="425" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="41" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Кейс сбор / кейс инференс:&lt;br&gt;- отличается конфигом сбора и набором пайплайнов, &lt;br&gt;то есть по сути этой новые проект&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="41" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Кейс сбор / кейс инференс:&lt;br&gt;- отличается конфигом сбора и набором пайплайнов, &lt;br&gt;то есть по сути этой новые проект&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="615" y="765" width="340" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="43" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Полный образ коров E8&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="43" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Полный образ коров E8&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="40" y="40" width="220" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="44" value="Админка datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="44" value="Админка datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="640" y="80" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="47" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="47" value="Client" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="2080" y="385" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="48" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="50" target="51">
+                <mxCell id="48" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="50" target="51" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="49" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="50" target="52">
+                <mxCell id="49" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="50" target="52" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2070" y="422.43478260869574" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="50" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="50" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="1490" y="410" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="51" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="51" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="1490" y="350" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="52" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="52" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="2045" y="277.5" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="53" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="55" target="52">
+                <mxCell id="53" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="55" target="52" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2070" y="460.0000000000002" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="55" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="55" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="1580" y="500" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="56" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="58" target="51">
+                <mxCell id="56" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="58" target="51" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="58" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="58" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="1795" y="47.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="59" value="datapipe eng" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="59" value="datapipe eng" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="1965" y="47.5" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="61" value="admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" vertex="1" parent="1">
+                <mxCell id="61" value="admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
                     <mxGeometry x="1680" y="590" width="30" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="62" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="62" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;1&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1730" y="580" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="64" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="64" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="2030" y="420" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="65" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="65" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;3&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1745" y="27.5" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="66" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="66" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;2&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1480" y="330" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="68" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;&amp;nbsp;Базовый образ проекта E8&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="68" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;&amp;nbsp;Базовый образ проекта E8&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1225" y="67.5" width="240" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="69" value="Админка datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="69" value="Админка datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="1835" y="107.5" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="70" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;В целом любой проект в CV E8 описывается этой терминологией&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="70" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;В целом любой проект в CV E8 описывается этой терминологией&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="1760" y="740" width="340" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="95" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" edge="1" parent="1" source="97" target="98">
+                <mxCell id="95" style="edgeStyle=none;html=1;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="97" target="98" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="96" style="edgeStyle=none;html=1;" edge="1" parent="1" source="97" target="99">
+                <mxCell id="96" style="edgeStyle=none;html=1;" parent="1" source="97" target="99" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="97" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="97" value="Data collector админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="2597" y="180" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="98" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="98" value="S3 - хранилище&amp;nbsp;&lt;br&gt;БД" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2582" y="107.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="99" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="99" value="Клиентская админка" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="2895" y="140" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="100" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="101" target="99">
+                <mxCell id="100" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="101" target="99" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="160" style="edgeStyle=none;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="101" target="118">
+                <mxCell id="160" style="edgeStyle=none;html=1;exitX=0;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="101" target="118" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="101" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="101" value="установка конфига cбора данных, проектов и юзеров" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="2687" y="270" width="90" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="112" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 1 - сетап прозрачного сбора данных&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="2376.5" y="47.5" width="390" height="30" as="geometry"/>
+                <mxCell id="112" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 1 - ПЛАТФОРМА прозрачного сбора данных&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="2346.5" y="47.5" width="450" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="121" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="118" target="97">
+                <mxCell id="121" style="edgeStyle=none;html=1;entryX=0;entryY=1;entryDx=0;entryDy=0;" parent="1" source="118" target="97" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="118" value="App" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="118" value="App" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2523.5" y="320" width="40" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="122" value="&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;Опционально" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="122" value="&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;Опционально" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="2457" y="285" width="173" height="140" as="geometry"/>
                 </mxCell>
-                <mxCell id="130" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 2 - прозрачная обработка данных&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
-                    <mxGeometry x="3315" y="57.5" width="370" height="30" as="geometry"/>
+                <mxCell id="130" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 2 - пайплайны обработка данных&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
+                    <mxGeometry x="3320" y="57.5" width="360" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="136" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="136" value="Контур datapipe пайплайнов" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3600" y="117.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="140" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="138" target="139">
+                <mxCell id="140" value="" style="edgeStyle=none;html=1;" parent="1" source="138" target="139" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="138" value="Дашборд datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="138" value="Дашборд datapipe (метрики etc)" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="3620" y="177.5" width="80" height="80" as="geometry"/>
                 </mxCell>
-                <mxCell id="139" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;метод запуска + N predefined datapipe pipelines&lt;/font&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;" vertex="1" parent="1">
+                <mxCell id="139" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;метод запуска + N predefined datapipe pipelines&lt;/font&gt;" style="whiteSpace=wrap;html=1;aspect=fixed;" parent="1" vertex="1">
                     <mxGeometry x="3573.75" y="327.5" width="172.5" height="172.5" as="geometry"/>
                 </mxCell>
-                <mxCell id="141" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 4&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="141" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 4&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="4500" y="67.5" width="100" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="146" value="MCP datapipe (программирование пайплайнов текстом)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="146" value="MCP datapipe (программирование пайплайнов текстом)" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="4479" y="110" width="140" height="92.5" as="geometry"/>
                 </mxCell>
-                <mxCell id="147" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 5&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="147" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 5&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="4740" y="65" width="100" height="30" as="geometry"/>
                 </mxCell>
-                <mxCell id="148" value="Datapipe realtime visualizations" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="148" value="Datapipe realtime visualizations" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="4730" y="107.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="150" value="" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="150" value="" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1380" y="230" width="870" height="510" as="geometry"/>
                 </mxCell>
-                <mxCell id="151" value="" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="151" value="" style="shape=ext;double=1;rounded=1;whiteSpace=wrap;html=1;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="1650" width="520" height="227.5" as="geometry"/>
                 </mxCell>
-                <mxCell id="152" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Плагины поверх п&lt;br&gt;айплайнов &lt;br&gt;пишем рукам&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="152" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Плагины поверх п&lt;br&gt;айплайнов &lt;br&gt;пишем рукам&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="1910" y="247.5" width="130" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="162" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="153">
+                <mxCell id="162" value="" style="edgeStyle=none;html=1;" parent="1" source="153" edge="1">
                     <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="2590" y="620" as="targetPoint"/>
+                        <mxPoint x="2590" y="580" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="153" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="153" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="2409.5" y="600" width="118" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="155" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - продукты&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="155" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - продукты&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="2400" y="702.5" width="120" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="158" value="" style="endArrow=classic;startArrow=classic;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1">
+                <mxCell id="158" value="" style="endArrow=classic;startArrow=classic;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="1915" y="142.5" as="sourcePoint"/>
                         <mxPoint x="2065" y="272.5" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="161" value="Ждем согласования от заказчика" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="2777" y="585" width="120" height="60" as="geometry"/>
+                <mxCell id="161" value="Ждем согласования от заказчика" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="2777" y="520" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="164" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" target="165" source="155">
+                <mxCell id="164" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="155" target="165" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2513.5" y="710" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="170" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="165" target="169">
+                <mxCell id="170" value="" style="edgeStyle=none;html=1;" parent="1" source="165" target="169" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="165" value="Сделать репу с примером как запускается, деплоится, сетапится" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="165" value="Сделать репу с примером как запускается, деплоится, сетапится" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2602.5" y="680" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="166" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - &lt;br&gt;пресейл коллектор&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="166" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - &lt;br&gt;пресейл коллектор&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="2400" y="827.5" width="120" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="167" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="166" target="168">
+                <mxCell id="167" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="166" target="168" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2513.5" y="835" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="168" value="Ждем андроид аккаунт, чтобы запустить приложения" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="168" value="Ждем андроид аккаунт, чтобы запустить приложения" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2580" y="805" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="169" value="Пример пустышка с пустыми полями по каждому типу, описанием и тп" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="169" value="Пример пустышка с пустыми полями по каждому типу, описанием и тп" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2800" y="680" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="171" value="Открытые вопросы:&amp;nbsp;&lt;br&gt;- как мы ведем проекты на уровне гита?&lt;br&gt;- что является пустышкой-проектом? Нужны экземплы или описания?&lt;br&gt;- нужен ли ношен?&lt;br&gt;- кто принимает код?&lt;br&gt;- как деплоится? Новый проект == автодеплой админки под проект? Они с коллекторской в одном контуре?&lt;br&gt;&lt;div&gt;&lt;br&gt;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
-                    <mxGeometry x="2488" y="940" width="348" height="190" as="geometry"/>
+                <mxCell id="171" value="Открытые вопросы:&amp;nbsp;&lt;br&gt;- как мы ведем проекты на уровне гита?&lt;br&gt;- что является пустышкой-проектом? Нужны экземплы или описания?&lt;br&gt;- нужен ли ношен?&lt;br&gt;- кто принимает код?&lt;br&gt;- как деплоится? Новый проект == автодеплой админки под проект? Они с коллекторской в одном контуре?&lt;br&gt;&lt;div&gt;&lt;br&gt;Ответы:&lt;br&gt;- мультитенент&lt;br&gt;- конфиги под проекты&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color: rgb(63, 63, 63);&quot;&gt;&lt;b&gt;&lt;font style=&quot;font-size: 18px;&quot;&gt;Новые вопросы:&lt;/font&gt;&lt;/b&gt;&lt;/span&gt;&lt;br&gt;- Какой репозиторий - базовый, в котором лежит единственная версия коллекторской админки? &lt;br&gt;Конфиги - это одна репа под клиента, или одна общая репа? &lt;br&gt;Как этот код разворачивается (и где) - в обоих случаях?&lt;br&gt;&lt;br&gt;- как сделать так, чтобы когда мы добавляли &quot;конифиг&quot; новой визуализации в клиентскую админку - она отрисовывалась? Типа в репу &quot;{client}&quot;/&quot;client_admin&quot; мы заливаем какой то JS файл?&amp;nbsp;&lt;br&gt;1). вариант - наделать заранее визуализационных плагинов (кладем в базовый репо) и импортить их в клиентских админок&lt;br&gt;2) вариант - можно ли просто сгенерить плагин, положить его в клиентскую папку и развернутая на серваке админка сделает визуализацию согласно этому плагину (то есть не импортим, а плодим плагины)&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;&lt;br&gt;Backend с развернутым базовым репо админки. (client-admin)&lt;br&gt;Backend с репо клиентской админки (client-admin-korovas)&lt;br&gt;&lt;br&gt;Если мы пушим в клиентском гите файл с визуализационным плагином&lt;br&gt;1) как он попадает в репо админки? это крон или че?&lt;/div&gt;&lt;div&gt;2) может ли он в рантайме отрисоваться (если там какой то докер вокруг репо админки)?&lt;br&gt;&lt;br&gt;&lt;br&gt;Нарисовать схемку &quot;какие технологии где мы используем&quot;&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+                    <mxGeometry x="2457" y="860" width="590" height="620" as="geometry"/>
                 </mxCell>
-                <mxCell id="172" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="173" target="175">
+                <mxCell id="172" value="" style="edgeStyle=none;html=1;" parent="1" source="173" target="175" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="173" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="173" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="3369.5" y="650" width="118" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="181" style="edgeStyle=none;html=1;" edge="1" parent="1" source="174">
+                <mxCell id="181" style="edgeStyle=none;html=1;" parent="1" source="174" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="3570" y="852.5" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="183" style="edgeStyle=none;html=1;" edge="1" parent="1" source="174">
+                <mxCell id="183" style="edgeStyle=none;html=1;" parent="1" source="174" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="3570" y="960" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="187" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="174" target="186">
+                <mxCell id="187" style="edgeStyle=none;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="174" target="186" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="174" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - продукты&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="174" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - продукты&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="3320" y="830" width="120" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="175" value="Ждем данные чтобы начать пользоваться" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="205" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="175" target="204">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="175" value="Ждем данные чтобы начать пользоваться" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3563.5" y="640" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="176" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="174" target="178">
+                <mxCell id="176" value="" style="edgeStyle=none;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="174" target="178" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="3473.5" y="760" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="178" value="Ждем мерджа от Саши Козлова чтобы потестить пример Саши Коротаевского с детекцией" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="178" value="Ждем мерджа от Саши Козлова чтобы потестить пример Саши Коротаевского с детекцией" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3562.5" y="730" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="182" value="Сформировать список predifined пайплайнов и решить кто их пишет" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="182" value="Сформировать список predifined пайплайнов и решить кто их пишет" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3572.5" y="830" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="184" value="Метод запуска (интеграция пайплайнов с контуром Коллекторские-Клиентские админки)" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="3572.5" y="930" width="164" height="90" as="geometry"/>
+                <mxCell id="207" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="184" target="206">
+                    <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="186" value="Метод верхнеуровневой оценки работы пайплайн&amp;nbsp; - дашборд (?) вокруг трубы (метрики / графики etc)" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="184" value="Метод запуска (интеграция пайплайнов с контуром Коллекторские-Клиентские админки)" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="3572.5" y="930" width="167.5" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="186" value="Метод верхнеуровневой оценки работы пайплайн&amp;nbsp; - дашборд (?) вокруг трубы (метрики / графики etc)" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3572.5" y="1040" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="188" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 3 =&amp;nbsp;&lt;/b&gt;&lt;/font&gt;&lt;b style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 16px;&quot;&gt;Продукт 1 +&amp;nbsp;&lt;/b&gt;&lt;b style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 16px;&quot;&gt;Продукт 2&lt;br&gt;&lt;br&gt;Менеджмент и обработка данных в CV&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="188" value="&lt;font style=&quot;font-size: 16px;&quot;&gt;&lt;b&gt;Продукт 3 =&amp;nbsp;&lt;/b&gt;&lt;/font&gt;&lt;b style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 16px;&quot;&gt;Продукт 1 +&amp;nbsp;&lt;/b&gt;&lt;b style=&quot;color: rgb(63, 63, 63); scrollbar-color: rgb(226, 226, 226) rgb(251, 251, 251); font-size: 16px;&quot;&gt;Продукт 2&lt;br&gt;&lt;br&gt;Менеджмент и обработка данных в CV&lt;/b&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="3930" y="50" width="330" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="189" value="неясная форма :&lt;br&gt;- репа?&amp;nbsp;&lt;br&gt;- готовый тул ?&lt;br&gt;???&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="189" value="неясная форма :&lt;br&gt;- репа?&amp;nbsp;&lt;br&gt;- готовый тул ?&lt;br&gt;???&amp;nbsp;" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="4070" y="247.5" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="191" style="edgeStyle=none;html=1;" edge="1" parent="1" source="190">
+                <mxCell id="191" style="edgeStyle=none;html=1;" parent="1" source="190" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2810" y="60" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="192" style="edgeStyle=none;html=1;" edge="1" parent="1" source="190">
+                <mxCell id="192" style="edgeStyle=none;html=1;" parent="1" source="190" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="3300" y="80" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="190" value="В основном внутренний продукт" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="190" value="В основном внутренний продукт" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="3000" y="5" width="190.5" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="194" style="edgeStyle=none;html=1;" edge="1" parent="1" source="193">
+                <mxCell id="194" style="edgeStyle=none;html=1;" parent="1" source="193" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="4440" y="80" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="195" style="edgeStyle=none;html=1;" edge="1" parent="1" source="193">
+                <mxCell id="195" style="edgeStyle=none;html=1;" parent="1" source="193" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="4720" y="70" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="193" value="Внешний продукт" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="193" value="Внешний продукт" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="4020" y="5" width="190.5" height="55" as="geometry"/>
                 </mxCell>
-                <mxCell id="197" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="196" target="161">
+                <mxCell id="197" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="196" target="161" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="196" value="Деплоим первую версию всего продукта" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
-                    <mxGeometry x="2590" y="585" width="110" height="60" as="geometry"/>
+                <mxCell id="208" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="196" target="209">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint x="2780" y="640" as="targetPoint"/>
+                    </mxGeometry>
                 </mxCell>
-                <mxCell id="198" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="199" target="200">
+                <mxCell id="196" value="Деплоим первую версию всего продукта" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
+                    <mxGeometry x="2592" y="550" width="110" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="198" value="" style="edgeStyle=none;html=1;" parent="1" source="199" target="200" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="199" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="199" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК Коровы&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="3973" y="640" width="118" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="200" value="Включить все E2E (инференс и/или дообучение)" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="200" value="Включить все E2E (инференс и/или дообучение)" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="4167" y="630" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="201" value="" style="endArrow=classic;startArrow=classic;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1">
+                    <mxGeometry width="50" height="50" relative="1" as="geometry">
+                        <mxPoint x="720" y="120" as="sourcePoint"/>
+                        <mxPoint x="870" y="250" as="targetPoint"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="202" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;0&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="650" width="30" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="203" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Клиент формирует задачу, админ превращает ее в ML задачу и понимает какие данные нам нужны&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="230" y="640" width="340" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="204" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="3763.5" y="640" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="206" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="3810" y="945" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="209" value="Второй конфиг (проект) для сбора GT данных" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                    <mxGeometry x="2777" y="580" width="120" height="60" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
