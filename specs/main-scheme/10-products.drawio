@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="hmkAEeSmkjy_PIBVzAzb" name="Страница — 1">
-        <mxGraphModel dx="1111" dy="676" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+        <mxGraphModel dx="1728" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -303,7 +303,7 @@
                 <mxCell id="174" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;ТРЕК E8 - продукты&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="3320" y="830" width="120" height="45" as="geometry"/>
                 </mxCell>
-                <mxCell id="205" value="" style="edgeStyle=none;html=1;" edge="1" parent="1" source="175" target="204">
+                <mxCell id="205" value="" style="edgeStyle=none;html=1;" parent="1" source="175" target="204" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="175" value="Ждем данные чтобы начать пользоваться" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -320,7 +320,7 @@
                 <mxCell id="182" value="Сформировать список predifined пайплайнов и решить кто их пишет" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3572.5" y="830" width="164" height="90" as="geometry"/>
                 </mxCell>
-                <mxCell id="207" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="184" target="206">
+                <mxCell id="207" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="184" target="206" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
                 <mxCell id="184" value="Метод запуска (интеграция пайплайнов с контуром Коллекторские-Клиентские админки)" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -364,7 +364,7 @@
                 <mxCell id="197" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="196" target="161" edge="1">
                     <mxGeometry relative="1" as="geometry"/>
                 </mxCell>
-                <mxCell id="208" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="196" target="209">
+                <mxCell id="208" style="edgeStyle=none;html=1;exitX=1;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="196" target="209" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="2780" y="640" as="targetPoint"/>
                     </mxGeometry>
@@ -381,26 +381,142 @@
                 <mxCell id="200" value="Включить все E2E (инференс и/или дообучение)" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="4167" y="630" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="201" value="" style="endArrow=classic;startArrow=classic;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1">
+                <mxCell id="201" value="" style="endArrow=classic;startArrow=classic;html=1;entryX=0.25;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" edge="1">
                     <mxGeometry width="50" height="50" relative="1" as="geometry">
                         <mxPoint x="720" y="120" as="sourcePoint"/>
                         <mxPoint x="870" y="250" as="targetPoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="202" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;0&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                <mxCell id="202" value="&lt;font style=&quot;color: rgb(255, 16, 0); font-size: 20px;&quot;&gt;0&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
                     <mxGeometry x="50" y="650" width="30" height="40" as="geometry"/>
                 </mxCell>
-                <mxCell id="203" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Клиент формирует задачу, админ превращает ее в ML задачу и понимает какие данные нам нужны&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                <mxCell id="203" value="&lt;span style=&quot;text-wrap-mode: nowrap;&quot;&gt;Клиент формирует задачу, админ превращает ее в ML задачу и понимает какие данные нам нужны&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
                     <mxGeometry x="230" y="640" width="340" height="70" as="geometry"/>
                 </mxCell>
-                <mxCell id="204" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="204" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3763.5" y="640" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="206" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="206" value="дашборд с запуском / логами&amp;nbsp;" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="3810" y="945" width="120" height="60" as="geometry"/>
                 </mxCell>
-                <mxCell id="209" value="Второй конфиг (проект) для сбора GT данных" style="whiteSpace=wrap;html=1;" vertex="1" parent="1">
+                <mxCell id="209" value="Второй конфиг (проект) для сбора GT данных" style="whiteSpace=wrap;html=1;" parent="1" vertex="1">
                     <mxGeometry x="2777" y="580" width="120" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="210" value="Стек и связи Data Collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="2270" y="1546" width="400" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="211" value="&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; color: #C9BFA8;&quot;&gt;Email/Password · ID token (JWT)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;spacingTop=4;fillColor=#3d3020;strokeColor=#F9AB00;fontColor=#FFF8E8;fontSize=11;arcSize=12;" parent="1" vertex="1">
+                    <mxGeometry x="2630" y="1582" width="200" height="52" as="geometry"/>
+                </mxCell>
+                <mxCell id="212" value="&lt;b&gt;Хранилище + БД&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#3DCC85&quot;&gt;prod:&lt;/font&gt; PostgreSQL · GCS(S3)&lt;br&gt;&lt;font color=&quot;#8B9DC6&quot;&gt;local:&lt;/font&gt; SQLite · media/&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="2600" y="1658" width="220" height="82" as="geometry"/>
+                </mxCell>
+                <mxCell id="236" style="edgeStyle=none;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="213" target="212">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="213" value="&lt;b&gt;Git / версионирование&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;планируется: git как база для&lt;br&gt;версионирования и хранения конфигов&amp;nbsp;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="2270" y="1663" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="214" value="&lt;b&gt;Data collector админка&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#5B8DEF&quot;&gt;django_server&lt;/font&gt; — Django 5, Python&lt;br&gt;/ui/* · /v1/* · /admin-api/*&lt;br&gt;Firebase Admin SDK · CORS&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="2600" y="1802" width="220" height="88" as="geometry"/>
+                </mxCell>
+                <mxCell id="215" value="&lt;b&gt;Клиентская админка&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#6BCF7F&quot;&gt;client-admin&lt;/font&gt; — React, TS&lt;br&gt;Vite · Tailwind · Canvas · npyjs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a2e28;strokeColor=#6BCF7F;fontColor=#E8F5EC;fontSize=11;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="3100" y="1790" width="190" height="76" as="geometry"/>
+                </mxCell>
+                <mxCell id="216" value="&lt;b&gt;Настройка (epoch8 admin)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #C9BFA8;&quot;&gt;браузер · Django UI&lt;br&gt;JSON config · CollectorUser&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;arcSize=8;" parent="1" vertex="1">
+                    <mxGeometry x="2610" y="1970" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="217" value="&lt;b&gt;App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #C4B8D8;&quot;&gt;Flutter · Riverpod · Drift&lt;br&gt;Dio · image_picker&lt;br&gt;Android · iOS · Web&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#EDE8F5;fontSize=11;arcSize=6;" parent="1" vertex="1">
+                    <mxGeometry x="2250" y="1802" width="150" height="128" as="geometry"/>
+                </mxCell>
+                <mxCell id="218" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#B8E6C8;fontSize=9;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="214" target="212" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="219" value="загрузка пакетов&lt;br&gt;POST/PUT /v1/… packages, blobs&lt;br&gt;manifest · commit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9B7ED0;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#D4C8E8;fontSize=9;labelBackgroundColor=#121218;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" parent="1" source="217" target="214" edge="1">
+                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="2440" y="1833"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="220" value="конфиг и каталог&lt;br&gt;GET /v1/projects&lt;br&gt;GET …/config · assets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#B8C8E8;fontSize=9;labelBackgroundColor=#121218;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="214" target="217" edge="1">
+                    <mxGeometry x="0.15" y="-8" relative="1" as="geometry">
+                        <mxPoint as="offset"/>
+                        <Array as="points">
+                            <mxPoint x="2560" y="1859"/>
+                            <mxPoint x="2560" y="1906"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="221" value="client-admin → django&lt;br&gt;&lt;b&gt;GET&lt;/b&gt; /admin-api/v1/* (чтение)&lt;br&gt;&lt;b&gt;PATCH&lt;/b&gt; …/packages/{id}/manifest (запись)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6BCF7F;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#A8E6B8;fontSize=9;labelBackgroundColor=#121218;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="215" target="214" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2950" y="1817"/>
+                            <mxPoint x="2950" y="1828"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="222" value="django → client-admin&lt;br&gt;200 JSON (projects, workspace)&lt;br&gt;превью blob (image)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6BCF7F;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#88C8A8;fontSize=9;labelBackgroundColor=#121218;exitX=1;exitY=0.55;exitDx=0;exitDy=0;entryX=0;entryY=0.65;entryDx=0;entryDy=0;" parent="1" source="214" target="215" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2820" y="1870"/>
+                            <mxPoint x="3100" y="1870"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="223" value="/ui/* — проекты, config,&lt;br&gt;users · mobile/admin_projects" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#E8D4A8;fontSize=9;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="216" target="214" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="224" value="ID token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="217" target="211" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2220" y="1866"/>
+                            <mxPoint x="2220" y="1610"/>
+                            <mxPoint x="2630" y="1610"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="225" value="Web SDK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.85;entryY=1;entryDx=0;entryDy=0;" parent="1" source="215" target="211" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="3195" y="1634"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="226" value="verify token · sync users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="214" target="211" edge="1">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="2890" y="1802"/>
+                            <mxPoint x="2890" y="1634"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="228" style="edgeStyle=none;html=1;entryX=1;entryY=1;entryDx=0;entryDy=0;" parent="1" source="230" target="214" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="229" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="230" target="215" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="230" value="&lt;b&gt;Взаимодействие с базой&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Возможно не нужно делать ручек в админке и на прямую общаться с БД&amp;nbsp;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="2900" y="1970" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="231" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="233" target="215" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="232" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="233" target="212" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="233" value="&lt;b&gt;Конфиги и таблицы datapipe&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Сейчас это просто затычки в виде JSON, нужно сделать таблицы из которых эта инфа читается&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="2930" y="1540" width="200" height="72" as="geometry"/>
+                </mxCell>
+                <mxCell id="234" style="edgeStyle=none;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" parent="1" source="235" target="215" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="235" value="&lt;b&gt;Толстая админка&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Все реализации визуализаций сделаны так если есть такой-то JSON (табличка в БД) отрисовывай эту вкладку. Реализация должна уже быть внутри админки&amp;nbsp;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" parent="1" vertex="1">
+                    <mxGeometry x="3230" y="1634" width="200" height="106" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>
