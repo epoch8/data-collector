@@ -20,7 +20,7 @@
     <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_media' project.project_id %}"><i class="bi bi-images me-1"></i>Файлы</a>
     {% endif %}
     <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>JSON</a>
-    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_packages_spa' %}"><i class="bi bi-box-seam me-1"></i>Пакеты</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_package_list' %}?project={{ project.project_id }}"><i class="bi bi-box-seam me-1"></i>Пакеты</a>
   </div>
 </div>
 <div class="row g-4">
@@ -46,7 +46,7 @@
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-cloud-arrow-up me-1"></i>Приём пакетов</div>
       <p class="mb-2">Сессий загрузки: <strong class="text-white">{{ package_count }}</strong></p>
-      <a class="btn btn-sm btn-outline-light" href="{% url 'ui_packages_spa' %}">Открыть пакеты<i class="bi bi-arrow-right ms-1"></i></a>
+      <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Открыть пакеты<i class="bi bi-arrow-right ms-1"></i></a>
     </div>
   </div>
 </div>

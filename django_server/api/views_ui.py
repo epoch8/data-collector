@@ -11,21 +11,37 @@ from uuid import uuid4
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.http import FileResponse, HttpResponse, HttpResponseForbidden, JsonResponse
+from django.http import (
+    FileResponse,
+    Http404,
+    HttpResponse,
+    HttpResponseForbidden,
+    JsonResponse,
+)
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods, require_POST
 
+from . import package_admin_service as pas
+from . import packages_ui as pui
 from .firebase_user_sync import sync_collector_users_from_firebase
 from .models import CollectorUser, PackageSession, Project, UploadedBlob
-from .packages_spa_assets import packages_spa_assets, packages_spa_built
 from .project_config_validate import validate_project_payload
-from .ui_access import staff_only
+from .ui_access import (
+    allowed_package_project_ids,
+    get_ui_collector,
+    is_ui_staff,
+    packages_ui_required,
+    staff_only,
+    ui_logout_clear_collector_session,
+)
 
 
 def ui_logout(request):
     if request.user.is_authenticated:
         logout(request)
+    ui_logout_clear_collector_session(request)
     return redirect("ui_login")
 
 
@@ -121,8 +137,10 @@ def _save_project_json(project: Project, project_id: str, data: dict, ver: str) 
 
 
 def ui_home(request):
-    if request.user.is_authenticated and request.user.is_staff:
+    if is_ui_staff(request):
         return redirect("ui_project_list")
+    if get_ui_collector(request) is not None:
+        return redirect("ui_package_list")
     return redirect("ui_login")
 
 
@@ -369,23 +387,360 @@ def project_delete(request, project_id: str):
     return redirect("ui_project_list")
 
 
-@ensure_csrf_cookie
-def packages_spa(request, subpath: str = ""):
-    assets = packages_spa_assets()
-    if not packages_spa_built():
-        return render(
-            request,
-            "ui/packages_spa_missing.html",
-            status=503,
+def _package_projects_queryset(request):
+    allowed = allowed_package_project_ids(request)
+    qs = Project.objects.all().order_by("name")
+    if allowed is not None:
+        qs = qs.filter(project_id__in=allowed)
+    return qs
+
+
+def _forbid_package_project(request, project_id: str) -> HttpResponseForbidden | None:
+    allowed = allowed_package_project_ids(request)
+    if allowed is not None and project_id not in allowed:
+        return HttpResponseForbidden("Нет доступа к этому проекту.")
+    return None
+
+
+def _ui_verifier_email(request) -> str:
+    if request.user.is_authenticated and request.user.email:
+        return request.user.email
+    cu = get_ui_collector(request)
+    if cu is not None and cu.email:
+        return cu.email
+    if request.user.is_authenticated:
+        return request.user.username
+    return ""
+
+
+def _select_project(request, projects: list[Project]):
+    """Возвращает (project, project_id) или (None, '') и при запрете — HttpResponseForbidden."""
+    project_id = (request.GET.get("project") or "").strip()
+    if project_id:
+        denied = _forbid_package_project(request, project_id)
+        if denied is not None:
+            return None, "", denied
+        selected = next((p for p in projects if p.project_id == project_id), None)
+        if selected is not None:
+            return selected, project_id, None
+    if projects:
+        return projects[0], projects[0].project_id, None
+    return None, "", None
+
+
+@packages_ui_required
+def package_list(request):
+    projects = list(_package_projects_queryset(request))
+    selected, project_id, denied = _select_project(request, projects)
+    if denied is not None:
+        return denied
+
+    phase = (request.GET.get("phase") or "completed").strip()
+    mode = (request.GET.get("mode") or "field").strip()
+    field_id = (request.GET.get("field") or "").strip()
+    text = (request.GET.get("q") or "").strip()
+    date = (request.GET.get("date") or "").strip()
+
+    fields: list = []
+    search_fields: list = []
+    rows: list = []
+    phase_chips: list = []
+    selected_field = None
+    total = 0
+
+    if selected is not None:
+        root = pui.config_root(selected)
+        fields = pui.config_fields(root)
+        search_fields = pui.searchable_fields(fields)
+        if mode == "field" and not field_id and search_fields:
+            field_id = search_fields[0]["field_id"]
+        selected_field = next((f for f in search_fields if f["field_id"] == field_id), None)
+
+        items, _err = pas.list_packages(project_id, phase="", preview_prefix="/ui/api/v1")
+        items = items or []
+        total = len(items)
+        phase_chips = [
+            {"id": p, "label": ("Все" if p == "all" else pui.phase_label(p)), "active": p == phase}
+            for p in pui.phase_options(items)
+        ]
+        filtered = pui.filter_packages(
+            items, fields, phase=phase, mode=mode, field_id=field_id, text=text, date=date,
         )
+        for it in filtered:
+            data_fields = it.get("data_fields") or {}
+            rows.append(
+                {
+                    "package_id": it["package_id"],
+                    "short_id": pui.short_package_id(it["package_id"]),
+                    "phase": it["phase"],
+                    "phase_label": pui.phase_label(it["phase"]),
+                    "created_at": it["created_at"],
+                    "uploader_email": it.get("uploader_email") or "",
+                    "field_value": data_fields.get(field_id) if field_id else None,
+                    "url": reverse("ui_package_workspace", args=[project_id, it["package_id"]]),
+                },
+            )
+
+    show_field_column = bool(mode == "field" and selected_field)
+    is_datetime = bool(selected_field and selected_field.get("type") == "datetime")
+
     return render(
         request,
-        "ui/packages_app.html",
+        "ui/packages/list.html",
         {
-            "spa_js": assets.get("js"),
-            "spa_css": assets.get("css"),
+            "is_staff": is_ui_staff(request),
+            "projects": projects,
+            "project_id": project_id,
+            "selected_project": selected,
+            "search_fields": search_fields,
+            "selected_field": selected_field,
+            "show_field_column": show_field_column,
+            "is_datetime_field": is_datetime,
+            "phase_chips": phase_chips,
+            "rows": rows,
+            "total": total,
+            "f_phase": phase,
+            "f_mode": mode,
+            "f_field": field_id,
+            "f_q": text,
+            "f_date": date,
         },
     )
+
+
+def _enrich_blob(project_id, package_id, blob, form_blob_paths):
+    path = blob["logical_path"]
+    return {
+        "blob_id": blob["blob_id"],
+        "logical_path": path,
+        "file_name": pui.blob_file_name(path),
+        "size_bytes": blob["size_bytes"],
+        "is_image": pui.is_image_path(path),
+        "in_form": path in form_blob_paths,
+        "url": reverse("ui_package_blob_download", args=[project_id, package_id, blob["blob_id"]]),
+    }
+
+
+def _build_data_sections(sections, data, editable):
+    out = []
+    for sec in sections:
+        sfields = []
+        for f in sec["fields"]:
+            fid = f["field_id"]
+            value = data.get(fid)
+            sfields.append(
+                {
+                    "field_id": fid,
+                    "label": pui.field_label(f),
+                    "type": f.get("type"),
+                    "hint": pui.field_hint(f),
+                    "required": pui.field_required(f),
+                    "value": "" if value is None else value,
+                    "editable": editable and f.get("type") == "text_input",
+                },
+            )
+        out.append({"id": sec["id"], "title": sec["title"], "fields": sfields})
+    return out
+
+
+@packages_ui_required
+def package_workspace(request, project_id: str, package_id: str):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+
+    body, err = pas.get_workspace(project_id, package_id, preview_prefix="/ui/api/v1")
+    if err is not None:
+        raise Http404("Package not found")
+
+    session = body["session"]
+    manifest = body["manifest"]
+    config = body["project_config"]
+    data = manifest.get("data") if isinstance(manifest.get("data"), dict) else {}
+
+    fields = pui.config_fields(config)
+    sections = pui.build_flow_sections(config, fields)
+    is_editable = session["phase"] == PackageSession.Phase.COMPLETED
+    data_sections = _build_data_sections(sections, data, is_editable)
+
+    form_blob_paths = pui.collect_form_blob_paths(data)
+    blobs = [_enrich_blob(project_id, package_id, b, form_blob_paths) for b in body["blobs"]]
+
+    entries = pui.read_changelog(project_id, package_id)
+    has_viz = pui.has_visualisation(project_id, package_id)
+    blob_map = {b["logical_path"]: b["url"] for b in blobs}
+
+    # Sidebar: все пакеты проекта
+    side_items, _ = pas.list_packages(project_id, phase="", preview_prefix="/ui/api/v1")
+    sidebar = [
+        {
+            "package_id": it["package_id"],
+            "short_id": pui.short_package_id(it["package_id"]),
+            "phase": it["phase"],
+            "phase_label": pui.phase_label(it["phase"]),
+            "uploader_email": it.get("uploader_email") or "",
+            "created_at": it["created_at"],
+            "active": it["package_id"] == package_id,
+            "url": reverse("ui_package_workspace", args=[project_id, it["package_id"]]),
+        }
+        for it in (side_items or [])
+    ]
+
+    project_name = (config.get("name") if isinstance(config, dict) else None) or project_id
+
+    return render(
+        request,
+        "ui/packages/workspace.html",
+        {
+            "is_staff": is_ui_staff(request),
+            "project_id": project_id,
+            "project_name": project_name,
+            "package_id": package_id,
+            "short_package_id": pui.short_package_id(package_id),
+            "session": session,
+            "phase_label": pui.phase_label(session["phase"]),
+            "is_editable": is_editable,
+            "data_sections": data_sections,
+            "blobs": blobs,
+            "blob_count": len(blobs),
+            "entries": entries,
+            "has_viz": has_viz,
+            "blob_map_json": json.dumps(blob_map, ensure_ascii=False),
+            "sidebar": sidebar,
+            "list_url": reverse("ui_package_list") + f"?project={project_id}",
+            "save_url": reverse("ui_package_manifest_save", args=[project_id, package_id]),
+            "viz_data_url": reverse("ui_package_viz_data", args=[project_id, package_id]),
+            "verifier_email": _ui_verifier_email(request),
+        },
+    )
+
+
+def _coerce_value(original, new_text: str):
+    """text_input: если исходное значение было числом и ввод числовой — храним число."""
+    if isinstance(original, bool):
+        return new_text
+    if isinstance(original, (int, float)) and not isinstance(original, bool):
+        try:
+            if new_text.strip() == "":
+                return ""
+            if "." in new_text or "e" in new_text.lower():
+                return float(new_text)
+            return int(new_text)
+        except ValueError:
+            return new_text
+    return new_text
+
+
+@packages_ui_required
+@require_POST
+def package_manifest_save(request, project_id: str, package_id: str):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+
+    body, err = pas.get_workspace(project_id, package_id, preview_prefix="/ui/api/v1")
+    if err is not None:
+        raise Http404("Package not found")
+
+    session = body["session"]
+    if session["phase"] != PackageSession.Phase.COMPLETED:
+        messages.error(request, "Редактировать можно только пакеты в статусе «Завершён».")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    manifest = body["manifest"]
+    config = body["project_config"]
+    data = dict(manifest.get("data") or {})
+
+    editable_ids = [
+        f["field_id"]
+        for f in pui.config_fields(config)
+        if f.get("type") == "text_input"
+    ]
+
+    changes = []
+    for fid in editable_ids:
+        posted = request.POST.get(f"data__{fid}")
+        if posted is None:
+            continue
+        before = data.get(fid)
+        after = _coerce_value(before, posted)
+        if json.dumps(before, ensure_ascii=False, sort_keys=True) != json.dumps(
+            after, ensure_ascii=False, sort_keys=True,
+        ):
+            changes.append({"field_id": fid, "before": before, "after": after})
+            data[fid] = after
+
+    if not changes:
+        messages.info(request, "Изменений нет.")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    reason = (request.POST.get("reason") or "").strip()
+    if not reason:
+        messages.error(request, "Укажите причину корректировки.")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    manifest["data"] = data
+    manifest["project_id"] = project_id
+    patch_resp = pas.patch_manifest(
+        project_id, package_id, json.dumps(manifest, ensure_ascii=False),
+    )
+    if patch_resp.status_code != 200:
+        try:
+            detail = json.loads(patch_resp.content.decode("utf-8"))
+            msg = detail.get("error", {}).get("message", "Ошибка сохранения")
+        except (json.JSONDecodeError, AttributeError):
+            msg = "Ошибка сохранения"
+        messages.error(request, f"Не удалось сохранить: {msg}")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    pui.append_changelog(
+        project_id, package_id, reason, _ui_verifier_email(request), changes,
+    )
+    messages.success(request, f"Сохранено. Изменено полей: {len(changes)}.")
+    return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+
+@packages_ui_required
+def package_viz_data(request, project_id: str, package_id: str):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+    return JsonResponse(
+        {
+            "gt": pui.gt_annotations_for_package(project_id, package_id),
+            "inference": pui.inference_for_package(project_id, package_id),
+        },
+    )
+
+
+@packages_ui_required
+def package_depth_npy(request, filename: str):
+    safe = Path(filename).name
+    if not safe.endswith(".npy"):
+        raise Http404("Not found")
+    path = pui.datapipe_dir() / safe
+    if not path.is_file():
+        raise Http404("Not found")
+    return FileResponse(path.open("rb"), content_type="application/octet-stream")
+
+
+@packages_ui_required
+def package_blob_download(request, project_id: str, package_id: str, blob_pk: int):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+    blob = get_object_or_404(
+        UploadedBlob,
+        pk=blob_pk,
+        session__project__project_id=project_id,
+        session__package_id=package_id,
+    )
+    if not blob.file:
+        return HttpResponseForbidden("Нет файла")
+    ctype, _ = mimetypes.guess_type(blob.logical_path)
+    resp = FileResponse(blob.file.open("rb"), content_type=ctype or "application/octet-stream")
+    resp["Content-Disposition"] = f'inline; filename="{Path(blob.logical_path).name}"'
+    return resp
 
 
 @staff_only

@@ -54,6 +54,7 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "api.middleware.UiCollectorSessionMiddleware",
     "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
@@ -70,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "api.ui_context.ui_template_context",
             ],
         },
     },
@@ -127,9 +129,6 @@ PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
-PACKAGES_SPA_STATIC_DIR = BASE_DIR / "api" / "static" / "packages"
-PACKAGES_SPA_MANIFEST = PACKAGES_SPA_STATIC_DIR / ".vite" / "manifest.json"
-
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
 
 # Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id
@@ -165,6 +164,16 @@ elif _firebase_flag in ("1", "true", "yes", "on"):
     FIREBASE_AUTH_ENABLED = True
 else:
     FIREBASE_AUTH_ENABLED = _firebase_has_credentials
+
+# Firebase Web SDK (вход клиента на /ui/login/)
+FIREBASE_WEB_CONFIG = {
+    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c"),
+    "authDomain": os.environ.get(
+        "FIREBASE_WEB_AUTH_DOMAIN",
+        "data-collector-dev-e8.firebaseapp.com",
+    ),
+    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "data-collector-dev-e8"),
+}
 
 ASSETS_CONFIG_ROOT = Path(
     os.environ.get(

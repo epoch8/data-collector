@@ -1,4 +1,4 @@
-"""Session JSON API for embedded packages SPA (/ui/api/v1)."""
+"""Session JSON API for packages UI (/ui/api/v1)."""
 
 from __future__ import annotations
 

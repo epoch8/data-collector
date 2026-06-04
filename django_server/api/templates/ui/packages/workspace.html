@@ -1,0 +1,221 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% block title %}{{ short_package_id }} — пакет{% endblock %}
+{% block extra_head %}
+<link href="{% static 'ui/packages.css' %}" rel="stylesheet">
+<link href="{% static 'ui/packages_viz.css' %}" rel="stylesheet">
+{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    {% if is_staff %}<li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>{% endif %}
+    <li class="breadcrumb-item"><a href="{{ list_url }}">Пакеты</a></li>
+    <li class="breadcrumb-item active" aria-current="page"><code class="small">{{ short_package_id }}</code></li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="pkg-ws" id="pkgWorkspace"
+     data-editable="{{ is_editable|yesno:'1,0' }}"
+     data-viz-url="{{ viz_data_url }}"
+     data-depth-base="/ui/packages/depth/">
+
+  {# ── Sidebar: package switcher ── #}
+  <aside class="pkg-ws__sidebar">
+    <div class="pkg-sidebar__head">
+      <a class="pkg-sidebar__back" href="{{ list_url }}"><i class="bi bi-arrow-left me-1"></i>Все пакеты</a>
+      <div class="pkg-sidebar__project" title="{{ project_name }}">{{ project_name }}</div>
+    </div>
+    <div class="pkg-sidebar__search">
+      <input type="search" class="form-control form-control-sm" id="pkgSidebarSearch" placeholder="Поиск по ID / email…">
+    </div>
+    <div class="pkg-sidebar__count"><span id="pkgSidebarCount">{{ sidebar|length }}</span> пакетов</div>
+    <nav class="pkg-sidebar__list" id="pkgSidebarList">
+      {% for s in sidebar %}
+      <a class="pkg-sidebar__item {% if s.active %}pkg-sidebar__item--active{% endif %}"
+         href="{{ s.url }}" data-search="{{ s.package_id|lower }} {{ s.uploader_email|lower }}">
+        <span class="pkg-sidebar__item-id">{{ s.short_id }}</span>
+        <span class="pkg-sidebar__item-meta">{{ s.phase_label }} · {{ s.uploader_email|default:"—" }}</span>
+      </a>
+      {% endfor %}
+    </nav>
+  </aside>
+
+  {# ── Main ── #}
+  <div class="pkg-ws__main">
+    <form id="pkgForm" method="post" action="{{ save_url }}">
+      {% csrf_token %}
+      <input type="hidden" name="reason" id="pkgReasonInput">
+
+      <header class="pkg-head">
+        <div class="min-w-0">
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <h1 class="pkg-head__title" title="{{ package_id }}">{{ short_package_id }}</h1>
+            {% include 'ui/_phase_badge.html' with phase=session.phase label=phase_label %}
+            <span class="pkg-head__dirty">не сохранено</span>
+          </div>
+          <p class="pkg-head__meta">{{ session.uploader_email|default:"—" }} · {{ session.created_at|slice:":16" }}</p>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-outline-light btn-sm" id="pkgRevertBtn" disabled>Откатить</button>
+          <button type="button" class="btn btn-primary btn-sm" id="pkgSaveBtn" disabled
+                  {% if not is_editable %}data-locked="1"{% endif %}>Сохранить</button>
+        </div>
+      </header>
+
+      {% if not is_editable %}
+      <div class="alert alert-warning mt-3 mb-0 py-2 small">
+        Только просмотр: правки доступны для пакетов в статусе «Завершён».
+      </div>
+      {% endif %}
+
+      {# ── Tabs ── #}
+      <div class="pkg-tabs" role="tablist">
+        <button type="button" class="pkg-tab active" data-tab="data">Данные</button>
+        <button type="button" class="pkg-tab" data-tab="media">Медиа<span class="pkg-tab__count">{{ blob_count }}</span></button>
+        {% if has_viz %}<button type="button" class="pkg-tab" data-tab="viz">Визуализация</button>{% endif %}
+        <button type="button" class="pkg-tab" data-tab="history">История изменений<span class="pkg-tab__count">{{ entries|length }}</span></button>
+      </div>
+
+      {# ── Data panel ── #}
+      <section class="pkg-panel active" data-panel="data">
+        {% if data_sections %}
+        <div class="pkg-data">
+          <nav class="pkg-data__nav">
+            <div class="pkg-data__nav-title">Формы</div>
+            {% for sec in data_sections %}
+            <a class="pkg-data__nav-link" href="#sec-{{ sec.id }}">{{ sec.title }}</a>
+            {% endfor %}
+          </nav>
+          <div class="pkg-data__body">
+            {% for sec in data_sections %}
+            <div class="pkg-section" id="sec-{{ sec.id }}">
+              <h3 class="pkg-section__title">{{ sec.title }}</h3>
+              <div class="pkg-fields">
+                {% for f in sec.fields %}
+                <div class="pkg-field {% if f.type == 'datetime' %}pkg-field--wide{% endif %}">
+                  <label class="pkg-field__label" {% if f.editable %}for="f-{{ f.field_id }}"{% endif %}>
+                    {{ f.label }}{% if f.required %}<span class="pkg-field__req">*</span>{% endif %}
+                  </label>
+                  {% if f.hint %}<div class="pkg-field__hint">{{ f.hint }}</div>{% endif %}
+                  {% if f.editable %}
+                  <input type="text" class="form-control" id="f-{{ f.field_id }}" name="data__{{ f.field_id }}"
+                         value="{{ f.value }}" data-initial="{{ f.value }}" data-field="{{ f.field_id }}">
+                  {% elif f.type == 'datetime' %}
+                  <div class="pkg-field__ro" data-datetime="{{ f.value }}">{{ f.value|default:"—" }}</div>
+                  {% else %}
+                  <div class="pkg-field__ro">{{ f.value|default:"—" }}</div>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% else %}
+        <div class="card p-5 text-center ui-muted">В конфиге проекта нет полей для отображения.</div>
+        {% endif %}
+      </section>
+
+      {# ── Media panel ── #}
+      <section class="pkg-panel" data-panel="media">
+        {% if blobs %}
+        <p class="ui-muted small mb-3">{{ blob_count }} файл(ов) · снимки с формы отмечены «в форме».</p>
+        <div class="pkg-media-grid">
+          {% for b in blobs %}
+          <div class="pkg-media-card">
+            <div class="pkg-media-card__thumb"
+                 {% if b.is_image %}data-lightbox="{{ b.url }}" data-name="{{ b.file_name }}"{% endif %}>
+              {% if b.in_form %}<span class="pkg-media-card__badge">в форме</span>{% endif %}
+              {% if b.is_image %}
+              <img loading="lazy" src="{{ b.url }}" alt="{{ b.file_name }}">
+              {% else %}
+              <span class="pkg-media-card__noimg"><i class="bi bi-file-earmark"></i></span>
+              {% endif %}
+            </div>
+            <div class="pkg-media-card__body">
+              <span class="pkg-media-card__name">{{ b.file_name }}</span>
+              <div class="pkg-media-card__meta">
+                <span>{{ b.size_bytes|filesizeformat }}</span>
+                <a href="{{ b.url }}" download="{{ b.file_name }}"><i class="bi bi-download me-1"></i>скачать</a>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="card p-5 text-center ui-muted">В пакете нет файлов.</div>
+        {% endif %}
+      </section>
+
+      {# ── Visualisation panel ── #}
+      {% if has_viz %}
+      <section class="pkg-panel" data-panel="viz">
+        <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}">
+          <script type="application/json" id="pkgBlobMap">{{ blob_map_json|safe }}</script>
+          <div class="pkg-viz__loading ui-muted p-5 text-center">Загрузка визуализации…</div>
+        </div>
+      </section>
+      {% endif %}
+
+      {# ── Change history panel ── #}
+      <section class="pkg-panel" data-panel="history">
+        {% if entries %}
+        {% for e in entries %}
+        <div class="pkg-history__entry">
+          <div class="pkg-history__head">
+            <span class="pkg-history__field">{{ e.field_id }}</span>
+            <span class="pkg-history__date">{{ e.changed_at|slice:":19" }}</span>
+          </div>
+          <div class="pkg-history__reason">Причина: {{ e.reason }} · проверил: {{ e.verifier_email|default:"не указан" }}</div>
+          <div class="pkg-history__diff">
+            <div class="pkg-diff pkg-diff--before">
+              <div class="pkg-diff__label">Было</div>
+              <pre>{{ e.before|default:"—" }}</pre>
+            </div>
+            <div class="pkg-diff pkg-diff--after">
+              <div class="pkg-diff__label">Стало</div>
+              <pre>{{ e.after|default:"—" }}</pre>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="card p-5 text-center ui-muted">История изменений пуста.</div>
+        {% endif %}
+      </section>
+    </form>
+  </div>
+</div>
+
+{# ── Save reason modal ── #}
+<div class="modal fade" id="pkgReasonModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Причина корректировки</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small ui-muted">Изменения: <span id="pkgChangeCount">0</span> полей. Укажите причину — она попадёт в историю.</p>
+        <div class="d-flex flex-column gap-2">
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="ошибка в введенных данных" checked> ошибка в введённых данных</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="устаревшие данные"> устаревшие данные</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="неправильный формат данных"> неправильный формат данных</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="__custom__"> другое…</label>
+          <textarea class="form-control mt-1 d-none" id="pkgReasonCustom" rows="2" placeholder="Своя причина"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Отмена</button>
+        <button type="button" class="btn btn-primary btn-sm" id="pkgConfirmSave">Сохранить</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'ui/packages_workspace.js' %}"></script>
+{% if has_viz %}<script src="{% static 'ui/packages_viz.js' %}"></script>{% endif %}
+{% endblock %}

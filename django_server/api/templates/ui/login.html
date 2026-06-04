@@ -1,12 +1,16 @@
 {% extends "ui/base.html" %}
+{% load static %}
 {% block title %}Вход{% endblock %}
 {% block body_class %}ui-auth-body{% endblock %}
+{% block topnav %}{% endblock topnav %}
 {% block footer %}{% endblock %}
 {% block content %}
-<div class="row justify-content-center">
+<div class="row justify-content-center g-4">
   <div class="col-11 col-sm-8 col-md-5 col-lg-4">
     <div class="card p-4 login-form-card">
-      <h1 class="h5 mb-3 text-white">Вход</h1>
+      <p class="ui-badge-admin mb-2">ADMIN</p>
+      <h1 class="h5 mb-1 text-white">Вход администратора</h1>
+      <p class="small ui-muted mb-3">Логин без символа <code>@</code> — учётная запись Django staff.</p>
       <form method="post" action="">
         {% csrf_token %}
         {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
@@ -15,5 +19,34 @@
       </form>
     </div>
   </div>
+
+  {% if firebase_auth_enabled %}
+  <div class="col-11 col-sm-8 col-md-5 col-lg-4">
+    <div class="card p-4 login-form-card" id="firebase-login-card">
+      <p class="ui-badge-admin mb-2" style="color: var(--ui-accent); border-color: rgba(45,212,191,.35); background: rgba(45,212,191,.12);">CLIENT</p>
+      <h1 class="h5 mb-1 text-white">Вход клиента</h1>
+      <p class="small ui-muted mb-3">Email и пароль Firebase. Доступ только к отмеченным проектам (Client-admin).</p>
+      <form id="firebase-login-form" class="d-flex flex-column gap-2">
+        <label class="small">Email
+          <input type="email" class="form-control mt-1" id="fb-email" autocomplete="username" required>
+        </label>
+        <label class="small">Пароль
+          <input type="password" class="form-control mt-1" id="fb-password" autocomplete="current-password" required>
+        </label>
+        <p id="fb-error" class="small text-danger mb-0 d-none"></p>
+        <button type="submit" class="btn btn-outline-light w-100 mt-2" id="fb-submit">Войти через Firebase</button>
+      </form>
+    </div>
+  </div>
+  {% endif %}
 </div>
+{% endblock %}
+{% block extra_js %}
+{% if firebase_auth_enabled %}
+<script type="module" src="{% static 'ui/firebase_login.js' %}"></script>
+<script>
+  window.__UI_FIREBASE_CONFIG__ = {{ firebase_web_config_json|safe }};
+  window.__UI_LOGIN_NEXT__ = "{{ request.GET.next|default:''|escapejs }}";
+</script>
+{% endif %}
 {% endblock %}
