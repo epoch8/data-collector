@@ -1,0 +1,46 @@
+{% extends "ui/base.html" %}
+{% block title %}Git — {{ project.name }}{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
+    <li class="breadcrumb-item active" aria-current="page">Настройки Git</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head mb-4">
+  <div>
+    <h1 class="ui-page-title">Настройки Git</h1>
+    <p class="ui-page-sub mb-0">Проект <code>{{ project.project_id }}</code> · конфиг <code>collector/config.json</code></p>
+  </div>
+</div>
+
+<div class="row justify-content-start">
+  <div class="col-lg-8">
+    <div class="card p-4">
+      <form method="post">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label class="form-label">GitHub репозиторий</label>
+          <input class="form-control" name="git_repo_url" required value="{{ git_repo_url }}" placeholder="https://github.com/org/my-project-config">
+          <div class="form-text ui-muted">Как при создании: <code>https://github.com/org/repo</code> или <code>git@github.com:org/repo.git</code>.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ветка</label>
+          <input class="form-control" name="git_default_ref" value="{{ git_default_ref }}" style="max-width: 12rem;">
+        </div>
+        <div class="alert alert-secondary py-2 small mb-4">
+          После смены репозитория или ветки локальный git-кэш удаляется и репозиторий клонируется заново.
+          Deploy key на GitHub должен иметь доступ к <strong>новому</strong> репозиторию (тот же SSH-ключ — на странице проекта).
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+          <button type="submit" class="btn btn-primary"><i class="bi bi-git me-1"></i>Сохранить и проверить</button>
+          <a href="{% url 'ui_project_detail' project.project_id %}" class="btn btn-outline-secondary">Отмена</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

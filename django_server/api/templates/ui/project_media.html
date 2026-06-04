@@ -1,4 +1,5 @@
 {% extends "ui/base.html" %}
+{% load static %}
 {% block title %}Файлы — {{ project.project_id }}{% endblock %}
 {% block breadcrumb %}
 <nav class="ui-breadcrumb" aria-label="Навигация">
@@ -12,18 +13,25 @@
 {% block content %}
 <div class="ui-page-head">
   <div>
-    <h1 class="ui-page-title">Файлы для API</h1>
+    <h1 class="ui-page-title">Медиа в Git</h1>
     <p class="ui-page-sub mb-0">
-      Выдаются как <code>/v1/projects/{{ project.project_id }}/assets/…</code>.
-      На диске: <code>project_assets/{{ project.project_id }}/</code>. В JSON клиента — пути <code>assets/…</code>.
+      Каталог <code>collector/media/</code> в репозитории <code>{{ project.git_remote }}</code>.
+      Клиент: <code>/v1/projects/{{ project.project_id }}/assets/collector/media/…</code>.
+      В конфиге и Markdown — путь <code>collector/media/uploads/…</code>.
     </p>
+  </div>
+  <div>
+    <form method="post" action="{% url 'ui_project_git_sync' project.project_id %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Обновить из Git</button>
+    </form>
   </div>
 </div>
 
 <div class="row g-4">
   <div class="col-lg-5">
     <div class="card p-4">
-      <div class="ui-card-title"><i class="bi bi-cloud-upload me-1"></i>Загрузить</div>
+      <div class="ui-card-title"><i class="bi bi-cloud-upload me-1"></i>Загрузить через data-collector</div>
       <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         <div class="mb-3">
@@ -31,10 +39,10 @@
           <input class="form-control" type="file" name="file" required>
         </div>
         <p class="form-text small ui-muted mb-4">
-          Путь на сервере задаётся автоматически: каталог <code>uploads/</code>, уникальный префикс и безопасное имя файла
-          (в JSON клиента — <code>assets/uploads/…</code>).
+          Файл попадёт в <code>collector/media/uploads/</code> с уникальным именем, затем commit и push в ветку проекта.
+          Альтернатива — положить файлы в репозиторий локально и сделать <code>git push</code>.
         </p>
-        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload me-2"></i>Загрузить</button>
+        <button type="submit" class="btn btn-primary w-100"><i class="bi bi-upload me-2"></i>Загрузить и отправить в Git</button>
       </form>
     </div>
   </div>
@@ -42,14 +50,17 @@
     <div class="ui-table-card">
       <div class="table-responsive">
         <table class="table table-hover align-middle mb-0">
-          <thead><tr><th>Путь</th><th>Размер</th><th class="text-end">Действие</th></tr></thead>
+          <thead><tr><th>Путь в config</th><th>Размер</th><th class="text-end">Действие</th></tr></thead>
           <tbody>
             {% for rel, sz in media_files %}
             <tr>
-              <td><code>{{ rel }}</code></td>
+              <td>
+                <code id="cfg-path-{{ forloop.counter }}">collector/media/{{ rel }}</code>
+                <button type="button" class="btn btn-sm btn-outline-light ms-1 ui-copy-btn" data-copy-target="cfg-path-{{ forloop.counter }}" title="Копировать путь"><i class="bi bi-clipboard"></i></button>
+              </td>
               <td class="small ui-muted">{{ sz }} B</td>
               <td class="text-end">
-                <form method="post" class="d-inline" onsubmit="return confirm('Удалить {{ rel }}?');">
+                <form method="post" class="d-inline" onsubmit="return confirm('Удалить collector/media/{{ rel }} из Git?');">
                   {% csrf_token %}
                   <input type="hidden" name="delete" value="1">
                   <input type="hidden" name="rel_path" value="{{ rel }}">
@@ -58,7 +69,7 @@
               </td>
             </tr>
             {% empty %}
-            <tr><td colspan="3" class="text-center py-5 ui-muted">Нет файлов</td></tr>
+            <tr><td colspan="3" class="text-center py-5 ui-muted">Нет файлов в кэше. Загрузите здесь или сделайте push в Git и «Обновить из Git».</td></tr>
             {% endfor %}
           </tbody>
         </table>
@@ -66,4 +77,7 @@
     </div>
   </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'ui/copy_clipboard.js' %}"></script>
 {% endblock %}

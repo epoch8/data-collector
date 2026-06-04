@@ -8,7 +8,6 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
-from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import (
@@ -37,7 +36,18 @@ from .project_config_service import (
     update_credential_private_key,
 )
 from .project_config_validate import validate_project_payload
-from .project_git import GitProjectError, normalize_git_remote, pull, test_remote
+from .project_git import (
+    GitProjectError,
+    delete_media_file,
+    list_media_files,
+    media_config_path,
+    media_dir,
+    normalize_git_remote,
+    normalize_media_rel,
+    pull,
+    test_remote,
+    write_media_file,
+)
 from .project_git import remove_cache as git_remove_cache
 from .ui_access import (
     allowed_package_project_ids,
@@ -56,22 +66,6 @@ def ui_logout(request):
     return redirect("ui_login")
 
 
-def _project_assets_dir(project_id: str) -> Path:
-    return Path(settings.PROJECT_ASSETS_ROOT) / project_id
-
-
-def _list_media_files(project_id: str) -> list[tuple[str, int]]:
-    root = _project_assets_dir(project_id)
-    if not root.is_dir():
-        return []
-    out: list[tuple[str, int]] = []
-    for f in sorted(root.rglob("*")):
-        if f.is_file():
-            rel = str(f.relative_to(root)).replace("\\", "/")
-            out.append((rel, f.stat().st_size))
-    return out
-
-
 def _safe_rel_path(s: str) -> str | None:
     s = (s or "").strip().replace("\\", "/").strip("/")
     if not s or ".." in Path(s).parts:
@@ -85,16 +79,16 @@ def _sanitize_upload_basename(name: str) -> str:
     return s[:200]
 
 
-def _allocate_auto_relative_path(project_id: str, uploaded_filename: str) -> str:
-    """Уникальный относительный путь: uploads/<короткий id>_<безопасное имя файла>."""
+def _allocate_auto_relative_path(project: Project, uploaded_filename: str) -> str:
+    """Уникальный путь под `collector/media/uploads/…`."""
     safe = _sanitize_upload_basename(uploaded_filename)
-    base = _project_assets_dir(project_id)
+    base = media_dir(project)
     for _ in range(4096):
         rel = f"uploads/{uuid4().hex[:12]}_{safe}".replace("\\", "/")
-        sp = _safe_rel_path(rel)
+        sp = normalize_media_rel(rel)
         if sp and not (base / sp).exists():
             return sp
-    return _safe_rel_path(f"uploads/{uuid4().hex}_{safe}") or f"uploads/{uuid4().hex}_file.bin"
+    return normalize_media_rel(f"uploads/{uuid4().hex}_{safe}") or f"uploads/{uuid4().hex}_file.bin"
 
 
 def ui_home(request):
@@ -171,7 +165,6 @@ def project_new(request):
 @staff_only
 def project_detail(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
-    media = _list_media_files(project_id)
     pkg_count = project.packages.count()
     public_key = request.session.pop(f"git_public_key_{project_id}", None) or project.git_credential.public_key
     return render(
@@ -179,7 +172,6 @@ def project_detail(request, project_id: str):
         "ui/project_detail.html",
         {
             "project": project,
-            "media_files": media,
             "package_count": pkg_count,
             "is_staff": request.user.is_staff,
             "git_public_key": public_key,
@@ -188,23 +180,91 @@ def project_detail(request, project_id: str):
 
 
 @staff_only
-@require_POST
+@require_http_methods(["GET", "POST"])
 def project_update_ssh_key(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
-    private_key = (request.POST.get("private_key") or "").strip()
-    if not private_key:
-        messages.error(request, "Вставьте приватный ключ OpenSSH.")
+    public_key = request.session.pop(f"git_public_key_{project_id}", None) or project.git_credential.public_key
+    if request.method == "POST":
+        private_key = (request.POST.get("private_key") or "").strip()
+        if not private_key:
+            messages.error(request, "Вставьте приватный ключ OpenSSH.")
+            return redirect("ui_project_update_ssh_key", project_id=project_id)
+        try:
+            public_key = update_credential_private_key(project.git_credential, private_key)
+            request.session[f"git_public_key_{project_id}"] = public_key
+            messages.success(
+                request,
+                "Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub.",
+            )
+        except GitProjectError as e:
+            messages.error(request, e.message)
+        return redirect("ui_project_update_ssh_key", project_id=project_id)
+    return render(
+        request,
+        "ui/project_ssh.html",
+        {"project": project, "git_public_key": public_key},
+    )
+
+
+@staff_only
+@require_http_methods(["GET", "POST"])
+def project_git_settings(request, project_id: str):
+    project = get_object_or_404(Project, project_id=project_id)
+    if request.method == "POST":
+        git_url = (request.POST.get("git_repo_url") or "").strip()
+        git_ref = (request.POST.get("git_default_ref") or "main").strip() or "main"
+        if not git_url:
+            messages.error(request, "Укажите URL репозитория GitHub.")
+            return redirect("ui_project_git_settings", project_id=project_id)
+        try:
+            git_remote = normalize_git_remote(git_url)
+        except GitProjectError as e:
+            messages.error(request, e.message)
+            return redirect("ui_project_git_settings", project_id=project_id)
+        changed = project.git_remote != git_remote or project.git_default_ref != git_ref
+        project.git_remote = git_remote
+        project.git_default_ref = git_ref
+        if changed:
+            project.last_synced_sha = ""
+            project.last_synced_at = None
+            project.sync_error = ""
+            project.save(
+                update_fields=[
+                    "git_remote",
+                    "git_default_ref",
+                    "last_synced_sha",
+                    "last_synced_at",
+                    "sync_error",
+                    "updated_at",
+                ]
+            )
+            git_remove_cache(project_id)
+        else:
+            project.save(update_fields=["git_remote", "git_default_ref", "updated_at"])
+            messages.info(request, "Настройки Git не изменились.")
+            return redirect("ui_project_detail", project_id=project_id)
+        try:
+            test_remote(project)
+            pull(project, force=True)
+            messages.success(
+                request,
+                f"Git обновлён: {git_remote}, ветка {git_ref}. Кэш пересоздан.",
+            )
+        except GitProjectError as e:
+            messages.warning(
+                request,
+                f"Настройки сохранены, но подключение не удалось: {e.message}",
+            )
         return redirect("ui_project_detail", project_id=project_id)
-    try:
-        public_key = update_credential_private_key(project.git_credential, private_key)
-        request.session[f"git_public_key_{project_id}"] = public_key
-        messages.success(
-            request,
-            "Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub.",
-        )
-    except GitProjectError as e:
-        messages.error(request, e.message)
-    return redirect("ui_project_detail", project_id=project_id)
+    return render(
+        request,
+        "ui/project_git_settings.html",
+        {
+            "project": project,
+            "git_repo_url": project.git_remote,
+            "git_default_ref": project.git_default_ref,
+        },
+    )
 
 
 @staff_only
@@ -344,22 +404,15 @@ def project_media(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     if request.method == "POST":
         if "delete" in request.POST:
-            rel = _safe_rel_path(request.POST.get("rel_path", ""))
+            rel = normalize_media_rel(request.POST.get("rel_path", ""))
             if not rel:
                 messages.error(request, "Некорректный путь.")
             else:
-                target = (_project_assets_dir(project_id) / rel).resolve()
-                base = _project_assets_dir(project_id).resolve()
                 try:
-                    target.relative_to(base)
-                except ValueError:
-                    messages.error(request, "Некорректный путь.")
-                else:
-                    if target.is_file():
-                        target.unlink()
-                        messages.success(request, f"Удалено: {rel}")
-                    else:
-                        messages.warning(request, "Файл не найден.")
+                    delete_media_file(project, rel)
+                    messages.success(request, f"Удалено из Git: {media_config_path(rel)}")
+                except GitProjectError as e:
+                    messages.error(request, e.message)
             return redirect("ui_project_media", project_id=project_id)
         f = request.FILES.get("file")
         if not f:
@@ -368,27 +421,47 @@ def project_media(request, project_id: str):
                 return JsonResponse({"ok": False, "error": msg}, status=400)
             messages.error(request, msg)
             return redirect("ui_project_media", project_id=project_id)
-        rel = _allocate_auto_relative_path(project_id, f.name)
-        dest = _project_assets_dir(project_id) / rel
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        with dest.open("wb") as out:
-            for chunk in f.chunks():
-                out.write(chunk)
-        messages.success(request, f"Сохранено: {rel}")
+        rel = _allocate_auto_relative_path(project, f.name)
+        data = b"".join(chunk for chunk in f.chunks())
+        try:
+            write_media_file(project, rel, data)
+        except GitProjectError as e:
+            if request.POST.get("respond") == "json":
+                return JsonResponse({"ok": False, "error": e.message}, status=400)
+            messages.error(request, e.message)
+            return redirect("ui_project_media", project_id=project_id)
+        cfg_path = media_config_path(rel)
+        messages.success(request, f"Закоммичено в Git: {cfg_path}")
         if request.POST.get("respond") == "json":
-            return JsonResponse({"ok": True, "relative_path": rel})
+            return JsonResponse(
+                {
+                    "ok": True,
+                    "relative_path": rel,
+                    "config_path": cfg_path,
+                    "asset_path": cfg_path,
+                }
+            )
         return redirect("ui_project_media", project_id=project_id)
+    try:
+        pull(project, force=False)
+    except GitProjectError:
+        pass
+    rows = list_media_files(project)
     if request.GET.get("format") == "json":
-        rows = _list_media_files(project_id)
         files = [
-            {"relative_path": rel, "size": size, "asset_path": f"assets/{rel}" if rel else ""}
+            {
+                "relative_path": rel,
+                "size": size,
+                "config_path": media_config_path(rel),
+                "asset_path": media_config_path(rel),
+            }
             for rel, size in rows
         ]
         return JsonResponse({"files": files})
     return render(
         request,
         "ui/project_media.html",
-        {"project": project, "media_files": _list_media_files(project_id)},
+        {"project": project, "media_files": rows},
     )
 
 

@@ -25,6 +25,11 @@ urlpatterns = [
         views_ui.project_update_ssh_key,
         name="ui_project_update_ssh_key",
     ),
+    path(
+        "projects/<str:project_id>/git-settings/",
+        views_ui.project_git_settings,
+        name="ui_project_git_settings",
+    ),
     path("projects/<str:project_id>/config/", views_ui.project_config, name="ui_project_config"),
     path(
         "projects/<str:project_id>/config/builder/",

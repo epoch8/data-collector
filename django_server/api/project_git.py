@@ -411,3 +411,114 @@ def seed_config_if_missing(project: Project, seed: dict[str, Any]) -> str:
 
 def remove_cache(project_id: str) -> None:
     shutil.rmtree(repo_dir(project_id), ignore_errors=True)
+
+
+def media_dir(project: Project) -> Path:
+    return repo_dir(project.project_id) / MEDIA_REL_DIR
+
+
+def normalize_media_rel(rel: str) -> str | None:
+    """Путь относительно `collector/media/` (без префикса каталога)."""
+    s = (rel or "").strip().replace("\\", "/").strip("/")
+    if not s or ".." in Path(s).parts:
+        return None
+    prefix = f"{MEDIA_REL_DIR}/"
+    if s.startswith(prefix):
+        s = s[len(prefix) :]
+    elif s.startswith("assets/"):
+        s = s[len("assets/") :]
+    return s
+
+
+def media_config_path(rel_under_media: str) -> str:
+    rel = normalize_media_rel(rel_under_media) or rel_under_media.strip().replace("\\", "/")
+    return f"{MEDIA_REL_DIR}/{rel}"
+
+
+def list_media_files(project: Project) -> list[tuple[str, int]]:
+    root = media_dir(project)
+    if not root.is_dir():
+        return []
+    out: list[tuple[str, int]] = []
+    for f in sorted(root.rglob("*")):
+        if f.is_file():
+            rel = str(f.relative_to(root)).replace("\\", "/")
+            out.append((rel, f.stat().st_size))
+    return out
+
+
+def resolve_media_file(project_id: str, asset_path: str) -> Path | None:
+    """Файл в git-кэше `collector/media/…` или legacy `project_assets/<id>/`."""
+    rel = normalize_media_rel(asset_path)
+    if not rel:
+        return None
+    git_path = repo_dir(project_id) / MEDIA_REL_DIR / rel
+    if git_path.is_file():
+        return git_path
+    legacy_root = Path(settings.PROJECT_ASSETS_ROOT) / project_id
+    legacy = (legacy_root / rel).resolve()
+    try:
+        legacy.relative_to(legacy_root.resolve())
+    except ValueError:
+        return None
+    return legacy if legacy.is_file() else None
+
+
+def _git_add_commit_push(project: Project, git_paths: list[str], commit_message: str) -> str:
+    pull(project, force=True)
+    dest = repo_dir(project.project_id)
+    for p in git_paths:
+        _run_git(["add", "--", p], credential=project.git_credential, cwd=dest)
+    status = _run_git(["status", "--porcelain"], credential=project.git_credential, cwd=dest)
+    if not status.stdout.strip():
+        return project.last_synced_sha or ""
+    _run_git(
+        ["commit", "-m", commit_message],
+        credential=project.git_credential,
+        cwd=dest,
+        extra_env=_git_commit_env(),
+    )
+    _run_git(
+        ["push", "origin", f"HEAD:{project.git_default_ref}"],
+        credential=project.git_credential,
+        cwd=dest,
+    )
+    return pull(project, force=True)
+
+
+def write_media_file(
+    project: Project,
+    rel_under_media: str,
+    data: bytes,
+    *,
+    commit_message: str | None = None,
+) -> str:
+    rel = normalize_media_rel(rel_under_media)
+    if not rel:
+        raise GitProjectError("Некорректный путь к файлу.", "invalid_path")
+    pull(project, force=True)
+    dest = media_dir(project) / rel
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_bytes(data)
+    git_path = f"{MEDIA_REL_DIR}/{rel}"
+    msg = commit_message or f"media: add {rel}"
+    return _git_add_commit_push(project, [git_path], msg)
+
+
+def delete_media_file(
+    project: Project,
+    rel_under_media: str,
+    *,
+    commit_message: str | None = None,
+) -> str:
+    rel = normalize_media_rel(rel_under_media)
+    if not rel:
+        raise GitProjectError("Некорректный путь к файлу.", "invalid_path")
+    pull(project, force=True)
+    path = media_dir(project) / rel
+    if not path.is_file():
+        raise GitProjectError("Файл не найден в репозитории.", "not_found")
+    path.unlink()
+    git_path = f"{MEDIA_REL_DIR}/{rel}"
+    msg = commit_message or f"media: delete {rel}"
+    return _git_add_commit_push(project, [git_path], msg)

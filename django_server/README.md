@@ -6,8 +6,8 @@
 
 | Роль | Вход | Где назначают проекты | UI |
 |------|------|------------------------|-----|
-| **Админ** | `/ui/login/` — логин без `@`, Django **staff** | — | Проекты, Пользователи, Пакеты |
-| **Клиент** | `/ui/login/` — **email** + Firebase | Пользователи → галочки **Client-admin** | Пакеты |
+| **Админ** | `/ui/login/` — галочка **Админ-доступ**, логин без `@`, Django **staff** | — | Проекты, Пользователи, Пакеты |
+| **Клиент** | `/ui/login/` — без галочки, **email** + Firebase | Пользователи → галочки **Client-admin** | Пакеты |
 
 Отдельных «веб-пользователей» Django нет — только Firebase + колонка Client-admin в таблице пользователей.
 
@@ -51,4 +51,4 @@ python manage.py runserver
 - `api/static/ui/packages.css`, `packages_viz.css` — стили пакетов
 - `api/static/ui/packages_list.js`, `packages_workspace.js`, `packages_viz.js` — логика пакетов
 - `api/static/ui/project_builder.js` — визуальный редактор конфига
-- `api/static/ui/firebase_login.js` — вход клиента на странице логина
+- `api/static/ui/login.js` — Firebase-вход на странице логина (без галочки «Админ-доступ»)

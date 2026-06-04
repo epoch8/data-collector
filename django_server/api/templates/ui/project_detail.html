@@ -1,4 +1,5 @@
 {% extends "ui/base.html" %}
+{% load static %}
 {% block title %}{{ project.name }}{% endblock %}
 {% block breadcrumb %}
 <nav class="ui-breadcrumb" aria-label="Навигация">
@@ -41,16 +42,24 @@
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-git me-1"></i>Репозиторий</div>
       <p class="small mb-2"><code class="text-break">{{ project.git_remote }}</code></p>
-      <p class="small ui-muted mb-2">Ветка: <code>{{ project.git_default_ref }}</code> · файл <code>collector/config.json</code></p>
+      <p class="small ui-muted mb-2">Ветка: <code>{{ project.git_default_ref }}</code> · конфиг <code>collector/config.json</code></p>
+      {% if is_staff %}
+      <p class="small mb-3">
+        <a href="{% url 'ui_project_git_settings' project.project_id %}"><i class="bi bi-pencil-square me-1"></i>Изменить репозиторий или ветку</a>
+      </p>
+      {% endif %}
       {% if is_staff and git_public_key %}
-      <p class="small ui-muted mb-1">Deploy key (public) — вставьте в GitHub → Settings → Deploy keys:</p>
-      <pre class="small bg-dark border border-secondary rounded p-2 mb-3 text-break" style="font-size: 0.7rem; max-height: 120px; overflow: auto;">{{ git_public_key }}</pre>
-      <form method="post" action="{% url 'ui_project_update_ssh_key' project.project_id %}">
-        {% csrf_token %}
-        <p class="small ui-muted mb-1">Если Git пишет <code>error in libcrypto</code> — вставьте приватный ключ заново (OpenSSH, не .ppk):</p>
-        <textarea class="form-control font-monospace small mb-2" name="private_key" rows="4" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
-        <button type="submit" class="btn btn-outline-light btn-sm">Обновить приватный ключ</button>
-      </form>
+      <p class="small ui-muted mb-1">Deploy key (public) — GitHub → Settings → Deploy keys:</p>
+      <div class="d-flex gap-2 align-items-start mb-2">
+        <pre id="deploy-public-key" class="small bg-dark border border-secondary rounded p-2 mb-0 text-break flex-grow-1" style="font-size: 0.7rem; max-height: 120px; overflow: auto;">{{ git_public_key }}</pre>
+        <button type="button" class="btn btn-sm btn-outline-light flex-shrink-0 ui-copy-btn" data-copy-target="deploy-public-key" title="Копировать">
+          <i class="bi bi-clipboard"></i>
+        </button>
+      </div>
+      <p class="small ui-muted mb-0">
+        <a href="{% url 'ui_project_update_ssh_key' project.project_id %}">Обновить SSH-ключ</a>
+        — только при ошибке <code>libcrypto</code> или смене ключа.
+      </p>
       {% endif %}
     </div>
   </div>
@@ -64,23 +73,6 @@
 </div>
 
 {% if is_staff %}
-<div class="row g-4">
-  <div class="col-md-6">
-    <div class="card p-4 h-100">
-      <div class="ui-card-title"><i class="bi bi-hdd-network me-1"></i>Медиа на диске (legacy)</div>
-      <p class="small ui-muted mb-3">Целевой путь в Git: <code>collector/media/</code>. Здесь — локальная папка до переноса.</p>
-      {% if media_files %}
-        <ul class="small mb-0 ps-3" style="max-height: 220px; overflow-y: auto;">
-          {% for rel, sz in media_files %}
-          {% if forloop.counter <= 12 %}<li class="mb-1"><code>{{ rel }}</code> <span class="ui-muted">— {{ sz }} B</span></li>{% endif %}
-          {% endfor %}
-        </ul>
-      {% else %}
-        <p class="small ui-muted mb-0">Пока нет файлов.</p>
-      {% endif %}
-    </div>
-  </div>
-</div>
 <hr class="border-secondary my-5">
 <h2 class="h6 text-danger mb-3"><i class="bi bi-shield-exclamation me-1"></i>Опасная зона</h2>
 <form method="post" action="{% url 'ui_project_delete' project.project_id %}" onsubmit="return confirm('Удалить проект и все пакеты?');">
@@ -92,5 +84,10 @@
     <button type="submit" class="btn btn-outline-danger btn-sm">Удалить проект</button>
   </div>
 </form>
+{% endif %}
+{% endblock %}
+{% block extra_js %}
+{% if is_staff and git_public_key %}
+<script src="{% static 'ui/copy_clipboard.js' %}"></script>
 {% endif %}
 {% endblock %}

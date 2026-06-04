@@ -320,23 +320,16 @@ class PackageDetailView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectAssetGetView(View):
-    """GET файла примера для конфига: путь относительно `assets/<slug>/` на репо → project_assets/<project_id>/."""
+    """GET медиа инструкций: `collector/media/…` в git-кэше (или legacy project_assets)."""
 
     def get(self, request, project_id: str, asset_path: str):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        rel = (asset_path or "").replace("\\", "/").strip("/")
-        if not rel or ".." in Path(rel).parts:
-            return JsonResponse(_err("invalid_path", rel), status=422)
-        base = Path(settings.PROJECT_ASSETS_ROOT) / project_id
-        target = (base / rel).resolve()
-        base_res = base.resolve()
-        try:
-            target.relative_to(base_res)
-        except ValueError:
-            return JsonResponse(_err("invalid_path", rel), status=422)
-        if not target.is_file():
+        from .project_git import resolve_media_file
+
+        target = resolve_media_file(project_id, asset_path)
+        if target is None:
             return JsonResponse(_err("not_found", "Asset not found"), status=404)
         ctype, _ = mimetypes.guess_type(str(target))
         return FileResponse(

@@ -12,6 +12,8 @@ from django.views.decorators.http import require_POST
 
 from .collector_user_defaults import assign_default_collector_project
 from .firebase_verify import firebase_auth_enabled, verify_id_token
+
+ADMIN_ACCESS_FIELD = "admin_access"
 from .models import CollectorUser
 from .ui_access import (
     get_ui_collector,
@@ -25,7 +27,7 @@ logger = logging.getLogger(__name__)
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class UiLoginView(LoginView):
-    """Вход staff: логин/пароль Django. Клиент: Firebase (см. login.html + firebase_login.js)."""
+    """Одна форма: без галочки — Firebase; «Админ-доступ» — Django staff."""
 
     template_name = "ui/login.html"
     redirect_authenticated_user = True
@@ -48,12 +50,17 @@ class UiLoginView(LoginView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        response = super().form_valid(form)
-        if not self.request.user.is_staff:
-            logout(self.request)
-            return redirect("ui_login")
+        if firebase_auth_enabled() and not self.request.POST.get(ADMIN_ACCESS_FIELD):
+            form.add_error(
+                None,
+                "Для входа клиента снимите «Админ-доступ» и укажите email Firebase.",
+            )
+            return self.form_invalid(form)
+        if not form.get_user().is_staff:
+            form.add_error(None, "Нужен аккаунт администратора (staff).")
+            return self.form_invalid(form)
         ui_logout_clear_collector_session(self.request)
-        return response
+        return super().form_valid(form)
 
 
 @csrf_protect

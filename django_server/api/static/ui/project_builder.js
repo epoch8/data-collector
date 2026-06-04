@@ -187,7 +187,7 @@
               <textarea class="form-control form-control-sm" data-fk="instructions" rows="14" autocomplete="off" placeholder="Длинный текст инструкции…"></textarea>
             </div>
             <div class="col-12">
-              <p class="small ui-muted mb-0">Картинки в Markdown должны быть <strong>загружены в медиа проекта</strong> — раздел ${mediaLink}.</p>
+              <p class="small ui-muted mb-0">Картинки в Markdown: путь <code>collector/media/…</code> в Git (загрузка — ${mediaLink} или <code>git push</code>).</p>
             </div>
           </div>
         </div>
