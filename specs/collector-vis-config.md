@@ -34,10 +34,17 @@ Django читает файл из кэша Git после `pull` (как `collec
       "default_visible": true
     },
     {
+      "id": "cvat",
+      "label": "CVAT",
+      "plugin": "cvat_link",
+      "table": "cvat_link",
+      "default_visible": true
+    },
+    {
       "id": "depth",
       "label": "Глубина",
       "plugin": "depth_map",
-      "table": "cow_inference_result",
+      "table": "depth_map",
       "default_visible": false
     }
   ]
@@ -58,10 +65,13 @@ Django читает файл из кэша Git после `pull` (как `collec
 
 | plugin | table | Поведение |
 |--------|-------|-----------|
-| `keypoint_korovas` | `cow_keypoint_annotation` | GT: `annotation.points`, CVAT link |
+| `keypoint_korovas` | `cow_keypoint_annotation` | GT: `annotation.points` |
 | `keypoint_korovas` | `cow_inference_result` | Inference: keypoints, bbox, segments, metrics |
-| `depth_map` | `cow_inference_result` | `.npy` из `depth_blob_key` / `depth_map.depth_url` |
+| `cvat_link` | `cvat_link` | URL задачи CVAT на кадр (`import_cvat_link`) |
+| `depth_map` | `depth_map` | Путь к `.npy` в пакете (`depth_path` → `depth_url`; `import_depth_map`) |
 | `yolo_detection` | `yolo_detection` | BBox из `detections.boxes` (импорт YOLO `.txt`) |
+
+Код плагина: `django_server/api/viz_plugins/<plugin_id>/plugin.py` (реестр в `viz_plugins/__init__.py`).
 
 Плагин сам знает формат строки; конфиг указывает таблицу и **опции классов** (см. ниже).
 

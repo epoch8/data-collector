@@ -5,19 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from .models import Project
-from .project_vis_config import layer_options_for_api, load_vis_config
+from .project_vis_config import load_vis_config
+from .viz_plugins import fetch_table, layer_options_for_api
 
 
-def _fetch_table(project_id: str, package_id: str, table: str) -> list[dict[str, Any]]:
-    from . import project_db as pdb
-
-    if table == "cow_keypoint_annotation":
-        return pdb.list_gt(project_id, package_id)
-    if table == "cow_inference_result":
-        return pdb.list_inference(project_id, package_id)
-    if table == "yolo_detection":
-        return pdb.list_yolo_detection(project_id, package_id)
-    return []
+def _fetch_layer_records(
+    project_id: str,
+    package_id: str,
+    layer: dict[str, Any],
+) -> list[dict[str, Any]]:
+    table = layer.get("table")
+    plugin = layer.get("plugin")
+    if not isinstance(table, str) or not isinstance(plugin, str):
+        return []
+    return fetch_table(project_id, package_id, table, plugin)
 
 
 def package_has_visualisation(project_id: str, package_id: str) -> bool:
@@ -33,10 +34,7 @@ def package_has_visualisation(project_id: str, package_id: str) -> bool:
     for layer in vis.get("layers") or []:
         if not isinstance(layer, dict):
             continue
-        table = layer.get("table")
-        if not isinstance(table, str):
-            continue
-        if _fetch_table(project_id, package_id, table):
+        if _fetch_layer_records(project_id, package_id, layer):
             return True
     return False
 
@@ -71,7 +69,7 @@ def build_package_viz_payload(
         table = layer.get("table")
         if not isinstance(lid, str) or not isinstance(table, str):
             continue
-        records = _fetch_table(project_id, package_id, table)
+        records = _fetch_layer_records(project_id, package_id, layer)
         if records:
             has_any = True
         data[lid] = records

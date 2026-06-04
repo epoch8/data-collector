@@ -137,35 +137,62 @@ def seed_package_pipeline(
         gt_t = gt_by_key.get(key)
         if gt_t:
             ann = gt_t.get("annotation") if isinstance(gt_t.get("annotation"), dict) else {}
+            img_sz = (
+                gt_t.get("image_size")
+                if isinstance(gt_t.get("image_size"), dict)
+                else {}
+            )
             pdb.insert_gt(
                 project_id,
                 package_id=package_id,
                 manifest_blob_key=key,
-                cvat_link=str(gt_t.get("cvat_link") or ""),
-                image_size=gt_t.get("image_size") if isinstance(gt_t.get("image_size"), dict) else {},
+                cvat_link="",
+                image_size=img_sz,
                 annotation=ann,
             )
             gt_n += 1
+            cvat_url = str(gt_t.get("cvat_link") or "").strip()
+            if cvat_url:
+                pdb.insert_cvat_link(
+                    project_id,
+                    package_id=package_id,
+                    manifest_blob_key=key,
+                    url=cvat_url,
+                    label="mock:datapipe_test",
+                )
 
         inf_t = inf_by_key.get(key)
         if inf_t:
             inf_body = inf_t.get("inference") if isinstance(inf_t.get("inference"), dict) else {}
             dm = inf_t.get("depth_map") if isinstance(inf_t.get("depth_map"), dict) else {}
+            img_sz = (
+                inf_t.get("image_size")
+                if isinstance(inf_t.get("image_size"), dict)
+                else {}
+            )
             depth_key = _attach_depth_blob(session, image_logical=key, template=inf_t)
             if depth_key:
                 depth_n += 1
+                pdb.insert_depth_map(
+                    project_id,
+                    package_id=package_id,
+                    manifest_blob_key=key,
+                    depth_path=depth_key,
+                    image_size=img_sz,
+                    fmt=str(dm.get("format") or "npy"),
+                    unit=str(dm.get("unit") or "m"),
+                    width=int(dm["width"]) if dm.get("width") else None,
+                    height=int(dm["height"]) if dm.get("height") else None,
+                    source_label="mock:datapipe_test",
+                )
             pdb.insert_inference(
                 project_id,
                 package_id=package_id,
                 manifest_blob_key=key,
                 source_export=str(inf_t.get("source_export") or ""),
-                image_size=inf_t.get("image_size") if isinstance(inf_t.get("image_size"), dict) else {},
+                image_size=img_sz,
                 inference=inf_body,
-                depth_blob_key=depth_key,
-                depth_format=str(dm.get("format") or "npy"),
-                depth_unit=str(dm.get("unit") or "m"),
-                depth_width=int(dm["width"]) if dm.get("width") else None,
-                depth_height=int(dm["height"]) if dm.get("height") else None,
+                depth_blob_key=None,
             )
             inf_n += 1
 

@@ -11,6 +11,13 @@
       "default_visible": false
     },
     {
+      "id": "cvat",
+      "label": "CVAT",
+      "plugin": "cvat_link",
+      "table": "cvat_link",
+      "default_visible": true
+    },
+    {
       "id": "inference",
       "label": "Inference",
       "plugin": "keypoint_korovas",
@@ -22,7 +29,7 @@
       "id": "depth",
       "label": "Глубина",
       "plugin": "depth_map",
-      "table": "cow_inference_result",
+      "table": "depth_map",
       "default_visible": false
     }
   ]

@@ -330,6 +330,17 @@
     return found;
   }
 
+  function cvatUrlFor(slide) {
+    if (!slide || !vizConfig) return null;
+    var url = null;
+    (vizConfig.layers || []).forEach(function (lc) {
+      if (url || lc.plugin !== "cvat_link") return;
+      var rec = slide.byLayer[lc.id];
+      if (rec && rec.cvat_link) url = rec.cvat_link;
+    });
+    return url;
+  }
+
   function depthUrlFor(slide) {
     if (!slide || !vizConfig) return null;
     var dlc = depthLayerConfig();
@@ -343,7 +354,6 @@
       if (asset.charAt(0) === "/") return asset;
       return depthNpyUrl(asset.split("/").pop());
     }
-    if (rec.source_export) return depthNpyUrl(rec.source_export.replace(/\.json$/i, "") + ".npy");
     return null;
   }
 
@@ -912,13 +922,7 @@
     refs.svg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
     if (refs.probeSvg) refs.probeSvg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
 
-    // CVAT link (GT-слой keypoint_korovas)
-    var cvat = null;
-    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
-      if (cvat || lc.plugin !== "keypoint_korovas" || lc.palette !== "gt") return;
-      var rec = slide.byLayer[lc.id];
-      if (rec && rec.cvat_link) cvat = rec.cvat_link;
-    });
+    var cvat = cvatUrlFor(slide);
     refs.cvat.style.display = cvat ? "" : "none";
     if (cvat) refs.cvat.href = cvat;
 

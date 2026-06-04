@@ -63,6 +63,34 @@ CREATE TABLE IF NOT EXISTS yolo_detection (
 );
 
 CREATE INDEX IF NOT EXISTS idx_yolo_pkg ON yolo_detection(package_id);
+
+CREATE TABLE IF NOT EXISTS depth_map (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    package_id TEXT NOT NULL,
+    manifest_blob_key TEXT NOT NULL,
+    depth_path TEXT NOT NULL,
+    format TEXT NOT NULL DEFAULT 'npy',
+    unit TEXT NOT NULL DEFAULT 'm',
+    width INTEGER,
+    height INTEGER,
+    source_label TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(package_id, manifest_blob_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_depth_pkg ON depth_map(package_id);
+
+CREATE TABLE IF NOT EXISTS cvat_link (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    package_id TEXT NOT NULL,
+    manifest_blob_key TEXT NOT NULL,
+    url TEXT NOT NULL,
+    label TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(package_id, manifest_blob_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_cvat_pkg ON cvat_link(package_id);
 """
 
 
@@ -118,11 +146,14 @@ def package_has_pipeline_data(project_id: str, package_id: str) -> bool:
         ).fetchone()
         if inf:
             return True
-        yolo = conn.execute(
-            "SELECT 1 FROM yolo_detection WHERE package_id = ? LIMIT 1",
-            (package_id,),
-        ).fetchone()
-        return yolo is not None
+        for tbl in ("yolo_detection", "depth_map", "cvat_link"):
+            hit = conn.execute(
+                f"SELECT 1 FROM {tbl} WHERE package_id = ? LIMIT 1",
+                (package_id,),
+            ).fetchone()
+            if hit:
+                return True
+        return False
 
 
 def delete_package_pipeline_data(project_id: str, package_id: str) -> None:
@@ -138,6 +169,81 @@ def delete_package_pipeline_data(project_id: str, package_id: str) -> None:
         conn.execute(
             "DELETE FROM yolo_detection WHERE package_id = ?",
             (package_id,),
+        )
+        conn.execute(
+            "DELETE FROM depth_map WHERE package_id = ?",
+            (package_id,),
+        )
+        conn.execute(
+            "DELETE FROM cvat_link WHERE package_id = ?",
+            (package_id,),
+        )
+
+
+def insert_depth_map(
+    project_id: str,
+    *,
+    package_id: str,
+    manifest_blob_key: str,
+    depth_path: str,
+    image_size: dict[str, Any] | None = None,
+    fmt: str = "npy",
+    unit: str = "m",
+    width: int | None = None,
+    height: int | None = None,
+    source_label: str = "",
+) -> None:
+    if width is None:
+        width = int((image_size or {}).get("width") or 0) or None
+    if height is None:
+        height = int((image_size or {}).get("height") or 0) or None
+    with connect(project_id) as conn:
+        conn.execute(
+            """
+            INSERT INTO depth_map (
+                package_id, manifest_blob_key, depth_path,
+                format, unit, width, height, source_label
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
+                depth_path = excluded.depth_path,
+                format = excluded.format,
+                unit = excluded.unit,
+                width = excluded.width,
+                height = excluded.height,
+                source_label = excluded.source_label
+            """,
+            (
+                package_id,
+                manifest_blob_key,
+                depth_path,
+                fmt,
+                unit,
+                width,
+                height,
+                source_label,
+            ),
+        )
+
+
+def insert_cvat_link(
+    project_id: str,
+    *,
+    package_id: str,
+    manifest_blob_key: str,
+    url: str,
+    label: str = "",
+) -> None:
+    with connect(project_id) as conn:
+        conn.execute(
+            """
+            INSERT INTO cvat_link (
+                package_id, manifest_blob_key, url, label
+            ) VALUES (?, ?, ?, ?)
+            ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
+                url = excluded.url,
+                label = excluded.label
+            """,
+            (package_id, manifest_blob_key, url, label),
         )
 
 
@@ -295,19 +401,6 @@ def _row_to_inference(
         "image_size": {"width": row["image_width"], "height": row["image_height"]},
         "inference": inf,
     }
-    depth_key = row["depth_blob_key"]
-    if depth_key:
-        dm: dict[str, Any] = {
-            "format": row["depth_format"] or "npy",
-            "unit": row["depth_unit"] or "m",
-            "asset_path": depth_key,
-            "depth_url": _depth_url(project_id, package_id, depth_key),
-        }
-        if row["depth_width"]:
-            dm["width"] = row["depth_width"]
-        if row["depth_height"]:
-            dm["height"] = row["depth_height"]
-        out["depth_map"] = dm
     return out
 
 
@@ -353,6 +446,68 @@ def list_yolo_detection(project_id: str, package_id: str) -> list[dict[str, Any]
             (package_id,),
         ).fetchall()
     return [_row_to_yolo(row) for row in rows]
+
+
+def _row_to_depth(
+    row: sqlite3.Row,
+    *,
+    project_id: str,
+    package_id: str,
+) -> dict[str, Any]:
+    path = row["depth_path"]
+    dm: dict[str, Any] = {
+        "format": row["format"] or "npy",
+        "unit": row["unit"] or "m",
+        "asset_path": path,
+        "depth_path": path,
+        "depth_url": _depth_url(project_id, package_id, path),
+    }
+    if row["width"]:
+        dm["width"] = row["width"]
+    if row["height"]:
+        dm["height"] = row["height"]
+    return {
+        "package_id": row["package_id"],
+        "manifest_blob_key": row["manifest_blob_key"],
+        "image_size": {"width": row["width"] or 0, "height": row["height"] or 0},
+        "depth_map": dm,
+        "source_label": row["source_label"] or "",
+    }
+
+
+def list_depth_map(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    with connect(project_id) as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM depth_map
+            WHERE package_id = ?
+            ORDER BY manifest_blob_key
+            """,
+            (package_id,),
+        ).fetchall()
+    return [_row_to_depth(row, project_id=project_id, package_id=package_id) for row in rows]
+
+
+def _row_to_cvat(row: sqlite3.Row) -> dict[str, Any]:
+    return {
+        "package_id": row["package_id"],
+        "manifest_blob_key": row["manifest_blob_key"],
+        "cvat_link": row["url"],
+        "label": row["label"] or "",
+    }
+
+
+def list_cvat_link(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    with connect(project_id) as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM cvat_link
+            WHERE package_id = ?
+            ORDER BY manifest_blob_key
+            """,
+            (package_id,),
+        ).fetchall()
+    return [_row_to_cvat(row) for row in rows]
 
 
 def list_inference(project_id: str, package_id: str) -> list[dict[str, Any]]:
