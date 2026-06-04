@@ -574,7 +574,13 @@ body.ui-body--pkg-ws .pkg-ws {
   font-size: 0.8rem;
 }
 
-/* ── Save reason modal ────────────────────────────────────────────────────── */
+/* ── Save reason modal (вне <main>, z-index выше lightbox) ───────────────── */
+#pkgReasonModal {
+  z-index: 1090;
+}
+.modal-backdrop.show {
+  z-index: 1085;
+}
 .pkg-reason-opt {
   display: flex;
   align-items: center;

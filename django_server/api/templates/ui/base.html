@@ -93,6 +93,9 @@
     {% block content %}{% endblock %}
   </main>
 
+  {# Модалки вне <main>: иначе Bootstrap 5 ставит inert на main и диалог «зависает». #}
+  {% block modals %}{% endblock %}
+
   {% block footer %}
   <footer class="ui-footer">
     <div class="container-xxl px-3 px-lg-4">

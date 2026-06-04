@@ -70,11 +70,16 @@
   var customBox = document.getElementById("pkgReasonCustom");
   var changeCount = document.getElementById("pkgChangeCount");
   var modalEl = document.getElementById("pkgReasonModal");
-  var modal = modalEl && window.bootstrap ? new window.bootstrap.Modal(modalEl) : null;
+  if (modalEl && modalEl.parentElement && modalEl.parentElement !== document.body) {
+    document.body.appendChild(modalEl);
+  }
+  var modal = modalEl && window.bootstrap ? new window.bootstrap.Modal(modalEl, { focus: true }) : null;
 
   document.querySelectorAll('input[name="reasonPreset"]').forEach(function (r) {
     r.addEventListener("change", function () {
-      var custom = document.querySelector('input[name="reasonPreset"]:checked').value === "__custom__";
+      var checked = document.querySelector('input[name="reasonPreset"]:checked');
+      if (!checked) return;
+      var custom = checked.value === "__custom__";
       if (customBox) customBox.classList.toggle("d-none", !custom);
       if (custom && customBox) customBox.focus();
     });
@@ -89,7 +94,7 @@
   }
 
   var confirmBtn = document.getElementById("pkgConfirmSave");
-  if (confirmBtn) {
+  if (confirmBtn && form && reasonInput) {
     confirmBtn.addEventListener("click", function () {
       var sel = document.querySelector('input[name="reasonPreset"]:checked');
       var reason = sel ? sel.value : "";
@@ -102,7 +107,9 @@
         return;
       }
       reasonInput.value = reason;
-      ws.classList.remove("is-dirty"); // снимаем предупреждение beforeunload
+      ws.classList.remove("is-dirty");
+      if (modal) modal.hide();
+      confirmBtn.disabled = true;
       form.submit();
     });
   }
