@@ -21,10 +21,78 @@
   --ui-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
   --ui-font: "DM Sans", system-ui, -apple-system, sans-serif;
   --ui-mono: "JetBrains Mono", ui-monospace, monospace;
+  /* Скроллбары — встроенные, дорожка почти невидима */
+  --ui-scrollbar-size: 6px;
+  --ui-scrollbar-thumb-idle: rgba(148, 163, 184, 0.14);
+  --ui-scrollbar-thumb-hover: rgba(148, 163, 184, 0.32);
+  --ui-scrollbar-thumb-active: rgba(45, 212, 191, 0.42);
 }
 
 html {
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ui-scrollbar-thumb-idle) transparent;
+}
+
+/* Overlay-скролл: без серой «колеи», только тонкий ползунок */
+*::-webkit-scrollbar {
+  width: var(--ui-scrollbar-size);
+  height: var(--ui-scrollbar-size);
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--ui-scrollbar-thumb-idle);
+  border-radius: 999px;
+  border: none;
+  min-height: 32px;
+  transition: background 0.2s ease;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--ui-scrollbar-thumb-hover);
+}
+
+*::-webkit-scrollbar-thumb:active {
+  background: var(--ui-scrollbar-thumb-active);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* В прокручиваемых блоках ползунок ярче только при наведении на область */
+.pkg-sidebar__list:hover::-webkit-scrollbar-thumb,
+.pkg-kp-list:hover::-webkit-scrollbar-thumb,
+.pkg-filmstrip:hover::-webkit-scrollbar-thumb,
+.pkg-data__nav:hover::-webkit-scrollbar-thumb,
+.table-responsive:hover::-webkit-scrollbar-thumb,
+.ui-table-card:hover::-webkit-scrollbar-thumb {
+  background: var(--ui-scrollbar-thumb-hover);
+}
+
+.pkg-sidebar__list,
+.pkg-kp-list,
+.pkg-filmstrip,
+.table-responsive {
+  scrollbar-color: var(--ui-scrollbar-thumb-idle) transparent;
+}
+
+.pkg-sidebar__list:hover,
+.pkg-kp-list:hover,
+.pkg-filmstrip:hover,
+.table-responsive:hover,
+.ui-table-card:hover {
+  scrollbar-color: var(--ui-scrollbar-thumb-hover) transparent;
 }
 
 body.ui-body {

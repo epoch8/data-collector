@@ -1,5 +1,6 @@
 {% extends "ui/base.html" %}
 {% load static %}
+{% block body_class %}ui-body--pkg-ws{% endblock %}
 {% block title %}{{ short_package_id }} — пакет{% endblock %}
 {% block extra_head %}
 <link href="{% static 'ui/packages.css' %}" rel="stylesheet">
@@ -152,7 +153,8 @@
       {# ── Visualisation panel ── #}
       {% if has_viz %}
       <section class="pkg-panel" data-panel="viz">
-        <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}">
+        <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}"
+             data-depth-base="/ui/packages/depth/">
           <script type="application/json" id="pkgBlobMap">{{ blob_map_json|safe }}</script>
           <div class="pkg-viz__loading ui-muted p-5 text-center">Загрузка визуализации…</div>
         </div>

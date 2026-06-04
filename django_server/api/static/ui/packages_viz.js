@@ -62,7 +62,18 @@
     if (shape.length === 2) { gh = shape[0]; gw = shape[1]; }
     else if (shape.length === 3 && shape[2] === 1) { gh = shape[0]; gw = shape[1]; }
     else throw new Error("unsupported shape " + shape.join("x"));
-    return { values: data, gridWidth: gw, gridHeight: gh, range: depthRange(data) };
+    var valid = 0, sampled = 0, step = Math.max(1, Math.floor(data.length / 8000));
+    for (var vi = 0; vi < data.length; vi += step) {
+      sampled++;
+      if (isValidDepth(data[vi])) valid++;
+    }
+    return {
+      values: data,
+      gridWidth: gw,
+      gridHeight: gh,
+      range: depthRange(data),
+      validPixelRatio: sampled ? valid / sampled : 0,
+    };
   }
   var depthCache = {};
   function loadDepth(url) {
@@ -77,6 +88,20 @@
     if (x < 0 || y < 0 || x >= d.gridWidth || y >= d.gridHeight) return null;
     var v = d.values[y * d.gridWidth + x];
     return isValidDepth(v) ? v : null;
+  }
+  function sampleDepthAtImage(d, ix, iy, iw, ih) {
+    var gx = Math.round(ix / iw * d.gridWidth);
+    var gy = Math.round(iy / ih * d.gridHeight);
+    return sampleDepth(d, gx, gy);
+  }
+  function formatDepthMeters(m) {
+    if (!isFinite(m)) return "—";
+    if (m >= 10) return m.toFixed(1) + " м";
+    if (m >= 1) return m.toFixed(2) + " м";
+    return (m * 100).toFixed(0) + " см";
+  }
+  function formatDepthRange(min, max) {
+    return formatDepthMeters(min) + " – " + formatDepthMeters(max);
   }
   function clientToImageCoords(cx, cy, rect, iw, ih) {
     var scale = Math.min(rect.width / iw, rect.height / ih);
@@ -177,10 +202,25 @@
 
   // ── Main controller ───────────────────────────────────────────────────────
   var root, blobMap, slides = [], inited = false, loading = false;
+  var depthBaseUrl = "/ui/packages/depth/";
+
+  function resolveDepthBase() {
+    var el = document.getElementById("pkgViz") || document.getElementById("pkgWorkspace");
+    var base = (el && el.getAttribute("data-depth-base")) || depthBaseUrl;
+    if (!base) base = "/ui/packages/depth/";
+    if (base.charAt(base.length - 1) !== "/") base += "/";
+    return base;
+  }
+
+  function depthNpyUrl(filename) {
+    return resolveDepthBase() + filename;
+  }
   var state = {
     index: 0, showGt: false, showInference: true, showBoxes: false, showLabels: false,
-    showDepth: false, depthMode: "split", depthOpacity: 0.6, selected: null, probe: null, depthData: null,
+    showDepth: false, depthMode: "split", depthOpacity: 0.5, selected: null, probe: null,
+    depthData: null, depthLoading: false, depthError: null,
   };
+  var depthResizeObs = [];
 
   function currentSlide() { return slides[state.index] || null; }
 
@@ -278,6 +318,11 @@
     renderOverlay(refs.svg, slide);
     renderSide(slide);
     syncToggles();
+    if (state.showDepth && state.depthData) {
+      var sz = imageSize(slide);
+      renderPhotoProbe(sz.w, sz.h);
+      repaintDepthViews();
+    }
   }
 
   function renderSide(slide) {
@@ -347,27 +392,351 @@
     });
   }
 
-  // ── Depth rendering ──────────────────────────────────────────────────────
-  function rasterDepth(d, mode) {
+  // ── Depth rendering (port DepthMapViewer) ─────────────────────────────────
+  function rasterDepthBitmap(d, mode, vmin, vmax) {
+    var cacheKey = mode + "|" + vmin + "|" + vmax;
+    if (d._bitmap && d._bitmapKey === cacheKey) return d._bitmap;
     var img = new ImageData(d.gridWidth, d.gridHeight), data = img.data;
-    var vmin = d.range.min, vmax = d.range.max;
     for (var y = 0; y < d.gridHeight; y++) {
       for (var x = 0; x < d.gridWidth; x++) {
         var v = d.values[y * d.gridWidth + x], i = (y * d.gridWidth + x) * 4;
         if (!isValidDepth(v)) {
           if (mode === "overlay") { data[i + 3] = 0; }
-          else { var ch = ((x >> 2) ^ (y >> 2)) & 1; data[i] = ch ? 22 : 16; data[i + 1] = ch ? 26 : 19; data[i + 2] = ch ? 36 : 28; data[i + 3] = 255; }
+          else {
+            var ch = ((x >> 2) ^ (y >> 2)) & 1;
+            data[i] = ch ? 22 : 16; data[i + 1] = ch ? 26 : 19; data[i + 2] = ch ? 36 : 28; data[i + 3] = 255;
+          }
           continue;
         }
         var t = clamp01((v - vmin) / (vmax - vmin)), rgb = depthToRgb(t);
         data[i] = rgb[0]; data[i + 1] = rgb[1]; data[i + 2] = rgb[2]; data[i + 3] = 255;
       }
     }
+    d._bitmap = img;
+    d._bitmapKey = cacheKey;
     return img;
   }
-  function paintDepthCanvas(canvas, d, mode) {
-    canvas.width = d.gridWidth; canvas.height = d.gridHeight;
-    canvas.getContext("2d").putImageData(rasterDepth(d, mode), 0, 0);
+
+  function paintDepthToDisplay(canvas, frame, d, iw, ih, mode, opacity, probe) {
+    if (!canvas || !frame || !d) return;
+    var w = Math.max(1, Math.round(frame.clientWidth));
+    var h = Math.max(1, Math.round(frame.clientHeight));
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    var ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    var off = document.createElement("canvas");
+    off.width = d.gridWidth;
+    off.height = d.gridHeight;
+    var offCtx = off.getContext("2d");
+    var vmin = d.range.min, vmax = d.range.max;
+    var rasterMode = mode === "overlay" ? "overlay" : "opaque";
+    offCtx.putImageData(rasterDepthBitmap(d, rasterMode, vmin, vmax), 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    if (mode === "split") {
+      var g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, "#0c0e14");
+      g.addColorStop(1, "#080a0f");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, w, h);
+    }
+    var scale = Math.min(w / iw, h / ih);
+    var drawW = iw * scale, drawH = ih * scale;
+    var ox = (w - drawW) / 2, oy = (h - drawH) / 2;
+    ctx.imageSmoothingEnabled = true;
+    ctx.globalAlpha = mode === "overlay" ? opacity : 1;
+    ctx.drawImage(off, 0, 0, d.gridWidth, d.gridHeight, ox, oy, drawW, drawH);
+    ctx.globalAlpha = 1;
+    if (mode === "split") {
+      ctx.strokeStyle = "rgba(251, 146, 60, 0.15)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(ox + 0.5, oy + 0.5, drawW - 1, drawH - 1);
+    }
+    if (probe) {
+      var px = ox + (probe.x / iw) * drawW;
+      var py = oy + (probe.y / ih) * drawH;
+      ctx.beginPath();
+      ctx.arc(px, py, 11, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(15, 17, 23, 0.55)";
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.92)";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(251, 146, 60, 0.95)";
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(px - 16, py);
+      ctx.lineTo(px + 16, py);
+      ctx.moveTo(px, py - 16);
+      ctx.lineTo(px, py + 16);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(px, py, 3, 0, Math.PI * 2);
+      ctx.fillStyle = "#fb923c";
+      ctx.fill();
+    }
+  }
+
+  function repaintDepthViews() {
+    var slide = currentSlide();
+    if (!slide || !state.depthData) return;
+    var sz = imageSize(slide);
+    var probe = state.probe;
+    if (state.depthMode === "split" && refs.depthSplit) {
+      paintDepthToDisplay(refs.depthSplit.canvas, refs.depthSplit.frame, state.depthData, sz.w, sz.h, "split", 1, probe);
+      positionDepthTooltip(refs.depthSplit, sz.w, sz.h, probe);
+    }
+    if (state.depthMode === "overlay" && refs.depthOverlay) {
+      paintDepthToDisplay(refs.depthOverlay.canvas, refs.depthOverlay.frame, state.depthData, sz.w, sz.h, "overlay", state.depthOpacity, probe);
+      positionDepthTooltip(refs.depthOverlay, sz.w, sz.h, probe);
+    }
+    renderPhotoProbe(sz.w, sz.h);
+  }
+
+  function positionDepthTooltip(view, iw, ih, probe) {
+    if (!view || !view.tooltip) return;
+    if (!probe) {
+      view.tooltip.style.display = "none";
+      return;
+    }
+    view.tooltip.style.display = "";
+    view.tooltip.style.left = (probe.x / iw) * 100 + "%";
+    view.tooltip.style.top = (probe.y / ih) * 100 + "%";
+    if (view.tooltipValue) view.tooltipValue.textContent = formatDepthMeters(probe.depthM);
+  }
+
+  function renderPhotoProbe(iw, ih) {
+    if (!refs.probeSvg) return;
+    while (refs.probeSvg.firstChild) refs.probeSvg.removeChild(refs.probeSvg.firstChild);
+    var probe = state.probe;
+    if (!probe || !state.showDepth) {
+      refs.probeSvg.style.display = "none";
+      return;
+    }
+    refs.probeSvg.style.display = "";
+    var g = svgEl("g", { transform: "translate(" + probe.x + "," + probe.y + ")" });
+    g.appendChild(svgEl("circle", { cx: 0, cy: 0, r: 11, fill: "rgba(15,17,23,0.55)", stroke: "rgba(255,255,255,0.92)", "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+    g.appendChild(svgEl("line", { x1: -16, y1: 0, x2: 16, y2: 0, stroke: "rgba(251,146,60,0.95)", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }));
+    g.appendChild(svgEl("line", { x1: 0, y1: -16, x2: 0, y2: 16, stroke: "rgba(251,146,60,0.95)", "stroke-width": 1.5, "vector-effect": "non-scaling-stroke" }));
+    g.appendChild(svgEl("circle", { cx: 0, cy: 0, r: 3, fill: "#fb923c" }));
+    refs.probeSvg.appendChild(g);
+    refs.probeSvg.style.display = "";
+  }
+
+  function updateDepthLegend(d) {
+    if (!refs.depthSplit) return;
+    if (refs.depthSplit.chip) {
+      refs.depthSplit.chip.textContent = "~" + Math.round((d.validPixelRatio || 0) * 100) + "% кадра";
+    }
+    if (refs.depthSplit.rangeEl) {
+      refs.depthSplit.rangeEl.textContent = formatDepthRange(d.range.min, d.range.max);
+    }
+  }
+
+  function updateProbeBar() {
+    if (!refs.probeBar) return;
+    var readout = refs.probeBar.readout;
+    readout.innerHTML = "";
+    if (state.depthLoading) {
+      var s = document.createElement("span");
+      s.className = "depth-probe-bar__status depth-probe-bar__status--loading";
+      s.textContent = "Загрузка карты…";
+      readout.appendChild(s);
+      return;
+    }
+    if (state.depthError) {
+      var e = document.createElement("span");
+      e.className = "depth-probe-bar__status depth-probe-bar__status--error";
+      e.textContent = state.depthError;
+      readout.appendChild(e);
+      return;
+    }
+    if (state.probe) {
+      var m = document.createElement("div");
+      m.className = "depth-probe-bar__measure";
+      m.innerHTML =
+        '<span class="depth-probe-bar__measure-label">Расстояние</span>' +
+        '<span class="depth-probe-bar__depth">' + formatDepthMeters(state.probe.depthM) + "</span>" +
+        '<span class="depth-probe-bar__coords">(' + state.probe.x + ", " + state.probe.y + ")</span>";
+      readout.appendChild(m);
+      return;
+    }
+    var idle = document.createElement("span");
+    idle.className = "depth-probe-bar__status";
+    idle.textContent = "Наведите на фото или карту глубины";
+    readout.appendChild(idle);
+  }
+
+  function setProbe(probe) {
+    state.probe = probe;
+    updateProbeBar();
+    repaintDepthViews();
+  }
+
+  function layoutDepthUI() {
+    var depthFile = depthFileFor(currentSlide());
+    var active = state.showDepth && depthFile;
+    if (refs.probeBar) refs.probeBar.root.classList.toggle("is-visible", !!active);
+    if (refs.vizDual) refs.vizDual.classList.toggle("viz-dual--single", !active || state.depthMode === "overlay");
+    if (refs.depthCol) refs.depthCol.classList.toggle("is-visible", !!active && state.depthMode === "split");
+    if (refs.annotationStage) refs.annotationStage.classList.toggle("annotation-stage--depth", !!active);
+    if (refs.depthOverlay && refs.depthOverlay.root) {
+      refs.depthOverlay.root.style.display = active && state.depthMode === "overlay" ? "" : "none";
+    }
+    if (refs.probeBar && refs.probeBar.opacityWrap) {
+      refs.probeBar.opacityWrap.classList.toggle("is-visible", active && state.depthMode === "overlay");
+    }
+    if (refs.probeBar && refs.probeBar.splitBtn && refs.probeBar.overlayBtn) {
+      refs.probeBar.splitBtn.classList.toggle("depth-mode-btn--on", state.depthMode === "split");
+      refs.probeBar.overlayBtn.classList.toggle("depth-mode-btn--on", state.depthMode === "overlay");
+    }
+  }
+
+  function observeDepthFrame(frame) {
+    if (typeof ResizeObserver === "undefined" || !frame) return;
+    var ro = new ResizeObserver(function () { repaintDepthViews(); });
+    ro.observe(frame);
+    depthResizeObs.push(ro);
+  }
+
+  function buildDepthView(compact) {
+    var view = document.createElement("div");
+    view.className = "depth-view" + (compact ? " depth-view--compact" : "");
+    var out = { root: view, frame: null, canvas: null, tooltip: null, tooltipValue: null, chip: null, rangeEl: null };
+    if (!compact) {
+      var head = document.createElement("div");
+      head.className = "depth-view__head";
+      head.innerHTML =
+        '<div class="depth-view__head-text">' +
+        '<span class="depth-view__badge">Z</span>' +
+        '<div><span class="depth-view__title">Карта глубины</span>' +
+        '<span class="depth-view__subtitle">расстояние до камеры · метры</span></div></div>';
+      out.chip = document.createElement("span");
+      out.chip.className = "depth-view__chip";
+      out.chip.textContent = "~0% кадра";
+      head.appendChild(out.chip);
+      view.appendChild(head);
+    }
+    out.frame = document.createElement("div");
+    out.frame.className = "depth-view__frame" + (compact ? " depth-view__frame--overlay" : " depth-view__frame--split");
+    out.canvas = document.createElement("canvas");
+    out.canvas.className = "depth-view__canvas";
+    out.tooltip = document.createElement("div");
+    out.tooltip.className = "depth-view__tooltip";
+    out.tooltip.style.display = "none";
+    out.tooltipValue = document.createElement("span");
+    out.tooltipValue.className = "depth-view__tooltip-value";
+    out.tooltip.appendChild(out.tooltipValue);
+    out.frame.appendChild(out.canvas);
+    out.frame.appendChild(out.tooltip);
+    view.appendChild(out.frame);
+    if (!compact) {
+      var footer = document.createElement("div");
+      footer.className = "depth-view__footer";
+      var wrap = document.createElement("div");
+      wrap.className = "depth-view__legend-wrap";
+      var leg = document.createElement("div");
+      leg.className = "depth-view__legend";
+      leg.setAttribute("aria-hidden", "true");
+      var nearWord = document.createElement("span");
+      nearWord.className = "depth-view__legend-word";
+      nearWord.textContent = "ближе";
+      leg.appendChild(nearWord);
+      var bar = document.createElement("div");
+      bar.className = "depth-view__legend-bar";
+      for (var i = 0; i < 32; i++) {
+        var rgb = depthToRgb(i / 31);
+        var step = document.createElement("span");
+        step.className = "depth-view__legend-step";
+        step.style.background = "rgb(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + ")";
+        bar.appendChild(step);
+      }
+      leg.appendChild(bar);
+      var farWord = document.createElement("span");
+      farWord.className = "depth-view__legend-word";
+      farWord.textContent = "дальше";
+      leg.appendChild(farWord);
+      wrap.appendChild(leg);
+      out.rangeEl = document.createElement("p");
+      out.rangeEl.className = "depth-view__range";
+      wrap.appendChild(out.rangeEl);
+      footer.appendChild(wrap);
+      var hint = document.createElement("p");
+      hint.className = "depth-view__hint";
+      hint.textContent = "Шахматный фон — нет данных. Наведите на цветную область коровы.";
+      footer.appendChild(hint);
+      view.appendChild(footer);
+    }
+    return out;
+  }
+
+  function buildDepthProbeBar() {
+    var bar = document.createElement("div");
+    bar.className = "depth-probe-bar";
+    var left = document.createElement("div");
+    left.className = "depth-probe-bar__left";
+    left.innerHTML = '<span class="depth-probe-bar__label">Глубина</span>';
+    var modes = document.createElement("div");
+    modes.className = "depth-probe-bar__modes";
+    modes.setAttribute("role", "group");
+    modes.setAttribute("aria-label", "Режим отображения");
+    var splitBtn = document.createElement("button");
+    splitBtn.type = "button";
+    splitBtn.className = "depth-mode-btn depth-mode-btn--on";
+    splitBtn.textContent = "Рядом";
+    var overlayBtn = document.createElement("button");
+    overlayBtn.type = "button";
+    overlayBtn.className = "depth-mode-btn";
+    overlayBtn.textContent = "Наложение";
+    modes.appendChild(splitBtn);
+    modes.appendChild(overlayBtn);
+    left.appendChild(modes);
+    var opacityWrap = document.createElement("label");
+    opacityWrap.className = "depth-probe-bar__opacity";
+    var op = document.createElement("input");
+    op.type = "range";
+    op.min = 15;
+    op.max = 85;
+    op.value = 50;
+    op.className = "depth-range";
+    op.title = "Прозрачность";
+    var opVal = document.createElement("span");
+    opVal.className = "depth-probe-bar__opacity-val";
+    opVal.textContent = "50%";
+    opacityWrap.appendChild(op);
+    opacityWrap.appendChild(opVal);
+    left.appendChild(opacityWrap);
+    bar.appendChild(left);
+    var readout = document.createElement("div");
+    readout.className = "depth-probe-bar__readout";
+    bar.appendChild(readout);
+    splitBtn.addEventListener("click", function () {
+      state.depthMode = "split";
+      layoutDepthUI();
+      if (state.showDepth) renderSlideKeepDepth();
+    });
+    overlayBtn.addEventListener("click", function () {
+      state.depthMode = "overlay";
+      layoutDepthUI();
+      if (state.showDepth) renderSlideKeepDepth();
+    });
+    op.addEventListener("input", function () {
+      state.depthOpacity = op.value / 100;
+      opVal.textContent = Math.round(state.depthOpacity * 100) + "%";
+      repaintDepthViews();
+    });
+    return { root: bar, readout: readout, splitBtn: splitBtn, overlayBtn: overlayBtn, opacityWrap: opacityWrap, op: op, opVal: opVal };
+  }
+
+  function handleProbePointer(e, frameEl) {
+    if (!state.showDepth || !state.depthData) return;
+    var slide = currentSlide();
+    if (!slide) return;
+    var sz = imageSize(slide);
+    var c = clientToImageCoords(e.clientX, e.clientY, frameEl.getBoundingClientRect(), sz.w, sz.h);
+    if (!c) { setProbe(null); return; }
+    var depthM = sampleDepthAtImage(state.depthData, c.x, c.y, sz.w, sz.h);
+    if (depthM == null) { setProbe(null); return; }
+    setProbe({ x: c.x, y: c.y, depthM: depthM });
   }
 
   // ── Full render of current slide ──────────────────────────────────────────
@@ -379,10 +748,9 @@
     refs.title.innerHTML = "Кадр <strong>" + escapeHtml(slide.key.split("/").pop()) + "</strong> · " + (state.index + 1) + " / " + slides.length;
 
     // Stage image
-    refs.stageFrame.style.setProperty("--pkg-aspect", sz.w + " / " + sz.h);
-    refs.depthWrap.style.setProperty("--pkg-aspect", sz.w + " / " + sz.h);
     refs.img.src = slide.url;
     refs.svg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
+    if (refs.probeSvg) refs.probeSvg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
 
     // CVAT link
     var cvat = slide.gt && slide.gt.cvat_link;
@@ -393,12 +761,11 @@
     var depthFile = depthFileFor(slide);
     refs.depthToggle.disabled = !depthFile;
     state.depthData = null;
-
-    refs.dual.classList.remove("has-depth-split");
-    refs.depthPane.style.display = "none";
-    refs.depthCanvasOverlay.style.display = "none";
-
-    if (refs.depthControls) refs.depthControls.style.display = (state.showDepth && depthFile) ? "" : "none";
+    state.depthLoading = false;
+    state.depthError = null;
+    setProbe(null);
+    layoutDepthUI();
+    updateProbeBar();
 
     renderOverlay(refs.svg, slide);
     renderSide(slide);
@@ -406,33 +773,40 @@
     syncToggles();
 
     if (state.showDepth && depthFile) applyDepth(depthFile);
+    else renderPhotoProbe(sz.w, sz.h);
   }
 
   function applyDepth(depthFile) {
-    var url = root.getAttribute("data-depth-base") + depthFile;
+    if (!depthFile) return;
+    var url = depthNpyUrl(depthFile);
+    state.depthLoading = true;
+    state.depthError = null;
+    state.depthData = null;
+    updateProbeBar();
+    layoutDepthUI();
     loadDepth(url).then(function (d) {
+      state.depthLoading = false;
+      if (!state.showDepth || depthFileFor(currentSlide()) !== depthFile) return;
+      delete d._bitmap;
+      delete d._bitmapKey;
       state.depthData = d;
-      if (!state.showDepth) return;
-      if (state.depthMode === "split") {
-        refs.dual.classList.add("has-depth-split");
-        refs.depthPane.style.display = "";
-        refs.depthCanvasOverlay.style.display = "none";
-        paintDepthCanvas(refs.depthCanvas, d, "opaque");
-        updateDepthRangeText(d);
-      } else {
-        refs.dual.classList.remove("has-depth-split");
-        refs.depthPane.style.display = "none";
-        refs.depthCanvasOverlay.style.display = "";
-        refs.depthCanvasOverlay.style.opacity = state.depthOpacity;
-        paintDepthCanvas(refs.depthCanvasOverlay, d, "overlay");
+      updateDepthLegend(d);
+      layoutDepthUI();
+      updateProbeBar();
+      repaintDepthViews();
+    }).catch(function (err) {
+      console.warn("Depth map load failed:", url, err);
+      state.depthLoading = false;
+      state.depthError = "Не удалось загрузить карту";
+      state.depthData = null;
+      if (depthFileFor(currentSlide()) === depthFile) {
+        refs.depthToggle.disabled = true;
+        state.showDepth = false;
+        syncToggles();
       }
-    }).catch(function () {
-      refs.depthToggle.disabled = true;
+      layoutDepthUI();
+      updateProbeBar();
     });
-  }
-
-  function updateDepthRangeText(d) {
-    if (refs.depthRange) refs.depthRange.textContent = d.range.min.toFixed(2) + "–" + d.range.max.toFixed(2) + " м";
   }
 
   function renderFilmstrip() {
@@ -493,7 +867,9 @@
       if (state.showDepth && state.depthData) {
         var dc = document.createElement("canvas");
         dc.width = state.depthData.gridWidth; dc.height = state.depthData.gridHeight;
-        dc.getContext("2d").putImageData(rasterDepth(state.depthData, state.depthMode === "overlay" ? "overlay" : "opaque"), 0, 0);
+        var vmin = state.depthData.range.min, vmax = state.depthData.range.max;
+        var mode = state.depthMode === "overlay" ? "overlay" : "opaque";
+        dc.getContext("2d").putImageData(rasterDepthBitmap(state.depthData, mode, vmin, vmax), 0, 0);
         if (state.depthMode === "overlay") { ctx.globalAlpha = state.depthOpacity; ctx.drawImage(dc, 0, 0, sz.w, sz.h); ctx.globalAlpha = 1; }
       }
       // Draw SVG overlay on top by serializing it.
@@ -530,9 +906,12 @@
         if (f) applyDepth(f);
       }
       if (key === "showDepth" && !state.showDepth) {
-        refs.dual.classList.remove("has-depth-split");
-        refs.depthPane.style.display = "none";
-        refs.depthCanvasOverlay.style.display = "none";
+        state.depthData = null;
+        state.depthLoading = false;
+        state.depthError = null;
+        setProbe(null);
+        layoutDepthUI();
+        updateProbeBar();
       }
     });
     refs.toggles[key] = btn;
@@ -587,72 +966,80 @@
     tb.appendChild(prev); tb.appendChild(next);
     root.appendChild(tb);
 
-    // Dual layout
-    refs.dual = document.createElement("div"); refs.dual.className = "pkg-viz__dual";
+    refs.body = document.createElement("div");
+    refs.body.className = "pkg-viz__body";
 
-    // Photo stage
-    var stage = document.createElement("div"); stage.className = "pkg-stage";
-    refs.stageFrame = document.createElement("div"); refs.stageFrame.className = "pkg-stage__frame";
-    refs.img = document.createElement("img"); refs.img.className = "pkg-stage__img"; refs.img.alt = "";
+    refs.canvasCol = document.createElement("div");
+    refs.canvasCol.className = "pkg-viz__canvas-col";
+
+    refs.probeBar = buildDepthProbeBar();
+    refs.canvasCol.appendChild(refs.probeBar.root);
+
+    refs.vizDual = document.createElement("div");
+    refs.vizDual.className = "viz-dual viz-dual--single";
+
+    refs.photoCol = document.createElement("div");
+    refs.photoCol.className = "viz-dual__photo";
+
+    refs.annotationStage = document.createElement("div");
+    refs.annotationStage.className = "annotation-stage";
+
+    var stage = document.createElement("div");
+    stage.className = "pkg-stage";
+    refs.stageFrame = document.createElement("div");
+    refs.stageFrame.className = "pkg-stage__frame";
+    refs.img = document.createElement("img");
+    refs.img.className = "pkg-stage__img";
+    refs.img.alt = "";
+    refs.img.addEventListener("load", function () { repaintDepthViews(); });
+    refs.depthOverlay = buildDepthView(true);
+    refs.depthOverlay.root.style.display = "none";
     refs.svg = svgEl("svg", { class: "pkg-stage__svg", preserveAspectRatio: "xMidYMid meet" });
-    refs.depthCanvasOverlay = document.createElement("canvas"); refs.depthCanvasOverlay.className = "pkg-stage__depth-canvas"; refs.depthCanvasOverlay.style.display = "none";
+    refs.probeSvg = svgEl("svg", { class: "annotation-stage__probe-svg", preserveAspectRatio: "xMidYMid meet" });
     refs.stageFrame.appendChild(refs.img);
-    refs.stageFrame.appendChild(refs.depthCanvasOverlay);
     refs.stageFrame.appendChild(refs.svg);
+    refs.stageFrame.appendChild(refs.depthOverlay.root);
+    refs.stageFrame.appendChild(refs.probeSvg);
     stage.appendChild(refs.stageFrame);
-    // legend
-    var legend = document.createElement("div"); legend.className = "pkg-stage__legend";
-    legend.innerHTML = '<span><span class="dot" style="background:' + PALETTE.gt.point + '"></span>GT</span>' +
+    var legend = document.createElement("div");
+    legend.className = "pkg-stage__legend";
+    legend.innerHTML =
+      '<span><span class="dot" style="background:' + PALETTE.gt.point + '"></span>GT</span>' +
       '<span><span class="dot" style="background:' + PALETTE.inference.point + '"></span>Inference</span>';
     stage.appendChild(legend);
-    // probe pointer for depth
-    refs.stageFrame.addEventListener("pointermove", onProbeMove);
-    refs.stageFrame.addEventListener("pointerleave", function () { state.probe = null; if (refs.depthReadout) refs.depthReadout.textContent = "—"; });
-    refs.dual.appendChild(stage);
+    refs.annotationStage.appendChild(stage);
+    refs.photoCol.appendChild(refs.annotationStage);
 
-    // Depth split pane
-    refs.depthPane = document.createElement("div"); refs.depthPane.className = "pkg-depth-pane"; refs.depthPane.style.display = "none";
-    refs.depthWrap = document.createElement("div"); refs.depthWrap.className = "pkg-depth-pane__canvas-wrap";
-    refs.depthCanvas = document.createElement("canvas");
-    refs.depthWrap.appendChild(refs.depthCanvas);
-    refs.depthPane.appendChild(refs.depthWrap);
-    var dbar = document.createElement("div"); dbar.className = "pkg-depth-bar";
-    dbar.innerHTML = '<span class="pkg-depth-gradient"></span><span class="pkg-depth-range pkg-depth-readout"></span>';
-    refs.depthRange = dbar.querySelector(".pkg-depth-range");
-    refs.depthPane.appendChild(dbar);
-    refs.dual.appendChild(refs.depthPane);
+    refs.depthCol = document.createElement("div");
+    refs.depthCol.className = "viz-dual__depth";
+    refs.depthSplit = buildDepthView(false);
+    refs.depthCol.appendChild(refs.depthSplit.root);
+    refs.vizDual.appendChild(refs.photoCol);
+    refs.vizDual.appendChild(refs.depthCol);
+    refs.canvasCol.appendChild(refs.vizDual);
 
-    // Side panel
-    refs.side = document.createElement("div"); refs.side.className = "pkg-viz__side";
-    refs.dual.appendChild(refs.side);
+    refs.side = document.createElement("div");
+    refs.side.className = "pkg-viz__side";
+    refs.body.appendChild(refs.canvasCol);
+    refs.body.appendChild(refs.side);
+    root.appendChild(refs.body);
 
-    root.appendChild(refs.dual);
+    refs.strip = document.createElement("div");
+    refs.strip.className = "pkg-filmstrip";
+    refs.canvasCol.appendChild(refs.strip);
 
-    // Depth controls (mode + opacity + readout) — own block, not wiped by renderSide.
-    var dctl = document.createElement("div"); dctl.className = "pkg-viz__card mt-3"; dctl.style.display = "none";
-    dctl.innerHTML = '<div class="pkg-viz__card-title">Глубина</div>';
-    var modeRow = document.createElement("div"); modeRow.className = "pkg-depth-bar p-0";
-    var splitBtn = document.createElement("button"); splitBtn.type = "button"; splitBtn.className = "pkg-toggle on"; splitBtn.textContent = "Рядом";
-    var ovBtn = document.createElement("button"); ovBtn.type = "button"; ovBtn.className = "pkg-toggle"; ovBtn.textContent = "Наложение";
-    splitBtn.addEventListener("click", function () { state.depthMode = "split"; splitBtn.classList.add("on"); ovBtn.classList.remove("on"); if (state.showDepth) renderSlideKeepDepth(); });
-    ovBtn.addEventListener("click", function () { state.depthMode = "overlay"; ovBtn.classList.add("on"); splitBtn.classList.remove("on"); if (state.showDepth) renderSlideKeepDepth(); });
-    modeRow.appendChild(splitBtn); modeRow.appendChild(ovBtn);
-    dctl.appendChild(modeRow);
-    var opRow = document.createElement("div"); opRow.className = "pkg-depth-bar p-0";
-    var op = document.createElement("input"); op.type = "range"; op.min = 15; op.max = 85; op.value = 60;
-    op.addEventListener("input", function () { state.depthOpacity = op.value / 100; if (refs.depthCanvasOverlay) refs.depthCanvasOverlay.style.opacity = state.depthOpacity; });
-    opRow.appendChild(document.createTextNode("Прозр.")); opRow.appendChild(op);
-    dctl.appendChild(opRow);
-    var roRow = document.createElement("div"); roRow.className = "pkg-depth-bar p-0";
-    roRow.innerHTML = 'Под курсором: <span class="pkg-depth-readout">—</span>';
-    refs.depthReadout = roRow.querySelector(".pkg-depth-readout");
-    dctl.appendChild(roRow);
-    refs.depthControls = dctl;
-    root.appendChild(dctl);
+    function bindProbe(frame) {
+      frame.addEventListener("pointermove", function (e) { handleProbePointer(e, frame); });
+      frame.addEventListener("pointerleave", function () { setProbe(null); });
+    }
+    bindProbe(refs.stageFrame);
+    bindProbe(refs.depthSplit.frame);
+    bindProbe(refs.depthOverlay.frame);
+    observeDepthFrame(refs.depthSplit.frame);
+    observeDepthFrame(refs.depthOverlay.frame);
+    observeDepthFrame(refs.stageFrame);
 
-    // Filmstrip
-    refs.strip = document.createElement("div"); refs.strip.className = "pkg-filmstrip";
-    root.appendChild(refs.strip);
+    updateProbeBar();
 
     // Keyboard nav
     document.addEventListener("keydown", function (e) {
@@ -666,24 +1053,10 @@
   }
 
   function renderSlideKeepDepth() {
+    setProbe(null);
+    layoutDepthUI();
     var f = depthFileFor(currentSlide());
-    refs.dual.classList.remove("has-depth-split");
-    refs.depthPane.style.display = "none";
-    refs.depthCanvasOverlay.style.display = "none";
     if (f) applyDepth(f);
-  }
-
-  function onProbeMove(e) {
-    if (!state.showDepth || !state.depthData) return;
-    var rect = refs.stageFrame.getBoundingClientRect();
-    var sz = imageSize(currentSlide());
-    var c = clientToImageCoords(e.clientX, e.clientY, rect, sz.w, sz.h);
-    if (!c) { state.probe = null; if (refs.depthReadout) refs.depthReadout.textContent = "—"; return; }
-    // map image coords → depth grid coords
-    var gx = Math.round(c.x / sz.w * state.depthData.gridWidth);
-    var gy = Math.round(c.y / sz.h * state.depthData.gridHeight);
-    var v = sampleDepth(state.depthData, gx, gy);
-    if (refs.depthReadout) refs.depthReadout.textContent = v == null ? "нет данных" : v.toFixed(2) + " м (" + c.x + "," + c.y + ")";
   }
 
   function buildSlides(data) {
@@ -708,6 +1081,7 @@
     loading = true;
     root = document.getElementById("pkgViz");
     if (!root) { loading = false; return; }
+    depthBaseUrl = resolveDepthBase();
     try {
       blobMap = JSON.parse(document.getElementById("pkgBlobMap").textContent || "{}");
     } catch (e) { blobMap = {}; }

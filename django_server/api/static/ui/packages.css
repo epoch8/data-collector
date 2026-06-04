@@ -61,12 +61,29 @@
   color: var(--ui-accent);
 }
 
+/* Workspace: ширина контента как client-admin (workspace-inner, 96rem) */
+body.ui-body--pkg-ws .ui-content.container-xxl {
+  max-width: 96rem;
+  width: 100%;
+  padding-inline: clamp(1rem, 2.5vw, 2rem);
+}
+
+body.ui-body--pkg-ws .pkg-ws {
+  width: 100%;
+}
+
 /* ── Workspace layout ─────────────────────────────────────────────────────── */
 .pkg-ws {
   display: flex;
   gap: 0;
   align-items: flex-start;
-  --pkg-sidebar-w: 19rem;
+  --pkg-sidebar-w: min(88vw, 19rem);
+}
+
+@media (min-width: 1024px) {
+  .pkg-ws {
+    --pkg-sidebar-w: 19.5rem;
+  }
 }
 
 .pkg-ws__sidebar {
@@ -87,7 +104,7 @@
 .pkg-ws__main {
   flex: 1;
   min-width: 0;
-  padding-left: 1.25rem;
+  padding-left: clamp(0.75rem, 1.5vw, 1.25rem);
 }
 
 @media (max-width: 991.98px) {
