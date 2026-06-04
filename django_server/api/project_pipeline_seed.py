@@ -18,12 +18,6 @@ logger = logging.getLogger(__name__)
 _MOCK_GT = "mock_datapipe_annotations.json"
 _MOCK_INF = "mock_datapipe_inference.json"
 
-# В демо mock CVAT frame 0/2 не совпали с pose_1/pose_3 по имени файла.
-_MOCK_TEMPLATE_KEY_SWAP: dict[str, str] = {
-    "blobs/img_0001.jpg": "blobs/img_0003.jpg",
-    "blobs/img_0003.jpg": "blobs/img_0001.jpg",
-}
-
 
 def _records_by_blob_key(records: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     out: dict[str, dict[str, Any]] = {}
@@ -32,10 +26,6 @@ def _records_by_blob_key(records: list[dict[str, Any]]) -> dict[str, dict[str, A
         if isinstance(key, str) and key:
             out[key] = r
     return out
-
-
-def _template_blob_key(logical_path: str) -> str:
-    return _MOCK_TEMPLATE_KEY_SWAP.get(logical_path, logical_path)
 
 
 def mock_seed_enabled() -> bool:
@@ -139,9 +129,8 @@ def seed_package_pipeline(
     gt_n = inf_n = depth_n = 0
     for blob in images:
         key = blob.logical_path
-        tpl_key = _template_blob_key(key)
 
-        gt_t = gt_by_key.get(tpl_key)
+        gt_t = gt_by_key.get(key)
         if gt_t:
             ann = gt_t.get("annotation") if isinstance(gt_t.get("annotation"), dict) else {}
             pdb.insert_gt(
@@ -154,7 +143,7 @@ def seed_package_pipeline(
             )
             gt_n += 1
 
-        inf_t = inf_by_key.get(tpl_key)
+        inf_t = inf_by_key.get(key)
         if inf_t:
             inf_body = inf_t.get("inference") if isinstance(inf_t.get("inference"), dict) else {}
             dm = inf_t.get("depth_map") if isinstance(inf_t.get("depth_map"), dict) else {}

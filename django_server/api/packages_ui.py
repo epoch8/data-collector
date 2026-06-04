@@ -272,41 +272,10 @@ def _load_records(filename: str) -> list[dict[str, Any]]:
     return records if isinstance(records, list) else []
 
 
-def gt_annotations_for_package(project_id: str, package_id: str) -> list[dict[str, Any]]:
-    from . import project_db as pdb
-
-    rows = pdb.list_gt(project_id, package_id)
-    if rows:
-        return rows
-    return [
-        r
-        for r in _load_records("mock_datapipe_annotations.json")
-        if r.get("project_id") == project_id and r.get("package_id") == package_id
-    ]
-
-
-def inference_for_package(project_id: str, package_id: str) -> list[dict[str, Any]]:
-    from . import project_db as pdb
-
-    rows = pdb.list_inference(project_id, package_id)
-    if rows:
-        return rows
-    return [
-        r
-        for r in _load_records("mock_datapipe_inference.json")
-        if r.get("project_id") == project_id and r.get("package_id") == package_id
-    ]
-
-
 def has_visualisation(project_id: str, package_id: str) -> bool:
-    from . import project_db as pdb
+    from .viz_service import package_has_visualisation
 
-    if pdb.package_has_pipeline_data(project_id, package_id):
-        return True
-    return bool(
-        gt_annotations_for_package(project_id, package_id)
-        or inference_for_package(project_id, package_id),
-    )
+    return package_has_visualisation(project_id, package_id)
 
 
 def changelog_path() -> Path:

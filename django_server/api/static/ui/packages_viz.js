@@ -200,8 +200,8 @@
     g.appendChild(t);
   }
 
-  // ── Main controller ───────────────────────────────────────────────────────
-  var root, blobMap, slides = [], inited = false, loading = false;
+  // ── Main controller (config: collector/viz.json) ───────────────────────────
+  var root, blobMap, slides = [], vizConfig = null, inited = false, loading = false;
   var depthBaseUrl = "/ui/packages/depth/";
 
   function resolveDepthBase() {
@@ -216,43 +216,80 @@
     return resolveDepthBase() + filename;
   }
   var state = {
-    index: 0, showGt: false, showInference: true, showBoxes: false, showLabels: false,
-    showDepth: false, depthMode: "split", depthOpacity: 0.5, selected: null, probe: null,
-    depthData: null, depthLoading: false, depthError: null,
+    index: 0, layerVisible: {}, showBoxes: false, showLabels: false,
+    showDepth: false, depthLayerId: null, depthMode: "split", depthOpacity: 0.5,
+    selected: null, probe: null, depthData: null, depthLoading: false, depthError: null,
   };
   var depthResizeObs = [];
 
   function currentSlide() { return slides[state.index] || null; }
 
+  function overlayFromKorovas(record) {
+    if (!record) return null;
+    if (record.annotation && record.annotation.points) {
+      var a = record.annotation;
+      return { boxes: a.boxes || [], points: a.points || [], segments: [] };
+    }
+    var ia = record.inference && record.inference.annotation;
+    if (ia) {
+      return { boxes: ia.boxes || [], points: ia.keypoints || [], segments: ia.segments || [] };
+    }
+    return null;
+  }
+
+  function depthLayerConfig() {
+    var found = null;
+    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
+      if (lc.plugin === "depth_map") found = lc;
+    });
+    return found;
+  }
+
   function depthUrlFor(slide) {
-    if (!slide || !slide.inference) return null;
-    var inf = slide.inference;
-    var dm = inf.depth_map;
+    if (!slide || !vizConfig) return null;
+    var dlc = depthLayerConfig();
+    if (!dlc) return null;
+    var rec = slide.byLayer[dlc.id];
+    if (!rec) return null;
+    var dm = rec.depth_map;
     if (dm && dm.depth_url) return dm.depth_url;
     var asset = dm && dm.asset_path;
     if (asset) {
       if (asset.charAt(0) === "/") return asset;
       return depthNpyUrl(asset.split("/").pop());
     }
-    if (inf.source_export) return depthNpyUrl(inf.source_export.replace(/\.json$/i, "") + ".npy");
+    if (rec.source_export) return depthNpyUrl(rec.source_export.replace(/\.json$/i, "") + ".npy");
     return null;
   }
 
   function buildLayers(slide) {
     var layers = [];
-    if (slide.gt) {
-      var a = slide.gt.annotation || {};
-      layers.push({ id: "gt", palette: "gt", visible: state.showGt, boxes: a.boxes || [], points: a.points || [], segments: [] });
-    }
-    if (slide.inference) {
-      var ia = (slide.inference.inference && slide.inference.inference.annotation) || {};
-      layers.push({ id: "inf", palette: "inference", visible: state.showInference, boxes: ia.boxes || [], points: ia.keypoints || [], segments: ia.segments || [] });
-    }
+    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
+      if (lc.plugin !== "keypoint_korovas") return;
+      var rec = slide.byLayer[lc.id];
+      var ov = overlayFromKorovas(rec);
+      if (!ov) return;
+      layers.push({
+        id: lc.id,
+        palette: lc.palette || "inference",
+        label: lc.label || lc.id,
+        visible: !!state.layerVisible[lc.id],
+        boxes: ov.boxes,
+        points: ov.points,
+        segments: ov.segments,
+      });
+    });
     return layers;
   }
 
   function imageSize(slide) {
-    var sz = (slide.gt && slide.gt.image_size) || (slide.inference && slide.inference.image_size) || { width: 1024, height: 640 };
+    var sz = null;
+    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
+      if (sz) return;
+      var rec = slide.byLayer[lc.id];
+      if (rec && rec.image_size) sz = rec.image_size;
+    });
+    sz = sz || { width: 1024, height: 640 };
     return { w: sz.width || 1024, h: sz.height || 640 };
   }
 
@@ -342,7 +379,7 @@
       card.className = "pkg-viz__card";
       var title = document.createElement("div");
       title.className = "pkg-viz__card-title";
-      title.textContent = (layer.palette === "gt" ? "GT точки" : "Inference точки") + " (" + layer.points.length + ")";
+      title.textContent = (layer.label || layer.palette) + " (" + layer.points.length + ")";
       card.appendChild(title);
       var ul = document.createElement("ul");
       ul.className = "pkg-kp-list";
@@ -365,9 +402,15 @@
       box.appendChild(card);
     });
 
-    // Metrics (distances) from inference.
-    var inf = slide.inference && slide.inference.inference;
-    if (state.showInference && inf && inf.distances && Object.keys(inf.distances).length) {
+    // Metrics (distances) — слой inference из конфига.
+    var inf = null;
+    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
+      if (inf || lc.plugin !== "keypoint_korovas" || lc.palette !== "inference") return;
+      if (!state.layerVisible[lc.id]) return;
+      var rec = slide.byLayer[lc.id];
+      if (rec && rec.inference) inf = rec.inference;
+    });
+    if (inf && inf.distances && Object.keys(inf.distances).length) {
       var mcard = document.createElement("div");
       mcard.className = "pkg-viz__card";
       var mt = document.createElement("div");
@@ -393,7 +436,14 @@
   function syncToggles() {
     Object.keys(refs.toggles || {}).forEach(function (key) {
       var btn = refs.toggles[key];
-      if (btn) btn.classList.toggle("on", !!state[key]);
+      if (!btn) return;
+      if (key.indexOf("layer_") === 0) {
+        btn.classList.toggle("on", !!state.layerVisible[key.slice(6)]);
+      } else if (key === "showDepth") {
+        btn.classList.toggle("on", !!state.showDepth);
+      } else {
+        btn.classList.toggle("on", !!state[key]);
+      }
     });
   }
 
@@ -757,8 +807,13 @@
     refs.svg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
     if (refs.probeSvg) refs.probeSvg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
 
-    // CVAT link
-    var cvat = slide.gt && slide.gt.cvat_link;
+    // CVAT link (GT-слой keypoint_korovas)
+    var cvat = null;
+    (vizConfig && vizConfig.layers || []).forEach(function (lc) {
+      if (cvat || lc.plugin !== "keypoint_korovas" || lc.palette !== "gt") return;
+      var rec = slide.byLayer[lc.id];
+      if (rec && rec.cvat_link) cvat = rec.cvat_link;
+    });
     refs.cvat.style.display = cvat ? "" : "none";
     if (cvat) refs.cvat.href = cvat;
 
@@ -852,8 +907,7 @@
       exported_at: new Date().toISOString(),
       image_file: slide.key.split("/").pop(),
       manifest_blob: slide.key,
-      cow_keypoint_annotation: slide.gt || null,
-      cow_inference_result: slide.inference || null,
+      layers: slide.byLayer || {},
     };
     downloadBlob(new Blob([JSON.stringify(doc, null, 2)], { type: "application/json" }), (doc.image_file || "frame") + ".annotation.json");
   }
@@ -923,6 +977,20 @@
     return btn;
   }
 
+  function makeLayerToggle(layerId, label, dotColor) {
+    var key = "layer_" + layerId;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "pkg-toggle";
+    btn.innerHTML = (dotColor ? '<span class="pkg-toggle__dot" style="background:' + dotColor + '"></span>' : "") + label;
+    btn.addEventListener("click", function () {
+      state.layerVisible[layerId] = !state.layerVisible[layerId];
+      rerenderDynamic();
+    });
+    refs.toggles[key] = btn;
+    return btn;
+  }
+
   function buildSkeleton() {
     refs.toggles = {};
     root.innerHTML = "";
@@ -934,12 +1002,23 @@
     refs.title.className = "pkg-viz__title";
     tb.appendChild(refs.title);
 
-    tb.appendChild(makeToggle("showGt", "GT", PALETTE.gt.point));
-    tb.appendChild(makeToggle("showInference", "Inference", PALETTE.inference.point));
-    var sep1 = document.createElement("div"); sep1.className = "pkg-viz__toolbar-sep"; tb.appendChild(sep1);
+    var hasKp = false;
+    (vizConfig.layers || []).forEach(function (lc) {
+      if (lc.plugin === "keypoint_korovas") {
+        hasKp = true;
+        var pal = PALETTE[lc.palette] || PALETTE.inference;
+        tb.appendChild(makeLayerToggle(lc.id, lc.label || lc.id, pal.point));
+      } else if (lc.plugin === "depth_map") {
+        state.depthLayerId = lc.id;
+        refs.depthToggle = makeToggle("showDepth", lc.label || "Глубина");
+        tb.appendChild(refs.depthToggle);
+      }
+    });
+    if (hasKp) {
+      var sep1 = document.createElement("div"); sep1.className = "pkg-viz__toolbar-sep"; tb.appendChild(sep1);
+    }
     tb.appendChild(makeToggle("showBoxes", "BBox"));
     tb.appendChild(makeToggle("showLabels", "Подписи"));
-    refs.depthToggle = makeToggle("showDepth", "Глубина"); tb.appendChild(refs.depthToggle);
 
     var sep2 = document.createElement("div"); sep2.className = "pkg-viz__toolbar-sep"; tb.appendChild(sep2);
 
@@ -1008,9 +1087,13 @@
     stage.appendChild(refs.stageFrame);
     var legend = document.createElement("div");
     legend.className = "pkg-stage__legend";
-    legend.innerHTML =
-      '<span><span class="dot" style="background:' + PALETTE.gt.point + '"></span>GT</span>' +
-      '<span><span class="dot" style="background:' + PALETTE.inference.point + '"></span>Inference</span>';
+    var legHtml = "";
+    (vizConfig.layers || []).forEach(function (lc) {
+      if (lc.plugin !== "keypoint_korovas") return;
+      var pal = PALETTE[lc.palette] || PALETTE.inference;
+      legHtml += '<span><span class="dot" style="background:' + pal.point + '"></span>' + escapeHtml(lc.label || lc.id) + "</span>";
+    });
+    legend.innerHTML = legHtml;
     stage.appendChild(legend);
     refs.annotationStage.appendChild(stage);
     refs.photoCol.appendChild(refs.annotationStage);
@@ -1064,21 +1147,37 @@
     if (u) applyDepth(u);
   }
 
-  function buildSlides(data) {
+  function buildSlides(payload) {
+    var joinKey = payload.join_key || "manifest_blob_key";
     var byKey = {}, order = [];
-    (data.gt || []).forEach(function (r) {
-      var k = r.manifest_blob_key;
-      if (!byKey[k]) { byKey[k] = {}; order.push(k); }
-      byKey[k].gt = r;
+    (payload.layers || []).forEach(function (lc) {
+      (payload.data[lc.id] || []).forEach(function (r) {
+        var k = r[joinKey];
+        if (!k || !blobMap[k]) return;
+        if (!byKey[k]) {
+          byKey[k] = { byLayer: {} };
+          order.push(k);
+        }
+        byKey[k].byLayer[lc.id] = r;
+      });
     });
-    (data.inference || []).forEach(function (r) {
-      var k = r.manifest_blob_key;
-      if (!byKey[k]) { byKey[k] = {}; order.push(k); }
-      byKey[k].inference = r;
+    return order.map(function (k) {
+      return { key: k, url: blobMap[k], byLayer: byKey[k].byLayer };
     });
-    return order
-      .filter(function (k) { return blobMap[k]; })
-      .map(function (k) { return { key: k, url: blobMap[k], gt: byKey[k].gt || null, inference: byKey[k].inference || null }; });
+  }
+
+  function initLayerVisibility(payload) {
+    state.layerVisible = {};
+    state.showDepth = false;
+    state.depthLayerId = null;
+    (payload.layers || []).forEach(function (lc) {
+      if (lc.plugin === "depth_map") {
+        state.showDepth = !!lc.default_visible;
+        state.depthLayerId = lc.id;
+      } else if (lc.plugin === "keypoint_korovas") {
+        state.layerVisible[lc.id] = !!lc.default_visible;
+      }
+    });
   }
 
   function init() {
@@ -1093,8 +1192,15 @@
     var url = document.getElementById("pkgWorkspace").getAttribute("data-viz-url");
     fetch(url, { credentials: "include" })
       .then(function (r) { return r.json(); })
-      .then(function (data) {
-        slides = buildSlides(data);
+      .then(function (payload) {
+        if (!payload || !payload.layers || !payload.data) {
+          root.innerHTML = '<div class="ui-muted p-5 text-center">Нет конфигурации визуализации.</div>';
+          loading = false;
+          return;
+        }
+        vizConfig = payload;
+        initLayerVisibility(payload);
+        slides = buildSlides(payload);
         if (!slides.length) {
           root.innerHTML = '<div class="ui-muted p-5 text-center">Нет кадров с разметкой для этого пакета.</div>';
           inited = true; loading = false; return;

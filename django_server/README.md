@@ -41,7 +41,7 @@ python manage.py runserver
 
 - **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
 - **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через обычный POST-форму на Django-вью (`package_manifest_save`, переиспользует `package_admin_service.patch_manifest` + дописывает `field_changelog.json`).
-- **Визуализация** — `static/ui/packages_viz.js`: SVG-оверлей keypoints/bbox/segments, карта глубины из `.npy` (палитра, режимы «рядом/наложение», проба под курсором), фильмстрип, ссылка в CVAT, экспорт PNG/JSON. Данные — из **per-project SQLite** (`project_db/<project_id>/pipeline.sqlite3`, таблицы `cow_keypoint_annotation`, `cow_inference_result`). После commit пакета в local-режиме автоматически копируются заглушки из `datapipe_test/`; `.npy` кладутся в blobs пакета (`blobs/img_0001_depth.npy` рядом с фото). Ручной сид: `python manage.py seed_package_pipeline <project_id> <package_id> [--force]`.
+- **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`. UI: `packages_viz.js` читает `/viz-data/`. Вкладка видна, если есть конфиг и строки в БД для пакета. Пример: `examples/collector/viz.json`; в кэш проекта: `python manage.py install_vis_config_example <project_id>`. Сид заглушек: `python manage.py seed_package_pipeline <project_id> <package_id>`. Спека: `specs/collector-vis-config.md`.
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
 

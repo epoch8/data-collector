@@ -747,12 +747,19 @@ def package_viz_data(request, project_id: str, package_id: str):
     denied = _forbid_package_project(request, project_id)
     if denied is not None:
         return denied
-    return JsonResponse(
-        {
-            "gt": pui.gt_annotations_for_package(project_id, package_id),
-            "inference": pui.inference_for_package(project_id, package_id),
-        },
-    )
+    from .project_git import GitProjectError
+    from .viz_service import build_package_viz_payload
+
+    try:
+        payload = build_package_viz_payload(project_id, package_id)
+    except GitProjectError as e:
+        return JsonResponse({"error": e.message, "code": e.code}, status=502)
+    if payload is None:
+        return JsonResponse(
+            {"error": "Нет collector/viz.json или данных pipeline для пакета."},
+            status=404,
+        )
+    return JsonResponse(payload)
 
 
 @packages_ui_required

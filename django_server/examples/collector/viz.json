@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "join_key": "manifest_blob_key",
+  "layers": [
+    {
+      "id": "gt",
+      "label": "GT",
+      "plugin": "keypoint_korovas",
+      "table": "cow_keypoint_annotation",
+      "palette": "gt",
+      "default_visible": false
+    },
+    {
+      "id": "inference",
+      "label": "Inference",
+      "plugin": "keypoint_korovas",
+      "table": "cow_inference_result",
+      "palette": "inference",
+      "default_visible": true
+    },
+    {
+      "id": "depth",
+      "label": "Глубина",
+      "plugin": "depth_map",
+      "table": "cow_inference_result",
+      "default_visible": false
+    }
+  ]
+}

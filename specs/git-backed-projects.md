@@ -55,7 +55,7 @@ my-project/
   collector/
     config.json       # полный Project JSON (fields, flow, ui, admin_ui, …)
     media/            # статика для конфига (примеры ракурсов и т.д.)
-    vis/              # (позже) manifest плагинов визуализации
+    viz.json          # визуализация: table + plugin (см. specs/collector-vis-config.md)
 ```
 
 ### `collector/config.json`
