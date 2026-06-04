@@ -428,6 +428,20 @@ def _select_project(request, projects: list[Project]):
     return None, "", None
 
 
+def package_list_legacy_redirect(request):
+    """Старый URL React SPA: /ui/packages/list → /ui/packages/."""
+    url = reverse("ui_package_list")
+    if request.GET:
+        url = f"{url}?{request.GET.urlencode()}"
+    return redirect(url)
+
+
+@packages_ui_required
+def package_workspace_legacy_redirect(request, project_id: str, package_id: str):
+    """Старый URL React SPA: /ui/packages/projects/…/packages/… → workspace."""
+    return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+
 @packages_ui_required
 def package_list(request):
     projects = list(_package_projects_queryset(request))

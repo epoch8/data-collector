@@ -1,5 +1,7 @@
 import json
+import logging
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import LoginView
 from django.http import JsonResponse
@@ -17,6 +19,8 @@ from .ui_access import (
     ui_login_redirect_target,
     ui_logout_clear_collector_session,
 )
+
+logger = logging.getLogger(__name__)
 
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
@@ -67,8 +71,12 @@ def ui_firebase_login(request):
         return JsonResponse({"detail": "Нужен id_token."}, status=400)
     try:
         claims = verify_id_token(raw)
-    except Exception:
-        return JsonResponse({"detail": "Неверный или просроченный токен Firebase."}, status=401)
+    except Exception as exc:
+        logger.warning("Firebase UI login: token rejected: %s", exc, exc_info=True)
+        detail = "Неверный или просроченный токен Firebase."
+        if settings.DEBUG:
+            detail = f"{detail} ({type(exc).__name__}: {exc})"
+        return JsonResponse({"detail": detail}, status=401)
     uid = claims.get("uid") or claims.get("sub")
     if not uid:
         return JsonResponse({"detail": "В токене нет uid."}, status=401)

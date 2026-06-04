@@ -28,7 +28,13 @@ urlpatterns = [
     ),
     path("projects/<str:project_id>/media/", views_ui.project_media, name="ui_project_media"),
     path("projects/<str:project_id>/delete/", views_ui.project_delete, name="ui_project_delete"),
+    path("packages/list", views_ui.package_list_legacy_redirect, name="ui_package_list_legacy"),
     path("packages/", views_ui.package_list, name="ui_package_list"),
+    path(
+        "packages/projects/<str:project_id>/packages/<str:package_id>/",
+        views_ui.package_workspace_legacy_redirect,
+        name="ui_package_workspace_legacy",
+    ),
     path("packages/depth/<str:filename>", views_ui.package_depth_npy, name="ui_package_depth_npy"),
     path(
         "projects/<str:project_id>/packages/<str:package_id>/",

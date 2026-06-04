@@ -165,7 +165,16 @@ elif _firebase_flag in ("1", "true", "yes", "on"):
 else:
     FIREBASE_AUTH_ENABLED = _firebase_has_credentials
 
-# Firebase Web SDK (вход клиента на /ui/login/)
+# Проверка ID token (Admin SDK): отзыв токенов — опционально (часто ломает dev без сети к Google).
+FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
+FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
+
+# Firebase Web SDK (вход клиента на /ui/login/) — тот же проект, что ios в lib/firebase_options.dart.
 FIREBASE_WEB_CONFIG = {
     "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c"),
     "authDomain": os.environ.get(
@@ -173,6 +182,16 @@ FIREBASE_WEB_CONFIG = {
         "data-collector-dev-e8.firebaseapp.com",
     ),
     "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "data-collector-dev-e8"),
+    "storageBucket": os.environ.get(
+        "FIREBASE_WEB_STORAGE_BUCKET",
+        "data-collector-dev-e8.firebasestorage.app",
+    ),
+    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "181572319604"),
+    # Зарегистрируйте Web-приложение в Firebase Console → App ID с суффиксом :web:
+    "appId": os.environ.get(
+        "FIREBASE_WEB_APP_ID",
+        "1:181572319604:ios:0000000000000000000000",
+    ),
 }
 
 ASSETS_CONFIG_ROOT = Path(

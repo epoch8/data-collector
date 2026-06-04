@@ -67,7 +67,7 @@ def ui_login_redirect_target(request) -> str:
     if is_ui_staff(request):
         return "/ui/projects/"
     if get_ui_collector(request) is not None:
-        return "/ui/packages/list"
+        return "/ui/packages/"
     return "/ui/login/"
 
 
