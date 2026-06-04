@@ -1,4 +1,8 @@
-"""Заглушки pipeline: datapipe_test → project SQLite + depth blobs в пакете."""
+"""Dev-заглушки pipeline: datapipe_test → project SQLite + *_depth.npy в пакете.
+
+Включается только при PROJECT_PIPELINE_MOCK_SEED=1 (см. maybe_seed_on_commit после commit).
+Мобильное приложение depth не отправляет — файлы появляются только из этого сида.
+"""
 
 from __future__ import annotations
 

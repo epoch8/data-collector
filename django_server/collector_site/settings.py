@@ -133,14 +133,12 @@ PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INT
 
 # Per-project SQLite: inference / GT (pipeline.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
 PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
-# После commit пакета — копировать datapipe_test в БД проекта (local по умолчанию).
+# После commit пакета — dev-заглушки из datapipe_test (GT/inference + *_depth.npy). По умолчанию выкл.
 _pipeline_mock = os.environ.get("PROJECT_PIPELINE_MOCK_SEED", "").strip().lower()
 if _pipeline_mock in ("1", "true", "yes"):
     PROJECT_PIPELINE_MOCK_SEED = True
-elif _pipeline_mock in ("0", "false", "no"):
-    PROJECT_PIPELINE_MOCK_SEED = False
 else:
-    PROJECT_PIPELINE_MOCK_SEED = DJANGO_ENV == "local"
+    PROJECT_PIPELINE_MOCK_SEED = False
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

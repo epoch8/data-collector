@@ -7,6 +7,7 @@
   var PALETTE = {
     gt: { box: "#22c55e", boxFill: "rgba(34,197,94,0.08)", point: "#f59e0b", segment: "#c084fc", label: "GT" },
     inference: { box: "#06b6d4", boxFill: "rgba(6,182,212,0.08)", point: "#3b82f6", segment: "#8b5cf6", label: "Inference" },
+    yolo: { box: "#a855f7", boxFill: "rgba(168,85,247,0.12)", point: "#a855f7", segment: "#a855f7", label: "YOLO" },
   };
 
   // ── Depth colormap (port of depth-colormap.ts) ────────────────────────────
@@ -224,6 +225,23 @@
 
   function currentSlide() { return slides[state.index] || null; }
 
+  function normalizeBlobKey(k) {
+    return String(k || "").replace(/\\/g, "/").trim();
+  }
+
+  function blobUrlForKey(k) {
+    var nk = normalizeBlobKey(k);
+    if (!nk) return null;
+    if (blobMap[nk]) return blobMap[nk];
+    var name = nk.split("/").pop();
+    if (!name) return null;
+    var keys = Object.keys(blobMap || {});
+    for (var i = 0; i < keys.length; i++) {
+      if (keys[i].split("/").pop() === name) return blobMap[keys[i]];
+    }
+    return null;
+  }
+
   function overlayFromKorovas(record) {
     if (!record) return null;
     if (record.annotation && record.annotation.points) {
@@ -235,6 +253,73 @@
       return { boxes: ia.boxes || [], points: ia.keypoints || [], segments: ia.segments || [] };
     }
     return null;
+  }
+
+  function parseClassId(v) {
+    if (v == null || v === "") return null;
+    var n = parseInt(String(v), 10);
+    return isNaN(n) ? null : n;
+  }
+
+  /** classes + include_classes из collector/viz.json (слой yolo_detection). */
+  function buildYoloClassMap(lc) {
+    var names = {};
+    var colors = {};
+    var include = null;
+    if (!lc) return { names: names, colors: colors, include: include };
+
+    if (lc.include_classes && Array.isArray(lc.include_classes)) {
+      include = {};
+      lc.include_classes.forEach(function (id) {
+        var n = parseClassId(id);
+        if (n != null) include[n] = true;
+      });
+    }
+
+    if (lc.classes && typeof lc.classes === "object") {
+      Object.keys(lc.classes).forEach(function (key) {
+        var n = parseClassId(key);
+        if (n == null) return;
+        var ent = lc.classes[key];
+        if (typeof ent === "string") {
+          names[n] = ent;
+        } else if (ent && typeof ent === "object") {
+          if (ent.name) names[n] = String(ent.name);
+          else if (ent.label) names[n] = String(ent.label);
+          if (ent.color) colors[n] = String(ent.color);
+        }
+      });
+    }
+
+    return { names: names, colors: colors, include: include };
+  }
+
+  function overlayFromYolo(record, lc) {
+    if (!record || !record.detections) return null;
+    var cmap = buildYoloClassMap(lc);
+    var boxes = [];
+    (record.detections.boxes || []).forEach(function (b) {
+      var cid = parseClassId(b.class_id != null ? b.class_id : b.label);
+      if (cmap.include && cid != null && !cmap.include[cid]) return;
+      if (cmap.include && cid == null) return;
+
+      var name = cid != null && cmap.names[cid] != null
+        ? cmap.names[cid]
+        : (b.label != null ? String(b.label) : (cid != null ? String(cid) : "?"));
+      var lbl = name;
+      if (b.confidence != null) lbl += " " + Math.round(b.confidence * 100) + "%";
+
+      var stroke = cid != null && cmap.colors[cid] ? cmap.colors[cid] : null;
+      boxes.push({
+        xtl: b.xtl, ytl: b.ytl, xbr: b.xbr, ybr: b.ybr,
+        label: lbl,
+        class_id: cid,
+        confidence: b.confidence,
+        color: stroke,
+        fill: stroke ? stroke.replace(/[\d.]+\)$/, "0.12)") : null,
+      });
+    });
+    return { boxes: boxes, points: [], segments: [] };
   }
 
   function depthLayerConfig() {
@@ -265,13 +350,15 @@
   function buildLayers(slide) {
     var layers = [];
     (vizConfig && vizConfig.layers || []).forEach(function (lc) {
-      if (lc.plugin !== "keypoint_korovas") return;
       var rec = slide.byLayer[lc.id];
-      var ov = overlayFromKorovas(rec);
+      var ov = null;
+      if (lc.plugin === "keypoint_korovas") ov = overlayFromKorovas(rec);
+      else if (lc.plugin === "yolo_detection") ov = overlayFromYolo(rec, lc);
+      else return;
       if (!ov) return;
       layers.push({
         id: lc.id,
-        palette: lc.palette || "inference",
+        palette: lc.palette || (lc.plugin === "yolo_detection" ? "yolo" : "inference"),
         label: lc.label || lc.id,
         visible: !!state.layerVisible[lc.id],
         boxes: ov.boxes,
@@ -307,8 +394,15 @@
       if (state.showBoxes) {
         layer.boxes.forEach(function (box) {
           var w = Math.max(0, box.xbr - box.xtl), h = Math.max(0, box.ybr - box.ytl);
-          g.appendChild(svgEl("rect", { x: box.xtl, y: box.ytl, width: w, height: h, fill: p.boxFill, stroke: p.box, "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
-          if (state.showLabels) yoloLabel(g, box.xtl, box.ytl, box.label || p.label, p.box, "start", "above");
+          var stroke = box.color || p.box;
+          var fill = p.boxFill;
+          if (box.color && box.color.indexOf("#") === 0 && box.color.length === 7) {
+            fill = box.color + "20";
+          } else if (box.fill) {
+            fill = box.fill;
+          }
+          g.appendChild(svgEl("rect", { x: box.xtl, y: box.ytl, width: w, height: h, fill: fill, stroke: stroke, "stroke-width": 2, "vector-effect": "non-scaling-stroke" }));
+          if (state.showLabels) yoloLabel(g, box.xtl, box.ytl, box.label || p.label, stroke, "start", "above");
         });
       }
 
@@ -373,31 +467,42 @@
     var layers = buildLayers(slide);
 
     layers.forEach(function (layer) {
-      if (!layer.visible || !layer.points.length) return;
+      if (!layer.visible) return;
+      if (!layer.points.length && !layer.boxes.length) return;
       var p = PALETTE[layer.palette];
       var card = document.createElement("div");
       card.className = "pkg-viz__card";
       var title = document.createElement("div");
       title.className = "pkg-viz__card-title";
-      title.textContent = (layer.label || layer.palette) + " (" + layer.points.length + ")";
+      var n = layer.points.length || layer.boxes.length;
+      title.textContent = (layer.label || layer.palette) + " (" + n + ")";
       card.appendChild(title);
       var ul = document.createElement("ul");
       ul.className = "pkg-kp-list";
-      layer.points.forEach(function (pt, idx) {
-        var li = document.createElement("li");
-        li.className = "pkg-kp";
-        var sel = state.selected;
-        if (sel && sel.layerId === layer.id && sel.index === idx) li.classList.add("active");
-        var color = layer.palette === "gt" ? gtLabelColor(pt.label) : p.point;
-        var conf = pt.confidence != null ? '<span class="pkg-kp__conf">' + Math.round(pt.confidence * 100) + "%</span>" : "";
-        li.innerHTML = '<span class="pkg-kp__label"><span class="pkg-kp__dot" style="background:' + color + '"></span><span class="text">' + escapeHtml(pt.label) + "</span></span>" + conf;
-        li.addEventListener("click", function () {
-          var same = state.selected && state.selected.layerId === layer.id && state.selected.index === idx;
-          state.selected = same ? null : { layerId: layer.id, index: idx };
-          rerenderDynamic();
+      if (layer.points.length) {
+        layer.points.forEach(function (pt, idx) {
+          var li = document.createElement("li");
+          li.className = "pkg-kp";
+          var sel = state.selected;
+          if (sel && sel.layerId === layer.id && sel.index === idx) li.classList.add("active");
+          var color = layer.palette === "gt" ? gtLabelColor(pt.label) : p.point;
+          var conf = pt.confidence != null ? '<span class="pkg-kp__conf">' + Math.round(pt.confidence * 100) + "%</span>" : "";
+          li.innerHTML = '<span class="pkg-kp__label"><span class="pkg-kp__dot" style="background:' + color + '"></span><span class="text">' + escapeHtml(pt.label) + "</span></span>" + conf;
+          li.addEventListener("click", function () {
+            var same = state.selected && state.selected.layerId === layer.id && state.selected.index === idx;
+            state.selected = same ? null : { layerId: layer.id, index: idx };
+            rerenderDynamic();
+          });
+          ul.appendChild(li);
         });
-        ul.appendChild(li);
-      });
+      } else {
+        layer.boxes.forEach(function (box) {
+          var li = document.createElement("li");
+          li.className = "pkg-kp";
+          li.innerHTML = '<span class="pkg-kp__label"><span class="pkg-kp__dot" style="background:' + p.box + '"></span><span class="text">' + escapeHtml(box.label || "box") + "</span></span>";
+          ul.appendChild(li);
+        });
+      }
       card.appendChild(ul);
       box.appendChild(card);
     });
@@ -819,7 +924,7 @@
 
     // Depth availability
     var depthUrl = depthUrlFor(slide);
-    refs.depthToggle.disabled = !depthUrl;
+    if (refs.depthToggle) refs.depthToggle.disabled = !depthUrl;
     state.depthData = null;
     state.depthLoading = false;
     state.depthError = null;
@@ -860,7 +965,7 @@
       state.depthError = "Не удалось загрузить карту";
       state.depthData = null;
       if (depthUrlFor(currentSlide()) === depthTarget) {
-        refs.depthToggle.disabled = true;
+        if (refs.depthToggle) refs.depthToggle.disabled = true;
         state.showDepth = false;
         syncToggles();
       }
@@ -1004,9 +1109,9 @@
 
     var hasKp = false;
     (vizConfig.layers || []).forEach(function (lc) {
-      if (lc.plugin === "keypoint_korovas") {
+      if (lc.plugin === "keypoint_korovas" || lc.plugin === "yolo_detection") {
         hasKp = true;
-        var pal = PALETTE[lc.palette] || PALETTE.inference;
+        var pal = PALETTE[lc.palette] || (lc.plugin === "yolo_detection" ? PALETTE.yolo : PALETTE.inference);
         tb.appendChild(makeLayerToggle(lc.id, lc.label || lc.id, pal.point));
       } else if (lc.plugin === "depth_map") {
         state.depthLayerId = lc.id;
@@ -1016,6 +1121,11 @@
     });
     if (hasKp) {
       var sep1 = document.createElement("div"); sep1.className = "pkg-viz__toolbar-sep"; tb.appendChild(sep1);
+    }
+    if (!refs.depthToggle) {
+      refs.depthToggle = makeToggle("showDepth", "Глубина");
+      refs.depthToggle.style.display = "none";
+      refs.depthToggle.disabled = true;
     }
     tb.appendChild(makeToggle("showBoxes", "BBox"));
     tb.appendChild(makeToggle("showLabels", "Подписи"));
@@ -1089,8 +1199,8 @@
     legend.className = "pkg-stage__legend";
     var legHtml = "";
     (vizConfig.layers || []).forEach(function (lc) {
-      if (lc.plugin !== "keypoint_korovas") return;
-      var pal = PALETTE[lc.palette] || PALETTE.inference;
+      if (lc.plugin !== "keypoint_korovas" && lc.plugin !== "yolo_detection") return;
+      var pal = PALETTE[lc.palette] || (lc.plugin === "yolo_detection" ? PALETTE.yolo : PALETTE.inference);
       legHtml += '<span><span class="dot" style="background:' + pal.point + '"></span>' + escapeHtml(lc.label || lc.id) + "</span>";
     });
     legend.innerHTML = legHtml;
@@ -1152,8 +1262,9 @@
     var byKey = {}, order = [];
     (payload.layers || []).forEach(function (lc) {
       (payload.data[lc.id] || []).forEach(function (r) {
-        var k = r[joinKey];
-        if (!k || !blobMap[k]) return;
+        var k = normalizeBlobKey(r[joinKey]);
+        var url = blobUrlForKey(k);
+        if (!k || !url) return;
         if (!byKey[k]) {
           byKey[k] = { byLayer: {} };
           order.push(k);
@@ -1162,7 +1273,7 @@
       });
     });
     return order.map(function (k) {
-      return { key: k, url: blobMap[k], byLayer: byKey[k].byLayer };
+      return { key: k, url: blobUrlForKey(k), byLayer: byKey[k].byLayer };
     });
   }
 
@@ -1174,27 +1285,46 @@
       if (lc.plugin === "depth_map") {
         state.showDepth = !!lc.default_visible;
         state.depthLayerId = lc.id;
-      } else if (lc.plugin === "keypoint_korovas") {
+      } else if (lc.plugin === "keypoint_korovas" || lc.plugin === "yolo_detection") {
         state.layerVisible[lc.id] = !!lc.default_visible;
       }
     });
+    if (Object.keys(state.layerVisible).length) {
+      state.showBoxes = true;
+      state.showLabels = true;
+    }
   }
 
   function init() {
-    if (inited || loading) return;
-    loading = true;
+    if (loading) return;
     root = document.getElementById("pkgViz");
-    if (!root) { loading = false; return; }
+    if (!root) return;
+    // Повторный заход на вкладку после импорта в SQLite — перезагрузить (раньше inited блокировал).
+    if (inited && !root.querySelector(".pkg-viz__toolbar")) {
+      inited = false;
+    }
+    if (inited) return;
+    loading = true;
     depthBaseUrl = resolveDepthBase();
+    var mapEl = document.getElementById("pkgBlobMap");
     try {
-      blobMap = JSON.parse(document.getElementById("pkgBlobMap").textContent || "{}");
+      blobMap = JSON.parse((mapEl && mapEl.textContent) || "{}");
     } catch (e) { blobMap = {}; }
-    var url = document.getElementById("pkgWorkspace").getAttribute("data-viz-url");
+    var ws = document.getElementById("pkgWorkspace");
+    var url = ws && ws.getAttribute("data-viz-url");
+    if (!url) {
+      root.innerHTML = '<div class="ui-muted p-5 text-center">Нет URL визуализации.</div>';
+      loading = false;
+      return;
+    }
     fetch(url, { credentials: "include" })
-      .then(function (r) { return r.json(); })
+      .then(function (r) {
+        if (!r.ok) throw new Error("viz-data " + r.status);
+        return r.json();
+      })
       .then(function (payload) {
         if (!payload || !payload.layers || !payload.data) {
-          root.innerHTML = '<div class="ui-muted p-5 text-center">Нет конфигурации визуализации.</div>';
+          root.innerHTML = '<div class="ui-muted p-5 text-center">Нет конфигурации визуализации. Проверьте <code>collector/viz.json</code> и «Проверить Git».</div>';
           loading = false;
           return;
         }
@@ -1202,18 +1332,26 @@
         initLayerVisibility(payload);
         slides = buildSlides(payload);
         if (!slides.length) {
-          root.innerHTML = '<div class="ui-muted p-5 text-center">Нет кадров с разметкой для этого пакета.</div>';
-          inited = true; loading = false; return;
+          var hint = "Импорт: <code>python manage.py import_yolo_labels yolo &lt;package_id&gt; labels.txt --blob blobs/img_0001.jpg</code>";
+          root.innerHTML = '<div class="ui-muted p-5 text-center">Нет кадров с разметкой для этого пакета.<br><span class="small">' + hint + '</span></div>';
+          loading = false;
+          return;
         }
         buildSkeleton();
         renderSlide();
-        inited = true; loading = false;
+        inited = true;
+        loading = false;
       })
-      .catch(function () {
-        root.innerHTML = '<div class="ui-muted p-5 text-center">Не удалось загрузить визуализацию.</div>';
+      .catch(function (err) {
+        var msg = err && err.message ? escapeHtml(String(err.message)) : "";
+        root.innerHTML = '<div class="ui-muted p-5 text-center">Не удалось загрузить визуализацию.' +
+          (msg ? '<br><span class="small">' + msg + "</span>" : "") + "</div>";
         loading = false;
       });
   }
 
-  window.PkgViz = { ensure: init };
+  window.PkgViz = {
+    ensure: init,
+    reset: function () { inited = false; loading = false; },
+  };
 })();

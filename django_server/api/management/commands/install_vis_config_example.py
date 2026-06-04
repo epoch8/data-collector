@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand
 
 from api.models import Project
 from api.project_git import repo_dir
-from api.project_vis_config import VIS_CONFIG_REL_PATH, validate_vis_config
+from api.project_vis_config import VIS_CONFIG_REL_PATH, parse_vis_json_text, validate_vis_config
 
 
 class Command(BaseCommand):
@@ -22,6 +22,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Перезаписать существующий файл",
         )
+        parser.add_argument(
+            "--example",
+            default="viz.json",
+            help="Имя файла в examples/collector/ (viz.json, viz_yolo.json)",
+        )
 
     def handle(self, *args, **options):
         project_id = options["project_id"]
@@ -30,7 +35,8 @@ class Command(BaseCommand):
             self.stderr.write(self.style.ERROR(f"Project {project_id} not found"))
             return
 
-        src = Path(settings.BASE_DIR) / "examples" / "collector" / "viz.json"
+        example_name = options["example"]
+        src = Path(settings.BASE_DIR) / "examples" / "collector" / example_name
         if not src.is_file():
             self.stderr.write(self.style.ERROR(f"Example missing: {src}"))
             return
@@ -42,7 +48,7 @@ class Command(BaseCommand):
 
         dest.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(src, dest)
-        errs = validate_vis_config(json.loads(dest.read_text(encoding="utf-8")))
+        errs = validate_vis_config(parse_vis_json_text(dest.read_text(encoding="utf-8")))
         if errs:
             self.stderr.write(self.style.ERROR("; ".join(errs)))
             return

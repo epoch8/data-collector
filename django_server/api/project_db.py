@@ -49,6 +49,20 @@ CREATE TABLE IF NOT EXISTS cow_inference_result (
 
 CREATE INDEX IF NOT EXISTS idx_gt_pkg ON cow_keypoint_annotation(package_id);
 CREATE INDEX IF NOT EXISTS idx_inf_pkg ON cow_inference_result(package_id);
+
+CREATE TABLE IF NOT EXISTS yolo_detection (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    package_id TEXT NOT NULL,
+    manifest_blob_key TEXT NOT NULL,
+    image_width INTEGER NOT NULL,
+    image_height INTEGER NOT NULL,
+    detections_json TEXT NOT NULL,
+    source_label TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE(package_id, manifest_blob_key)
+);
+
+CREATE INDEX IF NOT EXISTS idx_yolo_pkg ON yolo_detection(package_id);
 """
 
 
@@ -102,7 +116,13 @@ def package_has_pipeline_data(project_id: str, package_id: str) -> bool:
             "SELECT 1 FROM cow_inference_result WHERE package_id = ? LIMIT 1",
             (package_id,),
         ).fetchone()
-        return inf is not None
+        if inf:
+            return True
+        yolo = conn.execute(
+            "SELECT 1 FROM yolo_detection WHERE package_id = ? LIMIT 1",
+            (package_id,),
+        ).fetchone()
+        return yolo is not None
 
 
 def delete_package_pipeline_data(project_id: str, package_id: str) -> None:
@@ -114,6 +134,43 @@ def delete_package_pipeline_data(project_id: str, package_id: str) -> None:
         conn.execute(
             "DELETE FROM cow_inference_result WHERE package_id = ?",
             (package_id,),
+        )
+        conn.execute(
+            "DELETE FROM yolo_detection WHERE package_id = ?",
+            (package_id,),
+        )
+
+
+def insert_yolo_detection(
+    project_id: str,
+    *,
+    package_id: str,
+    manifest_blob_key: str,
+    image_size: dict[str, Any],
+    boxes: list[dict[str, Any]],
+    source_label: str = "",
+) -> None:
+    with connect(project_id) as conn:
+        conn.execute(
+            """
+            INSERT INTO yolo_detection (
+                package_id, manifest_blob_key,
+                image_width, image_height, detections_json, source_label
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
+                image_width = excluded.image_width,
+                image_height = excluded.image_height,
+                detections_json = excluded.detections_json,
+                source_label = excluded.source_label
+            """,
+            (
+                package_id,
+                manifest_blob_key,
+                int(image_size.get("width") or 0),
+                int(image_size.get("height") or 0),
+                json.dumps({"boxes": boxes}, ensure_ascii=False),
+                source_label,
+            ),
         )
 
 
@@ -270,6 +327,32 @@ def list_gt(project_id: str, package_id: str) -> list[dict[str, Any]]:
         rec["project_id"] = project_id
         out.append(rec)
     return out
+
+
+def _row_to_yolo(row: sqlite3.Row) -> dict[str, Any]:
+    det = json.loads(row["detections_json"])
+    if not isinstance(det, dict):
+        det = {"boxes": []}
+    return {
+        "package_id": row["package_id"],
+        "manifest_blob_key": row["manifest_blob_key"],
+        "image_size": {"width": row["image_width"], "height": row["image_height"]},
+        "detections": det,
+        "source_label": row["source_label"] or "",
+    }
+
+
+def list_yolo_detection(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    with connect(project_id) as conn:
+        rows = conn.execute(
+            """
+            SELECT * FROM yolo_detection
+            WHERE package_id = ?
+            ORDER BY manifest_blob_key
+            """,
+            (package_id,),
+        ).fetchall()
+    return [_row_to_yolo(row) for row in rows]
 
 
 def list_inference(project_id: str, package_id: str) -> list[dict[str, Any]]:

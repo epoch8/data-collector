@@ -61,8 +61,50 @@ Django читает файл из кэша Git после `pull` (как `collec
 | `keypoint_korovas` | `cow_keypoint_annotation` | GT: `annotation.points`, CVAT link |
 | `keypoint_korovas` | `cow_inference_result` | Inference: keypoints, bbox, segments, metrics |
 | `depth_map` | `cow_inference_result` | `.npy` из `depth_blob_key` / `depth_map.depth_url` |
+| `yolo_detection` | `yolo_detection` | BBox из `detections.boxes` (импорт YOLO `.txt`) |
 
-Плагин сам знает формат строки; конфиг только указывает таблицу и базовые опции.
+Плагин сам знает формат строки; конфиг указывает таблицу и **опции классов** (см. ниже).
+
+### Комментарии в `collector/viz.json`
+
+Поддерживаются построчные комментарии `//` (вне строк в кавычках). Шаблон с пояснениями: `django_server/examples/collector/viz_yolo.json`.
+
+### Слой `yolo_detection` — единая схема полей
+
+Общие поля слоя (как у всех плагинов): `id`, `label`, `plugin`, `table`, `palette`, `default_visible`.
+
+Дополнительно **только** для `yolo_detection`:
+
+| Поле | Описание |
+|------|----------|
+| `include_classes` | `[0, 1]` — какие class id из YOLO `.txt` рисовать; поле убрать = все |
+| `classes` | `{"0": "имя"}` или `{"0": {"name": "…", "color": "#hex"}}` — подписи и цвета по id |
+
+Устарело (ошибка валидации): `class_names`, `class_colors` — всё в `classes`.
+
+Пример для другого проекта (та же таблица `yolo_detection`, другие имена):
+
+```json
+{
+  "id": "det",
+  "label": "Детекции",
+  "plugin": "yolo_detection",
+  "table": "yolo_detection",
+  "palette": "yolo",
+  "default_visible": true,
+  "include_classes": [0, 1],
+  "classes": {
+    "0": { "name": "Вымень", "color": "#06b6d4" },
+    "1": { "name": "Соска", "color": "#a855f7" }
+  }
+}
+```
+
+Пример для YOLO-проекта: `django_server/examples/collector/viz_yolo.json`. Импорт разметки:
+
+```bash
+python manage.py import_yolo_labels <project_id> <package_id> path/to/labels.txt --blob blobs/img_0001.jpg
+```
 
 ## Когда показывается вкладка «Визуализация»
 

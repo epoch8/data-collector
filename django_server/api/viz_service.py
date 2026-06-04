@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from .models import Project
-from .project_vis_config import load_vis_config
+from .project_vis_config import layer_options_for_api, load_vis_config
 
 
 def _fetch_table(project_id: str, package_id: str, table: str) -> list[dict[str, Any]]:
@@ -15,6 +15,8 @@ def _fetch_table(project_id: str, package_id: str, table: str) -> list[dict[str,
         return pdb.list_gt(project_id, package_id)
     if table == "cow_inference_result":
         return pdb.list_inference(project_id, package_id)
+    if table == "yolo_detection":
+        return pdb.list_yolo_detection(project_id, package_id)
     return []
 
 
@@ -46,7 +48,15 @@ def build_package_viz_payload(
     project = Project.objects.filter(project_id=project_id).first()
     if not project:
         return None
-    vis = load_vis_config(project, fetch_remote=True)
+    try:
+        vis = load_vis_config(project, fetch_remote=False)
+    except Exception:
+        vis = None
+    if not vis:
+        try:
+            vis = load_vis_config(project, fetch_remote=True)
+        except Exception:
+            return None
     if not vis:
         return None
 
@@ -65,16 +75,16 @@ def build_package_viz_payload(
         if records:
             has_any = True
         data[lid] = records
-        layers_meta.append(
-            {
-                "id": lid,
-                "label": layer.get("label") or lid,
-                "plugin": layer.get("plugin"),
-                "table": table,
-                "palette": layer.get("palette"),
-                "default_visible": bool(layer.get("default_visible")),
-            },
-        )
+        meta: dict[str, Any] = {
+            "id": lid,
+            "label": layer.get("label") or lid,
+            "plugin": layer.get("plugin"),
+            "table": table,
+            "palette": layer.get("palette"),
+            "default_visible": bool(layer.get("default_visible")),
+        }
+        meta.update(layer_options_for_api(layer))
+        layers_meta.append(meta)
 
     if not has_any:
         return None

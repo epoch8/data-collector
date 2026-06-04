@@ -293,12 +293,15 @@ def pull(project: Project, *, force: bool = False) -> str:
 
         if not (dest / ".git").is_dir():
             _ensure_origin(project, dest)
+        remote_ref = f"origin/{project.git_default_ref}"
         _run_git(["fetch", "origin", project.git_default_ref], credential=project.git_credential, cwd=dest)
-        _run_git(
-            ["checkout", "-B", project.git_default_ref, f"origin/{project.git_default_ref}"],
-            credential=project.git_credential,
-            cwd=dest,
-        )
+        # Локальный install_vis_config_example кладёт untracked collector/viz.json — мешает checkout.
+        _local_git(dest, "clean", "-fd")
+        try:
+            _local_git(dest, "checkout", "-B", project.git_default_ref, remote_ref)
+        except GitProjectError:
+            _local_git(dest, "reset", "--hard", remote_ref)
+            _local_git(dest, "checkout", "-B", project.git_default_ref, remote_ref)
         sha = _local_head_sha(dest)
         project.last_synced_sha = sha
         project.last_synced_at = dj_tz.now()
