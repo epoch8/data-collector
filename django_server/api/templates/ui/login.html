@@ -1,25 +1,17 @@
 {% extends "ui/base.html" %}
-{% block title %}Вход — админка{% endblock %}
+{% block title %}Вход{% endblock %}
 {% block body_class %}ui-auth-body{% endblock %}
 {% block footer %}{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-11 col-sm-9 col-md-6 col-lg-5">
-    <div class="card p-4 p-md-5 login-form-card ui-login-card">
-      <div class="text-center mb-4">
-        <span class="ui-brand-mark d-inline-flex mb-3" style="width:3rem;height:3rem;font-size:1rem;">DC</span>
-        <h1 class="h4 mb-1 text-white fw-bold">Вход в админку</h1>
-        <p class="small ui-muted mb-0">Только для пользователей со статусом <strong>staff</strong></p>
-      </div>
-      <p class="small ui-muted mb-4 text-center">
-        Нет учётки? <code>python manage.py createsuperuser</code>
-      </p>
+  <div class="col-11 col-sm-8 col-md-5 col-lg-4">
+    <div class="card p-4 login-form-card">
+      <h1 class="h5 mb-3 text-white">Вход</h1>
       <form method="post" action="">
         {% csrf_token %}
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
         {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100 mt-3 py-2">
-          <i class="bi bi-unlock me-2"></i>Войти
-        </button>
+        <button type="submit" class="btn btn-primary w-100 mt-3">Войти</button>
       </form>
     </div>
   </div>

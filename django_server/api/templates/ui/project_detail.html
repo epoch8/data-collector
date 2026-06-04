@@ -15,13 +15,16 @@
     <p class="ui-page-sub mb-0"><code>{{ project.project_id }}</code> · конфиг <strong>v{{ project.config_version }}</strong></p>
   </div>
   <div class="d-flex flex-wrap gap-2 justify-content-md-end">
+    {% if is_staff %}
     <a class="btn btn-primary btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>Редактор</a>
-    <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>JSON</a>
     <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_media' project.project_id %}"><i class="bi bi-images me-1"></i>Файлы</a>
-    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_package_list' %}?project={{ project.project_id }}"><i class="bi bi-box-seam me-1"></i>Пакеты</a>
+    {% endif %}
+    <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>JSON</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_packages_spa' %}"><i class="bi bi-box-seam me-1"></i>Пакеты</a>
   </div>
 </div>
 <div class="row g-4">
+  {% if is_staff %}
   <div class="col-md-6">
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-hdd-network me-1"></i>Медиа на диске</div>
@@ -38,22 +41,26 @@
       {% endif %}
     </div>
   </div>
+  {% endif %}
   <div class="col-md-6">
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-cloud-arrow-up me-1"></i>Приём пакетов</div>
       <p class="mb-2">Сессий загрузки: <strong class="text-white">{{ package_count }}</strong></p>
-      <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Открыть список пакетов<i class="bi bi-arrow-right ms-1"></i></a>
+      <a class="btn btn-sm btn-outline-light" href="{% url 'ui_packages_spa' %}">Открыть пакеты<i class="bi bi-arrow-right ms-1"></i></a>
     </div>
   </div>
 </div>
+{% if is_staff %}
 <hr class="border-secondary my-5">
 <h2 class="h6 text-danger mb-3"><i class="bi bi-shield-exclamation me-1"></i>Опасная зона</h2>
-<form method="post" action="{% url 'ui_project_delete' project.project_id %}" class="card p-4 ui-danger-zone" onsubmit="return confirm('Удалить проект и все связанные пакеты?');">
+<form method="post" action="{% url 'ui_project_delete' project.project_id %}" onsubmit="return confirm('Удалить проект и все пакеты?');">
   {% csrf_token %}
-  <p class="small ui-muted mb-3">Введите точный <code>project_id</code> для подтверждения.</p>
-  <div class="input-group" style="max-width: 420px;">
-    <input class="form-control" name="confirm" placeholder="{{ project.project_id }}" required autocomplete="off">
-    <button type="submit" class="btn btn-outline-danger"><i class="bi bi-trash3 me-1"></i>Удалить проект</button>
+  <div class="card p-4 border-danger border-opacity-50">
+    <p class="small mb-3">Удаление проекта необратимо: конфиг, медиа на диске и все принятые пакеты.</p>
+    <label class="form-label small">Введите <code>{{ project.project_id }}</code> для подтверждения</label>
+    <input class="form-control mb-3" type="text" name="confirm" autocomplete="off">
+    <button type="submit" class="btn btn-outline-danger btn-sm">Удалить проект</button>
   </div>
 </form>
+{% endif %}
 {% endblock %}

@@ -13,7 +13,9 @@
     <h1 class="ui-page-title">Проекты</h1>
     <p class="ui-page-sub mb-0">Каталог конфигов и медиа для мобильного клиента по API <code>/v1/projects/…</code></p>
   </div>
+  {% if is_staff %}
   <a class="btn btn-primary" href="{% url 'ui_project_new' %}"><i class="bi bi-plus-lg me-1"></i>Новый проект</a>
+  {% endif %}
 </div>
 <div class="ui-table-card">
   <div class="table-responsive">

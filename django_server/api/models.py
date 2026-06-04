@@ -22,8 +22,8 @@ class CollectorUser(models.Model):
         "Project",
         blank=True,
         related_name="admin_collector_users",
-        verbose_name="Доступные проекты (client-admin)",
-        help_text="Веб-админка пакетов /admin-api — просмотр и правка.",
+        verbose_name="Доступные проекты (Client-admin)",
+        help_text="Веб /ui/packages/ — Firebase-вход, только отмеченные проекты.",
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

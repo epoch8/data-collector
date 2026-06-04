@@ -53,8 +53,8 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
@@ -117,7 +117,7 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_PASSWORD_VALIDATORS: list = []
 
 LOGIN_URL = "/ui/login/"
-LOGIN_REDIRECT_URL = "/ui/projects/"
+LOGIN_REDIRECT_URL = "/ui/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
@@ -125,6 +125,10 @@ MEDIA_URL = "/media/"
 PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / "project_assets")))
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
+
+PACKAGES_SPA_STATIC_DIR = BASE_DIR / "api" / "static" / "packages"
+PACKAGES_SPA_MANIFEST = PACKAGES_SPA_STATIC_DIR / ".vite" / "manifest.json"
 
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
 
@@ -214,3 +218,6 @@ CORS_ALLOW_HEADERS = (
 
 # Не требуем cookie для API; при необходимости кук можно включить и настроить CORS_ALLOW_CREDENTIALS.
 CORS_ALLOW_CREDENTIALS = False
+
+# Same-origin /ui SPA uses session cookies (not CORS).
+SESSION_COOKIE_SAMESITE = "Lax"

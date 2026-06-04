@@ -1,18 +1,12 @@
-from django.contrib.auth.views import LoginView
-from django.urls import path
+from django.urls import path, re_path
 
 from . import views_ui
+from .views_auth import UiLoginView, ui_login_page
 
 urlpatterns = [
     path("", views_ui.ui_home, name="ui_home"),
-    path(
-        "login/",
-        LoginView.as_view(
-            template_name="ui/login.html",
-            redirect_authenticated_user=True,
-        ),
-        name="ui_login",
-    ),
+    path("login/", ui_login_page, name="ui_login"),
+    path("login/submit/", UiLoginView.as_view(), name="ui_login_submit"),
     path("logout/", views_ui.ui_logout, name="ui_logout"),
     path("users/", views_ui.collector_user_list, name="ui_collector_user_list"),
     path("users/sync-firebase/", views_ui.collector_user_sync_firebase, name="ui_collector_user_sync_firebase"),
@@ -33,15 +27,10 @@ urlpatterns = [
     ),
     path("projects/<str:project_id>/media/", views_ui.project_media, name="ui_project_media"),
     path("projects/<str:project_id>/delete/", views_ui.project_delete, name="ui_project_delete"),
-    path("packages/", views_ui.package_list, name="ui_package_list"),
-    path(
-        "projects/<str:project_id>/packages/<str:package_id>/",
-        views_ui.package_detail,
-        name="ui_package_detail",
-    ),
-    path(
-        "projects/<str:project_id>/packages/<str:package_id>/blobs/<int:blob_pk>/",
-        views_ui.package_blob_download,
-        name="ui_package_blob_download",
+    path("packages/", views_ui.packages_spa, name="ui_packages_spa"),
+    re_path(
+        r"^packages/(?P<subpath>.*)$",
+        views_ui.packages_spa,
+        name="ui_packages_spa_catchall",
     ),
 ]

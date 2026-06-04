@@ -11,7 +11,6 @@ from uuid import uuid4
 from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import FileResponse, HttpResponse, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -19,9 +18,9 @@ from django.views.decorators.http import require_http_methods, require_POST
 
 from .firebase_user_sync import sync_collector_users_from_firebase
 from .models import CollectorUser, PackageSession, Project, UploadedBlob
+from .packages_spa_assets import packages_spa_assets, packages_spa_built
 from .project_config_validate import validate_project_payload
-
-staff_only = user_passes_test(lambda u: u.is_authenticated and u.is_staff)
+from .ui_access import staff_only
 
 
 def ui_logout(request):
@@ -121,24 +120,25 @@ def _save_project_json(project: Project, project_id: str, data: dict, ver: str) 
     return []
 
 
-@staff_only
-@login_required
 def ui_home(request):
-    return redirect("ui_project_list")
+    if request.user.is_authenticated and request.user.is_staff:
+        return redirect("ui_project_list")
+    return redirect("ui_login")
 
 
 @staff_only
-@login_required
 def project_list(request):
     return render(
         request,
         "ui/project_list.html",
-        {"projects": Project.objects.all().order_by("name")},
+        {
+            "projects": Project.objects.all().order_by("name"),
+            "is_staff": True,
+        },
     )
 
 
 @staff_only
-@login_required
 @require_http_methods(["GET", "POST"])
 def project_new(request):
     if request.method == "POST":
@@ -170,7 +170,6 @@ def project_new(request):
 
 
 @staff_only
-@login_required
 def project_detail(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     media = _list_media_files(project_id)
@@ -182,12 +181,12 @@ def project_detail(request, project_id: str):
             "project": project,
             "media_files": media,
             "package_count": pkg_count,
+            "is_staff": request.user.is_staff,
         },
     )
 
 
 @staff_only
-@login_required
 @require_http_methods(["GET", "POST"])
 def project_config(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
@@ -210,7 +209,12 @@ def project_config(request, project_id: str):
             return render(
                 request,
                 "ui/project_config.html",
-                {"project": project, "pretty_json": pretty, "validation_errors": errs},
+                {
+                    "project": project,
+                    "pretty_json": pretty,
+                    "validation_errors": errs,
+                    "read_only": False,
+                },
             )
         messages.success(request, "Конфиг сохранён, версия обновлена.")
         return redirect("ui_project_detail", project_id=project_id)
@@ -221,13 +225,17 @@ def project_config(request, project_id: str):
     return render(
         request,
         "ui/project_config.html",
-        {"project": project, "pretty_json": pretty, "validation_errors": None},
+        {
+            "project": project,
+            "pretty_json": pretty,
+            "validation_errors": None,
+            "read_only": False,
+        },
     )
 
 
 @ensure_csrf_cookie
 @staff_only
-@login_required
 @require_http_methods(["GET", "POST"])
 def project_config_builder(request, project_id: str):
     """Визуальный редактор + превью; сохраняет тот же JSON, что и raw-редактор."""
@@ -284,7 +292,6 @@ def project_config_builder(request, project_id: str):
 
 
 @staff_only
-@login_required
 @require_POST
 def project_config_validate_api(request, project_id: str):
     """POST JSON тела проекта — ответ { ok, errors } без сохранения."""
@@ -297,7 +304,6 @@ def project_config_validate_api(request, project_id: str):
 
 
 @staff_only
-@login_required
 @require_http_methods(["GET", "POST"])
 def project_media(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
@@ -352,7 +358,6 @@ def project_media(request, project_id: str):
 
 
 @staff_only
-@login_required
 @require_POST
 def project_delete(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
@@ -364,74 +369,26 @@ def project_delete(request, project_id: str):
     return redirect("ui_project_list")
 
 
-@staff_only
-@login_required
-def package_list(request):
-    qs = PackageSession.objects.select_related("project").order_by("-created_at")
-    filter_project = (request.GET.get("project") or "").strip()
-    if filter_project:
-        qs = qs.filter(project__project_id=filter_project)
-    qs = qs[:500]
+@ensure_csrf_cookie
+def packages_spa(request, subpath: str = ""):
+    assets = packages_spa_assets()
+    if not packages_spa_built():
+        return render(
+            request,
+            "ui/packages_spa_missing.html",
+            status=503,
+        )
     return render(
         request,
-        "ui/package_list.html",
+        "ui/packages_app.html",
         {
-            "sessions": qs,
-            "filter_project": filter_project,
-            "projects": Project.objects.all().order_by("name"),
+            "spa_js": assets.get("js"),
+            "spa_css": assets.get("css"),
         },
     )
 
 
 @staff_only
-@login_required
-def package_detail(request, project_id: str, package_id: str):
-    session = get_object_or_404(
-        PackageSession,
-        project__project_id=project_id,
-        package_id=package_id,
-    )
-    blobs = list(session.blobs.all().order_by("logical_path"))
-    manifest_pretty = ""
-    if session.manifest_json:
-        try:
-            manifest_pretty = json.dumps(
-                json.loads(session.manifest_json),
-                ensure_ascii=False,
-                indent=2,
-            )
-        except json.JSONDecodeError:
-            manifest_pretty = session.manifest_json
-    return render(
-        request,
-        "ui/package_detail.html",
-        {
-            "session": session,
-            "blobs": blobs,
-            "manifest_pretty": manifest_pretty,
-        },
-    )
-
-
-@staff_only
-@login_required
-def package_blob_download(request, project_id: str, package_id: str, blob_pk: int):
-    blob = get_object_or_404(
-        UploadedBlob,
-        pk=blob_pk,
-        session__project__project_id=project_id,
-        session__package_id=package_id,
-    )
-    if not blob.file:
-        return HttpResponseForbidden("Нет файла")
-    ctype, _ = mimetypes.guess_type(blob.logical_path)
-    resp = FileResponse(blob.file.open("rb"), content_type=ctype or "application/octet-stream")
-    resp["Content-Disposition"] = f'inline; filename="{Path(blob.logical_path).name}"'
-    return resp
-
-
-@staff_only
-@login_required
 def collector_user_list(request):
     users = CollectorUser.objects.prefetch_related("mobile_projects", "admin_projects").order_by(
         "email", "firebase_uid"
@@ -440,7 +397,6 @@ def collector_user_list(request):
 
 
 @staff_only
-@login_required
 @require_POST
 def collector_user_sync_firebase(request):
     try:
@@ -456,7 +412,6 @@ def collector_user_sync_firebase(request):
 
 
 @staff_only
-@login_required
 @require_http_methods(["GET", "POST"])
 def collector_user_detail(request, pk: int):
     cu = get_object_or_404(
