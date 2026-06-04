@@ -73,6 +73,7 @@ django_server/.env.*
 django_server/db.sqlite3
 django_server/db.sqlite3-journal
 django_server/media/
+django_server/project_db/
 django_server/staticfiles/
 django_server/api/static/packages/
 django_server/frontend/packages/dist/

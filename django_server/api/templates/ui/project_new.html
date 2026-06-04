@@ -12,25 +12,43 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">Новый проект</h1>
-    <p class="ui-page-sub mb-0">Будет создан пустой шаблон JSON — поля и сценарий можно настроить в редакторе.</p>
+    <p class="ui-page-sub mb-0">Конфиг хранится в Git: <code>collector/config.json</code>. На GitHub — deploy key с write access.</p>
   </div>
 </div>
 <div class="row justify-content-start">
-  <div class="col-lg-6">
+  <div class="col-lg-8">
     <div class="card p-4">
       <form method="post">
         {% csrf_token %}
         <div class="mb-3">
           <label class="form-label">project_id</label>
-          <input class="form-control" name="project_id" required placeholder="korovas-2026" autocomplete="off">
-          <div class="form-text ui-muted">Как поле <code>id</code> в корне JSON конфига.</div>
+          <input class="form-control" name="project_id" required placeholder="my-project-2026" autocomplete="off">
+          <div class="form-text ui-muted">Совпадает с полем <code>id</code> в <code>collector/config.json</code>.</div>
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
           <label class="form-label">Название</label>
           <input class="form-control" name="name" placeholder="Отображаемое имя">
         </div>
+        <div class="mb-3">
+          <label class="form-label">GitHub репозиторий</label>
+          <input class="form-control" name="git_repo_url" required placeholder="https://github.com/org/my-project-config">
+          <div class="form-text ui-muted">Публичный или приватный — доступ по SSH deploy key.</div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Ветка</label>
+          <input class="form-control" name="git_default_ref" value="main" style="max-width: 12rem;">
+        </div>
+        <div class="mb-3">
+          <div class="form-check mb-2">
+            <input class="form-check-input" type="checkbox" name="generate_key" value="1" id="genKey" checked>
+            <label class="form-check-label" for="genKey">Сгенерировать SSH-ключ на сервере</label>
+          </div>
+          <label class="form-label">Или вставьте приватный ключ (OpenSSH)</label>
+          <textarea class="form-control font-monospace small" name="private_key" rows="6" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+          <div class="form-text ui-muted">Если включена генерация — поле ключа можно оставить пустым.</div>
+        </div>
         <div class="d-flex flex-wrap gap-2">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-magic me-1"></i>Создать шаблон</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-git me-1"></i>Создать проект</button>
           <a href="{% url 'ui_project_list' %}" class="btn btn-outline-secondary">Отмена</a>
         </div>
       </form>

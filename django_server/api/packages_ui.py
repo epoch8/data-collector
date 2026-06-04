@@ -39,11 +39,12 @@ DATA_TAB_TYPES = ("text_input", "datetime")
 
 
 def config_root(project: Project) -> dict[str, Any]:
-    try:
-        root = json.loads(project.raw_json)
-    except (json.JSONDecodeError, TypeError):
+    from .project_config_service import load_config_dict
+
+    root, err = load_config_dict(project.project_id)
+    if err or not root:
         return {}
-    return root if isinstance(root, dict) else {}
+    return root
 
 
 def config_fields(root: dict[str, Any]) -> list[dict[str, Any]]:
@@ -272,6 +273,11 @@ def _load_records(filename: str) -> list[dict[str, Any]]:
 
 
 def gt_annotations_for_package(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    from . import project_db as pdb
+
+    rows = pdb.list_gt(project_id, package_id)
+    if rows:
+        return rows
     return [
         r
         for r in _load_records("mock_datapipe_annotations.json")
@@ -280,6 +286,11 @@ def gt_annotations_for_package(project_id: str, package_id: str) -> list[dict[st
 
 
 def inference_for_package(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    from . import project_db as pdb
+
+    rows = pdb.list_inference(project_id, package_id)
+    if rows:
+        return rows
     return [
         r
         for r in _load_records("mock_datapipe_inference.json")
@@ -288,6 +299,10 @@ def inference_for_package(project_id: str, package_id: str) -> list[dict[str, An
 
 
 def has_visualisation(project_id: str, package_id: str) -> bool:
+    from . import project_db as pdb
+
+    if pdb.package_has_pipeline_data(project_id, package_id):
+        return True
     return bool(
         gt_annotations_for_package(project_id, package_id)
         or inference_for_package(project_id, package_id),

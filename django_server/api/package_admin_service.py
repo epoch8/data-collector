@@ -42,11 +42,13 @@ def has_pipeline_flag(manifest: dict | None, key: str) -> bool:
     return key in pr and pr[key] is not None
 
 
-def searchable_field_ids(project: Project) -> set[str]:
-    try:
-        cfg_root = json.loads(project.raw_json)
-    except json.JSONDecodeError:
-        return set()
+def searchable_field_ids(project: Project, cfg_root: dict | None = None) -> set[str]:
+    if cfg_root is None:
+        from .project_config_service import load_config_dict
+
+        cfg_root, err = load_config_dict(project.project_id)
+        if err or not cfg_root:
+            return set()
     fields = (cfg_root.get("config") or {}).get("fields") or []
     ids: set[str] = set()
     for f in fields:
@@ -86,7 +88,7 @@ def list_projects(*, allowed: set[str] | None) -> list[dict[str, Any]]:
         {
             "project_id": p.project_id,
             "name": p.name,
-            "config_version": p.config_version,
+            "config_version": p.config_version_label,
             "updated_at": p.updated_at.isoformat(),
         }
         for p in qs
@@ -94,13 +96,34 @@ def list_projects(*, allowed: set[str] | None) -> list[dict[str, Any]]:
 
 
 def get_project_config(project_id: str) -> tuple[dict | None, JsonResponse | None]:
-    project = Project.objects.filter(project_id=project_id).first()
-    if not project:
+    from .project_config_service import load_config_dict
+
+    return load_config_dict(project_id)
+
+
+def list_package_summaries(
+    project_id: str,
+    *,
+    phase: str = "",
+    limit: int = 500,
+) -> tuple[list[dict[str, Any]] | None, JsonResponse | None]:
+    """Список пакетов без разбора manifest_json (сайдбар workspace)."""
+    if not Project.objects.filter(project_id=project_id).exists():
         return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
-    try:
-        return json.loads(project.raw_json), None
-    except json.JSONDecodeError:
-        return None, JsonResponse(_err("invalid_config", "Project config is not valid JSON"), status=500)
+
+    qs = PackageSession.objects.filter(project__project_id=project_id).order_by("-created_at")
+    if phase:
+        qs = qs.filter(phase=phase)
+    return [
+        {
+            "package_id": s.package_id,
+            "project_id": project_id,
+            "phase": s.phase,
+            "created_at": s.created_at.isoformat(),
+            "uploader_email": s.uploader_email or "",
+        }
+        for s in qs[:limit]
+    ], None
 
 
 def list_packages(
@@ -108,12 +131,17 @@ def list_packages(
     *,
     phase: str,
     preview_prefix: str,
+    search_field_ids: set[str] | None = None,
 ) -> tuple[list[dict[str, Any]] | None, JsonResponse | None]:
     project = Project.objects.filter(project_id=project_id).first()
     if not project:
         return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
 
-    searchable = searchable_field_ids(project)
+    searchable = (
+        search_field_ids
+        if search_field_ids is not None
+        else searchable_field_ids(project)
+    )
     qs = PackageSession.objects.filter(project__project_id=project_id).order_by("-created_at")
     if phase:
         qs = qs.filter(phase=phase)
@@ -158,10 +186,11 @@ def get_workspace(
     if manifest is None:
         return None, JsonResponse(_err("not_found", "Manifest not loaded"), status=404)
 
-    try:
-        project_config = json.loads(project.raw_json)
-    except json.JSONDecodeError:
-        return None, JsonResponse(_err("invalid_config", "Project config is not valid JSON"), status=500)
+    project_config, cfg_err = get_project_config(project_id)
+    if cfg_err is not None:
+        return None, cfg_err
+    if project_config is None:
+        return None, JsonResponse(_err("invalid_config", "Project config unavailable"), status=500)
 
     blobs = [
         {

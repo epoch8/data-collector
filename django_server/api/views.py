@@ -44,7 +44,7 @@ class ProjectsCatalogView(View):
             {
                 "project_id": p.project_id,
                 "name": p.name,
-                "config_version": p.config_version,
+                "config_version": p.config_version_label,
                 "updated_at": p.updated_at.isoformat(),
             }
             for p in rows
@@ -66,14 +66,12 @@ class ProjectConfigView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        project = Project.objects.filter(project_id=project_id).first()
-        if not project:
-            return JsonResponse(
-                _err("not_found", "Unknown project"),
-                status=404,
-            )
-        body = project.raw_json
-        etag = weak_etag(body)
+        from .project_config_service import load_config_body
+
+        body, sha, err = load_config_body(project_id)
+        if err is not None:
+            return err
+        etag = sha or weak_etag(body or "")
         if request.headers.get("If-None-Match") == etag:
             return HttpResponse(status=304, headers={"ETag": etag})
         return HttpResponse(
@@ -275,6 +273,9 @@ class PackageCommitView(View):
                 )
             session.phase = PackageSession.Phase.COMPLETED
             session.save(update_fields=["phase"])
+        from .project_pipeline_seed import maybe_seed_on_commit
+
+        maybe_seed_on_commit(session)
         return JsonResponse({"status": "completed", "package_id": package_id})
 
 

@@ -39,13 +39,40 @@ class CollectorUser(models.Model):
         return self.firebase_uid
 
 
+class GitCredential(models.Model):
+    """SSH deploy key для одного Git-репозитория проекта."""
+
+    label = models.CharField(max_length=256, blank=True, default="")
+    public_key = models.TextField(help_text="OpenSSH public key (для Deploy keys на GitHub).")
+    private_key_encrypted = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Git SSH credential"
+        verbose_name_plural = "Git SSH credentials"
+
+    def __str__(self) -> str:
+        return self.label or f"credential #{self.pk}"
+
+
 class Project(models.Model):
-    """Проект: полный JSON конфига и версия (спека 09)."""
+    """Проект: каталог в Django; конфиг — в Git (collector/config.json)."""
 
     project_id = models.CharField(max_length=256, primary_key=True)
     name = models.CharField(max_length=512)
-    config_version = models.CharField(max_length=128)
-    raw_json = models.TextField(help_text="Full project JSON for clients (Project.fromJson).")
+    git_remote = models.CharField(
+        max_length=512,
+        help_text="SSH URL, напр. git@github.com:org/repo.git",
+    )
+    git_default_ref = models.CharField(max_length=128, default="main")
+    git_credential = models.ForeignKey(
+        GitCredential,
+        on_delete=models.PROTECT,
+        related_name="projects",
+    )
+    last_synced_sha = models.CharField(max_length=64, blank=True, default="")
+    last_synced_at = models.DateTimeField(null=True, blank=True)
+    sync_error = models.TextField(blank=True, default="")
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -53,6 +80,12 @@ class Project(models.Model):
 
     def __str__(self) -> str:
         return self.name
+
+    @property
+    def config_version_label(self) -> str:
+        if self.last_synced_sha:
+            return self.last_synced_sha[:12]
+        return "—"
 
 
 class PackageSession(models.Model):

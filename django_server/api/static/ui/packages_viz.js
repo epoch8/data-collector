@@ -224,12 +224,17 @@
 
   function currentSlide() { return slides[state.index] || null; }
 
-  function depthFileFor(slide) {
+  function depthUrlFor(slide) {
     if (!slide || !slide.inference) return null;
     var inf = slide.inference;
-    var asset = inf.depth_map && inf.depth_map.asset_path;
-    if (asset) return asset.split("/").pop();
-    if (inf.source_export) return inf.source_export.replace(/\.json$/i, "") + ".npy";
+    var dm = inf.depth_map;
+    if (dm && dm.depth_url) return dm.depth_url;
+    var asset = dm && dm.asset_path;
+    if (asset) {
+      if (asset.charAt(0) === "/") return asset;
+      return depthNpyUrl(asset.split("/").pop());
+    }
+    if (inf.source_export) return depthNpyUrl(inf.source_export.replace(/\.json$/i, "") + ".npy");
     return null;
   }
 
@@ -573,8 +578,8 @@
   }
 
   function layoutDepthUI() {
-    var depthFile = depthFileFor(currentSlide());
-    var active = state.showDepth && depthFile;
+    var depthUrl = depthUrlFor(currentSlide());
+    var active = state.showDepth && depthUrl;
     if (refs.probeBar) refs.probeBar.root.classList.toggle("is-visible", !!active);
     if (refs.vizDual) refs.vizDual.classList.toggle("viz-dual--single", !active || state.depthMode === "overlay");
     if (refs.depthCol) refs.depthCol.classList.toggle("is-visible", !!active && state.depthMode === "split");
@@ -758,8 +763,8 @@
     if (cvat) refs.cvat.href = cvat;
 
     // Depth availability
-    var depthFile = depthFileFor(slide);
-    refs.depthToggle.disabled = !depthFile;
+    var depthUrl = depthUrlFor(slide);
+    refs.depthToggle.disabled = !depthUrl;
     state.depthData = null;
     state.depthLoading = false;
     state.depthError = null;
@@ -772,13 +777,13 @@
     renderFilmstrip();
     syncToggles();
 
-    if (state.showDepth && depthFile) applyDepth(depthFile);
+    if (state.showDepth && depthUrl) applyDepth(depthUrl);
     else renderPhotoProbe(sz.w, sz.h);
   }
 
-  function applyDepth(depthFile) {
-    if (!depthFile) return;
-    var url = depthNpyUrl(depthFile);
+  function applyDepth(depthTarget) {
+    if (!depthTarget) return;
+    var url = depthTarget.charAt(0) === "/" ? depthTarget : depthNpyUrl(depthTarget);
     state.depthLoading = true;
     state.depthError = null;
     state.depthData = null;
@@ -786,7 +791,7 @@
     layoutDepthUI();
     loadDepth(url).then(function (d) {
       state.depthLoading = false;
-      if (!state.showDepth || depthFileFor(currentSlide()) !== depthFile) return;
+      if (!state.showDepth || depthUrlFor(currentSlide()) !== depthTarget) return;
       delete d._bitmap;
       delete d._bitmapKey;
       state.depthData = d;
@@ -799,7 +804,7 @@
       state.depthLoading = false;
       state.depthError = "Не удалось загрузить карту";
       state.depthData = null;
-      if (depthFileFor(currentSlide()) === depthFile) {
+      if (depthUrlFor(currentSlide()) === depthTarget) {
         refs.depthToggle.disabled = true;
         state.showDepth = false;
         syncToggles();
@@ -902,8 +907,8 @@
       state[key] = !state[key];
       if (key === "showDepth") renderSlide(); else rerenderDynamic();
       if (key === "showDepth" && state.showDepth) {
-        var f = depthFileFor(currentSlide());
-        if (f) applyDepth(f);
+        var u = depthUrlFor(currentSlide());
+        if (u) applyDepth(u);
       }
       if (key === "showDepth" && !state.showDepth) {
         state.depthData = null;
@@ -1055,8 +1060,8 @@
   function renderSlideKeepDepth() {
     setProbe(null);
     layoutDepthUI();
-    var f = depthFileFor(currentSlide());
-    if (f) applyDepth(f);
+    var u = depthUrlFor(currentSlide());
+    if (u) applyDepth(u);
   }
 
   function buildSlides(data) {

@@ -22,13 +22,26 @@ python manage.py runserver
 
 - Вход: http://127.0.0.1:8000/ui/login/
 - Проекты (staff): http://127.0.0.1:8000/ui/projects/
+
+### Проекты и Git
+
+Конфиг проекта **не хранится в БД** — только в репозитории GitHub: `collector/config.json` (см. `specs/git-backed-projects.md`).
+
+- При создании проекта: URL репо + SSH deploy key (генерация на сервере или вставка приватного ключа).
+- Публичный ключ → GitHub → Deploy keys (**Allow write access**).
+- Кнопка «Проверить Git» на карточке проекта — `git pull` и при необходимости seed `config.json`.
+- Сохранение в JSON-редакторе = `git commit` + `git push`.
+- Кэш клонов: `project_git_cache/` (или `PROJECT_GIT_CACHE_ROOT`).
+- Нужны **git** и **ssh-keygen** в PATH; `pip install -r requirements.txt` (пакет `cryptography`).
+
+Миграция `0006_git_backed_projects` удаляет старые записи `Project` из БД (чистый старт).
 - Пакеты: http://127.0.0.1:8000/ui/packages/
 
 Пакеты (бывший client-admin) полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
 
 - **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
 - **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через обычный POST-форму на Django-вью (`package_manifest_save`, переиспользует `package_admin_service.patch_manifest` + дописывает `field_changelog.json`).
-- **Визуализация** — `static/ui/packages_viz.js`: SVG-оверлей keypoints/bbox/segments, карта глубины из `.npy` (палитра, режимы «рядом/наложение», проба под курсором), фильмстрип, ссылка в CVAT, экспорт PNG/JSON. Данные — из `datapipe_test/*` через `/ui/.../viz-data/` и `/ui/packages/depth/<file>`.
+- **Визуализация** — `static/ui/packages_viz.js`: SVG-оверлей keypoints/bbox/segments, карта глубины из `.npy` (палитра, режимы «рядом/наложение», проба под курсором), фильмстрип, ссылка в CVAT, экспорт PNG/JSON. Данные — из **per-project SQLite** (`project_db/<project_id>/pipeline.sqlite3`, таблицы `cow_keypoint_annotation`, `cow_inference_result`). После commit пакета в local-режиме автоматически копируются заглушки из `datapipe_test/`; `.npy` кладутся в blobs пакета (`blobs/img_0001_depth.npy` рядом с фото). Ручной сид: `python manage.py seed_package_pipeline <project_id> <package_id> [--force]`.
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
 

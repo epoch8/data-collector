@@ -12,37 +12,49 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">{{ project.name }}</h1>
-    <p class="ui-page-sub mb-0"><code>{{ project.project_id }}</code> · конфиг <strong>v{{ project.config_version }}</strong></p>
+    <p class="ui-page-sub mb-0">
+      <code>{{ project.project_id }}</code>
+      · Git <code class="small">{{ project.config_version_label }}</code>
+      {% if project.last_synced_at %}· sync {{ project.last_synced_at|date:"Y-m-d H:i" }}{% endif %}
+    </p>
   </div>
   <div class="d-flex flex-wrap gap-2 justify-content-md-end">
     {% if is_staff %}
     <a class="btn btn-primary btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>Редактор</a>
     <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_media' project.project_id %}"><i class="bi bi-images me-1"></i>Файлы</a>
+    <form method="post" action="{% url 'ui_project_git_sync' project.project_id %}" class="d-inline">
+      {% csrf_token %}
+      <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-arrow-repeat me-1"></i>Проверить Git</button>
+    </form>
     {% endif %}
     <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>JSON</a>
     <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_package_list' %}?project={{ project.project_id }}"><i class="bi bi-box-seam me-1"></i>Пакеты</a>
   </div>
 </div>
-<div class="row g-4">
-  {% if is_staff %}
-  <div class="col-md-6">
+
+{% if project.sync_error %}
+<div class="alert alert-warning py-2 small mb-4">{{ project.sync_error }}</div>
+{% endif %}
+
+<div class="row g-4 mb-4">
+  <div class="col-lg-6">
     <div class="card p-4 h-100">
-      <div class="ui-card-title"><i class="bi bi-hdd-network me-1"></i>Медиа на диске</div>
-      <p class="small ui-muted mb-3">Корень: <code>project_assets/{{ project.project_id }}/</code></p>
-      {% if media_files %}
-        <ul class="small mb-0 ps-3" style="max-height: 220px; overflow-y: auto;">
-          {% for rel, sz in media_files %}
-          {% if forloop.counter <= 12 %}<li class="mb-1"><code>{{ rel }}</code> <span class="ui-muted">— {{ sz }} B</span></li>{% endif %}
-          {% endfor %}
-          {% if media_files|length > 12 %}<li class="ui-muted">… и другие файлы</li>{% endif %}
-        </ul>
-      {% else %}
-        <p class="small ui-muted mb-0">Пока нет файлов. Загрузите на странице «Файлы».</p>
+      <div class="ui-card-title"><i class="bi bi-git me-1"></i>Репозиторий</div>
+      <p class="small mb-2"><code class="text-break">{{ project.git_remote }}</code></p>
+      <p class="small ui-muted mb-2">Ветка: <code>{{ project.git_default_ref }}</code> · файл <code>collector/config.json</code></p>
+      {% if is_staff and git_public_key %}
+      <p class="small ui-muted mb-1">Deploy key (public) — вставьте в GitHub → Settings → Deploy keys:</p>
+      <pre class="small bg-dark border border-secondary rounded p-2 mb-3 text-break" style="font-size: 0.7rem; max-height: 120px; overflow: auto;">{{ git_public_key }}</pre>
+      <form method="post" action="{% url 'ui_project_update_ssh_key' project.project_id %}">
+        {% csrf_token %}
+        <p class="small ui-muted mb-1">Если Git пишет <code>error in libcrypto</code> — вставьте приватный ключ заново (OpenSSH, не .ppk):</p>
+        <textarea class="form-control font-monospace small mb-2" name="private_key" rows="4" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
+        <button type="submit" class="btn btn-outline-light btn-sm">Обновить приватный ключ</button>
+      </form>
       {% endif %}
     </div>
   </div>
-  {% endif %}
-  <div class="col-md-6">
+  <div class="col-lg-6">
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-cloud-arrow-up me-1"></i>Приём пакетов</div>
       <p class="mb-2">Сессий загрузки: <strong class="text-white">{{ package_count }}</strong></p>
@@ -50,13 +62,31 @@
     </div>
   </div>
 </div>
+
 {% if is_staff %}
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="card p-4 h-100">
+      <div class="ui-card-title"><i class="bi bi-hdd-network me-1"></i>Медиа на диске (legacy)</div>
+      <p class="small ui-muted mb-3">Целевой путь в Git: <code>collector/media/</code>. Здесь — локальная папка до переноса.</p>
+      {% if media_files %}
+        <ul class="small mb-0 ps-3" style="max-height: 220px; overflow-y: auto;">
+          {% for rel, sz in media_files %}
+          {% if forloop.counter <= 12 %}<li class="mb-1"><code>{{ rel }}</code> <span class="ui-muted">— {{ sz }} B</span></li>{% endif %}
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="small ui-muted mb-0">Пока нет файлов.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
 <hr class="border-secondary my-5">
 <h2 class="h6 text-danger mb-3"><i class="bi bi-shield-exclamation me-1"></i>Опасная зона</h2>
 <form method="post" action="{% url 'ui_project_delete' project.project_id %}" onsubmit="return confirm('Удалить проект и все пакеты?');">
   {% csrf_token %}
   <div class="card p-4 border-danger border-opacity-50">
-    <p class="small mb-3">Удаление проекта необратимо: конфиг, медиа на диске и все принятые пакеты.</p>
+    <p class="small mb-3">Удаление проекта необратимо: запись в каталоге, git-кэш, SSH credential (если не используется elsewhere), пакеты.</p>
     <label class="form-label small">Введите <code>{{ project.project_id }}</code> для подтверждения</label>
     <input class="form-control mb-3" type="text" name="confirm" autocomplete="off">
     <button type="submit" class="btn btn-outline-danger btn-sm">Удалить проект</button>

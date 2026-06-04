@@ -125,6 +125,22 @@ MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
 PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / "project_assets")))
+PROJECT_GIT_CACHE_ROOT = Path(
+    os.environ.get("PROJECT_GIT_CACHE_ROOT", str(BASE_DIR / "project_git_cache")),
+)
+# Минимальный интервал между git fetch для одного проекта (секунды). Снижает лаг UI пакетов.
+PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INTERVAL_SEC", "300"))
+
+# Per-project SQLite: inference / GT (pipeline.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
+PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
+# После commit пакета — копировать datapipe_test в БД проекта (local по умолчанию).
+_pipeline_mock = os.environ.get("PROJECT_PIPELINE_MOCK_SEED", "").strip().lower()
+if _pipeline_mock in ("1", "true", "yes"):
+    PROJECT_PIPELINE_MOCK_SEED = True
+elif _pipeline_mock in ("0", "false", "no"):
+    PROJECT_PIPELINE_MOCK_SEED = False
+else:
+    PROJECT_PIPELINE_MOCK_SEED = DJANGO_ENV == "local"
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

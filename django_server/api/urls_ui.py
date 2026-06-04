@@ -15,6 +15,16 @@ urlpatterns = [
     path("projects/", views_ui.project_list, name="ui_project_list"),
     path("projects/new/", views_ui.project_new, name="ui_project_new"),
     path("projects/<str:project_id>/", views_ui.project_detail, name="ui_project_detail"),
+    path(
+        "projects/<str:project_id>/git-sync/",
+        views_ui.project_git_sync,
+        name="ui_project_git_sync",
+    ),
+    path(
+        "projects/<str:project_id>/ssh-key/",
+        views_ui.project_update_ssh_key,
+        name="ui_project_update_ssh_key",
+    ),
     path("projects/<str:project_id>/config/", views_ui.project_config, name="ui_project_config"),
     path(
         "projects/<str:project_id>/config/builder/",
@@ -36,6 +46,11 @@ urlpatterns = [
         name="ui_package_workspace_legacy",
     ),
     path("packages/depth/<str:filename>", views_ui.package_depth_npy, name="ui_package_depth_npy"),
+    path(
+        "projects/<str:project_id>/packages/<str:package_id>/depth/<path:logical_path>",
+        views_ui.package_depth_blob,
+        name="ui_package_depth_blob",
+    ),
     path(
         "projects/<str:project_id>/packages/<str:package_id>/",
         views_ui.package_workspace,

@@ -27,7 +27,18 @@ from . import package_admin_service as pas
 from . import packages_ui as pui
 from .firebase_user_sync import sync_collector_users_from_firebase
 from .models import CollectorUser, PackageSession, Project, UploadedBlob
+from .project_config_service import (
+    bootstrap_new_project,
+    create_credential,
+    create_credential_generated,
+    load_config_dict,
+    save_config_to_git,
+    seed_project_json,
+    update_credential_private_key,
+)
 from .project_config_validate import validate_project_payload
+from .project_git import GitProjectError, normalize_git_remote, pull, test_remote
+from .project_git import remove_cache as git_remove_cache
 from .ui_access import (
     allowed_package_project_ids,
     get_ui_collector,
@@ -86,56 +97,6 @@ def _allocate_auto_relative_path(project_id: str, uploaded_filename: str) -> str
     return _safe_rel_path(f"uploads/{uuid4().hex}_{safe}") or f"uploads/{uuid4().hex}_file.bin"
 
 
-def _seed_project_json(project_id: str, name: str) -> dict:
-    """Минимальный валидный конфиг для нового проекта и при битом JSON в БД."""
-    return {
-        "id": project_id,
-        "name": name or project_id,
-        "version": "1",
-        "config": {
-            "fields": [
-                {
-                    "field_id": "demo_text",
-                    "priority": 1,
-                    "type": "text_input",
-                    "title": "Пример текста",
-                    "instructions": "Заполните поле",
-                    "validation": {},
-                },
-            ],
-            "flow": {
-                "steps": [
-                    {"id": "form1", "screen": "form", "field_ids": ["demo_text"]},
-                ],
-            },
-            "ui": {},
-        },
-    }
-
-
-def _next_config_version(project: Project, ver: str) -> str:
-    if ver:
-        return ver
-    try:
-        v = int(project.config_version)
-        return str(v + 1)
-    except ValueError:
-        return project.config_version + "-1"
-
-
-def _save_project_json(project: Project, project_id: str, data: dict, ver: str) -> list[str]:
-    """Возвращает список ошибок валидации; пустой — сохранено."""
-    data["id"] = project_id
-    errs = validate_project_payload(data, project_id)
-    if errs:
-        return errs
-    project.config_version = _next_config_version(project, ver.strip())
-    project.raw_json = json.dumps(data, ensure_ascii=False, indent=2)
-    project.name = (data.get("name") or project.name)[:512]
-    project.save()
-    return []
-
-
 def ui_home(request):
     if is_ui_staff(request):
         return redirect("ui_project_list")
@@ -162,27 +123,47 @@ def project_new(request):
     if request.method == "POST":
         pid = (request.POST.get("project_id") or "").strip()
         name = (request.POST.get("name") or "").strip() or pid
+        git_url = (request.POST.get("git_repo_url") or "").strip()
+        private_key = (request.POST.get("private_key") or "").strip()
+        generate_key = request.POST.get("generate_key") == "1"
         if not pid:
-            messages.error(request, "Укажите project_id (как поле id в JSON).")
+            messages.error(request, "Укажите project_id (как поле id в config.json).")
             return redirect("ui_project_new")
         if Project.objects.filter(project_id=pid).exists():
             messages.error(request, "Проект с таким id уже есть.")
             return redirect("ui_project_detail", project_id=pid)
-        seed = _seed_project_json(pid, name)
-        body = {
-            "id": pid,
-            "name": name,
-            "version": seed["version"],
-            "config": seed["config"],
-        }
-        Project.objects.create(
+        try:
+            git_remote = normalize_git_remote(git_url)
+        except GitProjectError as e:
+            messages.error(request, e.message)
+            return redirect("ui_project_new")
+        try:
+            if generate_key:
+                cred, public_key, _ = create_credential_generated(label=f"{pid} deploy")
+            else:
+                cred = create_credential(label=f"{pid} deploy", private_key=private_key)
+                public_key = cred.public_key
+        except GitProjectError as e:
+            messages.error(request, e.message)
+            return redirect("ui_project_new")
+        project = Project.objects.create(
             project_id=pid,
             name=name,
-            config_version="1",
-            raw_json=json.dumps(body, ensure_ascii=False, indent=2),
+            git_remote=git_remote,
+            git_default_ref=(request.POST.get("git_default_ref") or "main").strip() or "main",
+            git_credential=cred,
         )
-        _project_assets_dir(pid).mkdir(parents=True, exist_ok=True)
-        messages.success(request, f"Проект {pid} создан.")
+        seed = seed_project_json(pid, name)
+        for w in bootstrap_new_project(project, seed=seed):
+            messages.warning(request, w)
+        if generate_key:
+            messages.info(
+                request,
+                "Добавьте deploy key в GitHub (Settings → Deploy keys, с write access). "
+                "Публичный ключ — на странице проекта.",
+            )
+        messages.success(request, f"Проект {pid} создан. Git: {git_remote}")
+        request.session[f"git_public_key_{pid}"] = public_key
         return redirect("ui_project_detail", project_id=pid)
     return render(request, "ui/project_new.html", {})
 
@@ -192,6 +173,7 @@ def project_detail(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     media = _list_media_files(project_id)
     pkg_count = project.packages.count()
+    public_key = request.session.pop(f"git_public_key_{project_id}", None) or project.git_credential.public_key
     return render(
         request,
         "ui/project_detail.html",
@@ -200,8 +182,44 @@ def project_detail(request, project_id: str):
             "media_files": media,
             "package_count": pkg_count,
             "is_staff": request.user.is_staff,
+            "git_public_key": public_key,
         },
     )
+
+
+@staff_only
+@require_POST
+def project_update_ssh_key(request, project_id: str):
+    project = get_object_or_404(Project, project_id=project_id)
+    private_key = (request.POST.get("private_key") or "").strip()
+    if not private_key:
+        messages.error(request, "Вставьте приватный ключ OpenSSH.")
+        return redirect("ui_project_detail", project_id=project_id)
+    try:
+        public_key = update_credential_private_key(project.git_credential, private_key)
+        request.session[f"git_public_key_{project_id}"] = public_key
+        messages.success(
+            request,
+            "Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub.",
+        )
+    except GitProjectError as e:
+        messages.error(request, e.message)
+    return redirect("ui_project_detail", project_id=project_id)
+
+
+@staff_only
+@require_POST
+def project_git_sync(request, project_id: str):
+    project = get_object_or_404(Project, project_id=project_id)
+    try:
+        test_remote(project)
+        pull(project, force=True)
+        seed = seed_project_json(project.project_id, project.name)
+        bootstrap_new_project(project, seed=seed, try_seed_push=True)
+        messages.success(request, "Git: подключение OK, репозиторий обновлён.")
+    except GitProjectError as e:
+        messages.error(request, f"Git: {e.message}")
+    return redirect("ui_project_detail", project_id=project_id)
 
 
 @staff_only
@@ -210,13 +228,12 @@ def project_config(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     if request.method == "POST":
         raw = request.POST.get("raw_json", "")
-        ver = (request.POST.get("config_version") or "").strip()
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
             messages.error(request, f"Невалидный JSON: {e}")
             return redirect("ui_project_config", project_id=project_id)
-        errs = _save_project_json(project, project_id, data, ver)
+        errs = save_config_to_git(project, project_id, data)
         if errs:
             for e in errs:
                 messages.error(request, e)
@@ -234,12 +251,19 @@ def project_config(request, project_id: str):
                     "read_only": False,
                 },
             )
-        messages.success(request, "Конфиг сохранён, версия обновлена.")
+        messages.success(request, "Конфиг закоммичен и отправлен в Git.")
         return redirect("ui_project_detail", project_id=project_id)
-    try:
-        pretty = json.dumps(json.loads(project.raw_json), ensure_ascii=False, indent=2)
-    except json.JSONDecodeError:
-        pretty = project.raw_json
+    data, err = load_config_dict(project_id)
+    if err is not None:
+        try:
+            body = json.loads(err.content.decode())
+            msg = body.get("error", {}).get("message", "Ошибка загрузки конфига из Git")
+        except (json.JSONDecodeError, AttributeError):
+            msg = "Ошибка загрузки конфига из Git"
+        messages.error(request, msg)
+        pretty = json.dumps(seed_project_json(project_id, project.name), ensure_ascii=False, indent=2)
+    else:
+        pretty = json.dumps(data, ensure_ascii=False, indent=2)
     return render(
         request,
         "ui/project_config.html",
@@ -260,43 +284,37 @@ def project_config_builder(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     if request.method == "POST":
         raw = request.POST.get("raw_json", "")
-        ver = (request.POST.get("config_version") or "").strip()
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
             messages.error(request, f"Невалидный JSON: {e}")
             return redirect("ui_project_config_builder", project_id=project_id)
-        errs = _save_project_json(project, project_id, data, ver)
+        errs = save_config_to_git(project, project_id, data)
         if errs:
             for e in errs:
                 messages.error(request, e)
             try:
                 initial_data = json.loads(raw)
             except json.JSONDecodeError:
-                initial_data = _seed_project_json(project.project_id, project.name)
-            try:
-                pretty = json.dumps(json.loads(project.raw_json), ensure_ascii=False, indent=2)
-            except json.JSONDecodeError:
-                pretty = project.raw_json
+                initial_data = seed_project_json(project.project_id, project.name)
             return render(
                 request,
                 "ui/project_config_builder.html",
                 {
                     "project": project,
                     "initial_data": initial_data,
-                    "pretty_json": pretty,
+                    "pretty_json": json.dumps(initial_data, ensure_ascii=False, indent=2),
                     "validation_errors": errs,
-                    "config_version": ver or project.config_version,
                 },
             )
-        messages.success(request, "Конфиг сохранён, версия обновлена.")
+        messages.success(request, "Конфиг закоммичен и отправлен в Git.")
         return redirect("ui_project_detail", project_id=project_id)
-    try:
-        initial_data = json.loads(project.raw_json)
-        pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
-    except json.JSONDecodeError:
-        initial_data = _seed_project_json(project.project_id, project.name)
-        pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
+    data, err = load_config_dict(project_id)
+    if err is not None or not data:
+        initial_data = seed_project_json(project.project_id, project.name)
+    else:
+        initial_data = data
+    pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
     return render(
         request,
         "ui/project_config_builder.html",
@@ -304,7 +322,6 @@ def project_config_builder(request, project_id: str):
             "project": project,
             "initial_data": initial_data,
             "pretty_json": pretty,
-            "config_version": project.config_version,
         },
     )
 
@@ -382,7 +399,12 @@ def project_delete(request, project_id: str):
     if request.POST.get("confirm") != project_id:
         messages.error(request, "Введите подтверждение: id проекта в поле confirm.")
         return redirect("ui_project_detail", project_id=project_id)
+    cred = project.git_credential
+    cred_pk = cred.pk
     project.delete()
+    git_remove_cache(project_id)
+    if not Project.objects.filter(git_credential_id=cred_pk).exists():
+        cred.delete()
     messages.success(request, "Проект удалён.")
     return redirect("ui_project_list")
 
@@ -470,7 +492,13 @@ def package_list(request):
             field_id = search_fields[0]["field_id"]
         selected_field = next((f for f in search_fields if f["field_id"] == field_id), None)
 
-        items, _err = pas.list_packages(project_id, phase="", preview_prefix="/ui/api/v1")
+        search_ids = {f["field_id"] for f in search_fields}
+        items, _err = pas.list_packages(
+            project_id,
+            phase="",
+            preview_prefix="/ui/api/v1",
+            search_field_ids=search_ids,
+        )
         items = items or []
         total = len(items)
         phase_chips = [
@@ -584,8 +612,8 @@ def package_workspace(request, project_id: str, package_id: str):
     has_viz = pui.has_visualisation(project_id, package_id)
     blob_map = {b["logical_path"]: b["url"] for b in blobs}
 
-    # Sidebar: все пакеты проекта
-    side_items, _ = pas.list_packages(project_id, phase="", preview_prefix="/ui/api/v1")
+    # Sidebar: без manifest_json — только колонки сессии
+    side_items, _ = pas.list_package_summaries(project_id)
     sidebar = [
         {
             "package_id": it["package_id"],
@@ -729,6 +757,7 @@ def package_viz_data(request, project_id: str, package_id: str):
 
 @packages_ui_required
 def package_depth_npy(request, filename: str):
+    """Legacy: .npy из datapipe_test/ (демо korovas-2026)."""
     safe = Path(filename).name
     if not safe.endswith(".npy"):
         raise Http404("Not found")
@@ -736,6 +765,25 @@ def package_depth_npy(request, filename: str):
     if not path.is_file():
         raise Http404("Not found")
     return FileResponse(path.open("rb"), content_type="application/octet-stream")
+
+
+@packages_ui_required
+def package_depth_blob(request, project_id: str, package_id: str, logical_path: str):
+    """Карта глубины из blob пакета (рядом с фото в media/pkg/…)."""
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+    rel = (logical_path or "").replace("\\", "/").strip("/")
+    if not rel.endswith(".npy") or ".." in Path(rel).parts:
+        raise Http404("Not found")
+    blob = UploadedBlob.objects.filter(
+        session__project__project_id=project_id,
+        session__package_id=package_id,
+        logical_path=rel,
+    ).first()
+    if not blob or not blob.file:
+        raise Http404("Not found")
+    return FileResponse(blob.file.open("rb"), content_type="application/octet-stream")
 
 
 @packages_ui_required

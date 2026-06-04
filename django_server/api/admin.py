@@ -5,7 +5,7 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .firebase_user_sync import sync_collector_users_from_firebase
-from .models import CollectorUser, PackageSession, Project, UploadedBlob
+from .models import CollectorUser, GitCredential, PackageSession, Project, UploadedBlob
 
 
 @admin.register(CollectorUser)
@@ -104,10 +104,17 @@ class CollectorUserAdmin(admin.ModelAdmin):
         return s or "—"
 
 
+@admin.register(GitCredential)
+class GitCredentialAdmin(admin.ModelAdmin):
+    list_display = ("id", "label", "created_at")
+    readonly_fields = ("public_key", "private_key_encrypted", "created_at")
+
+
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ("project_id", "name", "config_version", "updated_at")
-    search_fields = ("project_id", "name")
+    list_display = ("project_id", "name", "git_remote", "last_synced_sha", "updated_at")
+    search_fields = ("project_id", "name", "git_remote")
+    raw_id_fields = ("git_credential",)
 
 
 class UploadedBlobInline(admin.TabularInline):
