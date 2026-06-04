@@ -451,20 +451,12 @@ def list_media_files(project: Project) -> list[tuple[str, int]]:
 
 
 def resolve_media_file(project_id: str, asset_path: str) -> Path | None:
-    """Файл в git-кэше `collector/media/…` или legacy `project_assets/<id>/`."""
+    """Файл в git-кэше `collector/media/…`."""
     rel = normalize_media_rel(asset_path)
     if not rel:
         return None
     git_path = repo_dir(project_id) / MEDIA_REL_DIR / rel
-    if git_path.is_file():
-        return git_path
-    legacy_root = Path(settings.PROJECT_ASSETS_ROOT) / project_id
-    legacy = (legacy_root / rel).resolve()
-    try:
-        legacy.relative_to(legacy_root.resolve())
-    except ValueError:
-        return None
-    return legacy if legacy.is_file() else None
+    return git_path if git_path.is_file() else None
 
 
 def _git_add_commit_push(project: Project, git_paths: list[str], commit_message: str) -> str:

@@ -124,7 +124,6 @@ LOGIN_REDIRECT_URL = "/ui/"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
-PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / "project_assets")))
 PROJECT_GIT_CACHE_ROOT = Path(
     os.environ.get("PROJECT_GIT_CACHE_ROOT", str(BASE_DIR / "project_git_cache")),
 )
@@ -133,12 +132,12 @@ PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INT
 
 # Per-project SQLite: inference / GT (pipeline.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
 PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
-# После commit пакета — dev-заглушки из datapipe_test (GT/inference + *_depth.npy). По умолчанию выкл.
-_pipeline_mock = os.environ.get("PROJECT_PIPELINE_MOCK_SEED", "").strip().lower()
-if _pipeline_mock in ("1", "true", "yes"):
-    PROJECT_PIPELINE_MOCK_SEED = True
-else:
-    PROJECT_PIPELINE_MOCK_SEED = False
+PACKAGE_FIELD_CHANGELOG_PATH = Path(
+    os.environ.get(
+        "PACKAGE_FIELD_CHANGELOG_PATH",
+        str(BASE_DIR / "data" / "field_changelog.json"),
+    ),
+)
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

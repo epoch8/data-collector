@@ -203,18 +203,16 @@
 
   // ── Main controller (config: collector/viz.json) ───────────────────────────
   var root, blobMap, slides = [], vizConfig = null, inited = false, loading = false;
-  var depthBaseUrl = "/ui/packages/depth/";
-
-  function resolveDepthBase() {
+  function packageDepthBlobUrl(logicalPath) {
     var el = document.getElementById("pkgViz") || document.getElementById("pkgWorkspace");
-    var base = (el && el.getAttribute("data-depth-base")) || depthBaseUrl;
-    if (!base) base = "/ui/packages/depth/";
-    if (base.charAt(base.length - 1) !== "/") base += "/";
-    return base;
-  }
-
-  function depthNpyUrl(filename) {
-    return resolveDepthBase() + filename;
+    if (!el) return null;
+    var pid = el.getAttribute("data-project");
+    var pkg = el.getAttribute("data-package");
+    if (!pid || !pkg) return null;
+    var rel = String(logicalPath || "").replace(/\\/g, "/").replace(/^\/+/, "");
+    if (!rel) return null;
+    return "/ui/projects/" + encodeURIComponent(pid) + "/packages/" + encodeURIComponent(pkg)
+      + "/depth/" + rel.split("/").map(encodeURIComponent).join("/");
   }
   var state = {
     index: 0, layerVisible: {}, showBoxes: false, showLabels: false,
@@ -349,10 +347,10 @@
     if (!rec) return null;
     var dm = rec.depth_map;
     if (dm && dm.depth_url) return dm.depth_url;
-    var asset = dm && dm.asset_path;
+    var asset = dm && (dm.asset_path || dm.depth_path);
     if (asset) {
       if (asset.charAt(0) === "/") return asset;
-      return depthNpyUrl(asset.split("/").pop());
+      return packageDepthBlobUrl(asset);
     }
     return null;
   }
@@ -947,7 +945,7 @@
 
   function applyDepth(depthTarget) {
     if (!depthTarget) return;
-    var url = depthTarget.charAt(0) === "/" ? depthTarget : depthNpyUrl(depthTarget);
+    var url = depthTarget.charAt(0) === "/" ? depthTarget : packageDepthBlobUrl(depthTarget);
     state.depthLoading = true;
     state.depthError = null;
     state.depthData = null;
@@ -1309,7 +1307,6 @@
     }
     if (inited) return;
     loading = true;
-    depthBaseUrl = resolveDepthBase();
     var mapEl = document.getElementById("pkgBlobMap");
     try {
       blobMap = JSON.parse((mapEl && mapEl.textContent) || "{}");

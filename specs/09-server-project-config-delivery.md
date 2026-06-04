@@ -165,6 +165,6 @@
 |---------|------------|
 | Маршруты API | `django_server/api/urls.py` |
 | Каталог, конфиг, ассеты | `django_server/api/views.py` — `ProjectsCatalogView`, `ProjectConfigView`, `ProjectAssetGetView` |
-| Импорт проектов из Flutter `assets/config/` в БД | `python manage.py load_projects_from_assets` (`api/management/commands/load_projects_from_assets.py`) |
+| Импорт проектов из Flutter `assets/config/` в БД | устарело — проекты только через `/ui/projects/new/` и Git (см. `specs/git-backed-projects.md`) |
 | Клиент: синк каталога и конфигов, ETag / 304 | `lib/features/projects/server_project_catalog.dart` |
 | Клиент: загрузка пакета по `project_id` из URL и манифеста | `lib/features/collection/logic/package_server_upload.dart` (см. спеку `08`) |

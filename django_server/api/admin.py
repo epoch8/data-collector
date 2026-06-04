@@ -78,7 +78,7 @@ class CollectorUserAdmin(admin.ModelAdmin):
             {
                 "fields": ("admin_projects",),
                 "description": (
-                    "Веб-админка пакетов через API <code>/admin-api/…</code> — просмотр и правка. "
+                    "Веб-админка пакетов <code>/ui/</code> — просмотр и правка. "
                     "Можно выдать доступ только в админку, без мобильного приложения, и наоборот."
                 ),
             },

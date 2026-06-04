@@ -108,7 +108,9 @@ class UiBlobPreviewView(View):
 
 
 def _changelog_path() -> Path:
-    return Path(settings.BASE_DIR).parent / "datapipe_test" / "field_changelog.json"
+    from .packages_ui import field_changelog_path
+
+    return field_changelog_path()
 
 
 class UiFieldChangelogView(View):

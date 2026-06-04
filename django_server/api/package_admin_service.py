@@ -1,4 +1,4 @@
-"""Shared package admin logic for /admin-api and /ui/api."""
+"""Shared package admin logic for /ui/api/v1 and Django views."""
 
 from __future__ import annotations
 

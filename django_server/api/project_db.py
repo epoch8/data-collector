@@ -285,7 +285,6 @@ def insert_gt(
     *,
     package_id: str,
     manifest_blob_key: str,
-    cvat_link: str,
     image_size: dict[str, Any],
     annotation: dict[str, Any],
 ) -> None:
@@ -295,9 +294,8 @@ def insert_gt(
             INSERT INTO cow_keypoint_annotation (
                 package_id, manifest_blob_key, cvat_link,
                 image_width, image_height, annotation_json
-            ) VALUES (?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, '', ?, ?, ?)
             ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
-                cvat_link = excluded.cvat_link,
                 image_width = excluded.image_width,
                 image_height = excluded.image_height,
                 annotation_json = excluded.annotation_json
@@ -305,7 +303,6 @@ def insert_gt(
             (
                 package_id,
                 manifest_blob_key,
-                cvat_link,
                 int(image_size.get("width") or 0),
                 int(image_size.get("height") or 0),
                 json.dumps(annotation, ensure_ascii=False),
@@ -321,11 +318,6 @@ def insert_inference(
     source_export: str,
     image_size: dict[str, Any],
     inference: dict[str, Any],
-    depth_blob_key: str | None = None,
-    depth_format: str = "npy",
-    depth_unit: str = "m",
-    depth_width: int | None = None,
-    depth_height: int | None = None,
 ) -> None:
     with connect(project_id) as conn:
         conn.execute(
@@ -335,17 +327,12 @@ def insert_inference(
                 image_width, image_height, inference_json,
                 depth_blob_key, depth_format, depth_unit,
                 depth_width, depth_height
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'npy', 'm', NULL, NULL)
             ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
                 source_export = excluded.source_export,
                 image_width = excluded.image_width,
                 image_height = excluded.image_height,
-                inference_json = excluded.inference_json,
-                depth_blob_key = excluded.depth_blob_key,
-                depth_format = excluded.depth_format,
-                depth_unit = excluded.depth_unit,
-                depth_width = excluded.depth_width,
-                depth_height = excluded.depth_height
+                inference_json = excluded.inference_json
             """,
             (
                 package_id,
@@ -354,11 +341,6 @@ def insert_inference(
                 int(image_size.get("width") or 0),
                 int(image_size.get("height") or 0),
                 json.dumps(inference, ensure_ascii=False),
-                depth_blob_key,
-                depth_format,
-                depth_unit,
-                depth_width,
-                depth_height,
             ),
         )
 
@@ -369,7 +351,6 @@ def _row_to_gt(row: sqlite3.Row) -> dict[str, Any]:
         "package_id": row["package_id"],
         "project_id": "",  # filled by caller
         "manifest_blob_key": row["manifest_blob_key"],
-        "cvat_link": row["cvat_link"],
         "image_size": {"width": row["image_width"], "height": row["image_height"]},
         "annotation": ann,
     }

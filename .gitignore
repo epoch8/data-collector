@@ -74,19 +74,12 @@ django_server/db.sqlite3
 django_server/db.sqlite3-journal
 django_server/media/
 django_server/project_db/
+django_server/project_git_cache/
 django_server/staticfiles/
 django_server/api/static/packages/
-django_server/frontend/packages/dist/
-django_server/frontend/packages/node_modules/
 
-# Исходники CVAT и прочие артефакты генерации mock (не нужны runtime)
-datapipe_test/cvat_cow/
-datapipe_test/cvat_cow.zip
-datapipe_test/depth_maps/
-datapipe_test/inference.json
-
-# Локальная история правок полей (пишется vite dev-сервером)
-datapipe_test/field_changelog.json
+django_server/data/field_changelog.json
+django_server/project_assets/
 
 # --- Секреты (сервисный аккаунт — только локально / CI) ---
 # google-services.json / GoogleService-Info.plist обычно коммитят для сборки клиента.

@@ -1,4 +1,4 @@
-/* Packages UI (ex client-admin) — Django templates + Bootstrap, dark theme. */
+/* Packages UI — Django templates + Bootstrap, dark theme. */
 
 /* ── List filters ─────────────────────────────────────────────────────────── */
 .pkg-filter__label {
@@ -61,7 +61,7 @@
   color: var(--ui-accent);
 }
 
-/* Workspace: ширина контента как client-admin (workspace-inner, 96rem) */
+/* Workspace: ширина контента (workspace-inner, 96rem) */
 body.ui-body--pkg-ws .ui-content.container-xxl {
   max-width: 96rem;
   width: 100%;

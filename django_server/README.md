@@ -37,11 +37,11 @@ python manage.py runserver
 Миграция `0006_git_backed_projects` удаляет старые записи `Project` из БД (чистый старт).
 - Пакеты: http://127.0.0.1:8000/ui/packages/
 
-Пакеты (бывший client-admin) полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
+Пакеты полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
 
 - **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
-- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через обычный POST-форму на Django-вью (`package_manifest_save`, переиспользует `package_admin_service.patch_manifest` + дописывает `field_changelog.json`).
-- **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`, `yolo_detection`. YOLO: `examples/collector/viz_yolo.json`, импорт `.txt`: `import_yolo_labels`. UI: `packages_viz.js` читает `/viz-data/`. Вкладка видна, если есть конфиг и строки в БД для пакета. Пример: `examples/collector/viz.json`; в кэш проекта: `python manage.py install_vis_config_example <project_id>`. Сид заглушек вручную: `python manage.py seed_package_pipeline <project_id> <package_id>`. Автосид после commit (в т.ч. `blobs/img_*_depth.npy` из `datapipe_test`) — только при `PROJECT_PIPELINE_MOCK_SEED=1` (по умолчанию выкл.). Спека: `specs/collector-vis-config.md`.
+- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + `data/field_changelog.json`).
+- **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`, `cvat_link`, `yolo_detection`. Импорт: `import_yolo_labels`, `import_depth_map`, `import_cvat_link`. UI: `packages_viz.js` → `/viz-data/`. Пример конфига: `examples/collector/viz.json`; установка в git-кэш: `install_vis_config_example`. Спека: `specs/collector-vis-config.md`.
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
 

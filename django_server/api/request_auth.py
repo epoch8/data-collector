@@ -1,4 +1,4 @@
-"""Общая авторизация CollectorUser (Firebase / dev bearer) для /v1/* и /admin-api/*."""
+"""Общая авторизация CollectorUser (Firebase / dev bearer) для /v1/*."""
 
 from __future__ import annotations
 

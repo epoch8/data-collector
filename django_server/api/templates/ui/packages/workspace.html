@@ -18,8 +18,7 @@
 {% block content %}
 <div class="pkg-ws" id="pkgWorkspace"
      data-editable="{{ is_editable|yesno:'1,0' }}"
-     data-viz-url="{{ viz_data_url }}"
-     data-depth-base="/ui/packages/depth/">
+     data-viz-url="{{ viz_data_url }}">
 
   {# ── Sidebar: package switcher ── #}
   <aside class="pkg-ws__sidebar">
@@ -153,8 +152,7 @@
       {# ── Visualisation panel ── #}
       {% if has_viz %}
       <section class="pkg-panel" data-panel="viz">
-        <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}"
-             data-depth-base="/ui/packages/depth/">
+        <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}">
           <script type="application/json" id="pkgBlobMap">{{ blob_map_json|safe }}</script>
           <div class="pkg-viz__loading ui-muted p-5 text-center">Загрузка визуализации…</div>
         </div>

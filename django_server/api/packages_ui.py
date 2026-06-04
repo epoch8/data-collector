@@ -1,4 +1,4 @@
-"""Server-side helpers for the Django-rendered packages UI (ex client-admin)."""
+"""Server-side helpers for the Django-rendered packages UI."""
 
 from __future__ import annotations
 
@@ -254,22 +254,8 @@ def is_image_path(path: str) -> bool:
     return path.lower().endswith(IMAGE_EXTS)
 
 
-# ── datapipe_test mock data (visualisation) + field changelog ────────────────
-
-def datapipe_dir() -> Path:
-    return Path(settings.BASE_DIR).parent / "datapipe_test"
-
-
-def _load_records(filename: str) -> list[dict[str, Any]]:
-    path = datapipe_dir() / filename
-    if not path.is_file():
-        return []
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
-    records = data.get("records") if isinstance(data, dict) else None
-    return records if isinstance(records, list) else []
+def field_changelog_path() -> Path:
+    return Path(settings.PACKAGE_FIELD_CHANGELOG_PATH)
 
 
 def has_visualisation(project_id: str, package_id: str) -> bool:
@@ -278,12 +264,8 @@ def has_visualisation(project_id: str, package_id: str) -> bool:
     return package_has_visualisation(project_id, package_id)
 
 
-def changelog_path() -> Path:
-    return datapipe_dir() / "field_changelog.json"
-
-
 def read_changelog(project_id: str, package_id: str) -> list[dict[str, Any]]:
-    path = changelog_path()
+    path = field_changelog_path()
     if not path.is_file():
         return []
     try:
@@ -327,7 +309,7 @@ def append_changelog(
     ]
     if not normalized:
         return 0
-    path = changelog_path()
+    path = field_changelog_path()
     path.parent.mkdir(parents=True, exist_ok=True)
     existing: list = []
     if path.is_file():

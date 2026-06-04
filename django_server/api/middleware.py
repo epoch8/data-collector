@@ -26,9 +26,9 @@ class UiCollectorSessionMiddleware:
 
 class ApiV1AuthMiddleware:
     """
-    /v1/*, /admin-api/* и /ui/api/*:
+    /v1/* и /ui/api/*:
     - /ui/api/*: Django session (staff/client) или Firebase Bearer (admin_projects).
-    - /v1/*, /admin-api/*: как раньше (Firebase / dev bearer).
+    - /v1/*: Firebase / dev bearer (мобильное приложение).
     """
 
     def __init__(self, get_response):
@@ -36,11 +36,7 @@ class ApiV1AuthMiddleware:
 
     def __call__(self, request):
         path = request.path
-        if not (
-            path.startswith("/v1/")
-            or path.startswith("/admin-api/")
-            or path.startswith("/ui/api/")
-        ):
+        if not (path.startswith("/v1/") or path.startswith("/ui/api/")):
             return self.get_response(request)
 
         if request.method == "OPTIONS":

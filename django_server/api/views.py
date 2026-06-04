@@ -273,9 +273,6 @@ class PackageCommitView(View):
                 )
             session.phase = PackageSession.Phase.COMPLETED
             session.save(update_fields=["phase"])
-        from .project_pipeline_seed import maybe_seed_on_commit
-
-        maybe_seed_on_commit(session)
         return JsonResponse({"status": "completed", "package_id": package_id})
 
 
@@ -320,7 +317,7 @@ class PackageDetailView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectAssetGetView(View):
-    """GET медиа инструкций: `collector/media/…` в git-кэше (или legacy project_assets)."""
+    """GET медиа инструкций: `collector/media/…` в git-кэше проекта."""
 
     def get(self, request, project_id: str, asset_path: str):
         denied = _require_project(request, project_id)

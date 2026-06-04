@@ -217,7 +217,7 @@
   margin-right: 0.3rem;
 }
 
-/* Панель глубины (как client-admin DepthProbeBar) */
+/* Панель глубины */
 .depth-probe-bar {
   display: none;
   flex-wrap: wrap;

@@ -1,4 +1,4 @@
-"""Firebase (client-admin) и Django session (staff) для /ui/api/v1."""
+"""Firebase и Django session (staff) для /ui/api/v1."""
 
 from __future__ import annotations
 
