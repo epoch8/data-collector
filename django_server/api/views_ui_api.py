@@ -3,15 +3,15 @@
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
-from django.conf import settings
 from django.http import JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import ensure_csrf_cookie
 
 from . import package_admin_service as pas
+from . import packages_ui as pui
+from .models import PackageSession
 from .ui_request_auth import (
     allowed_project_ids_for_request,
     ui_api_forbid_if_no_project,
@@ -69,7 +69,11 @@ class UiPackageListView(View):
         if denied is not None:
             return denied
         phase = (request.GET.get("phase") or "").strip()
-        items, err = pas.list_packages(project_id, phase=phase, preview_prefix=PREVIEW_PREFIX)
+        items, err = pas.list_packages(
+            project_id,
+            phase=phase,
+            preview_prefix=PREVIEW_PREFIX,
+        )
         if err is not None:
             return err
         return JsonResponse(items, safe=False)
@@ -80,11 +84,7 @@ class UiPackageWorkspaceView(View):
         denied = ui_api_forbid_if_no_project(request, project_id)
         if denied is not None:
             return denied
-        body, err = pas.get_workspace(
-            project_id,
-            package_id,
-            preview_prefix=PREVIEW_PREFIX,
-        )
+        body, err = pas.get_workspace(project_id, package_id, preview_prefix=PREVIEW_PREFIX)
         if err is not None:
             return err
         return JsonResponse(body)
@@ -107,12 +107,6 @@ class UiBlobPreviewView(View):
         return pas.blob_preview_response(project_id, package_id, blob_pk)
 
 
-def _changelog_path() -> Path:
-    from .packages_ui import field_changelog_path
-
-    return field_changelog_path()
-
-
 class UiFieldChangelogView(View):
     def get(self, request):
         denied = ui_api_forbid_if_unauthenticated(request)
@@ -120,29 +114,15 @@ class UiFieldChangelogView(View):
             return denied
         package_id = (request.GET.get("package_id") or "").strip()
         project_id = (request.GET.get("project_id") or "").strip()
-        path = _changelog_path()
-        if not path.is_file():
-            return JsonResponse({"entries": []})
-        try:
-            data = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return JsonResponse({"entries": []})
-        if not isinstance(data, list):
-            return JsonResponse({"entries": []})
-        filtered = []
-        for item in data:
-            if not isinstance(item, dict):
-                continue
-            if package_id and item.get("package_id") != package_id:
-                continue
-            if project_id and item.get("project_id") != project_id:
-                continue
-            if project_id:
-                denied_p = ui_api_forbid_if_no_project(request, project_id)
-                if denied_p is not None:
-                    return denied_p
-            filtered.append(item)
-        return JsonResponse({"entries": filtered})
+        if project_id:
+            denied_p = ui_api_forbid_if_no_project(request, project_id)
+            if denied_p is not None:
+                return denied_p
+        entries = pui.list_changelog_entries(
+            project_id=project_id,
+            package_id=package_id,
+        )
+        return JsonResponse({"entries": entries})
 
     def post(self, request):
         denied = ui_api_forbid_if_unauthenticated(request)
@@ -161,41 +141,14 @@ class UiFieldChangelogView(View):
         denied_p = ui_api_forbid_if_no_project(request, project_id)
         if denied_p is not None:
             return denied_p
-        from datetime import datetime, timezone
-
-        now = datetime.now(timezone.utc).isoformat()
+        session = PackageSession.objects.filter(
+            project__project_id=project_id,
+            package_id=package_id,
+        ).first()
+        if session is None:
+            return JsonResponse({"error": "not_found"}, status=404)
         verifier = (body.get("verifier_email") or request.user.email or "").strip()
-        normalized = []
-        for change in changes:
-            if not isinstance(change, dict):
-                continue
-            fid = (change.get("field_id") or "").strip()
-            if not fid:
-                continue
-            normalized.append(
-                {
-                    "project_id": project_id,
-                    "package_id": package_id,
-                    "field_id": fid,
-                    "before": change.get("before"),
-                    "after": change.get("after"),
-                    "reason": reason,
-                    "verifier_email": verifier,
-                    "changed_at": now,
-                },
-            )
-        if not normalized:
+        count = pui.append_changelog(session, reason, verifier, changes)
+        if count == 0:
             return JsonResponse({"error": "no_valid_changes"}, status=400)
-        path = _changelog_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        existing: list = []
-        if path.is_file():
-            try:
-                raw = json.loads(path.read_text(encoding="utf-8"))
-                if isinstance(raw, list):
-                    existing = raw
-            except json.JSONDecodeError:
-                existing = []
-        existing.extend(normalized)
-        path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
-        return JsonResponse({"ok": True, "entries_count": len(normalized)})
+        return JsonResponse({"ok": True, "entries_count": count})

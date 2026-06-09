@@ -40,7 +40,7 @@ python manage.py runserver
 Пакеты полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
 
 - **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
-- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + `data/field_changelog.json`).
+- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + модель `PackageFieldChange` в Django DB).
 - **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`, `cvat_link`, `yolo_detection`. Импорт: `import_yolo_labels`, `import_depth_map`, `import_cvat_link`. UI: `packages_viz.js` → `/viz-data/`. Пример конфига: `examples/collector/viz.json`; установка в git-кэш: `install_vis_config_example`. Спека: `specs/collector-vis-config.md`.
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.

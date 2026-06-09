@@ -62,3 +62,9 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.dataCollector',
   );
 }
+    // apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    // appId: '1:59903871663:android:83c40cfe504ef60952225a',
+    // messagingSenderId: '59903871663',
+    // projectId: 'e8-gke',
+    // authDomain: 'e8-gke.firebaseapp.com',
+    // storageBucket: 'e8-gke.firebasestorage.app',

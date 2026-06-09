@@ -128,6 +128,33 @@ class PackageSession(models.Model):
         return f"{self.project.project_id}:{self.package_id}"
 
 
+class PackageFieldChange(models.Model):
+    """История ручных правок manifest.data из client-admin workspace."""
+
+    session = models.ForeignKey(
+        PackageSession,
+        on_delete=models.CASCADE,
+        related_name="field_changes",
+    )
+    field_id = models.CharField(max_length=256, db_index=True)
+    before_value = models.JSONField(null=True, blank=True)
+    after_value = models.JSONField(null=True, blank=True)
+    reason = models.TextField()
+    verifier_email = models.CharField(max_length=254, blank=True, default="")
+    changed_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-changed_at"]
+        verbose_name = "Правка поля пакета"
+        verbose_name_plural = "Правки полей пакетов"
+        indexes = [
+            models.Index(fields=["session", "-changed_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.session_id}:{self.field_id}@{self.changed_at}"
+
+
 class UploadedBlob(models.Model):
     """Принятый бинарный объект по логическому пути (как в манифесте)."""
 

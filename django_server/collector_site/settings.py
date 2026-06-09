@@ -132,12 +132,6 @@ PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INT
 
 # Per-project SQLite: inference / GT (pipeline.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
 PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
-PACKAGE_FIELD_CHANGELOG_PATH = Path(
-    os.environ.get(
-        "PACKAGE_FIELD_CHANGELOG_PATH",
-        str(BASE_DIR / "data" / "field_changelog.json"),
-    ),
-)
 
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"

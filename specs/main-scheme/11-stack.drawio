@@ -1,125 +1,101 @@
 <mxfile host="65bd71144e">
     <diagram id="NcJ8xpYGfzt8TwEuywAG" name="Page-1">
-        <mxGraphModel dx="1286" dy="709" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1100" pageHeight="720" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1179" dy="618" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
-                <mxCell id="title" value="Стек и связи Data Collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="16" width="400" height="28" as="geometry"/>
+                <mxCell id="title" value="Data Collector — стек (1 платформа, N проектов)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=18;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="40" y="20" width="520" height="32" as="geometry"/>
                 </mxCell>
-                <mxCell id="30" value="&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 9px; color: #C9BFA8;&quot;&gt;Email/Password · ID token (JWT)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;spacingTop=4;fillColor=#3d3020;strokeColor=#F9AB00;fontColor=#FFF8E8;fontSize=11;arcSize=12;" parent="1" vertex="1">
-                    <mxGeometry x="400" y="52" width="200" height="52" as="geometry"/>
+                <mxCell id="fb" value="&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#C9BFA8&quot;&gt;вход: Flutter + client /ui/login/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#3d3020;strokeColor=#F9AB00;fontColor=#FFF8E8;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="880" y="20" width="200" height="48" as="geometry"/>
                 </mxCell>
-                <mxCell id="12" value="&lt;b&gt;Хранилище + БД&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#3DCC85&quot;&gt;prod:&lt;/font&gt; PostgreSQL · GCS(S3)&lt;br&gt;&lt;font color=&quot;#8B9DC6&quot;&gt;local:&lt;/font&gt; SQLite · media/&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;arcSize=8;" parent="1" vertex="1">
-                    <mxGeometry x="370" y="128" width="220" height="82" as="geometry"/>
+                <mxCell id="platGrp" value="" style="group" connectable="0" vertex="1" parent="1">
+                    <mxGeometry x="40" y="80" width="1120" height="510" as="geometry"/>
                 </mxCell>
-                <mxCell id="18" value="&lt;b&gt;Git / версионирование&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;планируется: база для&lt;br&gt;версионирования конфигов и проекта&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" parent="1" vertex="1">
-                    <mxGeometry x="40" y="133" width="200" height="72" as="geometry"/>
+                <mxCell id="platBg" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#5B8DEF;fillColor=#0f1419;strokeWidth=2;" vertex="1" parent="platGrp">
+                    <mxGeometry width="1120" height="480" as="geometry"/>
                 </mxCell>
-                <mxCell id="4" value="&lt;b&gt;Data collector админка&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#5B8DEF&quot;&gt;django_server&lt;/font&gt; — Django 5, Python&lt;br&gt;/ui/* · /v1/* · /admin-api/*&lt;br&gt;Firebase Admin SDK · CORS&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;arcSize=8;" parent="1" vertex="1">
-                    <mxGeometry x="370" y="272" width="220" height="88" as="geometry"/>
+                <mxCell id="platLbl" value="&lt;b&gt;ПЛАТФОРМА&lt;/b&gt; — data-collector" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#5B8DEF;" vertex="1" parent="platGrp">
+                    <mxGeometry x="40" y="12" width="400" height="24" as="geometry"/>
                 </mxCell>
-                <mxCell id="5" value="&lt;b&gt;Клиентская админка&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #B8C4CE;&quot;&gt;&lt;font color=&quot;#6BCF7F&quot;&gt;client-admin&lt;/font&gt; — React, TS&lt;br&gt;Vite · Tailwind · Canvas · npyjs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a2e28;strokeColor=#6BCF7F;fontColor=#E8F5EC;fontSize=11;arcSize=8;" parent="1" vertex="1">
-                    <mxGeometry x="870" y="260" width="190" height="76" as="geometry"/>
+                <mxCell id="row1Lbl" value="КЛИЕНТЫ" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;fontStyle=1;fontColor=#6B7280;" vertex="1" parent="platGrp">
+                    <mxGeometry x="16" y="60" width="320" height="16" as="geometry"/>
                 </mxCell>
-                <mxCell id="8" value="&lt;b&gt;Настройка (epoch8 admin)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #C9BFA8;&quot;&gt;браузер · Django UI&lt;br&gt;JSON config · CollectorUser&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;arcSize=8;" parent="1" vertex="1">
-                    <mxGeometry x="380" y="440" width="200" height="72" as="geometry"/>
+                <mxCell id="row1Mid" value="→" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=22;fontColor=#5B8DEF;" vertex="1" parent="platGrp">
+                    <mxGeometry x="336" y="108" width="40" height="32" as="geometry"/>
                 </mxCell>
-                <mxCell id="10" value="&lt;b&gt;App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size: 10px; color: #C4B8D8;&quot;&gt;Flutter · Riverpod · Drift&lt;br&gt;Dio · image_picker&lt;br&gt;Android · iOS · Web&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#EDE8F5;fontSize=11;arcSize=6;" parent="1" vertex="1">
-                    <mxGeometry x="20" y="272" width="150" height="128" as="geometry"/>
+                <mxCell id="row1Lbl2" value="СЕРВЕР" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;fontStyle=1;fontColor=#6B7280;" vertex="1" parent="platGrp">
+                    <mxGeometry x="380" y="60" width="400" height="16" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_db" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#B8E6C8;fontSize=9;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="4" target="12" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint as="offset"/>
-                    </mxGeometry>
+                <mxCell id="flutter" value="&lt;b&gt;Flutter App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#C4B8D8&quot;&gt;/v1/* upload&lt;br&gt;Drift (local)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#2a2438;strokeColor=#9B7ED0;fontColor=#EDE8F5;fontSize=11;" vertex="1" parent="platGrp">
+                    <mxGeometry x="16" y="82" width="150" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_app_up" value="загрузка пакетов&lt;br&gt;POST/PUT /v1/… packages, blobs&lt;br&gt;manifest · commit" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#9B7ED0;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#D4C8E8;fontSize=9;labelBackgroundColor=#121218;exitX=1;exitY=0.25;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" parent="1" source="10" target="4" edge="1">
-                    <mxGeometry x="-0.2" y="10" relative="1" as="geometry">
-                        <mxPoint as="offset"/>
-                        <Array as="points">
-                            <mxPoint x="210" y="303"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="staff" value="&lt;b&gt;Staff Admin&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#C9BFA8&quot;&gt;/ui/projects/&lt;br&gt;Git, users&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" vertex="1" parent="platGrp">
+                    <mxGeometry x="176" y="82" width="150" height="64" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_app_cfg" value="конфиг и каталог&lt;br&gt;GET /v1/projects&lt;br&gt;GET …/config · assets" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#B8C8E8;fontSize=9;labelBackgroundColor=#121218;exitX=0;exitY=0.65;exitDx=0;exitDy=0;entryX=1;entryY=0.75;entryDx=0;entryDy=0;" parent="1" source="4" target="10" edge="1">
-                    <mxGeometry x="0.15" y="-8" relative="1" as="geometry">
-                        <mxPoint as="offset"/>
-                        <Array as="points">
-                            <mxPoint x="330" y="329"/>
-                            <mxPoint x="330" y="376"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="client" value="&lt;b&gt;Client-admin&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;/ui/packages/&lt;br&gt;Firebase login&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#1a2e28;strokeColor=#6BCF7F;fontColor=#E8F5EC;fontSize=11;" vertex="1" parent="platGrp">
+                    <mxGeometry x="16" y="156" width="310" height="56" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_spa_req" value="client-admin → django&lt;br&gt;&lt;b&gt;GET&lt;/b&gt; /admin-api/v1/* (чтение)&lt;br&gt;&lt;b&gt;PATCH&lt;/b&gt; …/packages/{id}/manifest (запись)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6BCF7F;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#A8E6B8;fontSize=9;labelBackgroundColor=#121218;exitX=0;exitY=0.35;exitDx=0;exitDy=0;entryX=1;entryY=0.3;entryDx=0;entryDy=0;" parent="1" source="5" target="4" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="720" y="287"/>
-                            <mxPoint x="720" y="298"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="dj" value="&lt;b&gt;django_server&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;/v1/* — mobile API&lt;br&gt;/ui/* — HTML admin&lt;br&gt;/ui/api/v1/* — JSON (viz)&lt;br&gt;project_git, project_db, viz_plugins&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" vertex="1" parent="platGrp">
+                    <mxGeometry x="380" y="82" width="360" height="130" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_spa_resp" value="django → client-admin&lt;br&gt;200 JSON (projects, workspace)&lt;br&gt;превью blob (image)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6BCF7F;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#88C8A8;fontSize=9;labelBackgroundColor=#121218;exitX=1;exitY=0.55;exitDx=0;exitDy=0;entryX=0;entryY=0.65;entryDx=0;entryDy=0;" parent="1" source="4" target="5" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="590" y="340"/>
-                            <mxPoint x="870" y="340"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="sharedGrp" value="" style="group" connectable="0" vertex="1" parent="platGrp">
+                    <mxGeometry x="16" y="230" width="1088" height="280" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_config_ui" value="/ui/* — проекты, config,&lt;br&gt;users · mobile/admin_projects" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;strokeWidth=2;endArrow=blockThin;endFill=1;fontColor=#E8D4A8;fontSize=9;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="8" target="4" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="sharedBg" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#3DCC85;fillColor=#0a1812;strokeWidth=2;" vertex="1" parent="sharedGrp">
+                    <mxGeometry width="1088" height="230" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_fb_app" value="ID token" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.15;entryY=1;entryDx=0;entryDy=0;" parent="1" source="10" target="30" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="131" y="272"/>
-                            <mxPoint x="131" y="270"/>
-                            <mxPoint x="30" y="270"/>
-                            <mxPoint x="30" y="104"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="sharedLbl" value="&lt;b&gt;ОБЩЕЕ хранилище&lt;/b&gt; (одно на все проекты)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#3DCC85;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="12" y="10" width="360" height="22" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_fb_spa" value="Web SDK" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.85;entryY=1;entryDx=0;entryDy=0;" parent="1" source="5" target="30" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="965" y="104"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="sharedSub" value="local: db.sqlite3 + media/   |   prod: PostgreSQL + GCS" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9CA3AF;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="12" y="30" width="400" height="16" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_fb_django" value="verify token · sync users" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#F9AB00;strokeWidth=1;dashed=1;dashPattern=4 4;endArrow=openThin;endFill=0;fontColor=#F9AB00;fontSize=8;labelBackgroundColor=#121218;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="4" target="30" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <Array as="points">
-                            <mxPoint x="660" y="272"/>
-                            <mxPoint x="660" y="104"/>
-                        </Array>
-                    </mxGeometry>
+                <mxCell id="djangoDb" value="&lt;b&gt;Django DB (одна)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;Project, GitCredential, CollectorUser&lt;br&gt;PackageSession + manifest_json&lt;br&gt;UploadedBlob (FK session)&lt;br&gt;PackageFieldChange — история правок UI&lt;br&gt;(field_id, before/after, reason)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="12" y="52" width="360" height="120" as="geometry"/>
                 </mxCell>
-                <mxCell id="e_git_plan" value="планируется" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#6B7280;strokeWidth=1;dashed=1;dashPattern=6 4;endArrow=openThin;endFill=0;fontColor=#9CA3AF;fontSize=8;labelBackgroundColor=#121218;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="18" target="12" edge="1">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="blobs" value="&lt;b&gt;Blob files (общий)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;media/pkg/{session_id}/...&lt;br&gt;фото, depth, файлы пакетов&lt;br&gt;все проекты в одном storage&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="388" y="52" width="280" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="33" style="edgeStyle=none;html=1;entryX=1;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="31" target="4">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="sqliteNote" value="&lt;font style=&quot;font-size:10px;color:#D4C8F0&quot;&gt;&lt;b&gt;SQLite на сервере: 1 + N&lt;/b&gt;&lt;br&gt;1 = Django DB (db.sqlite3)&lt;br&gt;N = pipeline.sqlite3 на project_id&lt;br&gt;&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a1528;strokeColor=#A78BFA;fontColor=#EDE8F5;fontSize=10;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="684" y="52" width="280" height="100" as="geometry"/>
                 </mxCell>
-                <mxCell id="34" style="edgeStyle=none;html=1;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="31" target="5">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="sharedFoot" value="Пакеты и история правок — в одной Django DB. Конфиг сбора (fields, flow) — в Git каждого проекта, не в БД." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#A7F3D0;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="12" y="175" width="1060" height="18" as="geometry"/>
                 </mxCell>
-                <mxCell id="31" value="&lt;b&gt;Взаимодействие с базой&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Возможно не нужно делать ручек в админке и на прямую общаться с БД&amp;nbsp;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" vertex="1" parent="1">
-                    <mxGeometry x="670" y="440" width="200" height="72" as="geometry"/>
+                <mxCell id="sharedFoot2" value="В prod Django DB = PostgreSQL, pipeline SQLite остаётся файлами в project_db/" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9CA3AF;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="12" y="195" width="1060" height="18" as="geometry"/>
                 </mxCell>
-                <mxCell id="36" style="edgeStyle=none;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="35" target="5">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="legend" value="&lt;b&gt;Открытые вопоросы&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#9CA3AF&quot;&gt;1.Нужно ли хранить пакеты для каждого проекта в своей БД проекта&amp;nbsp;&lt;br&gt;2. Как хранятся блобы для каждого проекта в одном месте или раздельно по проекту?&lt;br&gt;3. Что в целом должно быть в DjangoDB, может вообще всю инфу по проекту хранить в своих БД, но тогда как будто бы будет дублирование таблиц&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#E8EAED;fontSize=11;" vertex="1" parent="sharedGrp">
+                    <mxGeometry x="754" y="123" width="304" height="122" as="geometry"/>
                 </mxCell>
-                <mxCell id="37" style="edgeStyle=none;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="35" target="12">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="projGrp" value="" style="group" connectable="0" vertex="1" parent="1">
+                    <mxGeometry x="40" y="580" width="1120" height="247" as="geometry"/>
                 </mxCell>
-                <mxCell id="35" value="&lt;b&gt;Конфиги и таблицы datapipe&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Сейчас это просто затычки в виде JSON, нужно сделать таблицы из которых эта инфа читается&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" vertex="1" parent="1">
-                    <mxGeometry x="700" y="10" width="200" height="72" as="geometry"/>
+                <mxCell id="projBg" value="" style="rounded=1;whiteSpace=wrap;html=1;strokeColor=#8BC9F7;fillColor=#0a1218;strokeWidth=2;" vertex="1" parent="projGrp">
+                    <mxGeometry width="1120" height="200" as="geometry"/>
                 </mxCell>
-                <mxCell id="39" style="edgeStyle=none;html=1;entryX=0.75;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="38" target="5">
-                    <mxGeometry relative="1" as="geometry"/>
+                <mxCell id="projLbl" value="&lt;b&gt;ПРОЕКТ&lt;/b&gt; — N экземпляров (у каждого своё)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=13;fontStyle=1;fontColor=#8BC9F7;" vertex="1" parent="projGrp">
+                    <mxGeometry x="16" y="12" width="400" height="24" as="geometry"/>
                 </mxCell>
-                <mxCell id="38" value="&lt;b&gt;Толстая админка&lt;/b&gt;&lt;br&gt;&lt;font color=&quot;#b8c4ce&quot;&gt;&lt;span style=&quot;font-size: 10px;&quot;&gt;Все реализации визуализаций сделаны так если есть такой-то JSON (табличка в БД) отрисовывай эту вкладку. Реализация должна уже быть внутри админки&amp;nbsp;&lt;/span&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#6B7280;fontColor=#D1D5DB;fontSize=11;arcSize=8;dashed=1;" vertex="1" parent="1">
-                    <mxGeometry x="1050" y="160" width="200" height="80" as="geometry"/>
+                <mxCell id="projGit" value="&lt;b&gt;GitHub repo&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;config.json&lt;br&gt;viz.json&lt;br&gt;media/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#1e2433;strokeColor=#8BC9F7;fontColor=#E8EAED;fontSize=11;" vertex="1" parent="projGrp">
+                    <mxGeometry x="16" y="48" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="projCache" value="&lt;b&gt;git cache&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;project_git_cache/&lt;br&gt;{project_id}/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#1e2433;strokeColor=#8BC9F7;fontColor=#E8EAED;fontSize=11;" vertex="1" parent="projGrp">
+                    <mxGeometry x="232" y="48" width="200" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="projPipe" value="&lt;b&gt;pipeline SQLite&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;project_db/{id}/&lt;br&gt;pipeline.sqlite3&lt;br&gt;yolo, depth, keypoints&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#1e2433;strokeColor=#A78BFA;fontColor=#EDE8F5;fontSize=11;" vertex="1" parent="projGrp">
+                    <mxGeometry x="448" y="48" width="220" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="projRepeat" value="&lt;font style=&quot;font-size:11px;color:#9CA3AF&quot;&gt;Project A  |  Project B  |  ...  |  Project N&lt;br&gt;свой deploy key, свой repo, свой pipeline.sqlite3&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#D1D5DB;fontSize=11;dashed=1;" vertex="1" parent="projGrp">
+                    <mxGeometry x="688" y="48" width="400" height="90" as="geometry"/>
+                </mxCell>
+                <mxCell id="projFoot" value="Строка Project в общей Django DB — ссылка на Git. Пакеты проекта A в общей DB, inference-таблицы — в SQLite проекта A." style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9CA3AF;" vertex="1" parent="projGrp">
+                    <mxGeometry x="16" y="155" width="1080" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="46" value="&lt;b&gt;Открытые вопоросы&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#9CA3AF&quot;&gt;1. Сейчас репозеторий кэшируется в админке и обновляется по нажатию на кнопку сохранения. Может тут нужен более сложный механизм?&lt;br&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#E8EAED;fontSize=11;" vertex="1" parent="projGrp">
+                    <mxGeometry x="668" y="150" width="316" height="92" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

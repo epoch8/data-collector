@@ -5,7 +5,14 @@ from django.urls import path, reverse
 from django.utils.html import format_html
 
 from .firebase_user_sync import sync_collector_users_from_firebase
-from .models import CollectorUser, GitCredential, PackageSession, Project, UploadedBlob
+from .models import (
+    CollectorUser,
+    GitCredential,
+    PackageFieldChange,
+    PackageSession,
+    Project,
+    UploadedBlob,
+)
 
 
 @admin.register(CollectorUser)
@@ -123,10 +130,40 @@ class UploadedBlobInline(admin.TabularInline):
     readonly_fields = ("logical_path", "size_bytes", "sha256", "created_at")
 
 
+class PackageFieldChangeInline(admin.TabularInline):
+    model = PackageFieldChange
+    extra = 0
+    readonly_fields = (
+        "field_id",
+        "before_value",
+        "after_value",
+        "reason",
+        "verifier_email",
+        "changed_at",
+    )
+    can_delete = False
+
+
 @admin.register(PackageSession)
 class PackageSessionAdmin(admin.ModelAdmin):
     list_display = ("package_id", "project", "phase", "uploader_email", "uploader_uid", "created_at")
     list_filter = ("phase",)
     search_fields = ("package_id", "uploader_uid", "uploader_email")
     readonly_fields = ("created_at",)
-    inlines = (UploadedBlobInline,)
+    inlines = (UploadedBlobInline, PackageFieldChangeInline)
+
+
+@admin.register(PackageFieldChange)
+class PackageFieldChangeAdmin(admin.ModelAdmin):
+    list_display = ("session", "field_id", "verifier_email", "changed_at")
+    list_filter = ("field_id",)
+    search_fields = ("session__package_id", "field_id", "verifier_email", "reason")
+    readonly_fields = (
+        "session",
+        "field_id",
+        "before_value",
+        "after_value",
+        "reason",
+        "verifier_email",
+        "changed_at",
+    )

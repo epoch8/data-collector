@@ -10,6 +10,7 @@ from uuid import uuid4
 
 from django.contrib import messages
 from django.contrib.auth import logout
+from django.db import transaction
 from django.http import (
     FileResponse,
     Http404,
@@ -782,21 +783,29 @@ def package_manifest_save(request, project_id: str, package_id: str):
 
     manifest["data"] = data
     manifest["project_id"] = project_id
-    patch_resp = pas.patch_manifest(
-        project_id, package_id, json.dumps(manifest, ensure_ascii=False),
-    )
-    if patch_resp.status_code != 200:
-        try:
-            detail = json.loads(patch_resp.content.decode("utf-8"))
-            msg = detail.get("error", {}).get("message", "Ошибка сохранения")
-        except (json.JSONDecodeError, AttributeError):
-            msg = "Ошибка сохранения"
-        messages.error(request, f"Не удалось сохранить: {msg}")
-        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+    session_obj = PackageSession.objects.filter(
+        project__project_id=project_id,
+        package_id=package_id,
+    ).first()
+    if session_obj is None:
+        raise Http404("Package not found")
 
-    pui.append_changelog(
-        project_id, package_id, reason, _ui_verifier_email(request), changes,
-    )
+    with transaction.atomic():
+        patch_resp = pas.patch_manifest(
+            project_id, package_id, json.dumps(manifest, ensure_ascii=False),
+        )
+        if patch_resp.status_code != 200:
+            try:
+                detail = json.loads(patch_resp.content.decode("utf-8"))
+                msg = detail.get("error", {}).get("message", "Ошибка сохранения")
+            except (json.JSONDecodeError, AttributeError):
+                msg = "Ошибка сохранения"
+            messages.error(request, f"Не удалось сохранить: {msg}")
+            return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+        pui.append_changelog(
+            session_obj, reason, _ui_verifier_email(request), changes,
+        )
     messages.success(request, f"Сохранено. Изменено полей: {len(changes)}.")
     return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 

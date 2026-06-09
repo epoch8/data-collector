@@ -2,14 +2,9 @@
 
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
-from pathlib import Path
 from typing import Any
 
-from django.conf import settings
-
-from .models import Project
+from .models import PackageFieldChange, PackageSession, Project
 
 # ── Phases ──────────────────────────────────────────────────────────────────
 
@@ -254,71 +249,68 @@ def is_image_path(path: str) -> bool:
     return path.lower().endswith(IMAGE_EXTS)
 
 
-def field_changelog_path() -> Path:
-    return Path(settings.PACKAGE_FIELD_CHANGELOG_PATH)
-
-
 def has_visualisation(project_id: str, package_id: str) -> bool:
     from .viz_service import package_has_visualisation
 
     return package_has_visualisation(project_id, package_id)
 
 
+def _changelog_entry_dict(row: PackageFieldChange) -> dict[str, Any]:
+    session = row.session
+    return {
+        "project_id": session.project.project_id,
+        "package_id": session.package_id,
+        "field_id": row.field_id,
+        "before": row.before_value,
+        "after": row.after_value,
+        "reason": row.reason,
+        "verifier_email": row.verifier_email,
+        "changed_at": row.changed_at.isoformat(),
+    }
+
+
+def list_changelog_entries(
+    *,
+    project_id: str = "",
+    package_id: str = "",
+) -> list[dict[str, Any]]:
+    qs = (
+        PackageFieldChange.objects.select_related("session", "session__project")
+        .order_by("-changed_at")
+    )
+    if project_id:
+        qs = qs.filter(session__project__project_id=project_id)
+    if package_id:
+        qs = qs.filter(session__package_id=package_id)
+    return [_changelog_entry_dict(row) for row in qs]
+
+
 def read_changelog(project_id: str, package_id: str) -> list[dict[str, Any]]:
-    path = field_changelog_path()
-    if not path.is_file():
-        return []
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except (json.JSONDecodeError, OSError):
-        return []
-    if not isinstance(data, list):
-        return []
-    entries = [
-        e
-        for e in data
-        if isinstance(e, dict)
-        and e.get("project_id") == project_id
-        and e.get("package_id") == package_id
-    ]
-    entries.sort(key=lambda e: str(e.get("changed_at") or ""), reverse=True)
-    return entries
+    return list_changelog_entries(project_id=project_id, package_id=package_id)
 
 
 def append_changelog(
-    project_id: str,
-    package_id: str,
+    session: PackageSession,
     reason: str,
     verifier_email: str,
     changes: list[dict[str, Any]],
 ) -> int:
-    now = datetime.now(timezone.utc).isoformat()
-    normalized = [
-        {
-            "project_id": project_id,
-            "package_id": package_id,
-            "field_id": c["field_id"],
-            "before": c.get("before"),
-            "after": c.get("after"),
-            "reason": reason,
-            "verifier_email": verifier_email,
-            "changed_at": now,
-        }
-        for c in changes
-        if c.get("field_id")
-    ]
-    if not normalized:
+    rows: list[PackageFieldChange] = []
+    for change in changes:
+        field_id = change.get("field_id")
+        if not field_id:
+            continue
+        rows.append(
+            PackageFieldChange(
+                session=session,
+                field_id=str(field_id),
+                before_value=change.get("before"),
+                after_value=change.get("after"),
+                reason=reason,
+                verifier_email=verifier_email,
+            ),
+        )
+    if not rows:
         return 0
-    path = field_changelog_path()
-    path.parent.mkdir(parents=True, exist_ok=True)
-    existing: list = []
-    if path.is_file():
-        try:
-            raw = json.loads(path.read_text(encoding="utf-8"))
-            if isinstance(raw, list):
-                existing = raw
-        except (json.JSONDecodeError, OSError):
-            existing = []
-    existing.extend(normalized)
-    path.write_text(json.dumps(existing, ensure_ascii=False, indent=2), encoding="utf-8")
-    return len(normalized)
+    PackageFieldChange.objects.bulk_create(rows)
+    return len(rows)
