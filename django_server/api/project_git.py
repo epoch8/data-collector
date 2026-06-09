@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import getpass
 import json
 import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -57,12 +59,38 @@ def normalize_private_key(private_key: str) -> str:
     return text
 
 
-def write_private_key_file(path: Path, private_key: str) -> None:
-    path.write_bytes(normalize_private_key(private_key).encode("utf-8"))
+def _windows_key_owner() -> str:
+    user = os.environ.get("USERNAME") or getpass.getuser()
+    domain = os.environ.get("USERDOMAIN", "")
+    computer = os.environ.get("COMPUTERNAME", "")
+    if domain and domain.upper() != computer.upper():
+        return f"{domain}\\{user}"
+    return user
+
+
+def _restrict_private_key_permissions(path: Path) -> None:
+    """OpenSSH на Windows отклоняет ключ, если ACL Temp даёт доступ другим пользователям."""
+    if sys.platform == "win32":
+        path_str = str(path)
+        owner = _windows_key_owner()
+        for args in (
+            ["icacls", path_str, "/inheritance:r"],
+            ["icacls", path_str, "/grant:r", f"{owner}:(R)"],
+        ):
+            try:
+                subprocess.run(args, check=True, capture_output=True, text=True, timeout=15)
+            except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired):
+                pass
+        return
     try:
         os.chmod(path, 0o600)
     except OSError:
         pass
+
+
+def write_private_key_file(path: Path, private_key: str) -> None:
+    path.write_bytes(normalize_private_key(private_key).encode("utf-8"))
+    _restrict_private_key_permissions(path)
 
 
 def verify_private_key_file(path: Path) -> None:
