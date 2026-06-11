@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from django.core.management.base import BaseCommand
 
-from api.models import PackageSession
 from api import project_db as pdb
+from api import project_media as pm
+from api import project_packages as ppkg
+from api.models import Project
 
 
 class Command(BaseCommand):
@@ -31,20 +33,19 @@ class Command(BaseCommand):
         parser.add_argument("--source-label", default="")
 
     def handle(self, *args, **options):
-        session = (
-            PackageSession.objects.filter(
-                project__project_id=options["project_id"],
-                package_id=options["package_id"],
-            )
-            .select_related("project")
-            .first()
-        )
+        project_id = options["project_id"]
+        package_id = options["package_id"]
+        project = Project.objects.filter(project_id=project_id).first()
+        if not project:
+            self.stderr.write(self.style.ERROR("Project not found"))
+            return
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             self.stderr.write(self.style.ERROR("Package session not found"))
             return
 
         blob_key = (options["manifest_blob_key"] or "").strip()
-        blob = session.blobs.filter(logical_path=blob_key).first()
+        blob = ppkg.get_blob_by_path(project_id, package_id, blob_key)
         if not blob:
             self.stderr.write(self.style.ERROR(f"Blob not found: {blob_key}"))
             return
@@ -54,16 +55,20 @@ class Command(BaseCommand):
         if iw <= 0 or ih <= 0:
             from api.yolo_labels import sniff_image_size
 
-            with blob.file.open("rb") as f:
-                head = f.read(256 * 1024)
-            size = sniff_image_size(head)
-            if size:
-                iw, ih = size
+            head = pm.read_blob_head(
+                project_id,
+                blob.storage_path,
+                media_bucket=project.media_bucket or "",
+            )
+            if head:
+                size = sniff_image_size(head)
+                if size:
+                    iw, ih = size
 
         depth_path = options["depth_path"].replace("\\", "/").strip()
         pdb.insert_depth_map(
-            session.project.project_id,
-            package_id=session.package_id,
+            project_id,
+            package_id=package_id,
             manifest_blob_key=blob_key,
             depth_path=depth_path,
             image_size={"width": iw, "height": ih} if iw and ih else None,

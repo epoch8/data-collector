@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from django.core.management.base import BaseCommand
 
-from api.models import PackageSession
 from api import project_db as pdb
+from api import project_packages as ppkg
 
 
 class Command(BaseCommand):
@@ -24,20 +24,15 @@ class Command(BaseCommand):
         parser.add_argument("--label", default="", help="Подпись в UI (опционально)")
 
     def handle(self, *args, **options):
-        session = (
-            PackageSession.objects.filter(
-                project__project_id=options["project_id"],
-                package_id=options["package_id"],
-            )
-            .select_related("project")
-            .first()
-        )
+        project_id = options["project_id"]
+        package_id = options["package_id"]
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             self.stderr.write(self.style.ERROR("Package session not found"))
             return
 
         blob_key = (options["manifest_blob_key"] or "").strip()
-        if not session.blobs.filter(logical_path=blob_key).exists():
+        if not ppkg.get_blob_by_path(project_id, package_id, blob_key):
             self.stderr.write(self.style.ERROR(f"Blob not found: {blob_key}"))
             return
 
@@ -47,8 +42,8 @@ class Command(BaseCommand):
             return
 
         pdb.insert_cvat_link(
-            session.project.project_id,
-            package_id=session.package_id,
+            project_id,
+            package_id=package_id,
             manifest_blob_key=blob_key,
             url=url,
             label=(options.get("label") or "").strip(),

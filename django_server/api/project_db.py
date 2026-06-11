@@ -10,13 +10,49 @@ from typing import Any, Iterator
 from django.conf import settings
 from django.urls import reverse
 
-_SCHEMA_VERSION = 1
+_SCHEMA_VERSION = 2
 
 _SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS schema_meta (
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS package_session (
+    package_id TEXT PRIMARY KEY,
+    phase TEXT NOT NULL,
+    manifest_json TEXT NOT NULL DEFAULT '',
+    failure_reason TEXT NOT NULL DEFAULT '',
+    uploader_uid TEXT NOT NULL DEFAULT '',
+    uploader_email TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS uploaded_blob (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    package_id TEXT NOT NULL,
+    logical_path TEXT NOT NULL,
+    size_bytes INTEGER NOT NULL DEFAULT 0,
+    sha256 TEXT NOT NULL DEFAULT '',
+    storage_path TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    UNIQUE(package_id, logical_path)
+);
+
+CREATE INDEX IF NOT EXISTS idx_blob_pkg ON uploaded_blob(package_id);
+
+CREATE TABLE IF NOT EXISTS package_field_change (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    package_id TEXT NOT NULL,
+    field_id TEXT NOT NULL,
+    before_value TEXT,
+    after_value TEXT,
+    reason TEXT NOT NULL,
+    verifier_email TEXT NOT NULL DEFAULT '',
+    changed_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_changelog_pkg ON package_field_change(package_id, changed_at);
 
 CREATE TABLE IF NOT EXISTS cow_keypoint_annotation (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -101,7 +137,17 @@ def project_db_root() -> Path:
 def db_path(project_id: str) -> Path:
     root = project_db_root() / project_id
     root.mkdir(parents=True, exist_ok=True)
-    return root / "pipeline.sqlite3"
+    new_path = root / "project.sqlite3"
+    legacy = root / "pipeline.sqlite3"
+    if not new_path.exists() and legacy.is_file():
+        legacy.rename(new_path)
+    return new_path
+
+
+def remove_project_db(project_id: str) -> None:
+    import shutil
+
+    shutil.rmtree(project_db_root() / project_id, ignore_errors=True)
 
 
 @contextmanager
@@ -109,6 +155,7 @@ def connect(project_id: str) -> Iterator[sqlite3.Connection]:
     path = db_path(project_id)
     conn = sqlite3.connect(path, timeout=30)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA journal_mode=WAL")
     try:
         ensure_schema(conn)
         yield conn
@@ -128,6 +175,16 @@ def ensure_schema(conn: sqlite3.Connection) -> None:
     if row is None:
         conn.execute(
             "INSERT INTO schema_meta(key, value) VALUES ('version', ?)",
+            (str(_SCHEMA_VERSION),),
+        )
+        return
+    try:
+        current = int(row["value"])
+    except (TypeError, ValueError):
+        current = 1
+    if current < _SCHEMA_VERSION:
+        conn.execute(
+            "UPDATE schema_meta SET value = ? WHERE key = 'version'",
             (str(_SCHEMA_VERSION),),
         )
 
@@ -154,6 +211,35 @@ def package_has_pipeline_data(project_id: str, package_id: str) -> bool:
             if hit:
                 return True
         return False
+
+
+PIPELINE_TABLES = (
+    "cow_keypoint_annotation",
+    "cow_inference_result",
+    "yolo_detection",
+    "depth_map",
+    "cvat_link",
+)
+
+
+def rebind_pipeline_package_id(
+    project_id: str,
+    old_package_id: str,
+    new_package_id: str,
+) -> dict[str, int]:
+    """Перенести pipeline-строки со старого package_id на новый (manifest_blob_key без изменений)."""
+    if old_package_id == new_package_id:
+        return {}
+    counts: dict[str, int] = {}
+    with connect(project_id) as conn:
+        for tbl in PIPELINE_TABLES:
+            cur = conn.execute(
+                f"UPDATE {tbl} SET package_id = ? WHERE package_id = ?",
+                (new_package_id, old_package_id),
+            )
+            if cur.rowcount:
+                counts[tbl] = cur.rowcount
+    return counts
 
 
 def delete_package_pipeline_data(project_id: str, package_id: str) -> None:

@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from .models import PackageFieldChange, PackageSession, Project
+from . import project_packages as ppkg
+from .models import Project
 
 # ── Phases ──────────────────────────────────────────────────────────────────
 
@@ -255,17 +256,16 @@ def has_visualisation(project_id: str, package_id: str) -> bool:
     return package_has_visualisation(project_id, package_id)
 
 
-def _changelog_entry_dict(row: PackageFieldChange) -> dict[str, Any]:
-    session = row.session
+def _changelog_entry_dict(project_id: str, row: ppkg.FieldChange) -> dict[str, Any]:
     return {
-        "project_id": session.project.project_id,
-        "package_id": session.package_id,
+        "project_id": project_id,
+        "package_id": row.package_id,
         "field_id": row.field_id,
         "before": row.before_value,
         "after": row.after_value,
         "reason": row.reason,
         "verifier_email": row.verifier_email,
-        "changed_at": row.changed_at.isoformat(),
+        "changed_at": row.changed_at,
     }
 
 
@@ -274,15 +274,16 @@ def list_changelog_entries(
     project_id: str = "",
     package_id: str = "",
 ) -> list[dict[str, Any]]:
-    qs = (
-        PackageFieldChange.objects.select_related("session", "session__project")
-        .order_by("-changed_at")
-    )
     if project_id:
-        qs = qs.filter(session__project__project_id=project_id)
-    if package_id:
-        qs = qs.filter(session__package_id=package_id)
-    return [_changelog_entry_dict(row) for row in qs]
+        rows = ppkg.list_field_changes(project_id, package_id=package_id)
+        return [_changelog_entry_dict(project_id, row) for row in rows]
+
+    out: list[dict[str, Any]] = []
+    for project in Project.objects.all().order_by("name"):
+        rows = ppkg.list_field_changes(project.project_id, package_id=package_id)
+        out.extend(_changelog_entry_dict(project.project_id, row) for row in rows)
+    out.sort(key=lambda e: e["changed_at"], reverse=True)
+    return out
 
 
 def read_changelog(project_id: str, package_id: str) -> list[dict[str, Any]]:
@@ -290,27 +291,16 @@ def read_changelog(project_id: str, package_id: str) -> list[dict[str, Any]]:
 
 
 def append_changelog(
-    session: PackageSession,
+    project_id: str,
+    package_id: str,
     reason: str,
     verifier_email: str,
     changes: list[dict[str, Any]],
 ) -> int:
-    rows: list[PackageFieldChange] = []
-    for change in changes:
-        field_id = change.get("field_id")
-        if not field_id:
-            continue
-        rows.append(
-            PackageFieldChange(
-                session=session,
-                field_id=str(field_id),
-                before_value=change.get("before"),
-                after_value=change.get("after"),
-                reason=reason,
-                verifier_email=verifier_email,
-            ),
-        )
-    if not rows:
-        return 0
-    PackageFieldChange.objects.bulk_create(rows)
-    return len(rows)
+    return ppkg.append_field_changes(
+        project_id,
+        package_id,
+        reason,
+        verifier_email,
+        changes,
+    )

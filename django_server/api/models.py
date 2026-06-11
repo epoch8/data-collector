@@ -1,11 +1,6 @@
 from django.db import models
 
 
-def _blob_upload_to(instance, filename: str) -> str:
-    lid = instance.logical_path.replace("\\", "/").replace("/", "__")
-    return f"pkg/{instance.session_id}/{lid}_{filename}"
-
-
 class CollectorUser(models.Model):
     """Пользователь мобильного приложения (Firebase Auth): UID — ключ, email для списка в админке."""
 
@@ -73,6 +68,14 @@ class Project(models.Model):
     last_synced_sha = models.CharField(max_length=64, blank=True, default="")
     last_synced_at = models.DateTimeField(null=True, blank=True)
     sync_error = models.TextField(blank=True, default="")
+    media_bucket = models.CharField(
+        max_length=256,
+        blank=True,
+        default="",
+        help_text=(
+            "GCS-бакет для медиа пакетов (prod). Пусто — шаблон PROJECT_MEDIA_BUCKET_TEMPLATE."
+        ),
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -86,96 +89,3 @@ class Project(models.Model):
         if self.last_synced_sha:
             return self.last_synced_sha[:12]
         return "—"
-
-
-class PackageSession(models.Model):
-    """Сессия приёма пакета (спека 08)."""
-
-    class Phase(models.TextChoices):
-        AWAITING_BLOBS = "awaiting_blobs", "awaiting_blobs"
-        READY_TO_COMMIT = "ready_to_commit", "ready_to_commit"
-        COMPLETED = "completed", "completed"
-        FAILED = "failed", "failed"
-
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="packages")
-    package_id = models.CharField(max_length=512, db_index=True)
-    phase = models.CharField(
-        max_length=32,
-        choices=Phase.choices,
-        default=Phase.AWAITING_BLOBS,
-    )
-    manifest_json = models.TextField(blank=True, default="")
-    failure_reason = models.TextField(blank=True, default="")
-    uploader_uid = models.CharField(
-        max_length=128,
-        blank=True,
-        default="",
-        db_index=True,
-        help_text="Firebase UID создателя сессии (первый POST packages).",
-    )
-    uploader_email = models.CharField(max_length=254, blank=True, default="")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["project", "package_id"],
-                name="unique_package_per_project",
-            ),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.project.project_id}:{self.package_id}"
-
-
-class PackageFieldChange(models.Model):
-    """История ручных правок manifest.data из client-admin workspace."""
-
-    session = models.ForeignKey(
-        PackageSession,
-        on_delete=models.CASCADE,
-        related_name="field_changes",
-    )
-    field_id = models.CharField(max_length=256, db_index=True)
-    before_value = models.JSONField(null=True, blank=True)
-    after_value = models.JSONField(null=True, blank=True)
-    reason = models.TextField()
-    verifier_email = models.CharField(max_length=254, blank=True, default="")
-    changed_at = models.DateTimeField(auto_now_add=True, db_index=True)
-
-    class Meta:
-        ordering = ["-changed_at"]
-        verbose_name = "Правка поля пакета"
-        verbose_name_plural = "Правки полей пакетов"
-        indexes = [
-            models.Index(fields=["session", "-changed_at"]),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.session_id}:{self.field_id}@{self.changed_at}"
-
-
-class UploadedBlob(models.Model):
-    """Принятый бинарный объект по логическому пути (как в манифесте)."""
-
-    session = models.ForeignKey(
-        PackageSession,
-        on_delete=models.CASCADE,
-        related_name="blobs",
-    )
-    logical_path = models.CharField(
-        max_length=1024,
-        help_text="Например blobs/img_0001.jpg",
-    )
-    size_bytes = models.PositiveBigIntegerField(default=0)
-    file = models.FileField(upload_to=_blob_upload_to)
-    sha256 = models.CharField(max_length=64, blank=True, default="")
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        constraints = [
-            models.UniqueConstraint(
-                fields=["session", "logical_path"],
-                name="unique_blob_path_per_session",
-            ),
-        ]

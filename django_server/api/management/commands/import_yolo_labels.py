@@ -6,9 +6,11 @@ from pathlib import Path
 
 from django.core.management.base import BaseCommand
 
-from api.models import PackageSession, UploadedBlob
-from api.packages_ui import is_image_path
 from api import project_db as pdb
+from api import project_media as pm
+from api import project_packages as ppkg
+from api.models import Project
+from api.packages_ui import is_image_path
 from api.yolo_labels import (
     parse_class_names,
     parse_yolo_detection_lines,
@@ -16,9 +18,10 @@ from api.yolo_labels import (
 )
 
 
-def _image_size_for_blob(blob: UploadedBlob) -> tuple[int, int]:
-    with blob.file.open("rb") as f:
-        head = f.read(256 * 1024)
+def _image_size_for_blob(project_id: str, blob: ppkg.UploadedBlob, *, media_bucket: str) -> tuple[int, int]:
+    head = pm.read_blob_head(project_id, blob.storage_path, media_bucket=media_bucket)
+    if not head:
+        raise ValueError(f"Не удалось прочитать blob {blob.logical_path}")
     size = sniff_image_size(head)
     if size:
         return size
@@ -62,20 +65,18 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        session = (
-            PackageSession.objects.filter(
-                project__project_id=options["project_id"],
-                package_id=options["package_id"],
-            )
-            .select_related("project")
-            .first()
-        )
+        project_id = options["project_id"]
+        package_id = options["package_id"]
+        project = Project.objects.filter(project_id=project_id).first()
+        if not project:
+            self.stderr.write(self.style.ERROR("Project not found"))
+            return
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             self.stderr.write(self.style.ERROR("Package session not found"))
             return
 
-        project_id = session.project.project_id
-        package_id = session.package_id
+        media_bucket = project.media_bucket or ""
         class_names = parse_class_names(options.get("class_names"))
 
         label_paths: list[Path] = []
@@ -94,7 +95,7 @@ class Command(BaseCommand):
             return
 
         images = sorted(
-            [b for b in session.blobs.all() if is_image_path(b.logical_path)],
+            [b for b in ppkg.list_blobs(project_id, package_id) if is_image_path(b.logical_path)],
             key=lambda b: b.logical_path,
         )
         if not images:
@@ -110,9 +111,9 @@ class Command(BaseCommand):
                 self.stderr.write(self.style.WARNING(f"Empty label file: {lp}"))
                 continue
 
-            blob: UploadedBlob | None = None
+            blob: ppkg.UploadedBlob | None = None
             if explicit_blob and len(label_paths) == 1:
-                blob = session.blobs.filter(logical_path=explicit_blob).first()
+                blob = ppkg.get_blob_by_path(project_id, package_id, explicit_blob)
             else:
                 stem = lp.stem
                 for b in images:
@@ -136,7 +137,7 @@ class Command(BaseCommand):
             ih = int(options["image_height"] or 0)
             if iw <= 0 or ih <= 0:
                 try:
-                    iw, ih = _image_size_for_blob(blob)
+                    iw, ih = _image_size_for_blob(project_id, blob, media_bucket=media_bucket)
                 except ValueError as e:
                     self.stderr.write(self.style.ERROR(str(e)))
                     return

@@ -65,7 +65,7 @@ urlpatterns = [
         name="ui_package_viz_data",
     ),
     path(
-        "projects/<str:project_id>/packages/<str:package_id>/blobs/<int:blob_pk>/",
+        "projects/<str:project_id>/packages/<str:package_id>/blobs/<path:logical_path>/",
         views_ui.package_blob_download,
         name="ui_package_blob_download",
     ),

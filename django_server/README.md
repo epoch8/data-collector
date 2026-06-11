@@ -40,8 +40,15 @@ python manage.py runserver
 Пакеты полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
 
 - **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
-- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + модель `PackageFieldChange` в Django DB).
+- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + changelog в project SQLite).
 - **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`, `cvat_link`, `yolo_detection`. Импорт: `import_yolo_labels`, `import_depth_map`, `import_cvat_link`. UI: `packages_viz.js` → `/viz-data/`. Пример конфига: `examples/collector/viz.json`; установка в git-кэш: `install_vis_config_example`. Спека: `specs/collector-vis-config.md`.
+
+### Хранение пакетов (per project)
+
+- **Метаданные** — `project_db/{project_id}/project.sqlite3`: таблицы `package_session`, `uploaded_blob`, `package_field_change` + pipeline (yolo, depth, …).
+- **Медиа пакетов** — `project_media/{project_id}/packages/{package_id}/…` (dev) или отдельный GCS-бакет на проект (prod, шаблон `PROJECT_MEDIA_BUCKET_TEMPLATE`, переопределение в `Project.media_bucket`).
+- Миграция с Django DB: `python manage.py migrate_packages_to_project_storage --delete-legacy`, затем `python manage.py migrate`.
+- Если таблицы пакетов уже удалены: `python manage.py recover_legacy_packages` (читает остатки из `db.sqlite3` + `media/pkg/`).
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
 

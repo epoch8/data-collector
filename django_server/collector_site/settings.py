@@ -124,13 +124,23 @@ LOGIN_REDIRECT_URL = "/ui/"
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
+# Per-project package blobs: project_media/{project_id}/packages/{package_id}/…
+PROJECT_MEDIA_ROOT = Path(
+    os.environ.get("PROJECT_MEDIA_ROOT", str(BASE_DIR / "project_media")),
+)
+# Prod: отдельный GCS-бакет на проект (если Project.media_bucket пуст).
+PROJECT_MEDIA_BUCKET_TEMPLATE = os.environ.get(
+    "PROJECT_MEDIA_BUCKET_TEMPLATE",
+    "korovas-dc-{project_id}",
+)
+
 PROJECT_GIT_CACHE_ROOT = Path(
     os.environ.get("PROJECT_GIT_CACHE_ROOT", str(BASE_DIR / "project_git_cache")),
 )
 # Минимальный интервал между git fetch для одного проекта (секунды). Снижает лаг UI пакетов.
 PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INTERVAL_SEC", "300"))
 
-# Per-project SQLite: inference / GT (pipeline.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
+# Per-project SQLite: пакеты + pipeline (project.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
 PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
 
 STATIC_URL = "static/"

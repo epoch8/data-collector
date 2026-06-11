@@ -3,34 +3,24 @@
 from __future__ import annotations
 
 import json
-import mimetypes
-from pathlib import Path
 from typing import Any
+from urllib.parse import unquote
 
-from django.http import FileResponse, HttpResponseForbidden, JsonResponse
+from django.http import HttpResponseForbidden, JsonResponse
 
-from .models import PackageSession, Project, UploadedBlob
+from . import project_media as pm
+from . import project_packages as ppkg
+from .models import Project
 from .utils import collect_blob_refs, parse_json_body
 from .views import _err
 
 
-def blob_preview_url(project_id: str, package_id: str, blob_pk: int, *, prefix: str) -> str:
-    base = prefix.rstrip("/")
-    return (
-        f"{base}/projects/{project_id}/packages/{package_id}"
-        f"/blobs/{blob_pk}/preview"
-    )
+def _media_bucket(project: Project | None) -> str:
+    return (project.media_bucket if project else "") or ""
 
 
-def parse_manifest(session: PackageSession) -> dict | None:
-    raw = (session.manifest_json or "").strip()
-    if not raw:
-        return None
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return None
-    return data if isinstance(data, dict) else None
+def parse_manifest(session: ppkg.PackageSession) -> dict | None:
+    return session.manifest_dict
 
 
 def has_pipeline_flag(manifest: dict | None, key: str) -> bool:
@@ -111,18 +101,16 @@ def list_package_summaries(
     if not Project.objects.filter(project_id=project_id).exists():
         return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
 
-    qs = PackageSession.objects.filter(project__project_id=project_id).order_by("-created_at")
-    if phase:
-        qs = qs.filter(phase=phase)
+    sessions = ppkg.list_sessions(project_id, phase=phase, limit=limit)
     return [
         {
             "package_id": s.package_id,
             "project_id": project_id,
             "phase": s.phase,
-            "created_at": s.created_at.isoformat(),
+            "created_at": s.created_at,
             "uploader_email": s.uploader_email or "",
         }
-        for s in qs[:limit]
+        for s in sessions
     ], None
 
 
@@ -142,20 +130,17 @@ def list_packages(
         if search_field_ids is not None
         else searchable_field_ids(project)
     )
-    qs = PackageSession.objects.filter(project__project_id=project_id).order_by("-created_at")
-    if phase:
-        qs = qs.filter(phase=phase)
-    qs = qs[:500]
+    sessions = ppkg.list_sessions(project_id, phase=phase, limit=500)
 
     items = []
-    for s in qs:
+    for s in sessions:
         manifest = parse_manifest(s)
         items.append(
             {
                 "package_id": s.package_id,
                 "project_id": project_id,
                 "phase": s.phase,
-                "created_at": s.created_at.isoformat(),
+                "created_at": s.created_at,
                 "uploader_email": s.uploader_email or "",
                 "has_inference": has_pipeline_flag(manifest, "inference"),
                 "has_cvat": has_pipeline_flag(manifest, "cvat"),
@@ -175,10 +160,7 @@ def get_workspace(
     if not project:
         return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
 
-    session = PackageSession.objects.filter(
-        project__project_id=project_id,
-        package_id=package_id,
-    ).first()
+    session = ppkg.get_session(project_id, package_id)
     if not session:
         return None, JsonResponse(_err("not_found", "Package not found"), status=404)
 
@@ -194,12 +176,14 @@ def get_workspace(
 
     blobs = [
         {
-            "blob_id": b.pk,
+            "blob_id": b.id,
             "logical_path": b.logical_path,
             "size_bytes": b.size_bytes,
-            "preview_url": blob_preview_url(project_id, package_id, b.pk, prefix=preview_prefix),
+            "preview_url": ppkg.blob_preview_url(
+                project_id, package_id, b.logical_path, prefix=preview_prefix,
+            ),
         }
-        for b in session.blobs.all().order_by("logical_path")
+        for b in ppkg.list_blobs(project_id, package_id)
     ]
 
     return {
@@ -207,7 +191,7 @@ def get_workspace(
             "package_id": session.package_id,
             "project_id": project_id,
             "phase": session.phase,
-            "created_at": session.created_at.isoformat(),
+            "created_at": session.created_at,
             "uploader_email": session.uploader_email or "",
             "has_inference": has_pipeline_flag(manifest, "inference"),
             "has_cvat": has_pipeline_flag(manifest, "cvat"),
@@ -223,14 +207,11 @@ def patch_manifest(
     package_id: str,
     raw_body: str,
 ) -> JsonResponse | None:
-    session = PackageSession.objects.filter(
-        project__project_id=project_id,
-        package_id=package_id,
-    ).first()
+    session = ppkg.get_session(project_id, package_id)
     if not session:
         return JsonResponse(_err("not_found", "Package not found"), status=404)
 
-    if session.phase != PackageSession.Phase.COMPLETED:
+    if session.phase != ppkg.Phase.COMPLETED:
         return JsonResponse(
             _err("invalid_phase", "Only completed packages can be edited from admin"),
             status=409,
@@ -254,7 +235,7 @@ def patch_manifest(
 
     refs: set[str] = set()
     collect_blob_refs(manifest, refs)
-    uploaded = set(session.blobs.values_list("logical_path", flat=True))
+    uploaded = set(ppkg.list_blob_paths(project_id, package_id))
     missing = sorted(refs - uploaded)
     if missing:
         return JsonResponse(
@@ -267,30 +248,32 @@ def patch_manifest(
     if isinstance(submitted_by, dict):
         manifest["submitted_by"] = submitted_by
 
-    session.manifest_json = json.dumps(
+    manifest_json = json.dumps(
         manifest,
         ensure_ascii=False,
         separators=(",", ":"),
     )
-    session.save(update_fields=["manifest_json"])
+    ppkg.update_manifest(project_id, package_id, manifest_json)
     return JsonResponse({"ok": True, "package_id": package_id})
 
 
 def blob_preview_response(
     project_id: str,
     package_id: str,
-    blob_pk: int,
-) -> FileResponse | JsonResponse | HttpResponseForbidden:
-    blob = UploadedBlob.objects.filter(
-        pk=blob_pk,
-        session__project__project_id=project_id,
-        session__package_id=package_id,
-    ).first()
+    logical_path: str,
+) -> JsonResponse | HttpResponseForbidden:
+    logical = unquote((logical_path or "").replace("\\", "/"))
+    project = Project.objects.filter(project_id=project_id).first()
+    bucket = _media_bucket(project)
+    blob = ppkg.get_blob_by_path(project_id, package_id, logical)
     if not blob:
         return JsonResponse(_err("not_found", "Blob not found"), status=404)
-    if not blob.file:
+    resp = pm.blob_file_response(
+        project_id,
+        blob.storage_path,
+        blob.logical_path,
+        media_bucket=bucket,
+    )
+    if resp is None:
         return HttpResponseForbidden("No file")
-    ctype, _ = mimetypes.guess_type(blob.logical_path)
-    resp = FileResponse(blob.file.open("rb"), content_type=ctype or "application/octet-stream")
-    resp["Content-Disposition"] = f'inline; filename="{Path(blob.logical_path).name}"'
     return resp

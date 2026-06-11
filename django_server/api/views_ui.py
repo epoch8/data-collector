@@ -3,14 +3,12 @@
 from __future__ import annotations
 
 import json
-import mimetypes
 import re
 from pathlib import Path
 from uuid import uuid4
 
 from django.contrib import messages
 from django.contrib.auth import logout
-from django.db import transaction
 from django.http import (
     FileResponse,
     Http404,
@@ -26,7 +24,8 @@ from django.views.decorators.http import require_http_methods, require_POST
 from . import package_admin_service as pas
 from . import packages_ui as pui
 from .firebase_user_sync import sync_collector_users_from_firebase
-from .models import CollectorUser, PackageSession, Project, UploadedBlob
+from . import project_packages as ppkg
+from .models import CollectorUser, Project
 from .project_config_service import (
     bootstrap_new_project,
     create_credential,
@@ -166,7 +165,7 @@ def project_new(request):
 @staff_only
 def project_detail(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
-    pkg_count = project.packages.count()
+    pkg_count = len(ppkg.list_sessions(project.project_id))
     public_key = request.session.pop(f"git_public_key_{project_id}", None) or project.git_credential.public_key
     return render(
         request,
@@ -475,8 +474,10 @@ def project_delete(request, project_id: str):
         return redirect("ui_project_detail", project_id=project_id)
     cred = project.git_credential
     cred_pk = cred.pk
+    media_bucket = project.media_bucket
     project.delete()
     git_remove_cache(project_id)
+    ppkg.remove_project_packages(project_id, media_bucket=media_bucket)
     if not Project.objects.filter(git_credential_id=cred_pk).exists():
         cred.delete()
     messages.success(request, "Проект удалён.")
@@ -619,7 +620,10 @@ def _enrich_blob(project_id, package_id, blob, form_blob_paths):
         "size_bytes": blob["size_bytes"],
         "is_image": pui.is_image_path(path),
         "in_form": path in form_blob_paths,
-        "url": reverse("ui_package_blob_download", args=[project_id, package_id, blob["blob_id"]]),
+        "url": reverse(
+            "ui_package_blob_download",
+            args=[project_id, package_id, path],
+        ),
     }
 
 
@@ -662,7 +666,7 @@ def package_workspace(request, project_id: str, package_id: str):
 
     fields = pui.config_fields(config)
     sections = pui.build_flow_sections(config, fields)
-    is_editable = session["phase"] == PackageSession.Phase.COMPLETED
+    is_editable = session["phase"] == ppkg.Phase.COMPLETED
     data_sections = _build_data_sections(sections, data, is_editable)
 
     form_blob_paths = pui.collect_form_blob_paths(data)
@@ -745,7 +749,7 @@ def package_manifest_save(request, project_id: str, package_id: str):
         raise Http404("Package not found")
 
     session = body["session"]
-    if session["phase"] != PackageSession.Phase.COMPLETED:
+    if session["phase"] != ppkg.Phase.COMPLETED:
         messages.error(request, "Редактировать можно только пакеты в статусе «Завершён».")
         return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
@@ -783,29 +787,24 @@ def package_manifest_save(request, project_id: str, package_id: str):
 
     manifest["data"] = data
     manifest["project_id"] = project_id
-    session_obj = PackageSession.objects.filter(
-        project__project_id=project_id,
-        package_id=package_id,
-    ).first()
-    if session_obj is None:
+    if ppkg.get_session(project_id, package_id) is None:
         raise Http404("Package not found")
 
-    with transaction.atomic():
-        patch_resp = pas.patch_manifest(
-            project_id, package_id, json.dumps(manifest, ensure_ascii=False),
-        )
-        if patch_resp.status_code != 200:
-            try:
-                detail = json.loads(patch_resp.content.decode("utf-8"))
-                msg = detail.get("error", {}).get("message", "Ошибка сохранения")
-            except (json.JSONDecodeError, AttributeError):
-                msg = "Ошибка сохранения"
-            messages.error(request, f"Не удалось сохранить: {msg}")
-            return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+    patch_resp = pas.patch_manifest(
+        project_id, package_id, json.dumps(manifest, ensure_ascii=False),
+    )
+    if patch_resp.status_code != 200:
+        try:
+            detail = json.loads(patch_resp.content.decode("utf-8"))
+            msg = detail.get("error", {}).get("message", "Ошибка сохранения")
+        except (json.JSONDecodeError, AttributeError):
+            msg = "Ошибка сохранения"
+        messages.error(request, f"Не удалось сохранить: {msg}")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
-        pui.append_changelog(
-            session_obj, reason, _ui_verifier_email(request), changes,
-        )
+    pui.append_changelog(
+        project_id, package_id, reason, _ui_verifier_email(request), changes,
+    )
     messages.success(request, f"Сохранено. Изменено полей: {len(changes)}.")
     return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
@@ -832,39 +831,50 @@ def package_viz_data(request, project_id: str, package_id: str):
 
 @packages_ui_required
 def package_depth_blob(request, project_id: str, package_id: str, logical_path: str):
-    """Карта глубины из blob пакета (рядом с фото в media/pkg/…)."""
+    """Карта глубины из blob пакета (project_media/…)."""
     denied = _forbid_package_project(request, project_id)
     if denied is not None:
         return denied
     rel = (logical_path or "").replace("\\", "/").strip("/")
     if not rel.endswith(".npy") or ".." in Path(rel).parts:
         raise Http404("Not found")
-    blob = UploadedBlob.objects.filter(
-        session__project__project_id=project_id,
-        session__package_id=package_id,
-        logical_path=rel,
-    ).first()
-    if not blob or not blob.file:
+    project = Project.objects.filter(project_id=project_id).first()
+    blob = ppkg.get_blob_by_path(project_id, package_id, rel)
+    if not blob:
         raise Http404("Not found")
-    return FileResponse(blob.file.open("rb"), content_type="application/octet-stream")
+    from . import project_media as pm
+
+    resp = pm.blob_file_response(
+        project_id,
+        blob.storage_path,
+        blob.logical_path,
+        media_bucket=(project.media_bucket if project else "") or "",
+    )
+    if resp is None:
+        raise Http404("Not found")
+    return resp
 
 
 @packages_ui_required
-def package_blob_download(request, project_id: str, package_id: str, blob_pk: int):
+def package_blob_download(request, project_id: str, package_id: str, logical_path: str):
     denied = _forbid_package_project(request, project_id)
     if denied is not None:
         return denied
-    blob = get_object_or_404(
-        UploadedBlob,
-        pk=blob_pk,
-        session__project__project_id=project_id,
-        session__package_id=package_id,
+    logical = (logical_path or "").replace("\\", "/")
+    blob = ppkg.get_blob_by_path(project_id, package_id, logical)
+    if not blob:
+        raise Http404("Not found")
+    project = Project.objects.filter(project_id=project_id).first()
+    from . import project_media as pm
+
+    resp = pm.blob_file_response(
+        project_id,
+        blob.storage_path,
+        blob.logical_path,
+        media_bucket=(project.media_bucket if project else "") or "",
     )
-    if not blob.file:
+    if resp is None:
         return HttpResponseForbidden("Нет файла")
-    ctype, _ = mimetypes.guess_type(blob.logical_path)
-    resp = FileResponse(blob.file.open("rb"), content_type=ctype or "application/octet-stream")
-    resp["Content-Disposition"] = f'inline; filename="{Path(blob.logical_path).name}"'
     return resp
 
 

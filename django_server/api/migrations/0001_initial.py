@@ -1,7 +1,10 @@
 import django.db.models.deletion
 from django.db import migrations, models
 
-import api.models
+
+def _legacy_blob_upload_to(instance, filename: str) -> str:
+    lid = instance.logical_path.replace("\\", "/").replace("/", "__")
+    return f"pkg/{instance.session_id}/{lid}_{filename}"
 
 
 class Migration(migrations.Migration):
@@ -58,7 +61,7 @@ class Migration(migrations.Migration):
                 ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
                 ("logical_path", models.CharField(help_text="Например blobs/img_0001.jpg", max_length=1024)),
                 ("size_bytes", models.PositiveBigIntegerField(default=0)),
-                ("file", models.FileField(upload_to=api.models._blob_upload_to)),
+                ("file", models.FileField(upload_to=_legacy_blob_upload_to)),
                 ("sha256", models.CharField(blank=True, default="", max_length=64)),
                 ("created_at", models.DateTimeField(auto_now_add=True)),
                 (

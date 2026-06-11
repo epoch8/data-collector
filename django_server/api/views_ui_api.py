@@ -11,7 +11,7 @@ from django.views.decorators.csrf import ensure_csrf_cookie
 
 from . import package_admin_service as pas
 from . import packages_ui as pui
-from .models import PackageSession
+from . import project_packages as ppkg
 from .ui_request_auth import (
     allowed_project_ids_for_request,
     ui_api_forbid_if_no_project,
@@ -100,11 +100,11 @@ class UiPackageManifestPatchView(View):
 
 
 class UiBlobPreviewView(View):
-    def get(self, request, project_id: str, package_id: str, blob_pk: int):
+    def get(self, request, project_id: str, package_id: str, logical_path: str):
         denied = ui_api_forbid_if_no_project(request, project_id)
         if denied is not None:
             return denied
-        return pas.blob_preview_response(project_id, package_id, blob_pk)
+        return pas.blob_preview_response(project_id, package_id, logical_path)
 
 
 class UiFieldChangelogView(View):
@@ -141,14 +141,10 @@ class UiFieldChangelogView(View):
         denied_p = ui_api_forbid_if_no_project(request, project_id)
         if denied_p is not None:
             return denied_p
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
-        if session is None:
+        if ppkg.get_session(project_id, package_id) is None:
             return JsonResponse({"error": "not_found"}, status=404)
         verifier = (body.get("verifier_email") or request.user.email or "").strip()
-        count = pui.append_changelog(session, reason, verifier, changes)
+        count = pui.append_changelog(project_id, package_id, reason, verifier, changes)
         if count == 0:
             return JsonResponse({"error": "no_valid_changes"}, status=400)
         return JsonResponse({"ok": True, "entries_count": count})

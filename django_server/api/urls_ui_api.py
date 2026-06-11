@@ -28,7 +28,7 @@ urlpatterns = [
         name="ui_api_package_manifest",
     ),
     path(
-        "v1/projects/<str:project_id>/packages/<str:package_id>/blobs/<int:blob_pk>/preview",
+        "v1/projects/<str:project_id>/packages/<str:package_id>/blobs/<path:logical_path>/preview",
         views_ui_api.UiBlobPreviewView.as_view(),
         name="ui_api_blob_preview",
     ),
