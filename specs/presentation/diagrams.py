@@ -110,39 +110,118 @@ def draw_cover_architecture(slide, l, t, w, h):
               l + pad + bw * 0.85, ACCENT_PURPLE, dashed=True)
 
 
-# ── Stack: platform + N projects ────────────────────────────────────────────
+# ── Stack (legacy) ───────────────────────────────────────────────────────────
 
 def draw_stack_diagram(slide, l, t, w, h):
+    draw_product_architecture(slide, l, t, w, h)
+
+
+# ── Product: who talks to whom (not a tech list) ───────────────────────────
+
+def draw_product_architecture(slide, l, t, w, h):
+    """Vertical interaction map: config down to server, data up from app to admins."""
     _canvas(slide, l, t, w, h)
-    pad = Inches(0.16)
+    pad = Inches(0.14)
+    ix, iy = l + pad, t + Inches(0.2)
+    iw = w - pad * 2
+    cx = ix + iw / 2
+    bh = Inches(0.56)
+    gap = Inches(0.22)
+
+    _caption(slide, ix, iy - Inches(0.02), iw,
+             "Кто с кем взаимодействует — не список технологий", ACCENT_CYAN, 9)
+
+    # Staff → Django
+    y = iy + Inches(0.18)
+    staff_w = iw * 0.62
+    _box(slide, cx - staff_w / 2, y, staff_w, bh,
+         RGBColor(0x3D, 0x34, 0x20), ACCENT_GOLD, "Staff Admin", "настройка проекта и конфига", 10, 7)
+
+    y2 = y + bh + gap
+    _caption(slide, cx - Inches(0.55), y + bh, Inches(1.1), "конфиг\n+ права", ACCENT_GOLD, 7)
+    _arrow_v(slide, cx, y + bh, y2, ACCENT_GOLD)
+
+    srv_w = iw * 0.78
+    _box(slide, cx - srv_w / 2, y2, srv_w, bh + Inches(0.08), BG_CARD, ACCENT,
+         "Django + хранилище", "API · БД · медиа · синк из Git", 10, 7)
+
+    # Git sidecar
+    git_w = iw * 0.28
+    git_x = ix + iw - git_w
+    git_y = y2 + Inches(0.06)
+    _box(slide, git_x, git_y, git_w, bh, RGBColor(0x1E, 0x24, 0x33), ACCENT_CYAN,
+         "Git", "config · viz", 9, 7)
+    _arrow_h(slide, git_x, git_y + bh / 2, cx + srv_w / 2, ACCENT_CYAN, dashed=True)
+    _caption(slide, git_x - Inches(0.05), git_y + bh + Inches(0.02), git_w, "версии", ACCENT_CYAN, 7)
+
+    y3 = y2 + bh + Inches(0.08) + gap
+    half_w = (iw - Inches(0.12)) / 2
+
+    _box(slide, ix, y3, half_w, bh, RGBColor(0x2A, 0x24, 0x38), ACCENT_PURPLE,
+         "Flutter App", "сборщик в поле", 10, 7)
+    _box(slide, ix + half_w + Inches(0.12), y3, half_w, bh, RGBColor(0x1A, 0x2E, 0x28), ACCENT_GREEN,
+         "Client Admin", "просмотр пакетов", 10, 7)
+
+    mid_y = y2 + bh + Inches(0.08) + gap / 2
+    _arrow_v(slide, cx - half_w / 2 - Inches(0.06), y2 + bh + Inches(0.08), y3,
+             ACCENT_PURPLE, dashed=False)
+    _caption(slide, ix, mid_y, half_w, "синк конфига", ACCENT_PURPLE, 7)
+
+    _arrow_v(slide, cx + half_w / 2 + Inches(0.06), y2 + bh + Inches(0.08), y3,
+             ACCENT_GREEN, dashed=False)
+    _caption(slide, ix + half_w + Inches(0.12), mid_y, half_w, "список пакетов", ACCENT_GREEN, 7)
+
+    y4 = y3 + bh + Inches(0.14)
+    _caption(slide, ix, y3 + bh, half_w, "upload пакета", ACCENT_PURPLE, 7)
+    _arrow_v(slide, cx - half_w / 2 - Inches(0.06), y3 + bh, y4 - Inches(0.02), ACCENT_PURPLE)
+
+    foot_h = min(Inches(0.52), t + h - y4 - Inches(0.08))
+    if foot_h > Inches(0.3):
+        _box(slide, ix, y4, iw, foot_h, RGBColor(0x14, 0x20, 0x18), ACCENT_GREEN,
+             "Проект × N", "1 проект = 1 конфиг в Git · свои пакеты", 10, 7)
+
+
+# ── Dual path: config lifecycle vs package lifecycle ─────────────────────────
+
+def draw_dual_path_flow(slide, l, t, w, h):
+    """Two lanes: config (setup → sync → viz) and package (collect → upload → view)."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.14)
     ix, iy = l + pad, t + Inches(0.18)
     iw = w - pad * 2
+    lane_h = Inches(1.02)
+    lane_gap = Inches(0.38)
+    n = 3
+    gap = Inches(0.1)
+    bw = (iw - gap * (n - 1)) / n
 
-    row_h = Inches(0.58)
-    gap = Inches(0.14)
-    cw = (iw - gap * 2) / 3
+    _caption(slide, ix, iy - Inches(0.04), iw,
+             "Два пути: жизненный цикл конфига и жизненный цикл пакета данных", TEXT, 9)
 
-    clients = [
-        ("Flutter", ACCENT_PURPLE),
-        ("Staff Admin", ACCENT_GOLD),
-        ("Client Admin", ACCENT_GREEN),
+    lanes = [
+        ("Конфиг (config.json + viz.json в Git)", ACCENT_GOLD, [
+            ("①", "Настройка\nв Staff Admin", "fields · flow · Git"),
+            ("②", "Синк\nв приложение", "тот же сценарий в МП"),
+            ("③", "Визуализации\nв админке", "viz.json → UI просмотра"),
+        ]),
+        ("Пакет данных (результат сбора)", ACCENT_PURPLE, [
+            ("①", "Сбор\nв приложении", "сборщик по flow"),
+            ("②", "Upload\nна сервер", "поля + фото + манифест"),
+            ("③", "Просмотр\nв админке", "фильтры · workspace"),
+        ]),
     ]
-    for i, (name, c) in enumerate(clients):
-        _box(slide, ix + i * (cw + gap), iy, cw, row_h, BG_CARD, c, name, "", 10, 7)
 
-    sy = iy + row_h + Inches(0.28)
-    _box(slide, ix, sy, iw, row_h, BG_CARD, ACCENT, "django_server", "", 10, 7)
-    _arrow_v(slide, ix + iw / 2, iy + row_h, sy, ACCENT)
-
-    dy = sy + row_h + Inches(0.28)
-    _box(slide, ix, dy, iw, row_h, RGBColor(0x1A, 0x33, 0x29), ACCENT_GREEN, "DB + медиа", "пакеты всех проектов", 10, 7)
-    _arrow_v(slide, ix + iw / 2, sy + row_h, dy, ACCENT_GREEN)
-
-    py = dy + row_h + Inches(0.28)
-    ph = t + h - py - Inches(0.14)
-    _box(slide, ix, py, iw, ph, RGBColor(0x1E, 0x24, 0x33), ACCENT_CYAN,
-         "Проект × N", "Git: config.json · viz.json", 10, 8)
-    _arrow_v(slide, ix + iw / 2, dy + row_h, py, ACCENT_CYAN)
+    y = iy + Inches(0.2)
+    for lane_title, lane_color, steps in lanes:
+        _caption(slide, ix, y, iw, lane_title, lane_color, 8)
+        y += Inches(0.22)
+        cy = y + lane_h / 2
+        for i, (num, label, sub) in enumerate(steps):
+            x = ix + i * (bw + gap)
+            _box(slide, x, y, bw, lane_h, BG_CARD, lane_color, f"{num}  {label}", sub, 10, 7)
+            if i < n - 1:
+                _arrow_h(slide, x + bw, cy, x + bw + gap, lane_color)
+        y += lane_h + lane_gap
 
 
 # ── 5-step product flow ───────────────────────────────────────────────────────
@@ -173,30 +252,50 @@ def draw_five_step_flow(slide, l, t, w, h):
             _arrow_h(slide, x + bw, iy + bh / 2, x + bw + gap, c)
 
 
-# ── Config: fields → flow → package ─────────────────────────────────────────
+# ── Config: fields · flow · viz (with screen semantics) ─────────────────────
 
 def draw_config_entities(slide, l, t, w, h):
     _canvas(slide, l, t, w, h)
     pad = Inches(0.16)
-    ix, iy = l + pad, t + Inches(0.22)
+    ix, iy = l + pad, t + Inches(0.16)
     iw = w - pad * 2
-    gap = Inches(0.12)
-    bw = (iw - gap * 2) / 3
-    bh = Inches(0.72)
 
-    chain = [
-        ("fields", "что собираем", ACCENT),
-        ("flow", "порядок экранов", ACCENT_PURPLE),
-        ("package", "результат", ACCENT_GREEN),
+    banner_h = Inches(0.42)
+    banner = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, ix, iy, iw, banner_h)
+    banner.fill.solid()
+    banner.fill.fore_color.rgb = RGBColor(0x28, 0x32, 0x48)
+    banner.line.color.rgb = ACCENT_GOLD
+    banner.line.width = Pt(1)
+    tf = banner.text_frame
+    tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+    p = tf.paragraphs[0]
+    p.text = "Конфиг в Git состоит из этих частей:"
+    p.font.size = Pt(10)
+    p.font.bold = True
+    p.font.color.rgb = ACCENT_GOLD
+    p.alignment = PP_ALIGN.CENTER
+
+    gap = Inches(0.1)
+    y = iy + banner_h + Inches(0.14)
+    bw = iw
+
+    bh = Inches(0.68)
+    hint_h = Inches(0.16)
+    parts = [
+        ("fields", "набор полей формы", "один набор fields = один экран в приложении", ACCENT),
+        ("flow", "последовательность экранов", "flow = сценарий сбора (набор экранов по порядку)", ACCENT_PURPLE),
+        ("viz.json", "отображение в админке", "визуализации и layout просмотра пакета", ACCENT_GREEN),
     ]
-    cy = iy + bh / 2
-    for i, (title, sub, c) in enumerate(chain):
-        x = ix + i * (bw + gap)
-        _box(slide, x, iy, bw, bh, BG_CARD, c, title, sub, 11, 8)
-        if i < 2:
-            _arrow_h(slide, x + bw, cy, x + bw + gap, c)
+    for title, sub, hint, c in parts:
+        _box(slide, ix, y, bw, bh, BG_CARD, c, title, sub, 11, 8)
+        _caption(slide, ix + Inches(0.08), y + bh + Inches(0.02), bw - Inches(0.16), hint, TEXT_MUTED, 7)
+        y += bh + hint_h + Inches(0.1)
+        if title != parts[-1][0]:
+            _arrow_v(slide, ix + bw / 2, y - Inches(0.1), y - Inches(0.02), c)
 
-    _caption(slide, ix, iy + bh + Inches(0.12), iw, "JSON в Git → UI в приложении → те же поля в админке")
+    foot_y = t + h - Inches(0.24)
+    _caption(slide, ix, foot_y, iw,
+             "Новый сценарий = правка JSON в Git, без релиза приложения", ACCENT_CYAN, 8)
 
 
 # ── Package viewing (Step 4) ──────────────────────────────────────────────────

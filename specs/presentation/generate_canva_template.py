@@ -5,8 +5,10 @@ from pathlib import Path
 from diagrams import (
     draw_config_entities,
     draw_cover_architecture,
+    draw_dual_path_flow,
     draw_five_step_flow,
     draw_package_viewing_flow,
+    draw_product_architecture,
     draw_stack_diagram,
 )
 from pptx import Presentation
@@ -141,7 +143,7 @@ def _bullet_cards(slide, items, l, t, w, accent=ACCENT):
         is_problem = item.lower().startswith("проблема")
         card_fill = BG_CARD if not is_solution else RGBColor(0x14, 0x28, 0x22)
         card_line = ACCENT_CORAL if is_problem else (ACCENT_GREEN if is_solution else accent)
-        card_h = Inches(0.58) if len(item) < 72 else Inches(0.76)
+        card_h = Inches(0.58) if len(item) < 72 else (Inches(0.76) if len(item) < 120 else Inches(1.05))
         _rect(slide, l, y + Inches(0.06), Inches(0.05), card_h - Inches(0.12), card_line)
         card = _round(slide, l + Inches(0.08), y, w - Inches(0.08), card_h, card_fill, BORDER)
         card.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
@@ -171,6 +173,36 @@ def _component_cards(slide, rows, l, t, w):
         _text(slide, l + Inches(0.75), y + Inches(0.1), Inches(2), Inches(0.32), name, 12, bold=True, color=c)
         _text(slide, l + Inches(0.75), y + Inches(0.38), Inches(2), Inches(0.28), who, 9, color=TEXT_DIM)
         _text(slide, l + Inches(2.85), y + Inches(0.2), w - Inches(3), Inches(0.65), what, 11, color=TEXT_MUTED)
+
+
+def _role_cards(slide, rows, l, t, w):
+    """Taller cards with a short paragraph per product role."""
+    icons = ["⚙", "👁", "📱", "☁"]
+    colors = [ACCENT_GOLD, ACCENT_GREEN, ACCENT_PURPLE, ACCENT]
+    gap = Inches(0.06)
+    y = t
+    for i, (name, who, body) in enumerate(rows):
+        if len(body) > 160:
+            card_h = Inches(1.38)
+        elif len(body) > 120:
+            card_h = Inches(1.18)
+        else:
+            card_h = Inches(1.02)
+        c = colors[i % len(colors)]
+        _rect(slide, l, y + Inches(0.06), Inches(0.05), card_h - Inches(0.12), c)
+        card = _round(slide, l + Inches(0.08), y, w - Inches(0.08), card_h, BG_CARD, BORDER)
+        card.text_frame.clear()
+        badge = _round(slide, l + Inches(0.18), y + Inches(0.14), Inches(0.42), Inches(0.42), RGBColor(0x28, 0x32, 0x48), c)
+        badge.text_frame.paragraphs[0].text = icons[i]
+        badge.text_frame.paragraphs[0].font.size = Pt(12)
+        badge.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+        badge.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        tx = l + Inches(0.72)
+        tw = w - Inches(0.88)
+        _text(slide, tx, y + Inches(0.1), tw, Inches(0.28), name, 12, bold=True, color=c)
+        _text(slide, tx, y + Inches(0.34), tw, Inches(0.22), who, 9, color=TEXT_DIM)
+        _text(slide, tx, y + Inches(0.54), tw, card_h - Inches(0.58), body, 10, color=TEXT_MUTED)
+        y += card_h + gap
 
 
 def _step_badge(slide, num, color, l, t):
@@ -226,7 +258,11 @@ def build() -> Path:
         "Проблема: фото и метаданные теряются в мессенджерах и Excel",
         "Проблема: нет единого места «что собрали» и «что дальше»",
         "",
-        "Решение: конфиг → UI в приложении → пакет на сервер → просмотр в админке",
+        "Решение: в Staff Admin один раз настраиваем сценарий сбора данных под проект — "
+        "какие поля собирать и в каком порядке (JSON в Git, без релиза приложения) → "
+        "мобилка автоматически строит UI формы по этому описанию → "
+        "сборщик отправляет пакет на сервер → "
+        "команда просматривает принятые данные в админке, с фильтрацией по проектам",
     ], Inches(0.65), Inches(1.95), Inches(6.2))
     _screenshot_frame(slide, Inches(7.15), Inches(1.05), Inches(5.55), Inches(5.85), "до / после — хаос vs список пакетов")
 
@@ -337,5 +373,161 @@ def build() -> Path:
     return out
 
 
+def build_v4() -> Path:
+    """Lean 9-slide deck (v3_refactor base) with richer slides 2–5."""
+    global TOTAL_SLIDES
+    TOTAL_SLIDES = 9
+
+    prs = Presentation()
+    prs.slide_width = SLIDE_W
+    prs.slide_height = SLIDE_H
+
+    # 1 — Cover (from refactor)
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _gradient_bg(slide, BG_DEEP, RGBColor(0x14, 0x1C, 0x32), 145)
+    _decor_orbs(slide)
+    _rect(slide, Inches(0), Inches(0), SLIDE_W, Inches(0.08), ACCENT)
+    panel = _round(slide, Inches(0.55), Inches(0.75), Inches(7.2), Inches(6.0), BG_CARD, BORDER)
+    _text(slide, Inches(0.95), Inches(1.05), Inches(2), Inches(0.3), "EPOCH8", 10, bold=True, color=ACCENT_GOLD)
+    _text(slide, Inches(0.95), Inches(1.55), Inches(6.5), Inches(1.1), "Data Collector", 44, bold=True)
+    _rect(slide, Inches(0.95), Inches(2.75), Inches(2.4), Inches(0.06), ACCENT)
+    _text(
+        slide, Inches(0.95), Inches(3.0), Inches(6.4), Inches(1.4),
+        "Платформа сбора и визуализации полевых данных\n"
+        "Один бэкенд · мобильное приложение · конфигурируемые сценарии",
+        17, color=TEXT_MUTED,
+    )
+    draw_cover_architecture(slide, Inches(8.1), Inches(0.75), Inches(4.65), Inches(2.8))
+    _screenshot_frame(slide, Inches(8.1), Inches(3.7), Inches(4.65), Inches(3.05), "hero — админка + телефон")
+
+    # 2 — Overview (refactor wording kept)
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _slide_chrome(slide, 2, "OVERVIEW")
+    _slide_title(slide, "Зачем это нужно", "От хаоса в поле — к структурированным данным")
+    _bullet_cards(slide, [
+        "Проблема: каждый сценарий сбора = новая форма в коде",
+        "Проблема: фото и метаданные теряются в мессенджерах и Excel",
+        "Проблема: нет единого места «что собрали» и «что дальше»",
+        "",
+        "Решение: в Staff Admin один раз настраиваем сценарий сбора данных под проект — "
+        "какие поля собирать и в каком порядке (JSON в Git, без релиза приложения) → "
+        "мобилка автоматически строит UI формы по этому описанию → "
+        "сборщик отправляет пакет на сервер → "
+        "команда просматривает принятые данные в админке, с фильтрацией по проектам",
+    ], Inches(0.65), Inches(1.95), Inches(6.2))
+
+    # 3 — Product: prose + interaction diagram
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _slide_chrome(slide, 3, "PRODUCT")
+    _slide_title(slide, "Из чего состоит продукт", "Одна платформа — N проектов · 1 проект = 1 конфиг")
+    _role_cards(slide, [
+        (
+            "Staff Admin",
+            "Epoch8 · управление проектами",
+            "Администратор заходит в веб-админку: создаёт проект сбора под конкретную задачу, "
+            "привязывает Git-репозитории (там версионируются config.json и артефакты админки), "
+            "настраивает доступ — какие пользователи видят какие проекты, назначает сборщиков.",
+        ),
+        (
+            "Client Admin",
+            "Заказчик · просмотр данных",
+            "Аналитик или заказчик открывает Client Admin: видит принятые пакеты по своим проектам, "
+            "фильтрует по полям формы, просматривает медиа и визуализации пайплайнов поверх данных.",
+        ),
+        (
+            "Flutter App",
+            "Сборщик · полевой сбор",
+            "Сборщик логинится в мобильном приложении, получает актуальный конфиг с сервера, "
+            "проходит сценарий офлайн, формирует пакет и отправляет на сервер при появлении сети.",
+        ),
+        (
+            "Django + storage",
+            "Платформа · единый бэкенд",
+            "Связывает все части: API для приложения и админок, хранение пакетов и медиа, "
+            "синхронизация конфигов из Git, привязка данных к проектам.",
+        ),
+    ], Inches(0.65), Inches(1.82), Inches(6.2))
+    draw_product_architecture(slide, Inches(7.15), Inches(1.05), Inches(5.55), Inches(5.85))
+
+    # 4 — Dual path flow
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _slide_chrome(slide, 4, "FLOW")
+    _slide_title(slide, "Путь данных", "Два жизненных цикла: конфиг и пакет")
+    draw_dual_path_flow(slide, Inches(0.65), Inches(1.95), Inches(12.05), Inches(4.55))
+    _text(
+        slide, Inches(0.65), Inches(6.55), Inches(12.05), Inches(0.5),
+        "Конфиг описывает сценарий (fields + flow + viz) · пакет — результат прохождения сценария сборщиком",
+        12, color=TEXT_MUTED, align=PP_ALIGN.CENTER,
+    )
+
+    # 5 — Config with context
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _slide_chrome(slide, 5, "CONFIG")
+    _slide_title(slide, "Конфиг = сценарий без кода", "JSON в Git — без релиза приложения")
+    _bullet_cards(slide, [
+        "Конфиг — это набор JSON-файлов в Git-репозитории проекта",
+        "fields — описание полей: текст, фото, дата, выбор из списка…",
+        "Один набор fields = один экран формы в мобильном приложении",
+        "flow — порядок экранов: сценарий сбора = последовательность fields",
+        "viz.json — как показывать пакет и визуализации в админке",
+        "",
+        "Новый сценарий = правка или новый JSON в Git, а не релиз приложения",
+    ], Inches(0.65), Inches(1.82), Inches(6.2))
+    draw_config_entities(slide, Inches(7.15), Inches(1.05), Inches(5.55), Inches(5.85))
+
+    # 6 — STEP 01
+    _slide_step(prs, 6, "Админ настраивает проект", "STEP 01", [
+        "Создаёт проект и привязывает Git",
+        "Редактирует config.json: fields + flow",
+        "Назначает сборщиков на проект",
+        "Сохраняет → commit + push",
+    ], 1, ACCENT_GOLD, screenshot_label="проекты · JSON-редактор · пользователи")
+
+    # 7 — STEP 02 (refactor bullets)
+    _slide_step(prs, 7, "Конфиг в приложении", "STEP 02", [
+        "Сборщик логинится и видит свои проекты",
+        "Приложение скачивает config с сервера",
+        "Кэширует локально — работает офлайн",
+        "Заполняет данные формы и подтверждает формирование пакета",
+    ], 2, ACCENT, screenshot_label="список проектов · форма · камера")
+
+    # 8 — STEP 03 viewing (refactor)
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _slide_chrome(slide, 8, "STEP 03", ACCENT_GREEN)
+    _step_badge(slide, 3, ACCENT_GREEN, Inches(0.65), Inches(0.38))
+    _slide_title(slide, "Просмотр принятых пакетов", "Админка: список → фильтр → workspace пакета")
+    _bullet_cards(slide, [
+        "Список всех принятых пакетов по проектам",
+        "Фильтры: проект, статус, поиск по полям",
+        "данные · медиа · визуализации · история правок",
+        "UI строится из тех же полей в конфиге",
+    ], Inches(0.65), Inches(2.05), Inches(5.8), ACCENT_GREEN)
+    _screenshot_frame(slide, Inches(6.75), Inches(1.05), Inches(5.55), Inches(5.85), "admin-packages.gif", ACCENT_GREEN)
+
+    # 9 — Closing
+    slide = prs.slides.add_slide(prs.slide_layouts[6])
+    _gradient_bg(slide, RGBColor(0x0E, 0x18, 0x28), BG_DEEP, 160)
+    _decor_orbs(slide)
+    _rect(slide, Inches(0), Inches(0), SLIDE_W, Inches(0.08), ACCENT_GREEN)
+    _round(slide, Inches(1.2), Inches(1.5), Inches(10.9), Inches(4.5), BG_CARD, ACCENT_GREEN).text_frame.clear()
+    _text(slide, Inches(1.65), Inches(1.85), Inches(10), Inches(0.6), "Data Collector в одном предложении", 28, bold=True, align=PP_ALIGN.CENTER)
+    _text(
+        slide, Inches(1.65), Inches(2.65), Inches(10), Inches(2.2),
+        "Админ описывает сценарий в JSON → приложение проводит сборщика по шагам → "
+        "пакет с медиа попадает в админку → команда видит данные без ручной склейки.",
+        18, color=TEXT_MUTED, align=PP_ALIGN.CENTER,
+    )
+    _text(slide, Inches(12.0), Inches(7.2), Inches(0.9), Inches(0.28), f"{TOTAL_SLIDES:02d} / {TOTAL_SLIDES}", 9, color=TEXT_DIM, align=PP_ALIGN.RIGHT)
+
+    out = Path(__file__).resolve().parent / "Data-Collector-Canva-Template-v4.pptx"
+    prs.save(out)
+    TOTAL_SLIDES = 11
+    return out
+
+
 if __name__ == "__main__":
-    print(f"Created: {build()}")
+    import sys
+    if len(sys.argv) > 1 and sys.argv[1] == "v4":
+        print(f"Created: {build_v4()}")
+    else:
+        print(f"Created: {build()}")
