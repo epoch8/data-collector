@@ -70,6 +70,34 @@
       <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Открыть пакеты<i class="bi bi-arrow-right ms-1"></i></a>
     </div>
   </div>
+  <div class="col-lg-12">
+    <div class="card p-4 h-100">
+      <div class="ui-card-title"><i class="bi bi-hdd-stack me-1"></i>Хранилище данных</div>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <p class="small ui-muted mb-1">База (database_uri)
+            {% if database_is_default %}<span class="badge bg-secondary ms-1">по умолчанию</span>{% else %}<span class="badge bg-info text-dark ms-1">задано</span>{% endif %}
+          </p>
+          <code class="small text-break d-block">{{ effective_database_uri }}</code>
+        </div>
+        <div class="col-md-6">
+          <p class="small ui-muted mb-1">Медиа (storage_uri)
+            {% if storage_is_default %}<span class="badge bg-secondary ms-1">по умолчанию</span>{% else %}<span class="badge bg-info text-dark ms-1">задано</span>{% endif %}
+          </p>
+          <code class="small text-break d-block">{{ effective_storage_uri }}</code>
+        </div>
+      </div>
+      {% if is_staff %}
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_storage_settings' project.project_id %}"><i class="bi bi-pencil-square me-1"></i>Изменить хранилище</a>
+        <form method="post" action="{% url 'ui_project_storage_check' project.project_id %}" class="d-inline">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-outline-warning btn-sm"><i class="bi bi-plug me-1"></i>Проверить хранилище</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 {% if is_staff %}

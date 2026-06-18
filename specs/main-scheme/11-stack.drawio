@@ -1,14 +1,14 @@
-<mxfile host="65bd71144e" modified="2026-06-09T12:00:00.000Z" agent="cursor" version="24.7.17" type="device">
+<mxfile host="65bd71144e">
     <diagram id="stack-11" name="Page-1">
-        <mxGraphModel dx="1122" dy="820" grid="1" gridSize="10" guides="1" tooltips="1" connect="0" arrows="0" fold="1" page="1" pageScale="1" pageWidth="1122" pageHeight="860" background="#121218" math="0" shadow="0">
+        <mxGraphModel dx="1237" dy="896" grid="1" gridSize="10" guides="1" tooltips="1" connect="0" arrows="0" fold="1" page="1" pageScale="1" pageWidth="1122" pageHeight="860" background="#121218" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
                 <mxCell id="title" value="Data Collector — стек (1 платформа, N проектов)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=18;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
-                    <mxGeometry x="1" y="0" width="520" height="32" as="geometry"/>
+                    <mxGeometry x="1" width="520" height="32" as="geometry"/>
                 </mxCell>
                 <mxCell id="firebase" value="&lt;b&gt;Firebase Auth&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#C9BFA8&quot;&gt;вход: Flutter + client /ui/login/&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#3d3020;strokeColor=#f9ab00;fontColor=#FFF8E8;fontSize=11;" parent="1" vertex="1">
-                    <mxGeometry x="841" y="0" width="200" height="48" as="geometry"/>
+                    <mxGeometry x="841" width="200" height="48" as="geometry"/>
                 </mxCell>
                 <mxCell id="platformBox" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#0f1419;strokeColor=#5b8def;strokeWidth=2;" parent="1" vertex="1">
                     <mxGeometry x="1" y="60" width="1120" height="480" as="geometry"/>
@@ -17,10 +17,10 @@
                     <mxGeometry x="43" y="79" width="280" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="laneClients" value="КЛИЕНТЫ" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;fontStyle=1;fontColor=#6B7280;" parent="1" vertex="1">
-                    <mxGeometry x="127" y="127" width="100" height="16" as="geometry"/>
+                    <mxGeometry x="122" y="111" width="100" height="16" as="geometry"/>
                 </mxCell>
                 <mxCell id="laneServer" value="СЕРВЕР" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=10;fontStyle=1;fontColor=#6B7280;" parent="1" vertex="1">
-                    <mxGeometry x="531" y="127" width="100" height="16" as="geometry"/>
+                    <mxGeometry x="531" y="120" width="100" height="23" as="geometry"/>
                 </mxCell>
                 <mxCell id="flutter" value="&lt;b&gt;Flutter App&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#C4B8D8&quot;&gt;/v1/* upload&lt;br&gt;Drift (local)&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;fillColor=#2a2438;strokeColor=#9b7ed0;fontColor=#EDE8F5;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="17" y="142" width="150" height="64" as="geometry"/>
@@ -38,10 +38,10 @@
                     <mxGeometry x="17" y="290" width="1088" height="200" as="geometry"/>
                 </mxCell>
                 <mxCell id="sharedLbl" value="&lt;b&gt;ОБЩЕЕ хранилище&lt;/b&gt; (одно на все проекты)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#3DCC85;" parent="1" vertex="1">
-                    <mxGeometry x="31" y="307" width="320" height="20" as="geometry"/>
+                    <mxGeometry x="31" y="300" width="320" height="20" as="geometry"/>
                 </mxCell>
                 <mxCell id="sharedSub" value="local: db.sqlite3   |   prod: PostgreSQL — только каталог платформы" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=9;fontColor=#9CA3AF;" parent="1" vertex="1">
-                    <mxGeometry x="31" y="327" width="500" height="14" as="geometry"/>
+                    <mxGeometry x="31" y="320" width="500" height="14" as="geometry"/>
                 </mxCell>
                 <mxCell id="djangoDb" value="&lt;b&gt;Django DB (одна)&lt;/b&gt;&lt;br&gt;&lt;font style=&quot;font-size:10px;color:#B8C4CE&quot;&gt;Project (+ media_bucket)&lt;br&gt;GitCredential&lt;br&gt;CollectorUser (mobile + admin_projects)&lt;br&gt;&lt;br&gt;&lt;i&gt;пакетов здесь нет&lt;/i&gt;&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3dcc85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
                     <mxGeometry x="29" y="342" width="360" height="120" as="geometry"/>

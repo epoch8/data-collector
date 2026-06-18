@@ -4,3 +4,9 @@ django-cors-headers>=4.3.0,<5
 firebase-admin>=6.5.0
 django-storages[google]>=1.14.0
 psycopg2>=2.9.9
+SQLAlchemy>=2.0,<3
+alembic>=1.13
+fsspec>=2024.2.0
+# Опциональные fsspec-бэкенды (нужны только при storage_uri gs:// / s3://):
+gcsfs>=2024.2.0
+s3fs>=2024.2.0

@@ -73,7 +73,33 @@ class Project(models.Model):
         blank=True,
         default="",
         help_text=(
-            "GCS-бакет для медиа пакетов (prod). Пусто — шаблон PROJECT_MEDIA_BUCKET_TEMPLATE."
+            "Deprecated: используйте storage_uri. GCS-бакет для медиа пакетов (prod)."
+        ),
+    )
+    database_uri = models.CharField(
+        max_length=1024,
+        blank=True,
+        default="",
+        help_text=(
+            "SQLAlchemy URL для project DB (пакеты + pipeline). "
+            "Пусто — SQLite в PROJECT_DB_ROOT/{project_id}/project.sqlite3."
+        ),
+    )
+    storage_uri = models.CharField(
+        max_length=1024,
+        blank=True,
+        default="",
+        help_text=(
+            "fsspec URI корня blobs пакетов (file:// | gs:// | s3://). "
+            "Пусто — папка в PROJECT_MEDIA_ROOT/{project_id}/."
+        ),
+    )
+    storage_options_encrypted = models.TextField(
+        blank=True,
+        default="",
+        help_text=(
+            "Зашифрованный JSON с креды/опциями fsspec (например S3 endpoint_url/key/secret). "
+            "Редактируется в UI; секрет шифруется Fernet."
         ),
     )
     updated_at = models.DateTimeField(auto_now=True)

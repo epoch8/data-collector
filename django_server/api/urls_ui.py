@@ -30,6 +30,16 @@ urlpatterns = [
         views_ui.project_git_settings,
         name="ui_project_git_settings",
     ),
+    path(
+        "projects/<str:project_id>/storage-settings/",
+        views_ui.project_storage_settings,
+        name="ui_project_storage_settings",
+    ),
+    path(
+        "projects/<str:project_id>/storage-check/",
+        views_ui.project_storage_check,
+        name="ui_project_storage_check",
+    ),
     path("projects/<str:project_id>/config/", views_ui.project_config, name="ui_project_config"),
     path(
         "projects/<str:project_id>/config/builder/",

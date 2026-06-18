@@ -1,18 +1,19 @@
-"""Per-project package blob storage: local folder (dev) or dedicated GCS bucket (prod)."""
+"""Per-project package blob storage через fsspec (file:// | s3:// | gs://).
+
+Бэкенд и креды берутся из Project.storage_uri / storage_options (см.
+project_storage_config). Параметр media_bucket оставлен для обратной
+совместимости вызовов и больше не влияет на выбор бэкенда.
+"""
 
 from __future__ import annotations
 
 import mimetypes
-import shutil
 from pathlib import Path
-from typing import BinaryIO, Iterator
+from typing import Iterator
 
-from django.conf import settings
 from django.http import FileResponse, StreamingHttpResponse
 
-
-def media_root(project_id: str) -> Path:
-    return Path(settings.PROJECT_MEDIA_ROOT) / project_id
+from . import project_storage_config as psc
 
 
 def storage_rel_path(package_id: str, logical_path: str) -> str:
@@ -20,26 +21,10 @@ def storage_rel_path(package_id: str, logical_path: str) -> str:
     return f"packages/{package_id}/{rel}"
 
 
-def local_abs_path(project_id: str, storage_path: str) -> Path:
-    return media_root(project_id) / storage_path
-
-
-def bucket_name(project_id: str, project_media_bucket: str = "") -> str:
-    explicit = (project_media_bucket or "").strip()
-    if explicit:
-        return explicit
-    tmpl = getattr(settings, "PROJECT_MEDIA_BUCKET_TEMPLATE", "korovas-dc-{project_id}")
-    return tmpl.format(project_id=project_id)
-
-
-def _use_gcs() -> bool:
-    return getattr(settings, "DJANGO_ENV", "") == "production"
-
-
-def _gcs_client():
-    from google.cloud import storage
-
-    return storage.Client()
+def _fs_and_path(project_id: str, storage_path: str):
+    cfg = psc.resolve_by_id(project_id)
+    fs = psc.filesystem_for(cfg)
+    return fs, psc.object_path(cfg, storage_path), cfg
 
 
 def write_blob(
@@ -51,14 +36,17 @@ def write_blob(
     media_bucket: str = "",
 ) -> str:
     rel = storage_rel_path(package_id, logical_path)
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        client.bucket(bucket).blob(rel).upload_from_string(data)
+    fs, abs_path, cfg = _fs_and_path(project_id, rel)
+    if cfg.is_local_storage:
+        Path(abs_path).parent.mkdir(parents=True, exist_ok=True)
     else:
-        path = local_abs_path(project_id, rel)
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+        parent = abs_path.rsplit("/", 1)[0]
+        try:
+            fs.makedirs(parent, exist_ok=True)
+        except (NotImplementedError, FileExistsError):
+            pass
+    with fs.open(abs_path, "wb") as f:
+        f.write(data)
     return rel
 
 
@@ -68,15 +56,15 @@ def delete_blob_file(
     *,
     media_bucket: str = "",
 ) -> None:
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        blob = client.bucket(bucket).blob(storage_path)
-        if blob.exists():
-            blob.delete()
-        return
-    path = local_abs_path(project_id, storage_path)
-    path.unlink(missing_ok=True)
+    fs, abs_path, _ = _fs_and_path(project_id, storage_path)
+    try:
+        if fs.exists(abs_path):
+            fs.rm_file(abs_path)
+    except (FileNotFoundError, AttributeError):
+        try:
+            fs.rm(abs_path)
+        except FileNotFoundError:
+            pass
 
 
 def remove_package_media(
@@ -85,28 +73,23 @@ def remove_package_media(
     *,
     media_bucket: str = "",
 ) -> None:
-    prefix = f"packages/{package_id}/"
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        blobs = client.list_blobs(bucket, prefix=prefix)
-        for blob in blobs:
-            blob.delete()
-        return
-    root = media_root(project_id) / "packages" / package_id
-    shutil.rmtree(root, ignore_errors=True)
+    fs, abs_path, _ = _fs_and_path(project_id, f"packages/{package_id}")
+    try:
+        if fs.exists(abs_path):
+            fs.rm(abs_path, recursive=True)
+    except FileNotFoundError:
+        pass
 
 
 def remove_project_media(project_id: str, *, media_bucket: str = "") -> None:
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        blobs = list(client.list_blobs(bucket))
-        if blobs:
-            bucket_obj = client.bucket(bucket)
-            bucket_obj.delete_blobs(blobs)
-        return
-    shutil.rmtree(media_root(project_id), ignore_errors=True)
+    cfg = psc.resolve_by_id(project_id)
+    fs = psc.filesystem_for(cfg)
+    root = psc.object_root(cfg)
+    try:
+        if fs.exists(root):
+            fs.rm(root, recursive=True)
+    except FileNotFoundError:
+        pass
 
 
 def open_blob_path(
@@ -115,10 +98,11 @@ def open_blob_path(
     *,
     media_bucket: str = "",
 ) -> Path | None:
-    """Local filesystem path for FileResponse; None if missing or GCS."""
-    if _use_gcs():
+    """Локальный путь для FileResponse; None если не локальное хранилище или нет файла."""
+    cfg = psc.resolve_by_id(project_id)
+    if not cfg.is_local_storage:
         return None
-    path = local_abs_path(project_id, storage_path)
+    path = Path(psc.object_path(cfg, storage_path))
     return path if path.is_file() else None
 
 
@@ -129,24 +113,15 @@ def read_blob_head(
     media_bucket: str = "",
     max_bytes: int = 256 * 1024,
 ) -> bytes | None:
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        blob = client.bucket(bucket).blob(storage_path)
-        if not blob.exists():
-            return None
-        return blob.download_as_bytes(start=0, end=max_bytes - 1)
-    path = local_abs_path(project_id, storage_path)
-    if not path.is_file():
+    fs, abs_path, _ = _fs_and_path(project_id, storage_path)
+    if not fs.exists(abs_path):
         return None
-    with path.open("rb") as f:
+    with fs.open(abs_path, "rb") as f:
         return f.read(max_bytes)
 
 
-def _gcs_stream(storage_path: str, bucket: str) -> Iterator[bytes]:
-    client = _gcs_client()
-    blob = client.bucket(bucket).blob(storage_path)
-    with blob.open("rb") as f:
+def _fs_stream(fs, abs_path: str) -> Iterator[bytes]:
+    with fs.open(abs_path, "rb") as f:
         while True:
             chunk = f.read(1024 * 64)
             if not chunk:
@@ -166,22 +141,20 @@ def blob_file_response(
     filename = Path(logical_path.replace("\\", "/")).name
     disposition = f'inline; filename="{filename}"'
 
-    if _use_gcs():
-        bucket = bucket_name(project_id, media_bucket)
-        client = _gcs_client()
-        blob = client.bucket(bucket).blob(storage_path)
-        if not blob.exists():
+    cfg = psc.resolve_by_id(project_id)
+    fs = psc.filesystem_for(cfg)
+    abs_path = psc.object_path(cfg, storage_path)
+
+    if cfg.is_local_storage:
+        path = Path(abs_path)
+        if not path.is_file():
             return None
-        resp = StreamingHttpResponse(
-            _gcs_stream(storage_path, bucket),
-            content_type=content_type,
-        )
+        resp = FileResponse(path.open("rb"), content_type=content_type)
         resp["Content-Disposition"] = disposition
         return resp
 
-    path = local_abs_path(project_id, storage_path)
-    if not path.is_file():
+    if not fs.exists(abs_path):
         return None
-    resp = FileResponse(path.open("rb"), content_type=content_type)
+    resp = StreamingHttpResponse(_fs_stream(fs, abs_path), content_type=content_type)
     resp["Content-Disposition"] = disposition
     return resp

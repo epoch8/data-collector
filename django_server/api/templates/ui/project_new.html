@@ -47,6 +47,28 @@
           <textarea class="form-control font-monospace small" name="private_key" rows="6" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
           <div class="form-text ui-muted">Если включена генерация — поле ключа можно оставить пустым.</div>
         </div>
+        <hr class="my-4">
+        <details>
+          <summary class="mb-3" style="cursor: pointer;">
+            <span class="fw-semibold"><i class="bi bi-hdd-stack me-1"></i>Хранилище данных</span>
+            <span class="ui-muted small ms-2">необязательно</span>
+          </summary>
+          <p class="form-text ui-muted mb-3">
+            Если не указано — данные проекта на диске сервера (SQLite + папка), как раньше.
+            Укажите бакет и/или PostgreSQL для prod.
+          </p>
+          <div class="mb-3">
+            <label class="form-label">Бакет для медиа (storage)</label>
+            <input class="form-control" name="storage_uri" placeholder="korovas-dc-my-project  или  gs://bucket/  |  s3://bucket/prefix/" autocomplete="off">
+            <div class="form-text ui-muted">Голое имя считается GCS-бакетом (<code>gs://…/</code>). Пусто — папка на сервере.</div>
+          </div>
+          <div class="mb-1">
+            <label class="form-label">PostgreSQL (database_uri)</label>
+            <input class="form-control font-monospace small" name="database_uri" placeholder="postgresql://user:pass@host:5432/collector?options=-csearch_path%3Dmy_project" autocomplete="off">
+            <div class="form-text ui-muted">Полный SQLAlchemy URL. Пусто — SQLite-файл на сервере.</div>
+          </div>
+        </details>
+        <hr class="my-4">
         <div class="d-flex flex-wrap gap-2">
           <button type="submit" class="btn btn-primary"><i class="bi bi-git me-1"></i>Создать проект</button>
           <a href="{% url 'ui_project_list' %}" class="btn btn-outline-secondary">Отмена</a>
