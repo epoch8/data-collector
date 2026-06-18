@@ -123,6 +123,44 @@ def storage_uri_from_legacy_bucket(media_bucket: str) -> str:
     return f"gs://{bucket}/"
 
 
+def postgres_db_name(project_id: str) -> str:
+    """Имя Postgres-базы для проекта (db-per-project): proj_krs_label, proj_yolo, …"""
+    import re
+
+    safe = re.sub(r"[^\w]+", "_", (project_id or "").strip().lower()).strip("_")
+    return f"proj_{safe}" if safe else "proj_unknown"
+
+
+def build_postgres_database_uri(
+    project_id: str,
+    *,
+    host: str = "localhost",
+    port: int = 55432,
+    user: str = "collector",
+    password: str = "collector",
+) -> str:
+    dbname = postgres_db_name(project_id)
+    return f"postgresql+psycopg2://{user}:{password}@{host}:{port}/{dbname}"
+
+
+def build_s3_storage_uri(
+    project_id: str,
+    *,
+    bucket: str = "dc-packages",
+) -> str:
+    prefix = (project_id or "").strip().strip("/")
+    return f"s3://{bucket.strip('/')}/{prefix}/"
+
+
+def default_s3_storage_options(
+    *,
+    endpoint_url: str = "http://localhost:9000",
+    key: str = "minioadmin",
+    secret: str = "minioadmin",
+) -> dict:
+    return {"endpoint_url": endpoint_url, "key": key, "secret": secret}
+
+
 def decode_storage_options(encrypted: str) -> dict:
     """Расшифровать JSON storage_options. Пусто/ошибка -> {}."""
     raw = (encrypted or "").strip()
@@ -304,7 +342,18 @@ def _check_blob_storage(config: StorageConfig) -> str:
             f"Storage ({scheme}): не установлен бэкенд "
             f"({'gcsfs' if scheme == 'gs' else 's3fs'})"
         )
-    fs.ls(object_root(config), detail=False)
+    # Write/delete-пробник: надёжнее ls по префиксу (пустой префикс у s3/gs
+    # бросает FileNotFoundError, хотя бакет доступен).
+    probe = object_path(config, ".storage_check")
+    with fs.open(probe, "wb") as f:
+        f.write(b"ok")
+    try:
+        fs.rm_file(probe)
+    except (FileNotFoundError, AttributeError):
+        try:
+            fs.rm(probe)
+        except FileNotFoundError:
+            pass
     return f"Storage ({scheme}): OK — {config.storage_uri}"
 
 
