@@ -65,13 +65,16 @@ class Command(BaseCommand):
 
         for project in qs:
             pid = project.project_id
-            db_uri = psc.build_postgres_database_uri(
+            db_uri_base = psc.build_postgres_database_uri_base(
                 pid,
                 host=options["pg_host"],
                 port=options["pg_port"],
+            )
+            db_opts = psc.default_postgres_database_options(
                 user=options["pg_user"],
                 password=options["pg_password"],
             )
+            db_uri_full = psc.apply_database_credentials(db_uri_base, db_opts)
             dbname = psc.postgres_db_name(pid)
             st_uri = "" if skip_storage else psc.build_s3_storage_uri(pid, bucket=options["s3_bucket"])
             st_opts = (
@@ -85,7 +88,7 @@ class Command(BaseCommand):
             )
 
             self.stdout.write(f"\n=== {pid} ===")
-            self.stdout.write(f"  DB:      {dbname}  ({db_uri})")
+            self.stdout.write(f"  DB:      {dbname}  ({db_uri_base})")
             if not skip_storage:
                 self.stdout.write(f"  Storage: {st_uri}")
 
@@ -93,14 +96,16 @@ class Command(BaseCommand):
                 self.stdout.write("  (dry-run — URI не сохраняются, данные не копируются)")
                 continue
 
-            call_command("create_project_db", "--database-uri", db_uri, verbosity=0)
+            call_command("create_project_db", "--database-uri", db_uri_full, verbosity=0)
 
-            project.database_uri = db_uri
+            project.database_uri = db_uri_base
+            project.database_options_encrypted = psc.encode_database_options(db_opts)
             project.storage_uri = st_uri
             project.storage_options_encrypted = psc.encode_storage_options(st_opts)
             project.save(
                 update_fields=[
                     "database_uri",
+                    "database_options_encrypted",
                     "storage_uri",
                     "storage_options_encrypted",
                     "updated_at",

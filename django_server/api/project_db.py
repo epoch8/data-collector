@@ -274,25 +274,11 @@ def db_path(project_id: str) -> Path | None:
     return psc.sqlite_path_from_uri(uri)
 
 
-def remove_project_db(project_id: str) -> None:
-    import shutil
-
-    cfg = psc.resolve_by_id(project_id)
-    uri = cfg.database_uri
-    engine = _engines.pop(uri, None)
-    if engine is not None:
-        engine.dispose()
-    _initialized.discard(uri)
-    if uri.startswith("sqlite"):
-        path = psc.sqlite_path_from_uri(uri)
-        if path is not None:
-            shutil.rmtree(path.parent, ignore_errors=True)
-    else:
-        eng = create_engine(uri, future=True)
-        try:
-            metadata.drop_all(eng)
-        finally:
-            eng.dispose()
+def remove_project_db(project_id: str, *, database_uri: str | None = None) -> None:
+    uri = database_uri
+    if uri is None:
+        uri = psc.resolve_by_id(project_id).database_uri
+    psc.drop_database_uri(uri)
 
 
 @contextmanager

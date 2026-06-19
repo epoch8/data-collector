@@ -81,8 +81,13 @@ def remove_package_media(
         pass
 
 
-def remove_project_media(project_id: str, *, media_bucket: str = "") -> None:
-    cfg = psc.resolve_by_id(project_id)
+def remove_project_media(
+    project_id: str,
+    *,
+    media_bucket: str = "",
+    config: psc.StorageConfig | None = None,
+) -> None:
+    cfg = config or psc.resolve_by_id(project_id)
     fs = psc.filesystem_for(cfg)
     root = psc.object_root(cfg)
     try:

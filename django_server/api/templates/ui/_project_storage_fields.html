@@ -1,0 +1,49 @@
+{# Поля хранилища: медиа, S3, Postgres #}
+<div class="mb-3">
+  <label class="form-label">Медиа (blobs)</label>
+  <input class="form-control font-monospace small" name="storage_uri" value="{{ storage_uri_value|default:'' }}" placeholder="s3://dc-packages/my-project/" autocomplete="off">
+  <div class="form-text ui-muted">
+    Пример: <code>s3://dc-packages/my-project/</code> или <code>gs://my-bucket/</code>.
+    Пусто — локальная папка на сервере.
+    {% if effective_storage_uri %}
+    <br>Сейчас: <code class="text-break">{{ effective_storage_uri }}</code>
+    {% endif %}
+  </div>
+</div>
+<div class="mb-3">
+  <label class="form-label">S3 / MinIO</label>
+  <div class="row g-2">
+    <div class="col-12">
+      <input class="form-control font-monospace small" name="s3_endpoint_url" value="{{ s3_endpoint_url|default:'' }}" placeholder="http://localhost:9000" autocomplete="off">
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" name="s3_key" value="{{ s3_key|default:'' }}" placeholder="access key" autocomplete="off">
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" type="password" name="s3_secret" placeholder="{% if has_s3_secret %}secret (пусто — не менять){% else %}secret key{% endif %}" autocomplete="new-password">
+    </div>
+  </div>
+  <div class="form-text ui-muted">Нужно только для <code>s3://</code>.</div>
+</div>
+<div class="mb-3">
+  <label class="form-label">PostgreSQL — адрес</label>
+  <input class="form-control font-monospace small" name="database_uri" value="{{ database_uri_value|default:'' }}" placeholder="postgresql+psycopg2://localhost:55432/proj_my_project" autocomplete="off">
+  <div class="form-text ui-muted">
+    Без логина и пароля. Пример: <code>postgresql+psycopg2://localhost:55432/proj_my_project</code>.
+    База создаётся автоматически при сохранении.
+    {% if effective_database_uri %}
+    <br>Сейчас: <code class="text-break">{{ effective_database_uri }}</code>
+    {% endif %}
+  </div>
+</div>
+<div class="mb-0">
+  <label class="form-label">PostgreSQL — логин и пароль</label>
+  <div class="row g-2">
+    <div class="col-md-6">
+      <input class="form-control" name="db_user" value="{{ db_user|default:'' }}" placeholder="collector" autocomplete="off">
+    </div>
+    <div class="col-md-6">
+      <input class="form-control" type="password" name="db_password" placeholder="{% if has_db_password %}пароль (пусто — не менять){% else %}password{% endif %}" autocomplete="new-password">
+    </div>
+  </div>
+</div>

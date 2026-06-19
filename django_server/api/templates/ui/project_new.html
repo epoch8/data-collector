@@ -54,19 +54,9 @@
             <span class="ui-muted small ms-2">необязательно</span>
           </summary>
           <p class="form-text ui-muted mb-3">
-            Если не указано — данные проекта на диске сервера (SQLite + папка), как раньше.
-            Укажите бакет и/или PostgreSQL для prod.
+            Необязательно. Пустые поля — SQLite и локальная папка на сервере.
           </p>
-          <div class="mb-3">
-            <label class="form-label">Бакет для медиа (storage)</label>
-            <input class="form-control" name="storage_uri" placeholder="korovas-dc-my-project  или  gs://bucket/  |  s3://bucket/prefix/" autocomplete="off">
-            <div class="form-text ui-muted">Голое имя считается GCS-бакетом (<code>gs://…/</code>). Пусто — папка на сервере.</div>
-          </div>
-          <div class="mb-1">
-            <label class="form-label">PostgreSQL (database_uri)</label>
-            <input class="form-control font-monospace small" name="database_uri" placeholder="postgresql://user:pass@host:5432/collector?options=-csearch_path%3Dmy_project" autocomplete="off">
-            <div class="form-text ui-muted">Полный SQLAlchemy URL. Пусто — SQLite-файл на сервере.</div>
-          </div>
+          {% include "ui/_project_storage_fields.html" %}
         </details>
         <hr class="my-4">
         <div class="d-flex flex-wrap gap-2">

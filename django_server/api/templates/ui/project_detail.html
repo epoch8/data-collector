@@ -66,6 +66,9 @@
   <div class="col-lg-6">
     <div class="card p-4 h-100">
       <div class="ui-card-title"><i class="bi bi-cloud-arrow-up me-1"></i>Приём пакетов</div>
+      {% if project_db_error %}
+      <div class="alert alert-warning py-2 small mb-2">{{ project_db_error }}</div>
+      {% endif %}
       <p class="mb-2">Сессий загрузки: <strong class="text-white">{{ package_count }}</strong></p>
       <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">Открыть пакеты<i class="bi bi-arrow-right ms-1"></i></a>
     </div>

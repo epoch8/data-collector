@@ -14,6 +14,7 @@ from django.utils import timezone
 
 from . import project_db as pdb
 from . import project_media as pm
+from . import project_storage_config as psc
 
 
 class Phase:
@@ -467,6 +468,12 @@ def append_field_changes(
     return rows
 
 
-def remove_project_packages(project_id: str, *, media_bucket: str = "") -> None:
-    pm.remove_project_media(project_id, media_bucket=media_bucket)
-    pdb.remove_project_db(project_id)
+def remove_project_packages(
+    project_id: str,
+    *,
+    media_bucket: str = "",
+    config: psc.StorageConfig | None = None,
+) -> None:
+    cfg = config or psc.resolve_by_id(project_id)
+    pm.remove_project_media(project_id, media_bucket=media_bucket, config=cfg)
+    pdb.remove_project_db(project_id, database_uri=cfg.database_uri)

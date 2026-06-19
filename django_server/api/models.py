@@ -81,8 +81,18 @@ class Project(models.Model):
         blank=True,
         default="",
         help_text=(
-            "SQLAlchemy URL для project DB (пакеты + pipeline). "
-            "Пусто — SQLite в PROJECT_DB_ROOT/{project_id}/project.sqlite3."
+            "SQLAlchemy URL для project DB без логина/пароля "
+            "(postgresql+psycopg2://host:5432/db). "
+            "Креды — в database_options_encrypted. "
+            "Пусто — SQLite в PROJECT_DB_ROOT/{project_id}/."
+        ),
+    )
+    database_options_encrypted = models.TextField(
+        blank=True,
+        default="",
+        help_text=(
+            "Зашифрованный JSON с кредами БД (user, password). "
+            "Редактируется в UI; пароль шифруется Fernet."
         ),
     )
     storage_uri = models.CharField(

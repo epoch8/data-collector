@@ -13,7 +13,7 @@
 <div class="ui-page-head mb-4">
   <div>
     <h1 class="ui-page-title">Хранилище данных</h1>
-    <p class="ui-page-sub mb-0">Проект <code>{{ project.project_id }}</code> · пакеты, blobs и pipeline-таблицы</p>
+    <p class="ui-page-sub mb-0">Проект <code>{{ project.project_id }}</code></p>
   </div>
 </div>
 
@@ -22,40 +22,9 @@
     <div class="card p-4">
       <form method="post">
         {% csrf_token %}
-        <div class="mb-3">
-          <label class="form-label">Бакет для медиа (storage)</label>
-          <input class="form-control" name="storage_uri" value="{{ project.storage_uri }}" placeholder="korovas-dc-my-project  или  gs://bucket/  |  s3://bucket/prefix/" autocomplete="off">
-          <div class="form-text ui-muted">
-            Голое имя считается GCS-бакетом (<code>gs://…/</code>). Пусто — папка на сервере.<br>
-            Сейчас фактически: <code class="text-break">{{ effective_storage_uri }}</code>
-          </div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">S3 / MinIO — доступ <span class="ui-muted small">(для s3://)</span></label>
-          <div class="row g-2">
-            <div class="col-md-12">
-              <input class="form-control" name="s3_endpoint_url" value="{{ s3_endpoint_url }}" placeholder="endpoint_url, напр. http://localhost:9000 (для MinIO)" autocomplete="off">
-            </div>
-            <div class="col-md-6">
-              <input class="form-control" name="s3_key" value="{{ s3_key }}" placeholder="access key" autocomplete="off">
-            </div>
-            <div class="col-md-6">
-              <input class="form-control" type="password" name="s3_secret" placeholder="{% if has_secret %}•••••• (оставьте пустым — не менять){% else %}secret key{% endif %}" autocomplete="new-password">
-            </div>
-          </div>
-          <div class="form-text ui-muted">Секрет хранится в БД в зашифрованном виде. Для <code>gs://</code> оставьте пустым (креды через ADC).</div>
-        </div>
-        <div class="mb-3">
-          <label class="form-label">PostgreSQL (database_uri)</label>
-          <input class="form-control font-monospace small" name="database_uri" value="{{ project.database_uri }}" placeholder="postgresql+psycopg2://user:pass@host:5432/proj_db" autocomplete="off">
-          <div class="form-text ui-muted">
-            Полный SQLAlchemy URL (db-per-project). Пусто — SQLite-файл на сервере.<br>
-            Сейчас фактически: <code class="text-break">{{ effective_database_uri }}</code>
-          </div>
-        </div>
-        <div class="alert alert-secondary py-2 small mb-4">
-          Смена базы с SQLite на PostgreSQL <strong>не переносит данные автоматически</strong> —
-          нужна миграция (management command). После сохранения нажмите «Проверить хранилище» на странице проекта.
+        {% include "ui/_project_storage_fields.html" %}
+        <div class="alert alert-secondary py-2 small mb-4 mt-3">
+          Смена адреса не переносит уже сохранённые данные. После сохранения нажмите «Проверить хранилище» на странице проекта.
         </div>
         <div class="d-flex flex-wrap gap-2">
           <button type="submit" class="btn btn-primary"><i class="bi bi-hdd-stack me-1"></i>Сохранить</button>

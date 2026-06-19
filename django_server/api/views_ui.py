@@ -27,6 +27,40 @@ from . import project_storage_config as psc
 from .firebase_user_sync import sync_collector_users_from_firebase
 from . import project_packages as ppkg
 from .models import CollectorUser, Project
+
+
+def _storage_form_context(project: Project | None = None) -> dict:
+    """Контекст для include ui/_project_storage_fields.html."""
+    if project is None:
+        return {}
+    cfg = psc.resolve(project)
+    db_user, has_db_password = psc.database_credentials_for_ui(project)
+    db_stored = (project.database_uri or "").strip()
+    return {
+        "storage_uri_value": project.storage_uri,
+        "database_uri_value": psc.strip_database_credentials(db_stored) if db_stored else "",
+        "effective_storage_uri": cfg.storage_uri,
+        "effective_database_uri": psc.mask_database_uri(cfg.database_uri),
+        "s3_endpoint_url": cfg.storage_options.get("endpoint_url", ""),
+        "s3_key": cfg.storage_options.get("key", ""),
+        "has_s3_secret": bool(cfg.storage_options.get("secret")),
+        "db_user": db_user,
+        "has_db_password": has_db_password,
+    }
+
+
+def _provision_project_database(request, project) -> None:
+    if not (project.database_uri or "").strip() and not (
+        project.database_options_encrypted or ""
+    ).strip():
+        return
+    ok, msg = psc.ensure_project_database(project)
+    if ok:
+        messages.info(request, msg)
+    else:
+        messages.warning(request, f"БД проекта: {msg}")
+
+
 from .project_config_service import (
     bootstrap_new_project,
     create_credential,
@@ -141,8 +175,7 @@ def project_new(request):
         except GitProjectError as e:
             messages.error(request, e.message)
             return redirect("ui_project_new")
-        storage_uri = psc.normalize_storage_uri(request.POST.get("storage_uri") or "")
-        database_uri = psc.normalize_database_uri(request.POST.get("database_uri") or "")
+        storage_uri, database_uri, st_enc, db_enc = psc.save_storage_from_post(request.POST)
         project = Project.objects.create(
             project_id=pid,
             name=name,
@@ -151,7 +184,10 @@ def project_new(request):
             git_credential=cred,
             storage_uri=storage_uri,
             database_uri=database_uri,
+            storage_options_encrypted=st_enc,
+            database_options_encrypted=db_enc,
         )
+        _provision_project_database(request, project)
         seed = seed_project_json(pid, name)
         for w in bootstrap_new_project(project, seed=seed):
             messages.warning(request, w)
@@ -170,7 +206,15 @@ def project_new(request):
 @staff_only
 def project_detail(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
-    pkg_count = len(ppkg.list_sessions(project.project_id))
+    package_count = 0
+    project_db_error = ""
+    try:
+        package_count = len(ppkg.list_sessions(project.project_id))
+    except Exception:
+        project_db_error = (
+            "БД проекта недоступна. Проверьте настройки хранилища "
+            "или нажмите «Проверить хранилище»."
+        )
     public_key = request.session.pop(f"git_public_key_{project_id}", None) or project.git_credential.public_key
     cfg = psc.resolve(project)
     return render(
@@ -178,13 +222,15 @@ def project_detail(request, project_id: str):
         "ui/project_detail.html",
         {
             "project": project,
-            "package_count": pkg_count,
+            "package_count": package_count,
+            "project_db_error": project_db_error,
             "is_staff": request.user.is_staff,
             "git_public_key": public_key,
             "effective_storage_uri": cfg.storage_uri,
-            "effective_database_uri": cfg.database_uri,
+            "effective_database_uri": psc.mask_database_uri(cfg.database_uri),
             "storage_is_default": not (project.storage_uri or "").strip(),
-            "database_is_default": not (project.database_uri or "").strip(),
+            "database_is_default": not (project.database_uri or "").strip()
+            and not (project.database_options_encrypted or "").strip(),
         },
     )
 
@@ -297,46 +343,33 @@ def project_git_sync(request, project_id: str):
 def project_storage_settings(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     if request.method == "POST":
-        storage_uri = psc.normalize_storage_uri(request.POST.get("storage_uri") or "")
-        database_uri = psc.normalize_database_uri(request.POST.get("database_uri") or "")
-        existing = psc.decode_storage_options(project.storage_options_encrypted)
-        opts: dict = {}
-        endpoint = (request.POST.get("s3_endpoint_url") or "").strip()
-        key = (request.POST.get("s3_key") or "").strip()
-        secret = (request.POST.get("s3_secret") or "").strip()
-        if endpoint:
-            opts["endpoint_url"] = endpoint
-        if key:
-            opts["key"] = key
-        if secret:
-            opts["secret"] = secret
-        elif existing.get("secret"):
-            opts["secret"] = existing["secret"]
+        existing_st = psc.decode_storage_options(project.storage_options_encrypted)
+        existing_db = psc.decode_database_options(project.database_options_encrypted)
+        storage_uri, database_uri, st_enc, db_enc = psc.save_storage_from_post(
+            request.POST,
+            existing_storage=existing_st,
+            existing_db=existing_db,
+        )
         project.storage_uri = storage_uri
         project.database_uri = database_uri
-        project.storage_options_encrypted = psc.encode_storage_options(opts)
+        project.storage_options_encrypted = st_enc
+        project.database_options_encrypted = db_enc
         project.save(
             update_fields=[
                 "storage_uri",
                 "database_uri",
                 "storage_options_encrypted",
+                "database_options_encrypted",
                 "updated_at",
             ]
         )
+        _provision_project_database(request, project)
         messages.success(request, "Настройки хранилища сохранены.")
         return redirect("ui_project_detail", project_id=project_id)
-    cfg = psc.resolve(project)
     return render(
         request,
         "ui/project_storage_settings.html",
-        {
-            "project": project,
-            "effective_storage_uri": cfg.storage_uri,
-            "effective_database_uri": cfg.database_uri,
-            "s3_endpoint_url": cfg.storage_options.get("endpoint_url", ""),
-            "s3_key": cfg.storage_options.get("key", ""),
-            "has_secret": bool(cfg.storage_options.get("secret")),
-        },
+        {"project": project, **_storage_form_context(project)},
     )
 
 
@@ -547,9 +580,10 @@ def project_delete(request, project_id: str):
     cred = project.git_credential
     cred_pk = cred.pk
     media_bucket = project.media_bucket
+    cfg = psc.resolve(project)
+    ppkg.remove_project_packages(project_id, media_bucket=media_bucket, config=cfg)
     project.delete()
     git_remove_cache(project_id)
-    ppkg.remove_project_packages(project_id, media_bucket=media_bucket)
     if not Project.objects.filter(git_credential_id=cred_pk).exists():
         cred.delete()
     messages.success(request, "Проект удалён.")
