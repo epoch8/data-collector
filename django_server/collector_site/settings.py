@@ -191,23 +191,19 @@ FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lo
 )
 FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
 
-# Firebase Web SDK (вход клиента на /ui/login/) — тот же проект, что ios в lib/firebase_options.dart.
+# Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web (e8-gke).
 FIREBASE_WEB_CONFIG = {
-    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c"),
-    "authDomain": os.environ.get(
-        "FIREBASE_WEB_AUTH_DOMAIN",
-        "data-collector-dev-e8.firebaseapp.com",
-    ),
-    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "data-collector-dev-e8"),
+    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ"),
+    "authDomain": os.environ.get("FIREBASE_WEB_AUTH_DOMAIN", "e8-gke.firebaseapp.com"),
+    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "e8-gke"),
     "storageBucket": os.environ.get(
         "FIREBASE_WEB_STORAGE_BUCKET",
-        "data-collector-dev-e8.firebasestorage.app",
+        "e8-gke.firebasestorage.app",
     ),
-    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "181572319604"),
-    # Зарегистрируйте Web-приложение в Firebase Console → App ID с суффиксом :web:
+    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "59903871663"),
     "appId": os.environ.get(
         "FIREBASE_WEB_APP_ID",
-        "1:181572319604:ios:0000000000000000000000",
+        "1:59903871663:android:83c40cfe504ef60952225a",
     ),
 }
 
