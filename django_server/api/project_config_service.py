@@ -33,7 +33,6 @@ def seed_project_json(project_id: str, name: str) -> dict[str, Any]:
             "fields": [
                 {
                     "field_id": "demo_text",
-                    "priority": 1,
                     "type": "text_input",
                     "title": "Пример текста",
                     "instructions": "Заполните поле",
@@ -42,12 +41,109 @@ def seed_project_json(project_id: str, name: str) -> dict[str, Any]:
             ],
             "flow": {
                 "steps": [
-                    {"id": "form1", "screen": "form", "field_ids": ["demo_text"]},
+                    {
+                        "id": "form1",
+                        "screen": "scroll_form",
+                        "form_title": "Сбор данных",
+                        "field_ids": ["demo_text"],
+                    },
+                    {"id": "review", "screen": "review"},
                 ],
             },
             "ui": {},
         },
     }
+
+
+def prepare_builder_ssr_steps(initial_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """Шаги сценария для SSR в визуальном редакторе (логика совпадает с loadModel в project_builder.js)."""
+    cfg = (initial_data or {}).get("config") or {}
+    fields_raw = cfg.get("fields") or []
+    by_id: dict[str, dict[str, Any]] = {}
+    for f in fields_raw:
+        if isinstance(f, dict) and isinstance(f.get("field_id"), str):
+            by_id[f["field_id"]] = f
+
+    raw_steps = ((cfg.get("flow") or {}).get("steps")) or []
+    steps: list[dict[str, Any]] = []
+    used_ids: set[str] = set()
+
+    for st in raw_steps:
+        if not isinstance(st, dict):
+            continue
+        screen = str(st.get("screen", "scroll_form")).lower().replace("-", "_")
+        if screen == "review":
+            steps.append(
+                {
+                    "kind": "review",
+                    "id": st.get("id") or "review",
+                    "form_title": st.get("form_title") or "",
+                },
+            )
+            continue
+        field_items: list[dict[str, Any]] = []
+        for fid in st.get("field_ids") or []:
+            if not isinstance(fid, str) or fid in used_ids:
+                continue
+            f = by_id.get(fid)
+            if not f:
+                continue
+            used_ids.add(fid)
+            validation = f.get("validation") if isinstance(f.get("validation"), dict) else {}
+            field_items.append(
+                {
+                    "field_id": fid,
+                    "type": f.get("type") or "text_input",
+                    "title": f.get("title") or "",
+                    "instructions": f.get("instructions") or "",
+                    "required": validation.get("required") is True,
+                },
+            )
+        steps.append(
+            {
+                "kind": "scroll_form",
+                "id": st.get("id") or "",
+                "form_title": st.get("form_title") or "",
+                "cow_id_hints": st.get("cow_id_hints") is True,
+                "cow_id_field_id": st.get("cow_id_field_id") or "",
+                "fields": field_items,
+            },
+        )
+
+    orphan = [by_id[fid] for fid in by_id if fid not in used_ids]
+    first_scroll = next((s for s in steps if s["kind"] == "scroll_form"), None)
+    if first_scroll is None:
+        first_scroll = {
+            "kind": "scroll_form",
+            "id": "form1",
+            "form_title": "",
+            "cow_id_hints": False,
+            "cow_id_field_id": "",
+            "fields": [],
+        }
+        steps.insert(0, first_scroll)
+    for f in orphan:
+        validation = f.get("validation") if isinstance(f.get("validation"), dict) else {}
+        first_scroll["fields"].append(
+            {
+                "field_id": f.get("field_id") or "",
+                "type": f.get("type") or "text_input",
+                "title": f.get("title") or "",
+                "instructions": f.get("instructions") or "",
+                "required": validation.get("required") is True,
+            },
+        )
+
+    reviews = [s for s in steps if s["kind"] == "review"]
+    non_review = [s for s in steps if s["kind"] != "review"]
+    review = reviews[0] if reviews else {"kind": "review", "id": "review", "form_title": ""}
+    ordered = non_review + [review]
+    scroll_n = 0
+    for st in ordered:
+        if st["kind"] == "scroll_form":
+            scroll_n += 1
+            st["scroll_ordinal"] = scroll_n
+    return ordered
 
 
 def create_credential(*, label: str, private_key: str) -> GitCredential:

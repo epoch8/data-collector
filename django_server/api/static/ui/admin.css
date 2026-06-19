@@ -701,8 +701,307 @@ hr.border-secondary {
   border-color: rgba(56, 189, 248, 0.25) !important;
 }
 
-.builder-step-card .text-info {
-  color: #7dd3fc !important;
+/* ——— Конструктор сценария: карточки-экраны ——— */
+.builder-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.builder-step-card {
+  background: var(--ui-surface);
+  border: 1px solid var(--ui-border);
+  border-radius: 14px;
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.builder-step-card:hover {
+  border-color: var(--ui-accent-dim);
+}
+
+.builder-step-card.is-review {
+  border-style: dashed;
+  border-color: rgba(45, 212, 191, 0.4);
+  background: linear-gradient(180deg, rgba(45, 212, 191, 0.06), rgba(45, 212, 191, 0.02));
+}
+
+.builder-step-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--ui-border-soft);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.builder-step-grip {
+  cursor: grab;
+  color: var(--ui-text-muted);
+  padding: 0.2rem 0.15rem;
+  border-radius: 6px;
+  line-height: 1;
+}
+
+.builder-step-grip:hover {
+  color: var(--ui-text);
+  background: var(--ui-surface-hover);
+}
+
+.builder-step-grip.is-locked {
+  cursor: default;
+  color: var(--ui-accent);
+}
+
+.builder-step-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ui-text-muted);
+  background: var(--ui-surface-hover);
+  border: 1px solid var(--ui-border-soft);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  white-space: nowrap;
+}
+
+.builder-step-badge.is-review {
+  color: var(--ui-accent);
+  background: rgba(45, 212, 191, 0.12);
+  border-color: rgba(45, 212, 191, 0.3);
+}
+
+.builder-step-title {
+  flex: 1;
+  min-width: 6rem;
+}
+
+.builder-step-locked-note {
+  color: var(--ui-accent);
+  white-space: nowrap;
+}
+
+.builder-step-adv.btn,
+.builder-step-card .btn-icon-danger {
+  border: 1px solid var(--ui-border-soft);
+  color: var(--ui-text-muted);
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  background: transparent;
+}
+
+.builder-step-adv.btn:hover {
+  color: var(--ui-text);
+  border-color: var(--ui-border);
+}
+
+.builder-step-adv.active {
+  color: var(--ui-accent);
+  border-color: rgba(45, 212, 191, 0.4);
+}
+
+.btn-icon-danger {
+  border: 1px solid var(--ui-border-soft);
+  color: var(--ui-danger);
+  padding: 0.25rem 0.5rem;
+  line-height: 1;
+  background: transparent;
+  border-radius: 8px;
+}
+
+.btn-icon-danger:hover {
+  color: #fff;
+  background: var(--ui-danger);
+  border-color: var(--ui-danger);
+}
+
+.builder-step-adv-box {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--ui-border-soft);
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.builder-step-body {
+  padding: 0.75rem 0.9rem 0.9rem;
+}
+
+.builder-fields-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-height: 0.5rem;
+}
+
+.builder-field-block {
+  border: 1px solid var(--ui-border-soft);
+  border-radius: 10px;
+  background: var(--ui-bg);
+}
+
+.builder-field-block.sortable-ghost {
+  opacity: 0.4;
+  border-style: dashed;
+  border-color: var(--ui-accent);
+}
+
+.builder-field-block.sortable-chosen {
+  box-shadow: var(--ui-shadow);
+  border-color: var(--ui-accent-dim);
+}
+
+.builder-field-head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.45rem 0.55rem;
+}
+
+.builder-drag {
+  cursor: grab;
+  color: var(--ui-text-muted);
+  padding: 0.15rem;
+  line-height: 1;
+}
+
+.builder-drag:hover {
+  color: var(--ui-text);
+}
+
+.builder-field-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--ui-text-muted);
+  font-size: 0.85rem;
+}
+
+.builder-field-icon.is-ix {
+  background: rgba(45, 212, 191, 0.14);
+  color: var(--ui-accent);
+}
+
+.builder-field-type {
+  width: auto;
+  min-width: 8.5rem;
+  flex-shrink: 0;
+}
+
+.builder-field-id {
+  flex: 1;
+  min-width: 6rem;
+  font-family: "JetBrains Mono", monospace;
   font-size: 0.8rem;
-  line-height: 1.35;
+}
+
+.builder-field-body {
+  padding: 0 0.55rem 0.55rem 2.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.builder-field-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.builder-field-title-row > input {
+  flex: 1;
+}
+
+.builder-required-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  color: var(--ui-text-muted);
+  white-space: nowrap;
+  cursor: pointer;
+  margin: 0;
+}
+
+.builder-required-toggle .form-check-input {
+  margin: 0;
+}
+
+.builder-field-instr {
+  font-size: 0.82rem;
+}
+
+.builder-empty-hint {
+  font-size: 0.8rem;
+  color: var(--ui-text-muted);
+  text-align: center;
+  padding: 0.6rem;
+  border: 1px dashed var(--ui-border);
+  border-radius: 8px;
+  margin-top: 0.4rem;
+}
+
+.builder-palette {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
+}
+
+.builder-palette-btn {
+  font-size: 0.78rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  border: 1px dashed var(--ui-border);
+  background: transparent;
+  color: var(--ui-text-muted);
+  transition: all 0.12s ease;
+}
+
+.builder-palette-btn:hover {
+  color: var(--ui-accent);
+  border-color: var(--ui-accent-dim);
+  background: rgba(45, 212, 191, 0.08);
+}
+
+.builder-step-foot {
+  opacity: 0.7;
+}
+
+.builder-add-step-wrap {
+  margin: 0.85rem 0;
+}
+
+.builder-add-step-btn {
+  width: 100%;
+  border-style: dashed;
+  padding: 0.65rem 0.75rem;
+  font-weight: 600;
+  color: var(--ui-accent) !important;
+  border-color: rgba(45, 212, 191, 0.45) !important;
+  background: rgba(45, 212, 191, 0.06);
+}
+
+.builder-add-step-btn:hover {
+  background: rgba(45, 212, 191, 0.14);
+  border-color: var(--ui-accent) !important;
+  color: var(--ui-text) !important;
+}
+
+.builder-json-details summary {
+  cursor: pointer;
+  list-style: revert;
+}
+
+.builder-step-card.sortable-ghost {
+  opacity: 0.45;
+  border-style: dashed;
+  border-color: var(--ui-accent);
 }

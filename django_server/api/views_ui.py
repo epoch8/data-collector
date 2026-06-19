@@ -66,6 +66,7 @@ from .project_config_service import (
     create_credential,
     create_credential_generated,
     load_config_dict,
+    prepare_builder_ssr_steps,
     save_config_to_git,
     seed_project_json,
     update_credential_private_key,
@@ -446,6 +447,16 @@ def project_config(request, project_id: str):
 @require_http_methods(["GET", "POST"])
 def project_config_builder(request, project_id: str):
     """Визуальный редактор + превью; сохраняет тот же JSON, что и raw-редактор."""
+
+    def _builder_context(project: Project, initial_data: dict, **extra):
+        return {
+            "project": project,
+            "initial_data": initial_data,
+            "pretty_json": json.dumps(initial_data, ensure_ascii=False, indent=2),
+            "builder_ssr_steps": prepare_builder_ssr_steps(initial_data),
+            **extra,
+        }
+
     project = get_object_or_404(Project, project_id=project_id)
     if request.method == "POST":
         raw = request.POST.get("raw_json", "")
@@ -465,12 +476,7 @@ def project_config_builder(request, project_id: str):
             return render(
                 request,
                 "ui/project_config_builder.html",
-                {
-                    "project": project,
-                    "initial_data": initial_data,
-                    "pretty_json": json.dumps(initial_data, ensure_ascii=False, indent=2),
-                    "validation_errors": errs,
-                },
+                _builder_context(project, initial_data, validation_errors=errs),
             )
         messages.success(request, "Конфиг закоммичен и отправлен в Git.")
         return redirect("ui_project_detail", project_id=project_id)
@@ -479,15 +485,10 @@ def project_config_builder(request, project_id: str):
         initial_data = seed_project_json(project.project_id, project.name)
     else:
         initial_data = data
-    pretty = json.dumps(initial_data, ensure_ascii=False, indent=2)
     return render(
         request,
         "ui/project_config_builder.html",
-        {
-            "project": project,
-            "initial_data": initial_data,
-            "pretty_json": pretty,
-        },
+        _builder_context(project, initial_data),
     )
 
 
