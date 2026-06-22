@@ -417,6 +417,17 @@ def ensure_database_uri(database_uri: str) -> tuple[bool, str]:
     if not dbname:
         return False, "В адресе PostgreSQL не указано имя базы"
 
+    # Managed Postgres (Yandex и т.п.): база уже создана, пользователь не ходит в postgres.
+    # Сначала подключаемся к целевой БД и применяем схему.
+    try:
+        pdb.get_engine_for_uri(uri)
+        return True, f"База «{dbname}» готова"
+    except Exception as direct_exc:
+        err = str(direct_exc).lower()
+        if "does not exist" not in err and "doesn't exist" not in err:
+            return False, str(direct_exc)
+
+    # Self-hosted / Docker: создать БД через postgres (нужны права суперпользователя).
     admin_url = url.set(database="postgres")
     admin_engine = create_engine(admin_url, future=True, isolation_level="AUTOCOMMIT")
     created = False

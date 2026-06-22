@@ -318,6 +318,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   DateTime? _createdAtForRow;
   /// После «Отправить» не писать черновик поверх `completed`.
   bool _draftSaveSuspended = false;
+  bool _submitting = false;
 
   @override
   void initState() {
@@ -371,6 +372,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   }
 
   Future<void> _goBack() async {
+    if (_submitting) return;
     if (_step <= 0) {
       await _persistDraftNow();
       if (!mounted) return;
@@ -382,6 +384,15 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
   }
 
   ResolvedCollectionFlow get _flow => widget.resolvedFlow;
+
+  int get _maxStepIndex => _flow.steps.length - 1;
+
+  /// Не даём уйти за последний шаг (двойной тап «К проверке» → пустой экран).
+  void _advanceToNextStep() {
+    if (_step >= _maxStepIndex) return;
+    setState(() => _step++);
+    unawaited(_persistDraftNow());
+  }
 
   String _scrollContinueLabel(BuildContext context) {
     final loc = AppLocalizations.of(context);
@@ -515,29 +526,30 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
           flow: _flow,
           step: cur,
           continueLabel: _scrollContinueLabel(context),
-          onContinue: () {
-            setState(() => _step++);
-            unawaited(_persistDraftNow());
-          },
+          onContinue: _advanceToNextStep,
           onPhotoChanged: () {
             unawaited(_persistDraftNow());
           },
         );
       case CollectionScreenKind.review:
         return _FlowReviewStep(
-          key: const ValueKey('flow_review'),
+          key: ValueKey('flow_review_$_step'),
           project: p,
           flow: _flow,
           projectId: widget.projectId,
+          submitting: _submitting,
           onEditScrollStep: (int stepIndex) {
-            setState(() => _step = stepIndex);
+            if (_submitting) return;
+            setState(() => _step = stepIndex.clamp(0, _maxStepIndex));
             unawaited(_persistDraftNow());
           },
           onSubmit: () async {
+            if (_submitting) return;
             await _persistDraftNow();
             if (!context.mounted) return;
             _draftSaveSuspended = true;
-            final answers = ref.read(wizardStateProvider(widget.projectId));
+            setState(() => _submitting = true);
+            final answers = Map<String, dynamic>.from(ref.read(wizardStateProvider(widget.projectId)));
             await submitLocalPackage(
               ref: ref,
               context: context,
@@ -564,6 +576,7 @@ class _FlowReviewStep extends ConsumerWidget {
     required this.projectId,
     required this.onEditScrollStep,
     required this.onSubmit,
+    this.submitting = false,
   });
 
   final Project project;
@@ -571,6 +584,7 @@ class _FlowReviewStep extends ConsumerWidget {
   final String projectId;
   final void Function(int flowStepIndex) onEditScrollStep;
   final Future<void> Function() onSubmit;
+  final bool submitting;
 
   bool _isComplete(Map<String, dynamic> a) {
     for (final f in flow.allFormFields) {
@@ -699,12 +713,18 @@ class _FlowReviewStep extends ConsumerWidget {
           _CameraMetaReviewPanel(cameraContext: cameraCtx),
           const SizedBox(height: 24),
           FilledButton(
-            onPressed: complete
+            onPressed: complete && !submitting
                 ? () async {
                     await onSubmit();
                   }
                 : null,
-            child: Text(loc.flowReviewSubmit),
+            child: submitting
+                ? SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.onPrimary),
+                  )
+                : Text(loc.flowReviewSubmit),
           ),
         ],
       ),
