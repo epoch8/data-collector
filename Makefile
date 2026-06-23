@@ -1,4 +1,4 @@
-VERSION=0.0.2
+VERSION=0.0.4
 REPOSITORY=cr.yandex/crp9t7k628nhsnjetke5
 WEB_IMAGE=${REPOSITORY}/cow-web-app
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)

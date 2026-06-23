@@ -49,8 +49,8 @@ if DJANGO_ENV == "production":
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -92,10 +92,8 @@ if DJANGO_ENV == "production":
     }
     STORAGES = {
         "default": {
-            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-            "OPTIONS": {
-                "bucket_name": os.environ.get("GS_STORAGE", "korovas-dc-prod"),
-            },
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {},
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",

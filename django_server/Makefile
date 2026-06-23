@@ -1,4 +1,4 @@
-VERSION=0.0.10
+VERSION=0.0.17
 IMAGE=cr.yandex/crp9t7k628nhsnjetke5/cow-data-collector
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
 
