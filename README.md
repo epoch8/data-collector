@@ -1,41 +1,75 @@
 # data_collector
 
-Клиент для сбора данных (Flutter) + бэкенд Django с админкой.
+Клиент для сбора данных (Flutter) + бэкенд Django с веб-админкой.
 
 ## Структура репозитория
 
-- **`django_server/`**: Django-проект и **админка**. Запускается отдельно от приложения (свой `manage.py`, миграции, `runserver`). Клиент ходит на API по URL, который задаёте при сборке Flutter.
-- **Корень репозитория**: **Flutter-приложение** (`lib/`, `pubspec.yaml`, `android/`, `ios/` и т.д.). Точка входа: `lib/main.dart`.
+- **`django_server/`** — API и **веб-админка** (`/ui/`). Свой `manage.py`, миграции, `runserver`. Подробнее: [`django_server/README.md`](django_server/README.md).
+- **Корень** — Flutter-приложение (`lib/`, `pubspec.yaml`, `android/`, `ios/`, `web/`). Точка входа: `lib/main.dart`.
+- **`test_dev/`** — Docker Compose (PostgreSQL + MinIO) для локальной проверки прод-подобных хранилищ. Подробнее: [`test_dev/README.md`](test_dev/README.md).
 
-## Как запустить
+## Локальный запуск
 
-**Django** (из каталога `django_server/`): локально по умолчанию SQLite и файлы в `media/` (режим `local`). Установите зависимости, выполните миграции и поднимите сервер.
+### Django (простой режим)
+
+По умолчанию **`local`**: каталог Django — SQLite, пакеты проектов — SQLite + файлы в `project_db/` и `project_media/`.
 
 ```bash
 cd django_server
 pip install -r requirements.txt
 python manage.py migrate
+python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000
 ```
 
-Продакшен (PostgreSQL + GCS): в окружении задайте `POSTGRES_*` (или явно `DJANGO_ENV=production`); зависимости те же — `requirements.txt`.
+- Вход в админку: http://127.0.0.1:8000/ui/login/ (staff — галочка «Админ-доступ»)
+- Django admin: http://127.0.0.1:8000/admin/
 
-Админка: `python manage.py createsuperuser`, в браузере откройте `http://127.0.0.1:8000/admin/`.
+Конфиг проекта хранится в **Git-репозитории** (`collector/config.json`), не в БД — см. [`specs/git-backed-projects.md`](specs/git-backed-projects.md).
 
-Развёрнутый сервер (тот же Django, что и API): базовый URL `https://data-collector-app.korovas.ml.epoch8.dev` — админка: `/admin/`, API как в спеках — с этого же хоста (без завершающего `/` в `API_BASE_URL`).
+### Flutter (Android)
 
-**Flutter** (из корня репозитория):
+Из корня репозитория:
 
 ```bash
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
-Для Android-эмулятора `10.0.2.2` это хост-ПК. На физическом устройстве подставьте IP машины, где запущен Django.
+Для эмулятора `10.0.2.2` — хост-ПК. На физическом устройстве подставьте IP машины с Django.
+
+### Flutter Web (опционально)
+
+```bash
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
+```
+
+Отличия web/Android: [`docs/web-vs-android.md`](docs/web-vs-android.md).
+
+### test_dev — имитация прод-хранилищ
+
+Если нужно проверить **PostgreSQL + S3** (per-project `database_uri` / `storage_uri`) без облака:
+
+```bash
+cp test_dev/.env.example test_dev/.env
+docker compose -f test_dev/docker-compose.yml up -d
+```
+
+Поднимутся Postgres (`localhost:55432`) и MinIO (`http://localhost:9000`). URI задаются в UI проекта («Изменить хранилище»); полная инструкция — в [`test_dev/README.md`](test_dev/README.md) и [`specs/project-storage-uris.md`](specs/project-storage-uris.md).
+
+## Продакшен
+
+**Каталог платформы** (Django): PostgreSQL + Google Cloud Storage. Задайте `POSTGRES_*` (или явно `DJANGO_ENV=production`); зависимости — `requirements.txt`.
+
+**Данные проектов** (пакеты, медиа, pipeline) настраиваются **отдельно на каждый проект** через `database_uri` и `storage_uri` в UI. Если поля пустые — SQLite + локальная папка на сервере (часто смонтированный диск). В проде типично Postgres + `gs://` или `s3://`.
+
+Развёрнутый инстанс: `https://data-collector-app.korovas.ml.epoch8.dev` — админка `/ui/`, API с того же хоста. В `API_BASE_URL` не добавляйте завершающий `/`.
+
+Полезные переменные: `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, Firebase (`FIREBASE_SERVICE_ACCOUNT_PATH` или JSON в окружении).
 
 ## Сборка и авторизация
 
-- **Firebase** (Email/Password и т.п.): `lib/firebase_options.dart`, для Android ещё `android/app/google-services.json`. Обновить конфиг:
+- **Firebase** (Email/Password): `lib/firebase_options.dart`, для Android — `android/app/google-services.json`. Обновить конфиг:
 
 ```bash
 dart run flutterfire_cli:flutterfire configure
@@ -43,7 +77,7 @@ dart run flutterfire_cli:flutterfire configure
 
 (подробности в комментариях в `firebase_options.dart`).
 
-- **Django API:** при запуске/сборке передайте базовый URL без завершающего `/` (пример в блоке выше).
+- **Django API:** при запуске/сборке передайте базовый URL без завершающего `/`.
 - Если на Django **не** включена проверка Firebase-токена, опционально:
 
 ```bash
@@ -61,5 +95,7 @@ flutter run --dart-define=API_BASE_URL=... --dart-define=API_BEARER_TOKEN=...
 | [`specs/main-scheme/03_server_api.drawio`](specs/main-scheme/03_server_api.drawio) + [`specs/08-server-api-package-upload.md`](specs/08-server-api-package-upload.md) | **Загрузка пакета** на сервер (API и поток). |
 | [`specs/main-scheme/04-auth-firebase-django.drawio`](specs/main-scheme/04-auth-firebase-django.drawio) | **Аутентификация:** Firebase на клиенте и связка с Django. |
 | [`specs/main-scheme/05-admin-roles-access.drawio`](specs/main-scheme/05-admin-roles-access.drawio) | **Роли админки:** суперадмин (E8), админ проекта (хозяйства), сотрудник; границы доступа и иерархия назначения прав. |
+| [`specs/project-storage-uris.md`](specs/project-storage-uris.md) | **Хранилища проекта:** `database_uri`, `storage_uri`, миграция в Postgres/S3/GCS. |
+| [`specs/git-backed-projects.md`](specs/git-backed-projects.md) | **Git-репозиторий** проекта: deploy key, `config.json`, синхронизация. |
 
-Остальная документация по продукту и стеку лежит в `specs/*.md` (обзор, MVP, структура пакета и т.д.).
+Остальная документация по продукту и стеку — в `specs/*.md` и `docs/`.
