@@ -24,8 +24,8 @@ class DefaultFirebaseOptions {
 
   /// Добавьте веб-приложение в Firebase и подставьте appId с суффиксом :web:…
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyCstrHMeGKyiWrdEbTuJFdgArl_TiTDoxc',
-    appId: '1:59903871663:web:00aa1f03e37174f652225a',
+    apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    appId: '1:59903871663:android:83c40cfe504ef60952225a',
     messagingSenderId: '59903871663',
     projectId: 'e8-gke',
     authDomain: 'e8-gke.firebaseapp.com',
@@ -62,3 +62,9 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.dataCollector',
   );
 }
+    // apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    // appId: '1:59903871663:android:83c40cfe504ef60952225a',
+    // messagingSenderId: '59903871663',
+    // projectId: 'e8-gke',
+    // authDomain: 'e8-gke.firebaseapp.com',
+    // storageBucket: 'e8-gke.firebasestorage.app',

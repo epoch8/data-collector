@@ -11,7 +11,11 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">Пользователи</h1>
-    <p class="ui-page-sub mb-0">Учётные записи Firebase Auth и доступ к проектам для API <code>/v1/projects/…</code>. Подтяните список из консоли Firebase или дождитесь первого входа в приложение.</p>
+    <p class="ui-page-sub mb-0">
+      Firebase Auth. <strong>Мобильное</strong> — каталог и загрузка (<code>/v1/</code>).
+      <strong>Client-admin</strong> — веб-пакеты (<code>/ui/packages/</code>), вход через Firebase;
+      видны только отмеченные проекты.
+    </p>
   </div>
   <form method="post" action="{% url 'ui_collector_user_sync_firebase' %}" class="d-inline">
     {% csrf_token %}
@@ -25,7 +29,8 @@
         <tr>
           <th>Email</th>
           <th>Firebase UID</th>
-          <th>Проекты</th>
+          <th>Мобильное</th>
+          <th>Client-admin</th>
           <th>Создан</th>
           <th class="text-end">Действие</th>
         </tr>
@@ -36,11 +41,20 @@
           <td class="fw-medium">{% if u.email %}{{ u.email }}{% else %}<span class="ui-muted">—</span>{% endif %}</td>
           <td><code class="small">{{ u.firebase_uid }}</code></td>
           <td class="small">
-            {% with names=u.projects.all %}
+            {% with names=u.mobile_projects.all %}
               {% if names %}
                 {% for p in names %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
               {% else %}
-                <span class="ui-muted">нет доступа</span>
+                <span class="ui-muted">нет</span>
+              {% endif %}
+            {% endwith %}
+          </td>
+          <td class="small">
+            {% with names=u.admin_projects.all %}
+              {% if names %}
+                {% for p in names %}{{ p.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+              {% else %}
+                <span class="ui-muted">нет</span>
               {% endif %}
             {% endwith %}
           </td>
@@ -48,7 +62,7 @@
           <td class="text-end"><a class="btn btn-sm btn-outline-light" href="{% url 'ui_collector_user_detail' u.pk %}">Настроить<i class="bi bi-arrow-right ms-1"></i></a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" class="text-center py-5 ui-muted">Пока нет пользователей — нажмите «Синхронизировать с Firebase» или дождитесь первого запроса с телефона.</td></tr>
+        <tr><td colspan="6" class="text-center py-5 ui-muted">Нет пользователей — синхронизируйте с Firebase или дождитесь первого входа с телефона.</td></tr>
         {% endfor %}
       </tbody>
     </table>

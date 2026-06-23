@@ -66,4 +66,10 @@ def verify_id_token(id_token: str) -> dict[str, Any]:
     from firebase_admin import auth
 
     ensure_firebase_app()
-    return auth.verify_id_token(id_token, check_revoked=True)
+    check_revoked = bool(getattr(settings, "FIREBASE_CHECK_REVOKED", False))
+    clock_skew = int(getattr(settings, "FIREBASE_CLOCK_SKEW_SECONDS", 60))
+    return auth.verify_id_token(
+        id_token,
+        check_revoked=check_revoked,
+        clock_skew_seconds=clock_skew,
+    )

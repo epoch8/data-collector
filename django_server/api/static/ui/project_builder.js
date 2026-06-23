@@ -1,85 +1,41 @@
 /**
- * Визуальный редактор конфига: поля и flow.
- * Полный пересбор таблицы/карточек только при структурных изменениях — иначе не теряется фокус ввода.
+ * Визуальный редактор конфига — сценарий из карточек-экранов с drag-and-drop.
+ *
+ * Модель: сценарий = список шагов (экранов). Шаг scroll_form содержит блоки полей.
+ * Последний шаг — review (отправка пакета): он обязателен, всегда в конце и неудаляем —
+ * без него мобильный клиент не может отправить данные.
+ *
+ * Источник истины для значений и порядка — DOM. Модель пересобирается из DOM
+ * (readModelFromDom) при сериализации; структурные изменения (добавить/удалить/сменить тип,
+ * перетаскивание) перерисовывают карточки и переинициализируют Sortable.
  */
 (function () {
   "use strict";
 
-  /** value → подпись в селекте (в JSON уходит только value). */
   const FIELD_TYPES = [
-    { v: "text_input", label: "text_input — однострочный текст" },
-    { v: "datetime", label: "datetime — дата и время" },
-    { v: "instruction", label: "instruction — Markdown (текст и картинки из медиа проекта)" },
-    { v: "camera_photo", label: "camera_photo — снимок с камеры" },
+    { v: "text_input", label: "Текст", icon: "bi-input-cursor-text", hint: "однострочный ввод" },
+    { v: "datetime", label: "Дата и время", icon: "bi-calendar-event", hint: "выбор даты/времени" },
+    { v: "camera_photo", label: "Фото", icon: "bi-camera", hint: "снимок с камеры" },
+    { v: "instruction", label: "Инструкция", icon: "bi-journal-text", hint: "Markdown-текст" },
   ];
-  const SCREENS = [
-    { v: "scroll_form", label: "scroll_form — один экран (обязательный field_ids)" },
-    { v: "review", label: "review — проверка перед отправкой" },
-  ];
+
+  function typeMeta(v) {
+    return FIELD_TYPES.find((t) => t.v === v) || { v, label: v, icon: "bi-question-circle", hint: "" };
+  }
+
+  let _uid = 0;
+  function uid() {
+    _uid += 1;
+    return "u" + _uid + Date.now().toString(36).slice(-3);
+  }
 
   function getCookie(name) {
     const v = document.cookie.match("(^|;) ?" + name + "=([^;]*)(;|$)");
     return v ? decodeURIComponent(v[2]) : null;
   }
 
-  function deepClone(o) {
-    return JSON.parse(JSON.stringify(o));
-  }
-
-  function fieldById(root, id) {
-    return root.config.fields.find((f) => f.field_id === id);
-  }
-
-  function fieldTitle(root, id) {
-    const f = fieldById(root, id);
-    return f ? f.title || f.field_id : id;
-  }
-
-  function syncRootFromMeta(root, pid) {
-    root.id = pid;
-    const nm = document.getElementById("b-name");
-    const vr = document.getElementById("b-version");
-    if (nm) root.name = nm.value.trim() || pid;
-    if (vr) root.version = vr.value.trim() || "1";
-  }
-
-  function buildPayload(root, pid) {
-    const out = deepClone(root);
-    syncRootFromMeta(out, pid);
-    out.config = out.config || {};
-    out.config.fields = out.config.fields || [];
-    out.config.flow = out.config.flow || { steps: [] };
-    out.config.flow.steps = out.config.flow.steps || [];
-    if (out.config.ui && typeof out.config.ui === "object") {
-      delete out.config.ui.shooting_guide;
-    }
-    if (
-      !out.config.ui ||
-      (typeof out.config.ui === "object" && Object.keys(out.config.ui).length === 0)
-    ) {
-      delete out.config.ui;
-    }
-    (out.config.fields || []).forEach((f) => {
-      if (f && typeof f === "object") {
-        delete f.priority;
-        delete f.options;
-        delete f.sub_fields;
-        if (f.type === "instruction") {
-          f.title = "";
-          if (f.validation && typeof f.validation === "object") {
-            const nv = { ...f.validation };
-            delete nv.required;
-            if (Object.keys(nv).length) f.validation = nv;
-            else delete f.validation;
-          }
-        }
-      }
-    });
-    return out;
-  }
-
   function escapeAttr(s) {
-    return String(s)
+    return String(s == null ? "" : s)
       .replace(/&/g, "&amp;")
       .replace(/"/g, "&quot;")
       .replace(/</g, "&lt;");
@@ -87,8 +43,16 @@
 
   function escapeHtml(s) {
     const d = document.createElement("div");
-    d.textContent = s;
+    d.textContent = s == null ? "" : s;
     return d.innerHTML;
+  }
+
+  function slugify(s) {
+    return String(s || "")
+      .toLowerCase()
+      .replace(/[^a-z0-9_]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 48);
   }
 
   function mediaPageUrl() {
@@ -97,288 +61,451 @@
     return u && u.trim() ? u.trim() : "";
   }
 
-  function linesFromArray(arr) {
-    if (!Array.isArray(arr)) return "";
-    return arr.map((x) => String(x)).join("\n");
+  // ——— Загрузка модели из project JSON ———
+
+  function loadModel(root) {
+    const cfg = (root && root.config) || {};
+    const byId = {};
+    (Array.isArray(cfg.fields) ? cfg.fields : []).forEach((f) => {
+      if (f && typeof f === "object" && typeof f.field_id === "string") byId[f.field_id] = f;
+    });
+
+    const rawSteps = Array.isArray(cfg.flow && cfg.flow.steps) ? cfg.flow.steps : [];
+    const steps = [];
+    const usedIds = new Set();
+
+    rawSteps.forEach((st) => {
+      if (!st || typeof st !== "object") return;
+      const screen = String(st.screen || "scroll_form").toLowerCase().replace(/-/g, "_");
+      if (screen === "review") {
+        steps.push({ uid: uid(), kind: "review", id: st.id || "review", form_title: st.form_title || "" });
+        return;
+      }
+      // всё, что не review — трактуем как scroll_form (form/instruction/camera_pose устарели)
+      const ids = Array.isArray(st.field_ids) ? st.field_ids : [];
+      const fields = [];
+      ids.forEach((fid) => {
+        if (usedIds.has(fid)) return;
+        const f = byId[fid];
+        if (!f) return;
+        usedIds.add(fid);
+        fields.push(fieldFromConfig(f));
+      });
+      steps.push({
+        uid: uid(),
+        kind: "scroll_form",
+        id: st.id || "",
+        form_title: st.form_title || "",
+        cow_id_hints: st.cow_id_hints === true,
+        cow_id_field_id: st.cow_id_field_id || "",
+        fields,
+      });
+    });
+
+    // Поля, не попавшие ни в один шаг — добавим в первый scroll_form, чтобы не потерять.
+    const orphan = [];
+    Object.keys(byId).forEach((fid) => {
+      if (!usedIds.has(fid)) orphan.push(fieldFromConfig(byId[fid]));
+    });
+
+    let firstScroll = steps.find((s) => s.kind === "scroll_form");
+    if (!firstScroll) {
+      firstScroll = { uid: uid(), kind: "scroll_form", id: "form1", form_title: "", fields: [] };
+      steps.unshift(firstScroll);
+    }
+    orphan.forEach((f) => firstScroll.fields.push(f));
+
+    // Ровно один review, в самом конце.
+    const reviews = steps.filter((s) => s.kind === "review");
+    const nonReview = steps.filter((s) => s.kind !== "review");
+    const review = reviews[0] || { uid: uid(), kind: "review", id: "review", form_title: "" };
+    const ordered = nonReview.concat([review]);
+
+    return {
+      name: typeof root.name === "string" ? root.name : "",
+      version: typeof root.version === "string" ? root.version : "1",
+      ui: cfg.ui && typeof cfg.ui === "object" ? cfg.ui : {},
+      extraRoot: extractExtraRoot(root),
+      steps: ordered,
+    };
   }
 
-  function arrayFromLines(text) {
-    return String(text || "")
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean);
+  function extractExtraRoot(root) {
+    const out = {};
+    Object.keys(root || {}).forEach((k) => {
+      if (["id", "name", "version", "config"].includes(k)) return;
+      out[k] = root[k];
+    });
+    return out;
   }
 
-  function syncTextarea(root, pid) {
-    const ta = document.getElementById("id_raw_json");
-    if (!ta) return;
-    const payload = buildPayload(root, pid);
-    const text = JSON.stringify(payload, null, 2);
-    ta.value = text;
-    const ro = document.getElementById("builder-json-readonly");
-    if (ro) ro.value = text;
+  function fieldFromConfig(f) {
+    const validation = f.validation && typeof f.validation === "object" ? { ...f.validation } : {};
+    const required = validation.required === true;
+    delete validation.required;
+    return {
+      uid: uid(),
+      field_id: f.field_id || "",
+      type: typeof f.type === "string" ? f.type : "text_input",
+      title: typeof f.title === "string" ? f.title : "",
+      instructions: typeof f.instructions === "string" ? f.instructions : "",
+      required,
+      validationExtra: validation,
+    };
   }
 
-  function renderPreview(root, pid) {
+  // ——— Чтение модели из DOM (источник истины) ———
+
+  function readModelFromDom(model) {
+    const steps = [];
+    document.querySelectorAll("#builder-steps .builder-step-card").forEach((card) => {
+      if (card.classList.contains("is-review")) {
+        steps.push({
+          uid: card.dataset.uid,
+          kind: "review",
+          id: (card.querySelector('[data-sk="id"]')?.value || "review").trim() || "review",
+          form_title: card.querySelector('[data-sk="form_title"]')?.value?.trim() || "",
+        });
+        return;
+      }
+      const fields = [];
+      card.querySelectorAll(".builder-field-block").forEach((blk) => {
+        const get = (k) => blk.querySelector(`[data-fk="${k}"]`);
+        const type = get("type")?.value || "text_input";
+        fields.push({
+          uid: blk.dataset.uid,
+          field_id: get("field_id")?.value?.trim() || "",
+          type,
+          title: type === "instruction" ? "" : get("title")?.value || "",
+          instructions: get("instructions")?.value || "",
+          required: type !== "instruction" && get("required")?.checked === true,
+          validationExtra: blockExtra(blk),
+        });
+      });
+      steps.push({
+        uid: card.dataset.uid,
+        kind: "scroll_form",
+        id: card.querySelector('[data-sk="id"]')?.value?.trim() || "",
+        form_title: card.querySelector('[data-sk="form_title"]')?.value?.trim() || "",
+        cow_id_hints: card.querySelector('[data-sk="cow_id_hints"]')?.checked === true,
+        cow_id_field_id: card.querySelector('[data-sk="cow_id_field_id"]')?.value?.trim() || "",
+        fields,
+      });
+    });
+    model.steps = steps;
+    const nm = document.getElementById("b-name");
+    const vr = document.getElementById("b-version");
+    if (nm) model.name = nm.value.trim();
+    if (vr) model.version = vr.value.trim() || "1";
+    return model;
+  }
+
+  const _extraStore = new WeakMap();
+  function blockExtra(blk) {
+    return _extraStore.get(blk) || {};
+  }
+
+  // ——— Сериализация модели в project JSON ———
+
+  function serialize(model, pid) {
+    const fields = [];
+    const steps = [];
+    model.steps.forEach((st, i) => {
+      if (st.kind === "review") {
+        const s = { id: slugify(st.id) || "review", screen: "review" };
+        if (st.form_title) s.form_title = st.form_title;
+        steps.push(s);
+        return;
+      }
+      const sid = slugify(st.id) || `form${i + 1}`;
+      const ids = [];
+      (st.fields || []).forEach((f) => {
+        const fid = slugify(f.field_id);
+        if (!fid) return;
+        ids.push(fid);
+        const out = {
+          field_id: fid,
+          type: f.type || "text_input",
+          title: f.type === "instruction" ? "" : f.title || "",
+          instructions: f.instructions || "",
+        };
+        const validation = { ...(f.validationExtra || {}) };
+        if (f.type !== "instruction" && f.required) validation.required = true;
+        if (Object.keys(validation).length) out.validation = validation;
+        fields.push(out);
+      });
+      const s = { id: sid, screen: "scroll_form", field_ids: ids };
+      if (st.form_title) s.form_title = st.form_title;
+      if (st.cow_id_hints) {
+        s.cow_id_hints = true;
+        if (st.cow_id_field_id) s.cow_id_field_id = slugify(st.cow_id_field_id);
+      }
+      steps.push(s);
+    });
+
+    const config = { fields, flow: { steps } };
+    if (model.ui && typeof model.ui === "object" && Object.keys(model.ui).length) {
+      config.ui = model.ui;
+    }
+    return {
+      ...(model.extraRoot || {}),
+      id: pid,
+      name: model.name || pid,
+      version: model.version || "1",
+      config,
+    };
+  }
+
+  // ——— Рендер ———
+
+  function buildFieldBlock(f) {
+    const blk = document.createElement("div");
+    blk.className = "builder-field-block";
+    blk.dataset.uid = f.uid;
+    const isIx = f.type === "instruction";
+    const tm = typeMeta(f.type);
+    const typeOpts = FIELD_TYPES.map(
+      (t) => `<option value="${t.v}" ${f.type === t.v ? "selected" : ""}>${escapeHtml(t.label)}</option>`,
+    ).join("");
+    blk.innerHTML = `
+      <div class="builder-field-head">
+        <span class="builder-drag" data-drag title="Перетащить"><i class="bi bi-grip-vertical"></i></span>
+        <span class="builder-field-icon ${isIx ? "is-ix" : ""}"><i class="bi ${tm.icon}"></i></span>
+        <select class="form-select form-select-sm builder-field-type" data-fk="type" title="Тип поля">${typeOpts}</select>
+        <input type="text" class="form-control form-control-sm builder-field-id" data-fk="field_id"
+               value="${escapeAttr(f.field_id)}" placeholder="field_id (латиница)" autocomplete="off" title="Идентификатор поля"
+               ${f.field_id ? 'data-touched="1"' : ""}>
+        <button type="button" class="btn btn-sm btn-icon-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button>
+      </div>
+      <div class="builder-field-body">
+        <div class="builder-field-title-row ${isIx ? "d-none" : ""}">
+          <input type="text" class="form-control form-control-sm" data-fk="title"
+                 value="${escapeAttr(f.title)}" placeholder="Подпись (видна пользователю)" autocomplete="off">
+          <label class="builder-required-toggle" title="Обязательное поле">
+            <input class="form-check-input" type="checkbox" data-fk="required" ${f.required ? "checked" : ""}>
+            <span>обяз.</span>
+          </label>
+        </div>
+        <textarea class="form-control form-control-sm builder-field-instr" data-fk="instructions"
+                  rows="${isIx ? 6 : 2}" autocomplete="off"
+                  placeholder="${isIx ? "Markdown-текст инструкции (абзацы — с новой строки, картинки ![](collector/media/…))" : "Подсказка под полем (необязательно)"}"></textarea>
+      </div>`;
+    blk.querySelector('[data-fk="instructions"]').value = f.instructions || "";
+    if (f.validationExtra && Object.keys(f.validationExtra).length) {
+      _extraStore.set(blk, { ...f.validationExtra });
+    }
+    return blk;
+  }
+
+  function buildStepCard(st, index, scrollOrdinal) {
+    const card = document.createElement("div");
+    card.dataset.uid = st.uid;
+
+    if (st.kind === "review") {
+      card.className = "card builder-step-card is-review";
+      card.innerHTML = `
+        <div class="builder-step-head">
+          <span class="builder-step-grip is-locked" title="Финальный экран"><i class="bi bi-lock-fill"></i></span>
+          <span class="builder-step-badge is-review"><i class="bi bi-send-check me-1"></i>Проверка и отправка</span>
+        </div>
+        <div class="builder-step-body">
+          <label class="form-label small ui-muted mb-1">Заголовок экрана (необязательно)</label>
+          <input type="text" class="form-control form-control-sm" data-sk="form_title" value="${escapeAttr(st.form_title)}" placeholder="Например: Проверьте данные" autocomplete="off">
+          <input type="hidden" data-sk="id" value="${escapeAttr(st.id || "review")}">
+        </div>`;
+      return card;
+    }
+
+    card.className = "card builder-step-card";
+    const murl = mediaPageUrl();
+    const mediaLink = murl
+      ? `<a href="${escapeAttr(murl)}" target="_blank" rel="noopener">«Файлы»</a>`
+      : "«Файлы»";
+    card.innerHTML = `
+      <div class="builder-step-head">
+        <span class="builder-step-grip" data-step-drag title="Перетащить шаг"><i class="bi bi-grip-vertical"></i></span>
+        <span class="builder-step-badge"><i class="bi bi-window-stack me-1"></i>Экран ${scrollOrdinal}</span>
+        <input type="text" class="form-control form-control-sm builder-step-title" data-sk="form_title"
+               value="${escapeAttr(st.form_title)}" placeholder="Заголовок экрана (необязательно)" autocomplete="off">
+        <button type="button" class="btn btn-sm builder-step-adv" data-toggle-adv title="Дополнительно"><i class="bi bi-sliders"></i></button>
+        <button type="button" class="btn btn-sm btn-icon-danger" data-del-step title="Удалить экран"><i class="bi bi-trash3"></i></button>
+      </div>
+      <div class="builder-step-adv-box d-none">
+        <div class="row g-2">
+          <div class="col-md-5">
+            <label class="form-label small ui-muted mb-1">Код шага (латиница)</label>
+            <input type="text" class="form-control form-control-sm" data-sk="id" value="${escapeAttr(st.id)}" placeholder="form1" autocomplete="off">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label small ui-muted mb-1">Поле ID коровы (для подсказок)</label>
+            <input type="text" class="form-control form-control-sm" data-sk="cow_id_field_id" value="${escapeAttr(st.cow_id_field_id)}" placeholder="cow_identifier" autocomplete="off">
+          </div>
+          <div class="col-12">
+            <label class="builder-required-toggle">
+              <input class="form-check-input" type="checkbox" data-sk="cow_id_hints" ${st.cow_id_hints ? "checked" : ""}>
+              <span>Подсказки из локальной истории по ID коровы</span>
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="builder-step-body">
+        <div class="builder-fields-section-label small text-white mb-2">
+          <i class="bi bi-input-cursor-text me-1"></i><strong>Поля на этом экране</strong>
+          <span class="ui-muted fw-normal"> — здесь задаются field_id, подпись, тип и подсказка</span>
+        </div>
+        <div class="builder-fields-list" data-fields-list></div>
+        <div class="builder-empty-hint ${st.fields && st.fields.length ? "d-none" : ""}">
+          <i class="bi bi-arrow-down-circle me-1"></i>Пока нет полей — нажмите кнопку типа ниже или перетащите поле с другого экрана.
+        </div>
+        <div class="builder-palette-label small ui-muted mt-2 mb-1">Добавить поле:</div>
+        <div class="builder-palette">
+          ${FIELD_TYPES.map(
+            (t) =>
+              `<button type="button" class="builder-palette-btn" data-add-type="${t.v}" title="${escapeAttr(t.hint)}"><i class="bi ${t.icon} me-1"></i>${escapeHtml(t.label)}</button>`,
+          ).join("")}
+        </div>
+        <input type="hidden" data-sk="id" value="${escapeAttr(st.id)}">
+        <p class="small ui-muted mb-0 mt-2 builder-step-foot">Картинки для Markdown — в Git <code>collector/media/</code> (${mediaLink}).</p>
+      </div>`;
+    // у scroll-карточки два data-sk="id" (в adv-box и hidden) — оставляем один: убираем hidden, если adv есть
+    const hidden = card.querySelector('.builder-step-body input[type="hidden"][data-sk="id"]');
+    if (hidden) hidden.remove();
+
+    const list = card.querySelector("[data-fields-list]");
+    (st.fields || []).forEach((f) => list.appendChild(buildFieldBlock(f)));
+    return card;
+  }
+
+  let sortableInstances = [];
+  function destroySortables() {
+    sortableInstances.forEach((s) => {
+      try {
+        s.destroy();
+      } catch (e) {
+        /* noop */
+      }
+    });
+    sortableInstances = [];
+  }
+
+  function ensureReviewLast() {
+    const wrap = document.getElementById("builder-steps");
+    if (!wrap) return;
+    const review = wrap.querySelector(".builder-step-card.is-review");
+    if (review) {
+      placeAddStepButton(wrap);
+      if (review !== wrap.lastElementChild) wrap.appendChild(review);
+    }
+  }
+
+  function placeAddStepButton(wrap) {
+    if (!wrap) return;
+    let slot = wrap.querySelector(".builder-add-step-wrap");
+    if (!slot) {
+      slot = document.createElement("div");
+      slot.className = "builder-add-step-wrap";
+      slot.innerHTML =
+        '<button type="button" class="btn btn-outline-light btn-sm builder-add-step-btn" id="builder-add-step">' +
+        '<i class="bi bi-plus-lg me-1"></i>Добавить экран</button>';
+    }
+    const review = wrap.querySelector(".builder-step-card.is-review");
+    if (review) wrap.insertBefore(slot, review);
+    else if (!slot.parentElement) wrap.appendChild(slot);
+  }
+
+  function renderSteps(model, onChange) {
+    const wrap = document.getElementById("builder-steps");
+    if (!wrap) return;
+    destroySortables();
+    wrap.innerHTML = "";
+    let scrollOrdinal = 0;
+    model.steps.forEach((st, i) => {
+      if (st.kind !== "scroll_form") return;
+      scrollOrdinal += 1;
+      wrap.appendChild(buildStepCard(st, i, scrollOrdinal));
+    });
+    placeAddStepButton(wrap);
+    model.steps.forEach((st, i) => {
+      if (st.kind === "review") wrap.appendChild(buildStepCard(st, i, 0));
+    });
+    ensureReviewLast();
+    initSortables(model, onChange);
+  }
+
+  function initSortables(model, onChange) {
+    if (typeof window.Sortable === "undefined") return;
+    const wrap = document.getElementById("builder-steps");
+    // Перетаскивание шагов (review зафиксирован — не draggable и не принимает над собой).
+    sortableInstances.push(
+      window.Sortable.create(wrap, {
+        handle: "[data-step-drag]",
+        animation: 150,
+        draggable: ".builder-step-card",
+        filter: ".is-review",
+        onMove: (evt) => !evt.related.classList.contains("is-review"),
+        onEnd: () => {
+          ensureReviewLast();
+          setTimeout(() => onChange(true), 0);
+        },
+      }),
+    );
+    // Перетаскивание полей внутри и между scroll-шагами.
+    wrap.querySelectorAll("[data-fields-list]").forEach((list) => {
+      sortableInstances.push(
+        window.Sortable.create(list, {
+          group: "builder-fields",
+          handle: "[data-drag]",
+          animation: 150,
+          draggable: ".builder-field-block",
+          onEnd: () => setTimeout(() => onChange(true), 0),
+        }),
+      );
+    });
+  }
+
+  function renderPreview(model, pid) {
     const el = document.getElementById("builder-preview-steps");
     if (!el) return;
-    syncRootFromMeta(root, pid);
-    const steps = root.config.flow?.steps || [];
-    if (!steps.length) {
-      el.innerHTML = '<p class="small ui-muted mb-0">Нет шагов — вкладка «Сценарий» → «Добавить шаг».</p>';
-      return;
-    }
-    const icons = {
-      review: "bi-eye",
-      scroll_form: "bi-list-columns-reverse",
-      scrollform: "bi-list-columns-reverse",
-    };
+    const steps = model.steps || [];
     el.innerHTML = steps
       .map((st, i) => {
-        const sc = (st.screen || "").toLowerCase().replace(/-/g, "_");
-        const ic = icons[sc] || "bi-square";
-        let detail = "";
-        if (sc === "scroll_form" || sc === "scrollform") {
-          const ids = Array.isArray(st.field_ids) ? st.field_ids : [];
-          detail = ids
-            .map((id) => `<span class="preview-chip">${escapeHtml(fieldTitle(root, id))}</span>`)
-            .join(" ");
+        if (st.kind === "review") {
+          return `<div class="preview-step">
+            <div class="preview-step-idx"><i class="bi bi-send-check"></i></div>
+            <div class="preview-step-body">
+              <div class="preview-step-title">${escapeHtml(st.form_title || "Проверка и отправка")}</div>
+              <div class="preview-step-fields"><span class="ui-muted small">отправка пакета</span></div>
+            </div></div>`;
         }
+        const chips = (st.fields || [])
+          .map((f) => {
+            const tm = typeMeta(f.type);
+            const label = f.type === "instruction" ? "инструкция" : f.title || f.field_id || "поле";
+            return `<span class="preview-chip"><i class="bi ${tm.icon} me-1"></i>${escapeHtml(label)}</span>`;
+          })
+          .join(" ");
         return `<div class="preview-step">
           <div class="preview-step-idx">${i + 1}</div>
           <div class="preview-step-body">
-            <div class="preview-step-title"><i class="bi ${ic} me-2"></i>${escapeHtml(st.id || "?")} <span class="ui-muted small">· ${escapeHtml(sc)}</span></div>
-            <div class="preview-step-fields">${detail || '<span class="ui-muted small">—</span>'}</div>
+            <div class="preview-step-title">${escapeHtml(st.form_title || "Экран " + (i + 1))}</div>
+            <div class="preview-step-fields">${chips || '<span class="ui-muted small">нет полей</span>'}</div>
           </div></div>`;
       })
       .join("");
     const ph = document.getElementById("builder-preview-title");
-    if (ph) ph.textContent = root.name || pid;
+    if (ph) ph.textContent = model.name || pid;
   }
 
-  function applyFieldRowMeta(tr, type, f) {
-    const req = tr.querySelector('[data-fk="val_required"]');
-    if (req) req.checked = !!(f.validation && f.validation.required === true);
+  function syncTextarea(model, pid) {
+    const payload = serialize(model, pid);
+    const text = JSON.stringify(payload, null, 2);
+    const ta = document.getElementById("id_raw_json");
+    if (ta) ta.value = text;
+    const ro = document.getElementById("builder-json-readonly");
+    if (ro) ro.value = text;
   }
 
-  function instructionDetailTr(idx) {
-    return document.querySelector(`#builder-fields-body tr.builder-instruction-detail[data-detail-for="${idx}"]`);
-  }
-
-  /** Развёрнутая форма для type=instruction (title, instructions) — под основной строкой. */
-  function buildInstructionDetailRow(f, idx) {
-    const tr = document.createElement("tr");
-    tr.className = "builder-instruction-detail";
-    tr.dataset.detailFor = String(idx);
-    const murl = mediaPageUrl();
-    const mediaLink = murl
-      ? `<a href="${escapeAttr(murl)}" target="_blank" rel="noopener">странице «Файлы» проекта</a>`
-      : "странице «Файлы» проекта";
-    tr.innerHTML = `
-      <td colspan="6" class="p-0 border-secondary">
-        <div class="px-3 py-3" style="background: rgba(45, 212, 191, 0.07); border-left: 3px solid var(--ui-accent, #2dd4bf);">
-          <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
-            <i class="bi bi-journal-text text-info"></i>
-            <strong class="small text-white">Поле instruction</strong>
-          </div>
-          <div class="row g-3">
-            <div class="col-12">
-              <label class="form-label small ui-muted mb-0">instructions <span class="fw-normal text-secondary">— Markdown; новая строка = новый абзац; заголовки — в самом тексте (# …)</span></label>
-              <textarea class="form-control form-control-sm" data-fk="instructions" rows="14" autocomplete="off" placeholder="Длинный текст инструкции…"></textarea>
-            </div>
-            <div class="col-12">
-              <p class="small ui-muted mb-0">Картинки в Markdown должны быть <strong>загружены в медиа проекта</strong> — раздел ${mediaLink}.</p>
-            </div>
-          </div>
-        </div>
-      </td>`;
-    const ta = tr.querySelector('[data-fk="instructions"]');
-    if (ta) ta.value = f.instructions || "";
-    return tr;
-  }
-
-  /** Одна строка поля из root.config.fields[idx] */
-  function buildFieldRow(f, idx) {
-    const tr = document.createElement("tr");
-    tr.dataset.rowIndex = String(idx);
-    const isIx = f.type === "instruction";
-    const typeSelect = `
-      <select class="form-select form-select-sm" data-fk="type">
-        ${
-          !FIELD_TYPES.some((t) => t.v === f.type) && f.type
-            ? `<option value="${escapeAttr(f.type)}" selected>${escapeHtml(String(f.type) + " (устар./не в списке)")}</option>`
-            : ""
-        }
-        ${FIELD_TYPES.map(
-          (t) =>
-            `<option value="${escapeAttr(t.v)}" ${f.type === t.v ? "selected" : ""}>${escapeHtml(t.label)}</option>`,
-        ).join("")}
-      </select>`;
-    if (isIx) {
-      tr.innerHTML = `
-      <td><input type="text" class="form-control form-control-sm" data-fk="field_id" value="${escapeAttr(f.field_id || "")}" autocomplete="off"></td>
-      <td>${typeSelect}</td>
-      <td colspan="2" class="align-middle small ui-muted bg-dark bg-opacity-25"><i class="bi bi-arrow-down-circle me-1"></i>Содержимое — в форме <strong>под строкой</strong> (Markdown в instructions).</td>
-      <td class="text-center align-middle text-muted">—</td>
-      <td><button type="button" class="btn btn-sm btn-outline-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button></td>`;
-    } else {
-      tr.innerHTML = `
-      <td><input type="text" class="form-control form-control-sm" data-fk="field_id" value="${escapeAttr(f.field_id || "")}" autocomplete="off"></td>
-      <td>${typeSelect}</td>
-      <td><input type="text" class="form-control form-control-sm" data-fk="title" value="${escapeAttr(f.title || "")}" autocomplete="off"></td>
-      <td style="min-width:14rem"><textarea class="form-control form-control-sm" data-fk="instructions" rows="6" autocomplete="off" placeholder="Длинный текст, абзацы с новой строки — как в JSON"></textarea></td>
-      <td class="text-center align-middle" title="validation.required">
-        <input class="form-check-input" type="checkbox" data-fk="val_required" ${f.validation && f.validation.required ? "checked" : ""}>
-      </td>
-      <td><button type="button" class="btn btn-sm btn-outline-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button></td>`;
-      const ins = tr.querySelector('[data-fk="instructions"]');
-      if (ins) ins.value = f.instructions || "";
-    }
-    applyFieldRowMeta(tr, f.type || "text_input", f);
-    return tr;
-  }
-
-  function fullRebuildFields(root) {
-    const tb = document.querySelector("#builder-fields-body");
-    if (!tb) return;
-    tb.innerHTML = "";
-    (root.config.fields || []).forEach((f, idx) => {
-      tb.appendChild(buildFieldRow(f, idx));
-      if (f.type === "instruction") tb.appendChild(buildInstructionDetailRow(f, idx));
-    });
-  }
-
-  function buildStepCard(st, idx, root) {
-    const screen = (st.screen || "scroll_form").toLowerCase().replace(/-/g, "_");
-    const opts = SCREENS.map(
-      (s) => `<option value="${s.v}" ${screen === s.v ? "selected" : ""}>${s.label}</option>`,
-    ).join("");
-    let extra = "";
-    let hint = "";
-    if (screen === "scroll_form") {
-      const ids = (st.field_ids || []).join(", ");
-      extra = `<label class="form-label small ui-muted mt-2 mb-0">Название формы (экран проверки)</label>
-        <input type="text" class="form-control form-control-sm mb-2" data-sk="form_title" value="${escapeAttr(st.form_title || "")}" placeholder="Например: Данные коровы" autocomplete="off">
-        <label class="form-label small ui-muted mt-2 mb-0">Поля на этом экране (field_id через запятую)</label>
-        <input type="text" class="form-control form-control-sm" data-sk="field_ids" value="${escapeAttr(ids)}" placeholder="scan_time, cow_identifier, …" autocomplete="off">`;
-      extra += `<div class="form-check mt-2">
-            <input class="form-check-input" type="checkbox" data-sk="cow_id_hints" ${st.cow_id_hints ? "checked" : ""} id="cowh${idx}">
-            <label class="form-check-label small" for="cowh${idx}">Подсказки из локальной истории по ID коровы</label></div>
-          <input type="text" class="form-control form-control-sm mt-1" data-sk="cow_id_field_id" value="${escapeAttr(st.cow_id_field_id || "")}" placeholder="cow_id_field_id (например cow_identifier)" autocomplete="off">`;
-      hint =
-        '<p class="small text-info mb-0 mt-2"><i class="bi bi-lightbulb me-1"></i>Каждое поле из таблицы «Поля» — ровно в одном шаге. Порядок на экране = порядок <code>field_id</code> в списке (не по колонке priority — её нет). Типы: <strong>text_input</strong>, <strong>datetime</strong>, <strong>instruction</strong>, <strong>camera_photo</strong>.</p>';
-    } else if (screen === "review") {
-      hint =
-        '<p class="small text-info mb-0 mt-2"><i class="bi bi-lightbulb me-1"></i>Отдельных полей нет. Обычно один шаг <code>review</code> в конце.</p>';
-    }
-    const card = document.createElement("div");
-    card.className = "card mb-3 p-3 border-secondary builder-step-card";
-    card.dataset.stepIndex = String(idx);
-    card.innerHTML = `
-      <div class="d-flex justify-content-between align-items-start gap-2">
-        <div class="flex-grow-1">
-          <div class="row g-2">
-            <div class="col-md-4">
-              <label class="form-label small ui-muted mb-0">Код шага (латиница)</label>
-              <input class="form-control form-control-sm" data-sk="id" value="${escapeAttr(st.id || "")}" autocomplete="off">
-            </div>
-            <div class="col-md-8">
-              <label class="form-label small ui-muted mb-0">Тип экрана</label>
-              <select class="form-select form-select-sm" data-sk="screen">${opts}</select>
-            </div>
-          </div>
-          ${extra}
-          ${hint}
-        </div>
-        <button type="button" class="btn btn-sm btn-outline-danger flex-shrink-0" data-del-step="${idx}" title="Удалить шаг"><i class="bi bi-trash3"></i></button>
-      </div>`;
-    return card;
-  }
-
-  function fullRebuildSteps(root) {
-    const wrap = document.getElementById("builder-steps");
-    if (!wrap) return;
-    wrap.innerHTML = "";
-    (root.config.flow.steps || []).forEach((st, idx) => {
-      wrap.appendChild(buildStepCard(st, idx, root));
-    });
-  }
-
-  function syncFieldRowFromDom(tr, root) {
-    const idx = parseInt(tr.dataset.rowIndex, 10);
-    const f = root.config.fields[idx];
-    if (!f) return;
-    const detail = instructionDetailTr(idx);
-    const get = (k) => tr.querySelector(`[data-fk="${k}"]`) || detail?.querySelector(`[data-fk="${k}"]`);
-    const fid = get("field_id")?.value?.trim();
-    if (fid) f.field_id = fid;
-    delete f.priority;
-    f.type = get("type")?.value || "text_input";
-    if (f.type === "instruction") {
-      f.title = "";
-    } else {
-      f.title = get("title")?.value || "";
-    }
-    f.instructions = get("instructions")?.value || "";
-    delete f.options;
-    delete f.sub_fields;
-
-    const ft = f.type;
-    const req = ft !== "instruction" && get("val_required")?.checked === true;
-    if (ft !== "camera_photo") {
-      delete f.multiple;
-    }
-    const nextVal = { ...(f.validation && typeof f.validation === "object" ? f.validation : {}) };
-    if (ft !== "camera_photo") {
-      delete nextVal.min_items;
-    }
-    if (req) nextVal.required = true;
-    else delete nextVal.required;
-    if (Object.keys(nextVal).length) f.validation = nextVal;
-    else delete f.validation;
-  }
-
-  function syncStepCardFromDom(card, root) {
-    const idx = parseInt(card.dataset.stepIndex, 10);
-    const st = root.config.flow.steps[idx];
-    if (!st) return;
-    const idInp = card.querySelector('[data-sk="id"]');
-    const scr = card.querySelector('[data-sk="screen"]');
-    if (idInp) st.id = idInp.value.trim() || `step_${idx}`;
-    if (scr) st.screen = scr.value;
-    const screen = (st.screen || "").toLowerCase().replace(/-/g, "_");
-    delete st.field_ids;
-    delete st.field_id;
-    delete st.cow_id_hints;
-    delete st.cow_id_field_id;
-    delete st.form_title;
-    if (screen === "scroll_form") {
-      const ftitle = card.querySelector('[data-sk="form_title"]')?.value?.trim();
-      if (ftitle) st.form_title = ftitle;
-      const raw = card.querySelector('[data-sk="field_ids"]')?.value || "";
-      const ids = raw
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
-      st.field_ids = ids;
-      const ch = card.querySelector('[data-sk="cow_id_hints"]');
-      if (ch && ch.checked) st.cow_id_hints = true;
-      const cf = card.querySelector('[data-sk="cow_id_field_id"]')?.value?.trim();
-      if (cf) st.cow_id_field_id = cf;
-    }
-  }
-
-  function syncAllFieldsFromDom(root) {
-    document.querySelectorAll("#builder-fields-body tr[data-row-index]").forEach((tr) => {
-      syncFieldRowFromDom(tr, root);
-    });
-  }
-
-  function syncAllStepsFromDom(root) {
-    document.querySelectorAll("#builder-steps .builder-step-card").forEach((card) => {
-      syncStepCardFromDom(card, root);
-    });
-  }
+  // ——— Init ———
 
   function init() {
     const app = document.getElementById("builder-app");
@@ -386,179 +513,215 @@
     if (!app || !seed) return;
     const pid = app.getAttribute("data-project-id");
     const validateUrl = app.getAttribute("data-validate-url");
+
+    function showBootError(err) {
+      const box = document.getElementById("builder-boot-error");
+      if (!box) return;
+      box.classList.remove("d-none");
+      box.innerHTML =
+        '<i class="bi bi-exclamation-triangle me-1"></i><strong>Редактор не инициализировался.</strong> ' +
+        escapeHtml(String(err)) +
+        " Обновите страницу (Ctrl+F5).";
+    }
+
     let root;
     try {
       root = JSON.parse(seed.textContent);
     } catch (e) {
       console.error(e);
+      showBootError("Не удалось прочитать JSON конфига: " + e);
       return;
     }
-    if (!root.config) root.config = { fields: [], flow: { steps: [] }, ui: {} };
-    if (!root.config.fields) root.config.fields = [];
-    if (!root.config.flow) root.config.flow = { steps: [] };
-    if (!root.config.flow.steps) root.config.flow.steps = [];
-    if (!root.config.ui) root.config.ui = {};
-    if (root.config.ui && typeof root.config.ui === "object" && root.config.ui.shooting_guide) {
-      delete root.config.ui.shooting_guide;
-      if (Object.keys(root.config.ui).length === 0) delete root.config.ui;
+
+    function bootEditor(model, refresh) {
+      const wrap = document.getElementById("builder-steps");
+      const hasSsr = wrap && wrap.querySelector(".builder-step-card");
+      if (hasSsr) {
+        readModelFromDom(model);
+        initSortables(model, refresh);
+      } else {
+        renderSteps(model, refresh);
+      }
+      renderPreview(model, pid);
+      syncTextarea(model, pid);
     }
+
+    try {
+    const model = loadModel(root || {});
 
     const nameEl = document.getElementById("b-name");
     const verEl = document.getElementById("b-version");
-    if (nameEl) nameEl.value = root.name || "";
-    if (verEl) verEl.value = root.version || "1";
+    if (nameEl) nameEl.value = model.name || "";
+    if (verEl) verEl.value = model.version || "1";
 
     let debounceTimer = null;
-    function scheduleDebouncedSync() {
+
+    /** Прочитать DOM → модель, опционально перерисовать (drag-and-drop, смена типа). */
+    function refreshFromDom(structural) {
+      readModelFromDom(model);
+      if (structural) renderSteps(model, refreshFromDom);
+      updateEmptyHints();
+      renderPreview(model, pid);
+      syncTextarea(model, pid);
+    }
+
+    /** Перерисовать из уже изменённой модели (добавление/удаление — DOM ещё старый). */
+    function refreshFromModel() {
+      renderSteps(model, refreshFromDom);
+      updateEmptyHints();
+      renderPreview(model, pid);
+      syncTextarea(model, pid);
+    }
+
+    function updateEmptyHints() {
+      document.querySelectorAll(".builder-step-card:not(.is-review)").forEach((card) => {
+        const hint = card.querySelector(".builder-empty-hint");
+        const count = card.querySelectorAll(".builder-field-block").length;
+        if (hint) hint.classList.toggle("d-none", count > 0);
+      });
+    }
+    function refreshDebounced() {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => {
-        renderPreview(root, pid);
-        syncTextarea(root, pid);
-      }, 200);
+        readModelFromDom(model);
+        renderPreview(model, pid);
+        syncTextarea(model, pid);
+      }, 180);
     }
 
-    function structuralSync() {
-      syncAllFieldsFromDom(root);
-      syncAllStepsFromDom(root);
-      fullRebuildFields(root);
-      fullRebuildSteps(root);
-      renderPreview(root, pid);
-      syncTextarea(root, pid);
-    }
-
-    /** Ввод в ячейках полей — только правим объект, DOM не трогаем */
+    // Текстовый ввод — без перерисовки (не теряем фокус).
     app.addEventListener("input", (e) => {
-      const det = e.target.closest("#builder-fields-body tr.builder-instruction-detail");
-      if (det) {
-        const idx = parseInt(det.dataset.detailFor, 10);
-        const main = document.querySelector(`#builder-fields-body tr[data-row-index="${idx}"]`);
-        if (main) syncFieldRowFromDom(main, root);
-        scheduleDebouncedSync();
-        return;
-      }
-      const tr = e.target.closest("#builder-fields-body tr[data-row-index]");
-      if (tr) {
-        syncFieldRowFromDom(tr, root);
-        scheduleDebouncedSync();
-        return;
-      }
-      const card = e.target.closest("#builder-steps .builder-step-card");
-      if (card && e.target.matches("input,textarea") && !e.target.matches('[data-sk="screen"]')) {
-        syncStepCardFromDom(card, root);
-        scheduleDebouncedSync();
-      }
+      if (e.target.closest("#builder-steps")) refreshDebounced();
     });
 
+    // Смена типа поля и чекбоксы — мгновенно. Тип меняет верстку блока → структурно.
     app.addEventListener("change", (e) => {
-      const detCh = e.target.closest("#builder-fields-body tr.builder-instruction-detail");
-      if (detCh) {
-        const idx = parseInt(detCh.dataset.detailFor, 10);
-        const main = document.querySelector(`#builder-fields-body tr[data-row-index="${idx}"]`);
-        if (main) syncFieldRowFromDom(main, root);
-        renderPreview(root, pid);
-        syncTextarea(root, pid);
+      if (e.target.matches('[data-fk="type"]')) {
+        refreshFromDom(true);
         return;
       }
-      const tr = e.target.closest("#builder-fields-body tr[data-row-index]");
-      if (tr) {
-        syncFieldRowFromDom(tr, root);
-        if (e.target.matches('select[data-fk="type"]')) {
-          structuralSync();
-          return;
-        }
-        renderPreview(root, pid);
-        syncTextarea(root, pid);
-        return;
-      }
-      const stepCard = e.target.closest("#builder-steps .builder-step-card");
-      if (stepCard) {
-        if (e.target.matches('select[data-sk="screen"]')) {
-          syncStepCardFromDom(stepCard, root);
-          syncAllStepsFromDom(root);
-          fullRebuildSteps(root);
-          renderPreview(root, pid);
-          syncTextarea(root, pid);
-          return;
-        }
-        syncStepCardFromDom(stepCard, root);
-        renderPreview(root, pid);
-        syncTextarea(root, pid);
+      if (e.target.closest("#builder-steps")) {
+        readModelFromDom(model);
+        renderPreview(model, pid);
+        syncTextarea(model, pid);
       }
     });
 
+    // Авто-генерация field_id из подписи, если id ещё не трогали.
+    app.addEventListener("input", (e) => {
+      if (!e.target.matches('[data-fk="title"]')) return;
+      const blk = e.target.closest(".builder-field-block");
+      if (!blk) return;
+      const idInp = blk.querySelector('[data-fk="field_id"]');
+      if (idInp && !idInp.dataset.touched) {
+        idInp.value = slugify(e.target.value);
+      }
+    });
+    app.addEventListener("input", (e) => {
+      if (e.target.matches('[data-fk="field_id"]')) e.target.dataset.touched = "1";
+    });
+
+    // Клики: добавить/удалить поле и шаг, раскрыть «Дополнительно».
     app.addEventListener("click", (e) => {
-      const delF = e.target.closest("#builder-fields-body [data-del-field]");
+      const addStepBtn = e.target.closest("#builder-add-step");
+      if (addStepBtn) {
+        e.preventDefault();
+        readModelFromDom(model);
+        const n = model.steps.filter((s) => s.kind === "scroll_form").length + 1;
+        const review = model.steps.find((s) => s.kind === "review");
+        const newStep = { uid: uid(), kind: "scroll_form", id: "form" + n, form_title: "", fields: [] };
+        model.steps = model.steps.filter((s) => s.kind !== "review").concat([newStep, review]);
+        refreshFromModel();
+        document.querySelector(`.builder-step-card[data-uid="${newStep.uid}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
+      const addType = e.target.closest("[data-add-type]");
+      if (addType) {
+        e.preventDefault();
+        readModelFromDom(model);
+        const card = addType.closest(".builder-step-card");
+        const st = model.steps.find((s) => s.uid === card.dataset.uid);
+        if (st) {
+          const t = addType.getAttribute("data-add-type");
+          st.fields.push({
+            uid: uid(),
+            field_id: "",
+            type: t,
+            title: t === "instruction" ? "" : "Новое поле",
+            instructions: "",
+            required: false,
+            validationExtra: {},
+          });
+          refreshFromModel();
+          const newCard = document.querySelector(`.builder-step-card[data-uid="${st.uid}"]`);
+          const last = newCard?.querySelector(".builder-field-block:last-child [data-fk='field_id'], .builder-field-block:last-child [data-fk='instructions']");
+          last?.focus();
+        }
+        return;
+      }
+      const delF = e.target.closest("[data-del-field]");
       if (delF) {
         e.preventDefault();
-        const tr = delF.closest("tr[data-row-index]");
-        if (!tr) return;
-        syncAllFieldsFromDom(root);
-        const idx = parseInt(tr.dataset.rowIndex, 10);
-        root.config.fields.splice(idx, 1);
-        structuralSync();
+        readModelFromDom(model);
+        const blk = delF.closest(".builder-field-block");
+        const card = delF.closest(".builder-step-card");
+        const st = model.steps.find((s) => s.uid === card.dataset.uid);
+        if (st) st.fields = st.fields.filter((f) => f.uid !== blk.dataset.uid);
+        refreshFromModel();
         return;
       }
-      const delS = e.target.closest("#builder-steps [data-del-step]");
+      const delS = e.target.closest("[data-del-step]");
       if (delS) {
         e.preventDefault();
+        readModelFromDom(model);
         const card = delS.closest(".builder-step-card");
-        if (!card) return;
-        syncAllStepsFromDom(root);
-        const idx = parseInt(card.dataset.stepIndex, 10);
-        root.config.flow.steps.splice(idx, 1);
-        structuralSync();
+        const scrolls = model.steps.filter((s) => s.kind === "scroll_form");
+        if (scrolls.length <= 1) {
+          flashError("Нужен хотя бы один экран сбора. Этот удалить нельзя.");
+          return;
+        }
+        model.steps = model.steps.filter((s) => s.uid !== card.dataset.uid);
+        refreshFromModel();
+        return;
+      }
+      const adv = e.target.closest("[data-toggle-adv]");
+      if (adv) {
+        e.preventDefault();
+        const box = adv.closest(".builder-step-card")?.querySelector(".builder-step-adv-box");
+        box?.classList.toggle("d-none");
+        adv.classList.toggle("active");
       }
     });
 
-    document.getElementById("builder-add-field")?.addEventListener("click", () => {
-      syncAllFieldsFromDom(root);
-      root.config.fields.push({
-        field_id: "field_" + Date.now().toString(36).slice(-6),
-        type: "text_input",
-        title: "Новое поле",
-        instructions: "",
-        validation: {},
+    ["b-name", "b-version"].forEach((id) => {
+      document.getElementById(id)?.addEventListener("input", () => {
+        model.name = document.getElementById("b-name")?.value.trim() || "";
+        model.version = document.getElementById("b-version")?.value.trim() || "1";
+        renderPreview(model, pid);
+        syncTextarea(model, pid);
       });
-      structuralSync();
-    });
-
-    document.getElementById("builder-add-step")?.addEventListener("click", () => {
-      syncAllStepsFromDom(root);
-      root.config.flow.steps.push({
-        id: "step_" + Date.now().toString(36).slice(-6),
-        screen: "scroll_form",
-        field_ids: [],
-      });
-      structuralSync();
     });
 
     document.getElementById("builder-btn-validate")?.addEventListener("click", async () => {
-      syncAllFieldsFromDom(root);
-      syncAllStepsFromDom(root);
-      syncRootFromMeta(root, pid);
+      readModelFromDom(model);
       const box = document.getElementById("builder-errors");
       if (!box) return;
-      box.innerHTML = '<span class="ui-muted">Проверка…</span>';
+      box.innerHTML = '<span class="ui-muted small">Проверка…</span>';
       try {
         const res = await fetch(validateUrl, {
           method: "POST",
           credentials: "same-origin",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": getCookie("csrftoken") || "",
-          },
-          body: JSON.stringify(buildPayload(root, pid)),
+          headers: { "Content-Type": "application/json", "X-CSRFToken": getCookie("csrftoken") || "" },
+          body: JSON.stringify(serialize(model, pid)),
         });
         const data = await res.json();
         if (data.ok) {
           box.innerHTML =
-            '<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle me-2"></i>Ошибок не найдено.</div>';
+            '<div class="alert alert-success py-2 mb-0"><i class="bi bi-check-circle me-2"></i>Ошибок не найдено — можно сохранять.</div>';
         } else {
           box.innerHTML =
             '<div class="alert alert-danger py-2 mb-0"><strong>Проблемы:</strong><ul class="mb-0 mt-1 small">' +
-            (data.errors || ["Неизвестная ошибка"])
-              .map((err) => "<li>" + escapeHtml(err) + "</li>")
-              .join("") +
+            (data.errors || ["Неизвестная ошибка"]).map((err) => "<li>" + escapeHtml(err) + "</li>").join("") +
             "</ul></div>";
         }
       } catch (err) {
@@ -567,25 +730,26 @@
       }
     });
 
-    ["b-name", "b-version"].forEach((id) => {
-      document.getElementById(id)?.addEventListener("input", () => {
-        renderPreview(root, pid);
-        syncTextarea(root, pid);
-      });
-    });
-
     document.getElementById("builder-form")?.addEventListener("submit", () => {
       clearTimeout(debounceTimer);
-      syncAllFieldsFromDom(root);
-      syncAllStepsFromDom(root);
-      syncRootFromMeta(root, pid);
-      syncTextarea(root, pid);
+      readModelFromDom(model);
+      syncTextarea(model, pid);
     });
 
-    fullRebuildFields(root);
-    fullRebuildSteps(root);
-    renderPreview(root, pid);
-    syncTextarea(root, pid);
+    function flashError(msg) {
+      const box = document.getElementById("builder-errors");
+      if (!box) return;
+      box.innerHTML = '<div class="alert alert-warning py-2 mb-0"><i class="bi bi-exclamation-triangle me-2"></i>' + escapeHtml(msg) + "</div>";
+      setTimeout(() => {
+        if (box.querySelector(".alert-warning")) box.innerHTML = "";
+      }, 4000);
+    }
+
+    bootEditor(model, refreshFromDom);
+    } catch (e) {
+      console.error(e);
+      showBootError(e);
+    }
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);

@@ -1,27 +1,74 @@
 {% extends "ui/base.html" %}
-{% block title %}Вход — админка{% endblock %}
+{% load static %}
+{% block title %}Вход{% endblock %}
 {% block body_class %}ui-auth-body{% endblock %}
+{% block topnav %}{% endblock topnav %}
 {% block footer %}{% endblock %}
 {% block content %}
 <div class="row justify-content-center">
-  <div class="col-11 col-sm-9 col-md-6 col-lg-5">
-    <div class="card p-4 p-md-5 login-form-card ui-login-card">
-      <div class="text-center mb-4">
-        <span class="ui-brand-mark d-inline-flex mb-3" style="width:3rem;height:3rem;font-size:1rem;">DC</span>
-        <h1 class="h4 mb-1 text-white fw-bold">Вход в админку</h1>
-        <p class="small ui-muted mb-0">Только для пользователей со статусом <strong>staff</strong></p>
-      </div>
-      <p class="small ui-muted mb-4 text-center">
-        Нет учётки? <code>python manage.py createsuperuser</code>
+  <div class="col-11 col-sm-8 col-md-5 col-lg-4">
+    <div class="card p-4 login-form-card">
+      <h1 class="h5 mb-1 text-white">Вход</h1>
+      <p class="small ui-muted mb-3" id="login-hint">
+        {% if firebase_auth_enabled %}
+        Email и пароль Firebase. Доступ к пакетам — по назначению в «Пользователи».
+        {% else %}
+        Логин администратора Django (staff).
+        {% endif %}
       </p>
-      <form method="post" action="">
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger py-2 small mb-3">
+        {% for err in form.non_field_errors %}{{ err }}{% endfor %}
+      </div>
+      {% endif %}
+
+      <form method="post" action="" id="ui-login-form" class="d-flex flex-column gap-2"
+            data-firebase-enabled="{% if firebase_auth_enabled %}1{% else %}0{% endif %}">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary w-100 mt-3 py-2">
-          <i class="bi bi-unlock me-2"></i>Войти
-        </button>
+        {% if request.GET.next %}<input type="hidden" name="next" value="{{ request.GET.next }}">{% endif %}
+
+        {% if firebase_auth_enabled %}
+        <div class="form-check mb-1">
+          <input class="form-check-input" type="checkbox" name="admin_access" value="1" id="admin-access">
+          <label class="form-check-label small" for="admin-access">Админ-доступ</label>
+        </div>
+        {% else %}
+        <input type="hidden" name="admin_access" value="1">
+        {% endif %}
+
+        <label class="small" for="login-username">
+          <span id="login-id-label">{% if firebase_auth_enabled %}Email{% else %}Логин{% endif %}</span>
+          <input type="{% if firebase_auth_enabled %}email{% else %}text{% endif %}"
+                 class="form-control mt-1" name="username" id="login-username"
+                 autocomplete="{% if firebase_auth_enabled %}username{% else %}username{% endif %}"
+                 value="{{ form.username.value|default:'' }}" required>
+        </label>
+        {% if form.username.errors %}
+        <p class="small text-danger mb-0">{{ form.username.errors|join:", " }}</p>
+        {% endif %}
+
+        <label class="small" for="login-password">Пароль
+          <input type="password" class="form-control mt-1" name="password" id="login-password"
+                 autocomplete="current-password" required>
+        </label>
+        {% if form.password.errors %}
+        <p class="small text-danger mb-0">{{ form.password.errors|join:", " }}</p>
+        {% endif %}
+
+        <p id="login-error" class="small text-danger mb-0 d-none"></p>
+        <button type="submit" class="btn btn-primary w-100 mt-2" id="login-submit">Войти</button>
       </form>
     </div>
   </div>
 </div>
+{% endblock %}
+{% block extra_js %}
+{% if firebase_auth_enabled %}
+<script type="module" src="{% static 'ui/login.js' %}"></script>
+<script>
+  window.__UI_FIREBASE_CONFIG__ = {{ firebase_web_config_json|safe }};
+  window.__UI_LOGIN_NEXT__ = "{{ request.GET.next|default:''|escapejs }}";
+</script>
+{% endif %}
 {% endblock %}

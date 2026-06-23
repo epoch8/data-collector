@@ -1,0 +1,145 @@
+<mxfile host="65bd71144e">
+    <diagram id="admin-rendering" name="Конфиг → UI клиентской админки">
+        <mxGraphModel dx="1153" dy="833" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1480" pageHeight="1320" background="#121218" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="title" value="Как клиентская админка строит UI из конфига проекта" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=16;fontStyle=1;fontColor=#E8EAED;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="28" width="900" height="40" as="geometry"/>
+                </mxCell>
+                <mxCell id="srcLbl" value="&lt;b&gt;&amp;nbsp;Входы&lt;/b&gt; (что приходит в админку)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#8B9DC6;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="76" width="500" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="srcF" value="&lt;b&gt;config.fields&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Справочник полей проекта:&lt;br&gt;&lt;code&gt;field_id&lt;/code&gt;, &lt;code&gt;type&lt;/code&gt;, &lt;code&gt;label&lt;/code&gt;, &lt;code&gt;required&lt;/code&gt;.&lt;br&gt;Тип поля → какой виджет рисовать.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="104" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="srcPp" value="&lt;b&gt;config.pipelines&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Какие шаги обработки настроены:&lt;br&gt;inference, annotation, metrics,&lt;br&gt;data_processing. Определяет что&lt;br&gt;будет в &lt;code&gt;pipeline_results&lt;/code&gt;.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;" vertex="1" parent="1">
+                    <mxGeometry x="388" y="104" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="srcMn" value="&lt;b&gt;manifest пакета&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;&lt;code&gt;data.*&lt;/code&gt; — ответы формы МП&lt;br&gt;&lt;code&gt;pipeline_results.*&lt;/code&gt; — результаты обработки&lt;br&gt;&lt;code&gt;blobs/*&lt;/code&gt; — медиа файлы&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;" parent="1" vertex="1">
+                    <mxGeometry x="728" y="104" width="320" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="noAU" value="&lt;span style=&quot;color:#9CA3AF&quot;&gt;config.admin_ui — &lt;b&gt;нет&lt;/b&gt;.&lt;br&gt;UI строится автоматически.&lt;br&gt;config.flow — только для МП.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a1510;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+                    <mxGeometry x="1070" y="104" width="180" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="coreLbl" value="&lt;b&gt;Абстрактное ядро&lt;/b&gt; (встроено, без конфига)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#F5EFE0;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="232" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="coreGrp" value="" style="group" connectable="0" vertex="1" parent="1">
+                    <mxGeometry x="48" y="260" width="682" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="coreBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 6;strokeColor=#5a6578;fillColor=#0f1419;fontSize=10;strokeWidth=1;" vertex="1" parent="coreGrp">
+                    <mxGeometry width="682" height="130" as="geometry"/>
+                </mxCell>
+                <mxCell id="core1" value="&lt;b&gt;Widget Resolver&lt;/b&gt;&lt;br&gt;&lt;code&gt;field.type&lt;/code&gt; → виджет&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;text_input → поле ввода&lt;br&gt;datetime → дата readonly&lt;br&gt;camera_photo → карточка&lt;br&gt;instruction → подсказка/информационное поле&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=9;" vertex="1" parent="coreGrp">
+                    <mxGeometry x="11.366666666666667" y="14" width="154.26190476190476" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="core2" value="&lt;b&gt;Pipeline Viewer&lt;/b&gt;&lt;br&gt;&lt;code&gt;pipeline_results&lt;/code&gt; → статусы&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;inference → метрики&lt;br&gt;annotation → разметка&lt;br&gt;metrics → таблица GT vs inf&lt;br&gt;processing → результат&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=6;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=9;" vertex="1" parent="coreGrp">
+                    <mxGeometry x="176.9952380952381" y="14" width="154.26190476190476" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="core3" value="&lt;b&gt;Media Viewer&lt;/b&gt;&lt;br&gt;&lt;code&gt;blobs/*&lt;/code&gt; → галерея&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Превью, скачивание,&lt;br&gt;карточка кадра,&lt;br&gt;frame_camera (intrinsics)&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=8;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=9;" vertex="1" parent="coreGrp">
+                    <mxGeometry x="342.62380952380954" y="14" width="154.26190476190476" height="102" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgLbl" value="&lt;b&gt;Plugins&lt;/b&gt; (self-discovering, per-client)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#e8b4b8;" parent="1" vertex="1">
+                    <mxGeometry x="770" y="260" width="400" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="plgBox" value="&lt;span style=&quot;color:#9CA3AF&quot;&gt;Плагин сам определяет, нужен ли он, по данным проекта.&lt;br&gt;Не в config JSON — устанавливается как код.&lt;/span&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#E8C078&quot;&gt;Доменные:&lt;/span&gt; korovas_ais, compare_sessions&lt;br&gt;&lt;span style=&quot;color:#B8A0D8&quot;&gt;Pipeline:&lt;/span&gt; retraining, VLM, keypoint_editor&lt;br&gt;&lt;span style=&quot;color:#7DD4C8&quot;&gt;Интеграции:&lt;/span&gt; external_sync, cvat_deeplink&lt;br&gt;&lt;span style=&quot;color:#8BC9F7&quot;&gt;Визуализация:&lt;/span&gt; skeleton_overlay, depth, heatmap" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a1012;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=9;dashed=1;dashPattern=8 6;" vertex="1" parent="1">
+                    <mxGeometry x="770" y="284" width="330" height="138" as="geometry"/>
+                </mxCell>
+                <mxCell id="eSrcF" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5B8DEF;endArrow=blockThin;endFill=1;dashed=1;" parent="1" source="srcF" target="coreGrp" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eSrcPp" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#D4A84B;endArrow=blockThin;endFill=1;dashed=1;" edge="1" parent="1" source="srcPp" target="coreGrp">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="eSrcMn" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#3DCC85;endArrow=blockThin;endFill=1;dashed=1;" parent="1" source="srcMn" target="coreGrp" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="wsLbl" value="&lt;b&gt;&amp;nbsp;Package Workspace&lt;/b&gt; (результат рендеринга)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#F5EFE0;" parent="1" vertex="1">
+                    <mxGeometry x="48" y="420" width="600" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="wsGrp" value="" style="group" parent="1" vertex="1" connectable="0">
+                    <mxGeometry x="48" y="448" width="1200" height="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="wsBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=10 8;strokeColor=#D4A84B;fillColor=#1a1510;strokeWidth=1;opacity=85;" parent="wsGrp" vertex="1">
+                    <mxGeometry width="1200" height="370" as="geometry"/>
+                </mxCell>
+                <mxCell id="tabData" value="&lt;b&gt;Data&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;spacingTop=2;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=11;fontStyle=1;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="20" y="74" width="80" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="tabPipe" value="&lt;b&gt;Pipelines&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;spacingTop=2;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=11;fontStyle=1;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="108" y="74" width="100" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="tabMedia" value="&lt;b&gt;Media&lt;/b&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=center;spacingTop=2;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=11;fontStyle=1;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="216" y="74" width="80" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="dataPanel" value="&lt;b&gt;Вкладка Data&lt;/b&gt;&lt;br&gt;&lt;br&gt;Для каждого &lt;code&gt;field&lt;/code&gt; из &lt;code&gt;config.fields&lt;/code&gt;:&lt;br&gt;Widget Resolver берёт &lt;code&gt;field.type&lt;/code&gt;&lt;br&gt;→ рисует виджет с данными из&lt;br&gt;&lt;code&gt;manifest.data.{field_id}&lt;/code&gt;&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#e8b4b8&quot;&gt;Плагин может добавить UI рядом с полем&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#1e2a3d;strokeColor=#5B8DEF;strokeWidth=1;fontColor=#E8EAED;fontSize=10;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="20" y="116" width="280" height="146" as="geometry"/>
+                </mxCell>
+                <mxCell id="saveNote" value="&lt;b&gt;Сохранение&lt;/b&gt;: правки → PATCH manifest через API платформы (django_server)." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=12;spacingTop=8;fillColor=#0f1419;strokeColor=#5a6578;fontColor=#9CA3AF;fontSize=10;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="868" y="220" width="300" height="36" as="geometry"/>
+                </mxCell>
+                <mxCell id="dataW1" value="&lt;b&gt;text_input&lt;/b&gt; cow_id" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#151b26;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=8;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="32" y="272" width="80" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="dataW2" value="&lt;b&gt;datetime&lt;/b&gt; scan_time" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#151b26;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=8;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="120" y="272" width="80" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="dataW3" value="&lt;b&gt;photo&lt;/b&gt; pose_1" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=6;spacingTop=4;fillColor=#151b26;strokeColor=#4a6fa8;fontColor=#E8EAED;fontSize=8;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="208" y="272" width="80" height="28" as="geometry"/>
+                </mxCell>
+                <mxCell id="pipePanel" value="&lt;b&gt;Вкладка Pipelines&lt;/b&gt;&lt;br&gt;&lt;br&gt;Автоматически по &lt;code&gt;pipeline_results&lt;/code&gt;:&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;inference&lt;/b&gt;&lt;/span&gt; — статус, метрики&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;annotation&lt;/b&gt;&lt;/span&gt; — CVAT/LS разметка&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;metrics&lt;/b&gt;&lt;/span&gt; — GT vs inference&lt;br&gt;&lt;span style=&quot;color:#D4A84B&quot;&gt;&lt;b&gt;processing&lt;/b&gt;&lt;/span&gt; — обработанные данные" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#3d3420;strokeColor=#D4A84B;strokeWidth=1;fontColor=#F5EFE0;fontSize=10;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="316" y="116" width="260" height="184" as="geometry"/>
+                </mxCell>
+                <mxCell id="mediaPanel" value="&lt;b&gt;Вкладка Media&lt;/b&gt;&lt;br&gt;&lt;br&gt;Все &lt;code&gt;blobs/*&lt;/code&gt; из manifest:&lt;br&gt;превью, скачивание, просмотр.&lt;br&gt;&lt;br&gt;Карточка кадра:&lt;br&gt;фото + метаданные камеры&lt;br&gt;&lt;br&gt;&lt;span style=&quot;color:#e8b4b8&quot;&gt;Плагины добавляют overlays:&lt;br&gt;skeleton, depth map и т.д.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;verticalAlign=top;spacingLeft=12;spacingTop=10;fillColor=#1a3329;strokeColor=#3DCC85;strokeWidth=1;fontColor=#E3F7EC;fontSize=10;" parent="wsGrp" vertex="1">
+                    <mxGeometry x="592" y="116" width="260" height="184" as="geometry"/>
+                </mxCell>
+                <mxCell id="eCoreWs" value="автоматический UI" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#5a6578;endArrow=blockThin;endFill=1;fontSize=9;fontColor=#9CA3AF;exitX=0.5;exitY=1;entryX=0.35;entryY=0;" edge="1" parent="1" source="coreGrp" target="wsGrp">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="ePlgWs" value="self-discover → хуки в UI" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#c97a7e;endArrow=blockThin;endFill=1;dashed=1;fontSize=9;fontColor=#e8b4b8;exitX=0.5;exitY=1;entryX=0.8;entryY=0;" parent="1" source="plgBox" target="wsGrp" edge="1">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="termLbl" value="&lt;b&gt;Терминология и архитектура&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=12;fontStyle=1;fontColor=#F5EFE0;" vertex="1" parent="1">
+                    <mxGeometry x="48" y="850" width="400" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="termGrp" value="" style="group" connectable="0" vertex="1" parent="1">
+                    <mxGeometry x="48" y="878" width="1200" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="termBg" value="" style="rounded=1;whiteSpace=wrap;html=1;dashed=1;dashPattern=10 8;strokeColor=#5a6578;fillColor=#0f1419;strokeWidth=1;opacity=85;" vertex="1" parent="termGrp">
+                    <mxGeometry width="1200" height="340" as="geometry"/>
+                </mxCell>
+                <mxCell id="termH1" value="&lt;b&gt;Определение проекта&lt;/b&gt; (JSON, хранится на сервере)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#8BA3C4;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="16" width="500" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="term1" value="&lt;b&gt;config.fields&lt;/b&gt; — схема данных (что собирать)&lt;br&gt;&lt;b&gt;config.flow&lt;/b&gt; — экраны МП (как собирать)&lt;br&gt;&lt;b&gt;config.pipelines&lt;/b&gt; — шаги обработки (что делать с данными)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1e2a3d;strokeColor=#5B8DEF;fontColor=#E8EAED;fontSize=10;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="40" width="360" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="termH2" value="&lt;b&gt;Расширения&lt;/b&gt; (код, per-client deployment)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#e8b4b8;" vertex="1" parent="termGrp">
+                    <mxGeometry x="400" y="16" width="400" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="term2" value="&lt;b&gt;plugins&lt;/b&gt; — self-discovering расширения.&lt;br&gt;Не часть config JSON.&lt;br&gt;Устанавливаются как код под конкретного клиента.&lt;br&gt;Сами определяют, нужны ли они, по данным проекта." style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a1012;strokeColor=#c97a7e;fontColor=#e8eaef;fontSize=10;" vertex="1" parent="termGrp">
+                    <mxGeometry x="400" y="40" width="360" height="70" as="geometry"/>
+                </mxCell>
+                <mxCell id="termH3" value="&lt;b&gt;Приложения&lt;/b&gt; (кто потребляет)" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#F5EFE0;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="130" width="400" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="appMP" value="&lt;b&gt;МП&lt;/b&gt; (Flutter)&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Коллектор — записывает данные.&lt;br&gt;Потребляет: fields + flow.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#1a3329;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="154" width="230" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="appColl" value="&lt;b&gt;Коллекторская админка&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Конфигуратор + приёмник данных.&lt;br&gt;Создаёт и редактирует config JSON.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#3d3420;strokeColor=#D4A84B;fontColor=#F5EFE0;fontSize=10;" vertex="1" parent="termGrp">
+                    <mxGeometry x="264" y="154" width="240" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="appClient" value="&lt;b&gt;Клиентская админка&lt;/b&gt;&lt;br&gt;&lt;span style=&quot;color:#9CA3AF&quot;&gt;Визуализатор + редактор.&lt;br&gt;Потребляет: fields + pipeline_results + manifest.&lt;br&gt;Расширяется plugins.&lt;/span&gt;" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#252a38;strokeColor=#8B9DC6;fontColor=#D1D5DB;fontSize=10;" vertex="1" parent="termGrp">
+                    <mxGeometry x="518" y="154" width="250" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="termH4" value="&lt;b&gt;Инфраструктура&lt;/b&gt;" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=11;fontStyle=1;fontColor=#F5EFE0;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="234" width="300" height="18" as="geometry"/>
+                </mxCell>
+                <mxCell id="infra" value="&lt;b&gt;django_server&lt;/b&gt; = единый бэкенд:&lt;br&gt;· REST API (для МП и клиентской админки)&lt;br&gt;· Config storage (проекты, конфиги)&lt;br&gt;· Pipeline workers (запуск inference, annotation, metrics и т.д.)&lt;br&gt;· Коллекторская админка (Django admin UI)" style="rounded=1;whiteSpace=wrap;html=1;align=left;spacingLeft=10;spacingTop=6;fillColor=#15251f;strokeColor=#3DCC85;fontColor=#E3F7EC;fontSize=10;strokeWidth=2;" vertex="1" parent="termGrp">
+                    <mxGeometry x="20" y="258" width="740" height="68" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>

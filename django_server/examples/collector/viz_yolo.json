@@ -1,0 +1,41 @@
+{
+  // collector/viz.json — вкладка «Визуализация» пакета (отдельно от collector/config.json)
+
+  // Схема конфига (пока только 1)
+  "version": 1,
+
+  // Как связать строку в SQLite с файлом в пакете (не менять)
+  "join_key": "manifest_blob_key",
+
+  "layers": [
+    {
+      // Уникальный id слоя в UI (произвольный, уникальный внутри файла)
+      "id": "yolo",
+
+      // Подпись на кнопке-переключателе слоя
+      "label": "YOLO",
+
+      // Плагин отрисовки: yolo_detection | keypoint_korovas | depth_map
+      "plugin": "yolo_detection",
+
+      // Таблица в project SQLite: django_server/project_db/<project_id>/pipeline.sqlite3
+      "table": "yolo_detection",
+
+      // Базовая палитра слоя: gt | inference | yolo (если у класса нет свой color)
+      "palette": "yolo",
+
+      // true — слой включён при открытии вкладки
+      "default_visible": true,
+
+      // Какие class id из YOLO .txt показывать. Убрать поле или [] = все классы
+      "include_classes": [0],
+
+      // Имена и цвета по id класса (первая колонка в YOLO .txt: 0, 1, 2…)
+      // Коротко:  "0": "имя"
+      // Полностью: "0": { "name": "имя", "color": "#a855f7" }
+      "classes": {
+        "0": { "name": "object", "color": "#a855f7" }
+      }
+    }
+  ]
+}

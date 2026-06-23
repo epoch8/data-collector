@@ -1,0 +1,109 @@
+{% for st in builder_ssr_steps %}
+  {% if st.kind != "review" %}
+  <div class="card builder-step-card" data-uid="ssr-step-{{ forloop.counter0 }}">
+    <div class="builder-step-head">
+      <span class="builder-step-grip" data-step-drag title="Перетащить шаг"><i class="bi bi-grip-vertical"></i></span>
+      <span class="builder-step-badge"><i class="bi bi-window-stack me-1"></i>Экран {{ st.scroll_ordinal }}</span>
+      <input type="text" class="form-control form-control-sm builder-step-title" data-sk="form_title"
+             value="{{ st.form_title }}" placeholder="Заголовок экрана (необязательно)" autocomplete="off">
+      <button type="button" class="btn btn-sm builder-step-adv" data-toggle-adv title="Дополнительно"><i class="bi bi-sliders"></i></button>
+      <button type="button" class="btn btn-sm btn-icon-danger" data-del-step title="Удалить экран"><i class="bi bi-trash3"></i></button>
+    </div>
+    <div class="builder-step-adv-box d-none">
+      <div class="row g-2">
+        <div class="col-md-5">
+          <label class="form-label small ui-muted mb-1">Код шага (латиница)</label>
+          <input type="text" class="form-control form-control-sm" data-sk="id" value="{{ st.id }}" placeholder="form1" autocomplete="off">
+        </div>
+        <div class="col-md-7">
+          <label class="form-label small ui-muted mb-1">Поле ID коровы (для подсказок)</label>
+          <input type="text" class="form-control form-control-sm" data-sk="cow_id_field_id" value="{{ st.cow_id_field_id }}" placeholder="cow_identifier" autocomplete="off">
+        </div>
+        <div class="col-12">
+          <label class="builder-required-toggle">
+            <input class="form-check-input" type="checkbox" data-sk="cow_id_hints" {% if st.cow_id_hints %}checked{% endif %}>
+            <span>Подсказки из локальной истории по ID коровы</span>
+          </label>
+        </div>
+      </div>
+    </div>
+    <div class="builder-step-body">
+      <div class="builder-fields-section-label small text-white mb-2">
+        <i class="bi bi-input-cursor-text me-1"></i><strong>Поля на этом экране</strong>
+        <span class="ui-muted fw-normal"> — field_id, подпись, тип, подсказка</span>
+      </div>
+      <div class="builder-fields-list" data-fields-list>
+        {% for f in st.fields %}
+        <div class="builder-field-block" data-uid="ssr-field-{{ forloop.parentloop.counter0 }}-{{ forloop.counter0 }}">
+          <div class="builder-field-head">
+            <span class="builder-drag" data-drag title="Перетащить"><i class="bi bi-grip-vertical"></i></span>
+            <span class="builder-field-icon {% if f.type == 'instruction' %}is-ix{% endif %}">
+              {% if f.type == 'datetime' %}<i class="bi bi-calendar-event"></i>
+              {% elif f.type == 'camera_photo' %}<i class="bi bi-camera"></i>
+              {% elif f.type == 'instruction' %}<i class="bi bi-journal-text"></i>
+              {% else %}<i class="bi bi-input-cursor-text"></i>{% endif %}
+            </span>
+            <select class="form-select form-select-sm builder-field-type" data-fk="type" title="Тип поля">
+              <option value="text_input" {% if f.type == 'text_input' %}selected{% endif %}>Текст</option>
+              <option value="datetime" {% if f.type == 'datetime' %}selected{% endif %}>Дата и время</option>
+              <option value="camera_photo" {% if f.type == 'camera_photo' %}selected{% endif %}>Фото</option>
+              <option value="instruction" {% if f.type == 'instruction' %}selected{% endif %}>Инструкция</option>
+            </select>
+            <input type="text" class="form-control form-control-sm builder-field-id" data-fk="field_id"
+                   value="{{ f.field_id }}" placeholder="field_id (латиница)" autocomplete="off" title="Идентификатор поля"
+                   {% if f.field_id %}data-touched="1"{% endif %}>
+            <button type="button" class="btn btn-sm btn-icon-danger" data-del-field title="Удалить поле"><i class="bi bi-trash3"></i></button>
+          </div>
+          <div class="builder-field-body">
+            <div class="builder-field-title-row {% if f.type == 'instruction' %}d-none{% endif %}">
+              <input type="text" class="form-control form-control-sm" data-fk="title"
+                     value="{{ f.title }}" placeholder="Подпись (видна пользователю)" autocomplete="off">
+              <label class="builder-required-toggle" title="Обязательное поле">
+                <input class="form-check-input" type="checkbox" data-fk="required" {% if f.required %}checked{% endif %}>
+                <span>обяз.</span>
+              </label>
+            </div>
+            <textarea class="form-control form-control-sm builder-field-instr" data-fk="instructions"
+                      rows="{% if f.type == 'instruction' %}6{% else %}2{% endif %}" autocomplete="off"
+                      placeholder="{% if f.type == 'instruction' %}Markdown-текст инструкции{% else %}Подсказка под полем (необязательно){% endif %}">{{ f.instructions }}</textarea>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="builder-empty-hint {% if st.fields %}d-none{% endif %}">
+        <i class="bi bi-arrow-down-circle me-1"></i>Пока нет полей — нажмите кнопку типа ниже.
+      </div>
+      <div class="builder-palette-label small ui-muted mt-2 mb-1">Добавить поле:</div>
+      <div class="builder-palette">
+        <button type="button" class="builder-palette-btn" data-add-type="text_input" title="однострочный ввод"><i class="bi bi-input-cursor-text me-1"></i>Текст</button>
+        <button type="button" class="builder-palette-btn" data-add-type="datetime" title="выбор даты/времени"><i class="bi bi-calendar-event me-1"></i>Дата и время</button>
+        <button type="button" class="builder-palette-btn" data-add-type="camera_photo" title="снимок с камеры"><i class="bi bi-camera me-1"></i>Фото</button>
+        <button type="button" class="builder-palette-btn" data-add-type="instruction" title="Markdown-текст"><i class="bi bi-journal-text me-1"></i>Инструкция</button>
+      </div>
+      <p class="small ui-muted mb-0 mt-2 builder-step-foot">Картинки для Markdown — в Git <code>collector/media/</code> (<a href="{% url 'ui_project_media' project.project_id %}">«Файлы»</a>).</p>
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}
+
+<div class="builder-add-step-wrap">
+  <button type="button" class="btn btn-outline-light btn-sm builder-add-step-btn" id="builder-add-step">
+    <i class="bi bi-plus-lg me-1"></i>Добавить экран
+  </button>
+</div>
+
+{% for st in builder_ssr_steps %}
+  {% if st.kind == "review" %}
+  <div class="card builder-step-card is-review" data-uid="ssr-step-{{ forloop.counter0 }}">
+    <div class="builder-step-head">
+      <span class="builder-step-grip is-locked" title="Финальный экран"><i class="bi bi-lock-fill"></i></span>
+      <span class="builder-step-badge is-review"><i class="bi bi-send-check me-1"></i>Проверка и отправка</span>
+    </div>
+    <div class="builder-step-body">
+      <label class="form-label small ui-muted mb-1">Заголовок экрана (необязательно)</label>
+      <input type="text" class="form-control form-control-sm" data-sk="form_title" value="{{ st.form_title }}" placeholder="Например: Проверьте данные" autocomplete="off">
+      <input type="hidden" data-sk="id" value="{{ st.id|default:'review' }}">
+    </div>
+  </div>
+  {% endif %}
+{% endfor %}

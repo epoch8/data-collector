@@ -73,8 +73,6 @@ Future<void> submitLocalPackage({
 
   await deleteAllDraftPackagesForProject(db, projectId);
 
-  ref.read(wizardStateProvider(projectId).notifier).reset();
-
   if (!context.mounted) return;
 
   ScaffoldMessenger.of(context).showSnackBar(
@@ -85,4 +83,6 @@ Future<void> submitLocalPackage({
   );
 
   context.go('/dashboard');
+  // Сброс после ухода с экрана — иначе review перерисовывается с пустым wizard state.
+  ref.read(wizardStateProvider(projectId).notifier).reset();
 }

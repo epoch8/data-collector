@@ -2,42 +2,25 @@ from __future__ import annotations
 
 import json
 import mimetypes
-from pathlib import Path
 
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.db import transaction
 from django.http import FileResponse, HttpResponse, JsonResponse
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
-from .models import PackageSession, Project, UploadedBlob
+from .models import Project
+from . import project_packages as ppkg
+from .request_auth import forbid_if_no_project_access, project_ids_for_request
 from .utils import collect_blob_refs, parse_json_body, validate_blob_logical_path, weak_etag
 
 
-def _project_ids_for_request(request) -> set[str] | None:
-    """Если Firebase-режим — только явно выданные project_id; иначе None = все проекты."""
-    user = getattr(request, "collector_user", None)
-    if user is not None:
-        return set(user.projects.values_list("project_id", flat=True))
-    return None
-
-
-def _forbidden_project():
-    return JsonResponse(
-        _err("forbidden", "No access to this project"),
-        status=403,
-    )
-
-
 def _require_project(request, project_id: str) -> JsonResponse | None:
-    if not Project.objects.filter(project_id=project_id).exists():
-        return JsonResponse(_err("not_found", "Unknown project"), status=404)
-    allowed = _project_ids_for_request(request)
-    if allowed is not None and project_id not in allowed:
-        return _forbidden_project()
-    return None
+    return forbid_if_no_project_access(request, project_id, scope="mobile")
+
+
+def _media_bucket(project_id: str) -> str:
+    project = Project.objects.filter(project_id=project_id).only("media_bucket").first()
+    return (project.media_bucket if project else "") or ""
 
 
 def _err(code: str, message: str, details=None):
@@ -55,7 +38,7 @@ def health(_request):
 class ProjectsCatalogView(View):
     def get(self, request):
         qs = Project.objects.all().order_by("name")
-        allowed = _project_ids_for_request(request)
+        allowed = project_ids_for_request(request, scope="mobile")
         if allowed is not None:
             qs = qs.filter(project_id__in=allowed)
         rows = list(qs)
@@ -63,7 +46,7 @@ class ProjectsCatalogView(View):
             {
                 "project_id": p.project_id,
                 "name": p.name,
-                "config_version": p.config_version,
+                "config_version": p.config_version_label,
                 "updated_at": p.updated_at.isoformat(),
             }
             for p in rows
@@ -85,14 +68,12 @@ class ProjectConfigView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        project = Project.objects.filter(project_id=project_id).first()
-        if not project:
-            return JsonResponse(
-                _err("not_found", "Unknown project"),
-                status=404,
-            )
-        body = project.raw_json
-        etag = weak_etag(body)
+        from .project_config_service import load_config_body
+
+        body, sha, err = load_config_body(project_id)
+        if err is not None:
+            return err
+        etag = sha or weak_etag(body or "")
         if request.headers.get("If-None-Match") == etag:
             return HttpResponse(status=304, headers={"ETag": etag})
         return HttpResponse(
@@ -108,6 +89,8 @@ class PackageSessionCreateView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
+        if not Project.objects.filter(project_id=project_id).exists():
+            return JsonResponse(_err("not_found", "Unknown project"), status=404)
         raw = request.body.decode("utf-8") if request.body else "{}"
         data, err = parse_json_body(raw)
         if err:
@@ -118,19 +101,13 @@ class PackageSessionCreateView(View):
                 _err("validation", "package_id required"),
                 status=422,
             )
-        project = Project.objects.get(project_id=project_id)
-        session, created = PackageSession.objects.get_or_create(
-            project=project,
-            package_id=package_id,
-            defaults={"phase": PackageSession.Phase.AWAITING_BLOBS},
-        )
+        session, created = ppkg.get_or_create_session(project_id, package_id)
         uid = getattr(request, "firebase_uid", None) or ""
         email = getattr(request, "firebase_email", None) or ""
         if uid and not session.uploader_uid:
-            session.uploader_uid = uid
-            session.uploader_email = email
-            session.save(update_fields=["uploader_uid", "uploader_email"])
-        if session.phase == PackageSession.Phase.COMPLETED:
+            ppkg.update_uploader(project_id, package_id, uid=uid, email=email)
+            session = ppkg.get_session(project_id, package_id) or session
+        if session.phase == ppkg.Phase.COMPLETED:
             return JsonResponse(
                 _err(
                     "conflict",
@@ -146,13 +123,8 @@ class PackageSessionCreateView(View):
         )
 
 
-def _session_status(session: PackageSession) -> str:
-    return {
-        PackageSession.Phase.AWAITING_BLOBS: "awaiting_blobs",
-        PackageSession.Phase.READY_TO_COMMIT: "ready_to_commit",
-        PackageSession.Phase.COMPLETED: "completed",
-        PackageSession.Phase.FAILED: "failed",
-    }[session.phase]
+def _session_status(session: ppkg.PackageSession) -> str:
+    return session.phase
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -172,29 +144,24 @@ class PackageBlobPutView(View):
                 _err("invalid_blob_path", verr, logical),
                 status=422,
             )
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             return JsonResponse(_err("not_found", "Start package session first"), status=404)
-        if session.phase == PackageSession.Phase.COMPLETED:
+        if session.phase == ppkg.Phase.COMPLETED:
             return JsonResponse(_err("conflict", "Package already completed"), status=409)
-        if session.phase == PackageSession.Phase.FAILED:
+        if session.phase == ppkg.Phase.FAILED:
             return JsonResponse(_err("conflict", "Package session failed"), status=409)
-        if session.phase == PackageSession.Phase.READY_TO_COMMIT:
-            session.manifest_json = ""
-            session.phase = PackageSession.Phase.AWAITING_BLOBS
-            session.save(update_fields=["manifest_json", "phase"])
+        if session.phase == ppkg.Phase.READY_TO_COMMIT:
+            ppkg.reset_manifest_phase(project_id, package_id)
         data = request.body or b""
-        size = len(data)
-        UploadedBlob.objects.filter(session=session, logical_path=logical).delete()
-        blob = UploadedBlob(session=session, logical_path=logical, size_bytes=size)
-        blob.file.save("body.bin", ContentFile(data), save=True)
-        if session.phase != PackageSession.Phase.READY_TO_COMMIT:
-            session.phase = PackageSession.Phase.AWAITING_BLOBS
-            session.save(update_fields=["phase"])
-        return JsonResponse({"path": logical, "size": size})
+        ppkg.put_blob(
+            project_id,
+            package_id,
+            logical,
+            data,
+            media_bucket=_media_bucket(project_id),
+        )
+        return JsonResponse({"path": logical, "size": len(data)})
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -203,13 +170,10 @@ class PackageManifestPutView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             return JsonResponse(_err("not_found", "Start package session first"), status=404)
-        if session.phase == PackageSession.Phase.COMPLETED:
+        if session.phase == ppkg.Phase.COMPLETED:
             return JsonResponse(
                 {"status": "completed", "package_id": package_id},
                 status=200,
@@ -240,7 +204,7 @@ class PackageManifestPutView(View):
             )
         refs: set[str] = set()
         collect_blob_refs(manifest, refs)
-        uploaded = set(session.blobs.values_list("logical_path", flat=True))
+        uploaded = set(ppkg.list_blob_paths(project_id, package_id))
         missing = sorted(refs - uploaded)
         if missing:
             return JsonResponse(
@@ -254,13 +218,12 @@ class PackageManifestPutView(View):
                 "firebase_uid": uid,
                 "email": email,
             }
-        session.manifest_json = json.dumps(
+        manifest_json = json.dumps(
             manifest,
             ensure_ascii=False,
             separators=(",", ":"),
         )
-        session.phase = PackageSession.Phase.READY_TO_COMMIT
-        session.save(update_fields=["manifest_json", "phase"])
+        ppkg.save_manifest(project_id, package_id, manifest_json)
         return JsonResponse({"status": "ready_to_commit", "package_id": package_id})
 
 
@@ -270,30 +233,25 @@ class PackageCommitView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             return JsonResponse(_err("not_found", "Package not found"), status=404)
-        with transaction.atomic():
-            session = PackageSession.objects.select_for_update().get(pk=session.pk)
-            if session.phase == PackageSession.Phase.COMPLETED:
-                return JsonResponse(
-                    {
-                        "status": "completed",
-                        "package_id": package_id,
-                        "idempotent": True,
-                    },
-                    status=200,
-                )
-            if session.phase != PackageSession.Phase.READY_TO_COMMIT or not session.manifest_json:
-                return JsonResponse(
-                    _err("invalid_phase", "Manifest not accepted; call PUT manifest first"),
-                    status=409,
-                )
-            session.phase = PackageSession.Phase.COMPLETED
-            session.save(update_fields=["phase"])
+        try:
+            committed = ppkg.commit_session(project_id, package_id)
+        except ValueError:
+            return JsonResponse(
+                _err("invalid_phase", "Manifest not accepted; call PUT manifest first"),
+                status=409,
+            )
+        if not committed:
+            return JsonResponse(
+                {
+                    "status": "completed",
+                    "package_id": package_id,
+                    "idempotent": True,
+                },
+                status=200,
+            )
         return JsonResponse({"status": "completed", "package_id": package_id})
 
 
@@ -305,13 +263,10 @@ class PackageDetailView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             return JsonResponse(_err("not_found", "Package not found"), status=404)
-        blobs = sorted(session.blobs.values_list("logical_path", flat=True))
+        blobs = sorted(ppkg.list_blob_paths(project_id, package_id))
         return JsonResponse(
             {
                 "package_id": package_id,
@@ -324,37 +279,27 @@ class PackageDetailView(View):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        session = PackageSession.objects.filter(
-            project__project_id=project_id,
-            package_id=package_id,
-        ).first()
+        session = ppkg.get_session(project_id, package_id)
         if not session:
             return JsonResponse(_err("not_found", "Package not found"), status=404)
-        if session.phase == PackageSession.Phase.COMPLETED:
+        if session.phase == ppkg.Phase.COMPLETED:
             return JsonResponse(_err("conflict", "Cannot delete completed package"), status=409)
-        session.delete()
+        ppkg.delete_session(project_id, package_id, media_bucket=_media_bucket(project_id))
         return HttpResponse(status=204)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectAssetGetView(View):
-    """GET файла примера для конфига: путь относительно `assets/<slug>/` на репо → project_assets/<project_id>/."""
+    """GET медиа инструкций: `collector/media/…` в git-кэше проекта."""
 
     def get(self, request, project_id: str, asset_path: str):
         denied = _require_project(request, project_id)
         if denied:
             return denied
-        rel = (asset_path or "").replace("\\", "/").strip("/")
-        if not rel or ".." in Path(rel).parts:
-            return JsonResponse(_err("invalid_path", rel), status=422)
-        base = Path(settings.PROJECT_ASSETS_ROOT) / project_id
-        target = (base / rel).resolve()
-        base_res = base.resolve()
-        try:
-            target.relative_to(base_res)
-        except ValueError:
-            return JsonResponse(_err("invalid_path", rel), status=422)
-        if not target.is_file():
+        from .project_git import resolve_media_file
+
+        target = resolve_media_file(project_id, asset_path)
+        if target is None:
             return JsonResponse(_err("not_found", "Asset not found"), status=404)
         ctype, _ = mimetypes.guess_type(str(target))
         return FileResponse(

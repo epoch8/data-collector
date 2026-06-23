@@ -53,8 +53,9 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "api.middleware.UiCollectorSessionMiddleware",
+    "api.middleware.ApiV1AuthMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
 ]
 
@@ -70,6 +71,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "api.ui_context.ui_template_context",
             ],
         },
     },
@@ -117,18 +119,37 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 AUTH_PASSWORD_VALIDATORS: list = []
 
 LOGIN_URL = "/ui/login/"
-LOGIN_REDIRECT_URL = "/ui/projects/"
+LOGIN_REDIRECT_URL = "/ui/"
 
 MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = "/media/"
 
-PROJECT_ASSETS_ROOT = Path(os.environ.get("PROJECT_ASSETS_ROOT", str(BASE_DIR / "project_assets")))
+# Per-project package blobs: project_media/{project_id}/packages/{package_id}/…
+PROJECT_MEDIA_ROOT = Path(
+    os.environ.get("PROJECT_MEDIA_ROOT", str(BASE_DIR / "project_media")),
+)
+# Prod: отдельный GCS-бакет на проект (если Project.media_bucket пуст).
+PROJECT_MEDIA_BUCKET_TEMPLATE = os.environ.get(
+    "PROJECT_MEDIA_BUCKET_TEMPLATE",
+    "korovas-dc-{project_id}",
+)
+
+PROJECT_GIT_CACHE_ROOT = Path(
+    os.environ.get("PROJECT_GIT_CACHE_ROOT", str(BASE_DIR / "project_git_cache")),
+)
+# Минимальный интервал между git fetch для одного проекта (секунды). Снижает лаг UI пакетов.
+PROJECT_GIT_PULL_MIN_INTERVAL_SEC = int(os.environ.get("PROJECT_GIT_PULL_MIN_INTERVAL_SEC", "300"))
+
+# Per-project SQLite: пакеты + pipeline (project.sqlite3 в PROJECT_DB_ROOT/<project_id>/).
+PROJECT_DB_ROOT = Path(os.environ.get("PROJECT_DB_ROOT", str(BASE_DIR / "project_db")))
 
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
 
-# Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id, если он есть в БД.
+# Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id
+# в mobile_projects, если проект есть в БД. admin_projects назначаются вручную в админке.
 DEFAULT_COLLECTOR_PROJECT_ID = (
     os.environ.get("DEFAULT_COLLECTOR_PROJECT_ID", "").strip() or "simple-photo-2026"
 )
@@ -160,6 +181,31 @@ elif _firebase_flag in ("1", "true", "yes", "on"):
     FIREBASE_AUTH_ENABLED = True
 else:
     FIREBASE_AUTH_ENABLED = _firebase_has_credentials
+
+# Проверка ID token (Admin SDK): отзыв токенов — опционально (часто ломает dev без сети к Google).
+FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
+FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
+
+# Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web (e8-gke).
+FIREBASE_WEB_CONFIG = {
+    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ"),
+    "authDomain": os.environ.get("FIREBASE_WEB_AUTH_DOMAIN", "e8-gke.firebaseapp.com"),
+    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "e8-gke"),
+    "storageBucket": os.environ.get(
+        "FIREBASE_WEB_STORAGE_BUCKET",
+        "e8-gke.firebasestorage.app",
+    ),
+    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "59903871663"),
+    "appId": os.environ.get(
+        "FIREBASE_WEB_APP_ID",
+        "1:59903871663:android:83c40cfe504ef60952225a",
+    ),
+}
 
 ASSETS_CONFIG_ROOT = Path(
     os.environ.get(
@@ -213,3 +259,6 @@ CORS_ALLOW_HEADERS = (
 
 # Не требуем cookie для API; при необходимости кук можно включить и настроить CORS_ALLOW_CREDENTIALS.
 CORS_ALLOW_CREDENTIALS = False
+
+# Same-origin /ui SPA uses session cookies (not CORS).
+SESSION_COOKIE_SAMESITE = "Lax"

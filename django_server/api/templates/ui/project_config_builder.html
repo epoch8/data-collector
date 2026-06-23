@@ -14,7 +14,7 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">Конфигурация: визуальный редактор</h1>
-    <p class="ui-page-sub mb-0">Поля и сценарий (flow) — те же правила, что в мобильном клиенте. Превью показывает порядок экранов и подписи полей.</p>
+    <p class="ui-page-sub mb-0">Поля задаются <strong>внутри каждого экрана</strong> (карточки «Экран 1», «Экран 2»…), а не отдельной таблицей. Финальный экран «Проверка и отправка» обязателен и всегда в конце.</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
     <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>Только JSON</a>
@@ -28,28 +28,6 @@
 </div>
 {% endif %}
 
-<div class="card border-secondary mb-4 builder-help-card">
-  <div class="card-body py-3 px-4">
-    <h2 class="h6 mb-3 text-white"><i class="bi bi-signpost-2 me-2"></i>С чего начать</h2>
-    <div class="row g-3">
-      <div class="col-md-4">
-        <div class="small text-uppercase ui-muted mb-1">Шаг 1</div>
-        <p class="small mb-0"><strong>Поля.</strong> Описываете всё, что может понадобиться на экранах: идентификатор, тип, подписи. Это справочник; что реально показать и в каком порядке — решает сценарий.</p>
-      </div>
-      <div class="col-md-4">
-        <div class="small text-uppercase ui-muted mb-1">Шаг 2</div>
-        <p class="small mb-0"><strong>Сценарий.</strong> Собираете экраны: шаг <code>scroll_form</code> = один скролл-экран и список полей на нём; при необходимости — финальный <code>review</code>. Каждое поле из таблицы должно встретиться ровно в одном шаге.</p>
-      </div>
-      <div class="col-md-4">
-        <div class="small text-uppercase ui-muted mb-1">Шаг 3</div>
-        <p class="small mb-0"><strong>Проверка и сохранение.</strong> «Проверить» — валидация без записи. Картинки для инструкций — на <a href="{% url 'ui_project_media' project.project_id %}">странице «Файлы»</a> этого проекта.</p>
-      </div>
-    </div>
-    <hr class="border-secondary my-3 opacity-50">
-    <p class="small ui-muted mb-0"><strong>Сценарий:</strong> только <code>scroll_form</code> и <code>review</code>. Объект <code>config.ui</code> (подписи в приложении) правьте во вкладке <strong>JSON</strong> или в режиме «Только JSON».</p>
-  </div>
-</div>
-
 <div id="builder-app"
      class="builder-app"
      data-project-id="{{ project.project_id }}"
@@ -61,65 +39,43 @@
     <input type="hidden" name="raw_json" id="id_raw_json" value="">
     <div class="row g-4">
       <div class="col-xl-7">
-        <div class="card p-4 mb-3">
-          <div class="row g-3">
-            <div class="col-md-6">
-              <label class="form-label" for="b-name">Название проекта</label>
+        <div class="card p-3 p-md-4 mb-3">
+          <div class="row g-3 align-items-end">
+            <div class="col-md-7">
+              <label class="form-label mb-1" for="b-name">Название проекта</label>
               <input type="text" class="form-control" id="b-name" name="name_meta" autocomplete="off">
-              <div class="form-text ui-muted">Пишется в корень JSON как <code>name</code> при сохранении.</div>
             </div>
-            <div class="col-md-4">
-              <label class="form-label" for="b-version">Версия (JSON)</label>
+            <div class="col-md-3">
+              <label class="form-label mb-1" for="b-version">Версия</label>
               <input type="text" class="form-control" id="b-version" autocomplete="off">
-              <div class="form-text ui-muted">Поле <code>version</code> в JSON.</div>
-            </div>
-            <div class="col-md-4">
-              <label class="form-label" for="id_config_version">config_version (БД)</label>
-              <input class="form-control" id="id_config_version" name="config_version" value="{{ config_version }}" placeholder="Пусто = авто">
             </div>
           </div>
         </div>
 
-        <ul class="nav nav-tabs border-secondary mb-0" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="tab-fields-btn" data-bs-toggle="tab" data-bs-target="#tab-fields" type="button" role="tab">Поля</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-flow-btn" data-bs-toggle="tab" data-bs-target="#tab-flow" type="button" role="tab">Сценарий</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="tab-json-btn" data-bs-toggle="tab" data-bs-target="#tab-json" type="button" role="tab">JSON</button>
-          </li>
-        </ul>
-        <div class="tab-content border border-secondary border-top-0 rounded-bottom p-3 p-md-4 mb-3" style="background: var(--ui-surface, #111a24);">
-          <div class="tab-pane fade show active" id="tab-fields" role="tabpanel">
-            <p class="small ui-muted mb-2">Заполните поля: у типа <strong>instruction</strong> только Markdown в блоке под строкой; у остальных — колонки строки (в т.ч. title).</p>
-            <div class="table-responsive ui-table-card mb-3">
-              <table class="table table-sm align-middle mb-0">
-                <thead><tr><th>field_id</th><th>type</th><th>title</th><th>instructions</th><th class="text-center" title="validation.required">Обяз.</th><th></th></tr></thead>
-                <tbody id="builder-fields-body"></tbody>
-              </table>
-            </div>
-            <button type="button" class="btn btn-outline-light btn-sm" id="builder-add-field"><i class="bi bi-plus-lg me-1"></i>Добавить поле</button>
-          </div>
-          <div class="tab-pane fade" id="tab-flow" role="tabpanel">
-            <p class="small ui-muted mb-2">Порядок карточек = порядок экранов. Смена «типа экрана» перестраивает поля шага. Удаление шага — корзина справа вверху карточки.</p>
-            <div id="builder-steps"></div>
-            <button type="button" class="btn btn-outline-light btn-sm mt-2" id="builder-add-step"><i class="bi bi-plus-lg me-1"></i>Добавить шаг</button>
-          </div>
-          <div class="tab-pane fade" id="tab-json" role="tabpanel">
-            <p class="small ui-muted mb-2">Синхронизируется с редактором. Ручные правки здесь перезапишутся при переключении вкладок, если не обновить страницу.</p>
-            <textarea class="form-control json-block font-monospace" rows="22" readonly id="builder-json-readonly"></textarea>
-          </div>
+        <div class="builder-canvas-head d-flex align-items-center justify-content-between mb-2">
+          <h2 class="h6 mb-0 text-white"><i class="bi bi-diagram-3 me-2"></i>Сценарий: экраны и поля</h2>
+          <span class="small ui-muted d-none d-md-inline"><i class="bi bi-grip-vertical me-1"></i>тяните за ручку, чтобы менять порядок</span>
         </div>
 
-        <div id="builder-errors" class="mb-3"></div>
+        <div id="builder-boot-error" class="alert alert-danger py-2 small mb-2 d-none" role="alert"></div>
+
+        <div id="builder-steps" class="builder-steps">
+          {% include "ui/_builder_steps_ssr.html" %}
+        </div>
+
+        <div id="builder-errors" class="my-3"></div>
+
+        <details class="builder-json-details mb-3">
+          <summary class="small ui-muted"><i class="bi bi-braces me-1"></i>Показать итоговый JSON (только чтение)</summary>
+          <textarea class="form-control json-block font-monospace mt-2" rows="18" readonly id="builder-json-readonly"></textarea>
+        </details>
 
         <div class="d-flex flex-wrap gap-2">
-          <button type="button" class="btn btn-outline-light" id="builder-btn-validate"><i class="bi bi-shield-check me-1"></i>Проверить без сохранения</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить в БД</button>
+          <button type="button" class="btn btn-outline-light" id="builder-btn-validate"><i class="bi bi-shield-check me-1"></i>Проверить</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить в Git</button>
         </div>
       </div>
+
       <div class="col-xl-5">
         <div class="builder-preview-sticky">
           <div class="ui-card-title mb-2"><i class="bi bi-phone me-1"></i>Превью приложения</div>
@@ -131,7 +87,18 @@
             </div>
             <div class="builder-preview-body" id="builder-preview-steps"></div>
           </div>
-          <p class="small ui-muted mt-3 mb-0">Это упрощённая схема экранов, не пиксель-в-пиксель Flutter. Ошибки логики ловит кнопка «Проверить» (те же правила, что у клиента при открытии сценария).</p>
+          <div class="card border-secondary mt-3 builder-help-card">
+            <div class="card-body py-3 px-3">
+              <div class="small mb-2"><i class="bi bi-lightbulb me-1 text-info"></i><strong>Как пользоваться</strong></div>
+              <ul class="small ui-muted mb-0 ps-3">
+                <li>Кнопки под экраном — добавить поле нужного типа.</li>
+                <li>Тяните <i class="bi bi-grip-vertical"></i> у поля — порядок и перенос между экранами.</li>
+                <li>Тяните <i class="bi bi-grip-vertical"></i> у шапки экрана — порядок экранов.</li>
+                <li><i class="bi bi-lock-fill"></i> «Проверка и отправка» — финальный экран.</li>
+                <li>«Проверить» — валидация без сохранения.</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -139,5 +106,6 @@
 </div>
 {% endblock %}
 {% block extra_js %}
-<script src="{% static 'ui/project_builder.js' %}"></script>
+<script src="{% static 'ui/sortable.min.js' %}"></script>
+<script src="{% static 'ui/project_builder.js' %}?v=5"></script>
 {% endblock %}

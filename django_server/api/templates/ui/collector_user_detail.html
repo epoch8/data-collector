@@ -11,30 +11,57 @@
 {% block content %}
 <div class="ui-page-head">
   <div>
-    <h1 class="ui-page-title">Доступ к проектам</h1>
+    <h1 class="ui-page-title">Права доступа</h1>
     <p class="ui-page-sub mb-0"><code>{{ collector_user.firebase_uid }}</code>{% if collector_user.email %} · {{ collector_user.email }}{% endif %}</p>
   </div>
 </div>
 <div class="ui-table-card p-4">
   <form method="post">
     {% csrf_token %}
-    <p class="text-secondary small mb-3">Отметьте проекты, которые пользователь видит в мобильном приложении и в которые может загружать пакеты.</p>
-    <div class="row row-cols-1 row-cols-md-2 g-2 mb-4">
-      {% for p in all_projects %}
-      <div class="col">
-        <div class="form-check">
-          <input class="form-check-input" type="checkbox" name="projects" value="{{ p.project_id }}" id="proj_{{ p.project_id }}"
-            {% if p.project_id in selected_project_ids %}checked{% endif %}>
-          <label class="form-check-label" for="proj_{{ p.project_id }}">
-            <span class="fw-medium">{{ p.name }}</span>
-            <span class="text-secondary small d-block"><code>{{ p.project_id }}</code></span>
-          </label>
+
+    <div class="mb-4 pb-4 border-bottom border-secondary-subtle">
+      <h2 class="h6 mb-1"><i class="bi bi-phone me-1"></i>Мобильное приложение</h2>
+      <p class="text-secondary small mb-3">Каталог проектов и загрузка пакетов через API <code>/v1/…</code>.</p>
+      <div class="row row-cols-1 row-cols-md-2 g-2">
+        {% for p in all_projects %}
+        <div class="col">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="mobile_projects" value="{{ p.project_id }}" id="mobile_{{ p.project_id }}"
+              {% if p.project_id in selected_mobile_project_ids %}checked{% endif %}>
+            <label class="form-check-label" for="mobile_{{ p.project_id }}">
+              <span class="fw-medium">{{ p.name }}</span>
+              <span class="text-secondary small d-block"><code>{{ p.project_id }}</code></span>
+            </label>
+          </div>
         </div>
+        {% empty %}
+        <p class="ui-muted">В системе ещё нет проектов — создайте их в разделе «Проекты».</p>
+        {% endfor %}
       </div>
-      {% empty %}
-      <p class="ui-muted">В системе ещё нет проектов — создайте их в разделе «Проекты».</p>
-      {% endfor %}
     </div>
+
+    <div class="mb-4">
+      <h2 class="h6 mb-1"><i class="bi bi-window-sidebar me-1"></i>Client-admin</h2>
+      <p class="text-secondary small mb-3">
+        Веб-пакеты <code>/ui/packages/</code>: пользователь входит через <strong>Firebase</strong> (тот же email)
+        и видит только отмеченные проекты и их пакеты.
+      </p>
+      <div class="row row-cols-1 row-cols-md-2 g-2">
+        {% for p in all_projects %}
+        <div class="col">
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="admin_projects" value="{{ p.project_id }}" id="admin_{{ p.project_id }}"
+              {% if p.project_id in selected_admin_project_ids %}checked{% endif %}>
+            <label class="form-check-label" for="admin_{{ p.project_id }}">
+              <span class="fw-medium">{{ p.name }}</span>
+              <span class="text-secondary small d-block"><code>{{ p.project_id }}</code></span>
+            </label>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
     <button type="submit" class="btn btn-primary"><i class="bi bi-check2 me-1"></i>Сохранить</button>
     <a class="btn btn-outline-secondary ms-2" href="{% url 'ui_collector_user_list' %}">К списку</a>
   </form>

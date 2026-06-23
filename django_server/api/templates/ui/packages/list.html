@@ -1,0 +1,114 @@
+{% extends "ui/base.html" %}
+{% load static %}
+{% block title %}Пакеты{% endblock %}
+{% block extra_head %}<link href="{% static 'ui/packages.css' %}" rel="stylesheet">{% endblock %}
+{% block breadcrumb %}
+<nav class="ui-breadcrumb" aria-label="Навигация">
+  <ol class="breadcrumb mb-0">
+    {% if is_staff %}<li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>{% endif %}
+    <li class="breadcrumb-item active" aria-current="page">Пакеты</li>
+  </ol>
+</nav>
+{% endblock %}
+{% block content %}
+<div class="ui-page-head">
+  <div>
+    <h1 class="ui-page-title">Пакеты</h1>
+    <p class="ui-page-sub mb-0">До 500 последних сессий приёма{% if selected_project %} · <strong>{{ selected_project.name }}</strong>{% endif %}.</p>
+  </div>
+</div>
+
+{% if projects %}
+<form id="pkgFilters" method="get" class="pkg-filter card p-3 p-md-4 mb-4">
+  <div class="row g-3 align-items-start">
+    <div class="col-12 col-lg-4">
+      <label class="pkg-filter__label" for="fProject">Проект</label>
+      <select class="form-select" id="fProject" name="project" data-autosubmit>
+        {% for p in projects %}
+        <option value="{{ p.project_id }}" {% if p.project_id == project_id %}selected{% endif %}>{{ p.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-12 col-lg-8">
+      <label class="pkg-filter__label">Поиск</label>
+      <div class="d-flex flex-wrap align-items-center gap-2">
+        <div class="btn-group pkg-segment" role="group" aria-label="Режим поиска">
+          <input type="radio" class="btn-check" name="mode" id="modeField" value="field" {% if f_mode == 'field' %}checked{% endif %} data-autosubmit {% if not search_fields %}disabled{% endif %}>
+          <label class="btn btn-sm" for="modeField">По полю</label>
+          <input type="radio" class="btn-check" name="mode" id="modeMeta" value="meta" {% if f_mode == 'meta' %}checked{% endif %} data-autosubmit>
+          <label class="btn btn-sm" for="modeMeta">ID / email</label>
+        </div>
+
+        {% if f_mode == 'field' and search_fields %}
+        <select class="form-select form-select-sm w-auto" name="field" data-autosubmit>
+          {% for f in search_fields %}
+          <option value="{{ f.field_id }}" {% if f.field_id == f_field %}selected{% endif %}>{{ f.title }}{% if f.type == 'datetime' %} (дата){% endif %}</option>
+          {% endfor %}
+        </select>
+        {% endif %}
+
+        {% if is_datetime_field %}
+        <input type="date" class="form-control form-control-sm w-auto" name="date" value="{{ f_date }}" data-autosubmit>
+        {% if f_date %}<a class="btn btn-sm btn-outline-secondary" href="?{% if project_id %}project={{ project_id }}&{% endif %}mode={{ f_mode }}&field={{ f_field }}&phase={{ f_phase }}">Сбросить дату</a>{% endif %}
+        {% else %}
+        <input type="search" class="form-control form-control-sm flex-grow-1" name="q" value="{{ f_q }}"
+               placeholder="{% if f_mode == 'field' and selected_field %}Значение: {{ selected_field.title }}…{% else %}UUID или email…{% endif %}"
+               style="min-width:180px;">
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+    <span class="pkg-filter__label mb-0 me-1">Статус</span>
+    {% for chip in phase_chips %}
+    <button type="button" class="pkg-chip {% if chip.active %}pkg-chip--active{% endif %}" data-phase="{{ chip.id }}">{{ chip.label }}</button>
+    {% endfor %}
+    <input type="hidden" name="phase" id="fPhase" value="{{ f_phase }}">
+  </div>
+</form>
+
+<div class="pkg-list-meta">Показано <strong>{{ rows|length }}</strong> из {{ total }}</div>
+
+{% if rows %}
+<div class="ui-table-card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0 pkg-table">
+      <thead>
+        <tr>
+          <th>Пакет</th>
+          {% if show_field_column %}<th>{{ selected_field.title }}</th>{% endif %}
+          <th>Статус</th>
+          <th>Дата</th>
+          <th class="d-none d-md-table-cell">Загрузил</th>
+          <th class="text-end"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td><a href="{{ r.url }}" class="pkg-table__id font-monospace">{{ r.short_id }}</a></td>
+          {% if show_field_column %}<td class="ui-muted">{{ r.field_value|default:"—" }}</td>{% endif %}
+          <td>{% include 'ui/_phase_badge.html' with phase=r.phase label=r.phase_label %}</td>
+          <td class="ui-muted small" title="{{ r.created_at }}">{{ r.created_at|slice:":16" }}</td>
+          <td class="ui-muted small d-none d-md-table-cell">{{ r.uploader_email|default:"—" }}</td>
+          <td class="text-end">
+            <button type="button" class="btn btn-sm btn-outline-light pkg-copy" data-copy="{{ r.package_id }}" title="Копировать ID"><i class="bi bi-clipboard"></i></button>
+            <a class="btn btn-sm btn-outline-light" href="{{ r.url }}">Открыть<i class="bi bi-arrow-right ms-1"></i></a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="card p-5 text-center ui-muted">Нет пакетов по выбранному фильтру.</div>
+{% endif %}
+
+{% else %}
+<div class="card p-5 text-center ui-muted">Нет доступных проектов.</div>
+{% endif %}
+{% endblock %}
+{% block extra_js %}<script src="{% static 'ui/packages_list.js' %}"></script>{% endblock %}

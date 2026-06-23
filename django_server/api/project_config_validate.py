@@ -99,6 +99,21 @@ def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]
         errs.append(str(e))
         return errs
 
+    # Шаг review обязателен и должен быть последним: только на нём клиент отправляет пакет.
+    review_count = kinds.count("review")
+    if review_count == 0:
+        errs.append(
+            "Нужен шаг review в конце сценария — без него клиент не может отправить пакет.",
+        )
+    elif review_count > 1:
+        errs.append("Шаг review должен быть ровно один (он завершает сценарий).")
+    if kinds and kinds[-1] != "review":
+        errs.append("Шаг review должен быть последним в сценарии.")
+
+    scroll_count = kinds.count("scroll_form")
+    if scroll_count == 0:
+        errs.append("Нужен хотя бы один шаг scroll_form с полями для сбора.")
+
     field_step: dict[str, str] = {}
 
     for st, k in zip(steps, kinds):

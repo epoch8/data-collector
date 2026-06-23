@@ -1,0 +1,22 @@
+{
+
+  "version": 1,
+  "join_key": "manifest_blob_key",
+
+  "layers": [
+    {
+      "id": "yolo",
+      "label": "YOLO",
+      "plugin": "yolo_detection",
+      "table": "yolo_detection",
+      "palette": "yolo",
+      "default_visible": true,
+
+      "include_classes": [0],
+
+      "classes": {
+        "0": { "name": "toy car", "color": "#f59e0b" }
+      }
+    }
+  ]
+}
