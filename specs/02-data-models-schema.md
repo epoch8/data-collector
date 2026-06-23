@@ -1,65 +1,127 @@
 # Data Models & Config Schema
 
-## 1. Project Schema
+Статус: **актуально** (июнь 2026). Источник правды для парсинга на клиенте: `lib/models/project_config.dart`, `collection_flow_resolver.dart`.
+
+## 1. Project JSON (корень файла)
+
+Файл `collector/config.json` в Git-репозитории проекта (или bundled `assets/config/*.json` для офлайн-демо).
+
 ```json
 {
-  "id": "proj_123",
+  "id": "korovas-2026",
   "name": "Korovas RGB-D Capture",
   "version": "1.0",
   "config": {
-    "collection_flow": "korovas",
-    "fields": [ /* See §2; omit collection_flow for a single-scroll wizard */ ]
+    "fields": [ /* см. §2 */ ],
+    "flow": {
+      "steps": [ /* см. §3 */ ]
+    },
+    "ui": { /* опционально, см. json-driven-collection-ui.md */ }
   }
 }
 ```
 
-- **`collection_flow`** (optional): приложение выбирает сценарий UI. Значение `korovas` — пошаговый поток (анкета → справка → N ракурсов `camera_photo` → проверка), при этом поля по-прежнему задаются в `fields` с приоритетами (см. §2.2).
+- **`id`** — совпадает с `project_id` в Django и в URL API.
+- **`version`** — семантическая версия для отображения; серверная «версия конфига» для кэша — Git SHA (`last_synced_sha` → `config_version` в каталоге).
 
-## 2. Config Collection Schema (Draft)
-The `config` defines a declarative list of fields that must be collected. The order and display (e.g., a wizard versus an open "to-do list") are orchestrated by the App based on the field's `priority`. This supports both strict sequential guided flows and flexible, out-of-order data collection scenarios.
+## 2. Поля (`config.fields`)
 
-### 2.1 Basic fields
-Поля задаются в `fields` с типом `type` (см. таблицу ниже). Поддерживаются только **`text_input`**, **`datetime`**, **`instruction`**, **`camera_photo`**.
+Справочник всех полей сбора. Ключи в JSON: **`field_id`**, **`type`**, **`title`**, **`instructions`**, опционально **`validation`**, **`multiple`** (для `camera_photo`).
 
-**JSON keys** в конфиге: `field_id`, `collection_flow` (snake_case), остальные поля — как в примерах ниже.
+Поддерживаемые типы:
 
-### 2.2 Korovas flow & extra types (app)
-Для `collection_flow: "korovas"` приложение интерпретирует:
-
-| `type` | `priority` (типично) | Назначение |
-|--------|----------------------|------------|
-| `datetime` | 1–99 | Дата/время скана |
-| `text_input` | 1–99 | Текстовые поля анкеты |
-| `instruction` | 100–199 | Экран справки (без записи в payload) |
-| `camera_photo` | 200–399 | Ракурс съёмки; значение в state — массив путей к файлам |
-
-Порядок шагов съёмки = сортировка `camera_photo` по `priority`. Имена полей в сохранённом `data` совпадают с `field_id` (например `cow_identifier`, `pose_1`).
+| `type` | Значение в payload | Примечание |
+|--------|-------------------|------------|
+| `text_input` | строка | `validation.required` |
+| `datetime` | ISO 8601 строка | |
+| `instruction` | не пишется в payload | Markdown в `instructions`; картинки из `collector/media/` |
+| `camera_photo` | map path → metadata | `multiple` + `min_items`; см. §5 |
 
 ```json
 {
-  "fields": [
-    {
-      "field_id": "cow_identifier",
-      "priority": 10,
-      "type": "text_input",
-      "title": "Cow Identifier",
-      "instructions": "Enter the unique string identifier for the cow.",
-      "validation": { "required": true }
-    },
-    {
-      "field_id": "scan_notes",
-      "priority": 20,
-      "type": "text_input",
-      "title": "Notes",
-      "instructions": "Optional short notes.",
-      "validation": {}
-    }
-  ]
+  "field_id": "cow_identifier",
+  "type": "text_input",
+  "title": "Идентификатор",
+  "instructions": "Уникальный код коровы.",
+  "validation": { "required": true }
 }
 ```
 
-## 3. Package Payload (Output)
-As outlined deeply in `07-package-payload-structure.md`, the output payload strictly separates structured JSON data from binary blobs. The `payload.json` inside the permanent package directory behaves as a manifest:
+## 3. Сценарий (`config.flow.steps`)
+
+**Только два типа экранов** (legacy `form` / `instruction` / `camera_pose` удалены):
+
+| `screen` | Назначение |
+|----------|------------|
+| `scroll_form` | Один скролл-экран; поля задаются **`field_ids`** (порядок = порядок на экране). |
+| `review` | Финальная проверка перед сохранением пакета. |
+
+Правила валидации (сервер + клиент):
+
+- Каждое поле из `fields` должно встретиться **ровно в одном** шаге `scroll_form`.
+- У `scroll_form` — непустой `field_ids`.
+- Опционально у шага: `form_title` (подпись на review), `cow_id_hints`, `cow_id_field_id`.
+
+```json
+{
+  "flow": {
+    "steps": [
+      {
+        "id": "main",
+        "screen": "scroll_form",
+        "form_title": "Анкета",
+        "field_ids": ["cow_identifier", "scan_notes", "pose_front"]
+      },
+      {
+        "id": "check",
+        "screen": "review"
+      }
+    ]
+  }
+}
+```
+
+Гайд для авторов: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md).
+
+## 4. Django ORM (каталог платформы)
+
+`django_server/api/models.py`:
+
+| Модель | Назначение |
+|--------|------------|
+| **CollectorUser** | `firebase_uid`, `email`; M2M `mobile_projects` (API `/v1/*`), M2M `admin_projects` (client-admin `/ui/packages/`) |
+| **GitCredential** | SSH deploy key (Fernet-шифрование приватного ключа) |
+| **Project** | `project_id` (PK), `name`, `git_remote`, `git_default_ref`, `git_credential`, `last_synced_sha`, `database_uri`, `database_options_encrypted`, `storage_uri`, `storage_options_encrypted`, deprecated `media_bucket` |
+
+Конфиг проекта **не хранится** в Django ORM.
+
+## 5. Per-project DB (SQLAlchemy)
+
+Таблицы в БД проекта (`api/project_db.py`, миграции Alembic):
+
+**Приём пакетов:**
+
+- `package_session` — фазы `awaiting_blobs` / `ready_to_commit` / `completed` / `failed`
+- `uploaded_blob` — логический путь + `storage_path` относительно `storage_uri`
+- `package_field_change` — changelog правок манифеста в админке
+
+**Pipeline (заполняется импортом / внешними job, не мобильным upload):**
+
+- `cow_keypoint_annotation`, `cow_inference_result`, `yolo_detection`, `depth_map`, `cvat_link`
+
+## 6. Flutter local models
+
+| Слой | Файл | Содержимое |
+|------|------|------------|
+| Конфиг | `project_config.dart` | `Project`, `ProjectConfig`, `ConfigField`, `CollectionFlowDecl` |
+| Пакет (DTO) | `package.dart` | `CollectedPackage` |
+| Локальный индекс | `core/storage/database.dart` (Drift) | `packages`: `id`, `projectId`, `status`, `dataJson`, `serverDeliveryState`, `serverDeliveryError` (schema v3) |
+
+## 7. Package payload (манифест)
+
+Структура каталога и JSON — [07-package-payload-structure.md](07-package-payload-structure.md).
+
+Минимальный пример `payload.json`:
 
 ```json
 {
@@ -74,5 +136,4 @@ As outlined deeply in `07-package-payload-structure.md`, the output payload stri
 }
 ```
 
-**Notes on Blob Resolution:**
-- Photo paths in `data` reference *relative paths* inside the local `/blobs/` subdirectory of the package where applicable.
+Пути к фото в `data` — **относительные** (`blobs/...`) после materialization. На сервере при `PUT manifest` добавляется `submitted_by: { firebase_uid, email }`.

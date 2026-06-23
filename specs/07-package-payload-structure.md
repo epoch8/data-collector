@@ -1,101 +1,96 @@
-# 07 - Package Payload Structure (To-Be)
+# 07 — Package Payload Structure
+
+Статус: **актуально** (июнь 2026). Реализация materializer: `lib/features/collection/logic/materialize_local_package.dart`.
 
 ## 1. Overview
-The "Collected Package" is the atomic unit of data collected by the application and uploaded to the server. While Stage 1 implemented a simple, flat map (`Map<String, dynamic>`) for data fields, the future architecture requires a robust, hierarchical structure capable of modeling complex relationships, sub-datasets, and massive binary payloads (like photos, depth maps, and videos).
 
-This document outlines the **To-Be** design for package payloads.
+**Package** — атомарная единица сбора: JSON-манифест + бинарные файлы. Структурированные данные отделены от blobs; Base64 в JSON **запрещён**.
 
-## 2. Structure Philosophy
-To support both structured data and heavy binaries efficiently (especially on flaky mobile connections):
-- **Data vs. Blobs**: Structured data is kept completely distinct from binary blobs.
-- **No Base64**: Binaries are strictly explicitly forbidden from being Base64-encoded into the JSON. They are treated as separate physical files.
-- **Referencing**: The JSON data acts like a manifest. It contains relative pointers (URI/Paths) pointing to the specific binary files belonging to the package.
+## 2. Directory layout (на устройстве и на сервере)
 
-## 3. Directory Representation
-A complete package on the local device (in queued/completed state ready for upload) will mimic a strict directory structure:
 ```text
-/packages/<package_uuid>/
-  ├── payload.json            # The structured data containing metadata and answers
+packages/<package_id>/
+  ├── payload.json       # манифест (на сервере — PUT manifest)
   └── blobs/
-      ├── side_photo_1.jpg    
-      ├── rgb_angle_1.png     
-      └── depth_angle_1.raw   
+      ├── pose_front.jpg
+      └── ...
 ```
 
-## 4. The JSON Payload (`payload.json`)
-The JSON structure will support hierarchical scoping. Instead of just root-level mappings, fields can be complex objects or arrays of complex objects.
+На сервере корень — `storage_uri`; относительный путь в БД: `packages/{package_id}/blobs/...`.
 
-### 4.1. Core Package Metadata
-The root of the JSON should contain standard tracking info:
-- `package_id`: A universally unique identifier.
-- `project_id`: The identifier of the governing configuration schema.
-- `created_at`: Timestamp of package creation.
-- `data`: The actual nested payload captured by the dynamic form fields.
+## 3. JSON payload (`payload.json`)
 
-### 4.2. Complex Sub-Datas (Object Arrays)
-To address complex collection scenarios—like collecting multiple photos of an object where each capture needs its own associated comment—the schema introduces **Object Arrays** (or Collections).
+### 3.1 Корневые поля
 
-Instead of treating a field like `camera_photo` simply as an array of strings (paths), a "Collection Widget" will output an array of rich objects tying multiple input parameters together per item.
+| Поле | Описание |
+|------|----------|
+| `package_id` | UUID от клиента |
+| `project_id` | Должен совпадать с URL API |
+| `status` | `completed` при submit |
+| `created_at` | ISO 8601 |
+| `data` | Ответы полей конфига + метаданные камеры |
 
-**Scenario**: Collect multiple photos of a cow, and for each capture, explicitly attach a typed comment.
+### 3.2 Значения полей в `data`
 
-**To-Be Data Representation:**
+| Тип поля | Формат в `data` |
+|----------|-----------------|
+| `text_input` | строка |
+| `datetime` | ISO строка |
+| `camera_photo` | `Map<relativePath, shotMetadata>` |
+
+`instruction` в payload **не попадает**.
+
+### 3.3 Camera metadata (реализовано)
+
+После materialization:
+
+- **`data.camera_session`** — компактный снимок сессии: `device`, `native_back_camera` без тяжёлого `camera2_characteristics`.
+- **`data.camera_debug`** — полный `camera_capture_context` для отладки.
+
+**Per photo** (каждая запись в map поля `camera_photo`):
+
+- **`frame_camera`** — intrinsics для сохранённого файла: `image_width_px`, `image_height_px`, `fx_px`, `fy_px`, `cx_px`, `cy_px`, `focal_length_mm`, `intrinsics_source`, …
+- **`camera_supplement`** — `exif`, `derived`, `notes`.
+- **`collected_at`** — время съёмки.
+
+До submit черновик может держать `camera_capture_context`; materializer переписывает в финальную структуру.
+
+## 4. Lifecycle
+
+### Draft
+
+- Фото во временном кэше ОС / app storage.
+- Riverpod wizard state хранит абсолютные пути для превью.
+
+### Submit (`materializeLocalPackage`)
+
+1. Создать `packages/<package_id>/blobs/`.
+2. Скопировать/переместить файлы, нормализовать имена.
+3. Заменить абсолютные пути на относительные `blobs/...`.
+4. Записать `payload.json`; обновить Drift (`status: completed`, `serverDeliveryState: pending`).
+
+### Upload
+
+См. [06-upload-lifecycle.md](06-upload-lifecycle.md): blobs → manifest → commit.
+
+Сервер при `PUT manifest` добавляет:
+
 ```json
-{
-  "package_id": "pkg_1234567890",
-  "project_id": "korovas-2026",
-  "data": {
-    "cow_identifier": "Bessie-99",
-    "annotated_photos": [
-      {
-        "item_id": "item_001",
-        "image": "blobs/item_001_image.jpg",
-        "comment": "Focus on the left flank.",
-        "timestamp": 1718045123
-      },
-      {
-        "item_id": "item_002",
-        "image": "blobs/item_002_image.jpg",
-        "comment": "Scratch identified here.",
-        "timestamp": 1718045185
-      }
-    ]
-  }
-}
+"submitted_by": { "firebase_uid": "...", "email": "..." }
 ```
 
-### 4.3. Camera intrinsics (primary vs supplement)
+## 5. Будущее (не реализовано)
 
-After package save (materialization), the payload separates **geometry consumers** from **debug dumps**:
+**Object arrays** — коллекции с несколькими полями на элемент (фото + комментарий в одном объекте):
 
-- **`data.camera_session`** — compact session snapshot: `device`, `native_back_camera` **without** `camera2_characteristics` (only numeric intrinsics, sensor size, focal lengths, estimated fx/fy/cx/cy in native pixel-array space).
-- **`data.camera_debug`** — full `camera_capture_context` as captured during the wizard (includes Android `camera2_characteristics` and any legacy blobs).
+```json
+"annotated_photos": [
+  {
+    "item_id": "item_001",
+    "image": "blobs/item_001_image.jpg",
+    "comment": "Focus on the left flank."
+  }
+]
+```
 
-**Per photo blob** (each map entry under a `camera_photo` pose field: path → metadata):
-
-- **`frame_camera`** — primary intrinsics for the **saved image file** (EXIF width/height coordinate system):
-  - `image_width_px`, `image_height_px`
-  - `fx_px`, `fy_px`, `cx_px`, `cy_px` (pinhole K in pixel units for that file)
-  - `focal_length_mm`, `sensor_width_mm`, `sensor_height_mm`, optional `focal_length_35mm_equiv`
-  - `intrinsics_source`: `lens_intrinsic_calibration` | `exif_focal_sensor` | `native_pinhole` | `35mm_equiv` | `fallback_device_db` | `incomplete`
-  - optional `skew`, `lens_distortion`, `image_orientation_exif`
-  - `collected_at` remains alongside at shot level (or duplicate inside `frame_camera` — app writes shot-level `collected_at`).
-
-- **`camera_supplement`** — heavy or alternate data: full **`exif`** map, all **`derived`** focal variants and **`notes`**.
-
-On-device draft state may still use `camera_capture_context` until submit; the materializer rewrites to `camera_session` + `camera_debug` and hoists `exif`/`derived` into `camera_supplement` per shot.
-
-## 5. Binary Blob Handling Lifecycle
-How binary properties like `"image": "blobs/item_001_image.jpg"` are resolved efficiently across the user session:
-
-1. **Draft Phase (Local Capture):**
-   - When a user actively takes a photo in the form, the plugin (`image_picker`) saves it to a generic temporary OS cache (`/data/user/0/com.app/cache/xyz.jpg`).
-   - The immediate Riverpod state temporarily stores this absolute local path so it can be previewed seamlessly on screen.
-2. **Submit Phase ("Save Package"):**
-   - The app dynamically builds a permanent package directory (`/documents/packages/<package_id>`).
-   - It scaffolds a `/blobs/` subfolder.
-   - It **moves/copies** all temporary files designated by the complex object logic into the `/blobs/` directory, normalizing their names (e.g., `blobs/item_001_image.jpg`).
-   - The nested JSON tree is walked, and absolute cache paths are scrubbed and replaced with their *strictly relative blob paths*.
-   - The `payload.json` file is securely written. (Note: SQLite could still independently hold an index of `package_id` and its `status` string for ultra-fast dashboard rendering).
-3. **Upload Phase (Networking):**
-   - Working cohesively with `06-upload-lifecycle.md` and [08-server-api-package-upload.md](08-server-api-package-upload.md), a background queue **first** uploads each file under `/blobs/` (one HTTP request per file, with a per-blob progress ledger), **then** uploads the JSON manifest derived from `payload.json`, **then** calls `commit`. This order avoids server-side manifests that reference missing blobs; uploads are **push** from the client when connectivity exists.
+Текущие конфиги используют плоские `camera_photo` поля по одному ракурсу.

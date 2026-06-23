@@ -1,67 +1,97 @@
-# Data Collector App - Specification Document
+# Data Collector — обзор продукта
 
-## 1. Overview
-The **Data Collector** is a Flutter-based mobile application designed to securely and efficiently collect rich data (photos, videos, and structured metadata) based on dynamic, project-specific configurations. The app packages the collected assets and uploads them to a central backend server. It also allows users to review previously collected data and inspect enriched results (such as ML predictions) returned by the backend.
+Статус: **актуально** (июнь 2026). Реализация: Flutter-клиент + Django-бэкенд (`django_server/`).
 
-## 2. Core Concepts
-* **User:** Ground-truth data collector who logs into the system.
-* **Project:** A specific collection initiative. Users are assigned to one or more projects.
-* **Config:** A dynamic schema attached to a project that dictates *what* data must be collected (e.g., "Take 3 photos of an item, 1 video of it rotating, and enter its serial number"). Authoring reference: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md).
-* **Package:** A compiled unit of work containing the specific media and structured info collected for a single instance according to the Config.
-* **Enriched Data:** Results, annotations, or ML predictions provided by the backend after a Package has been successfully uploaded and processed.
+## 1. Назначение
 
-## 3. Key Features
+**Data Collector** — мобильное приложение (Flutter, Android/iOS, опционально Web) для сбора структурированных данных и медиа по **динамическому конфигу проекта**. Пакеты сохраняются локально и загружаются на сервер. Веб-админка Django (`/ui/`) позволяет управлять проектами, просматривать пакеты и визуализировать pipeline-данные (ML, depth, CVAT).
 
-### 3.1 Authentication & User Management
-* Secure login (email/password, SSO, etc.).
-* Token-based authentication with secure local storage.
-* Graceful handling of expired sessions.
+Продакшен: `https://data-collector-app.korovas.ml.epoch8.dev` — API `/v1/*`, админка `/ui/`.
 
-### 3.2 Projects Dashboard
-* View a list of assigned/available Projects.
-* Display high-level stats (e.g., packages collected today, pending uploads).
-* Sync and cache project definitions and Configs for offline use.
+## 2. Основные сущности
 
-### 3.3 Dynamic Data Collection Flow
-* UI dynamically generated based on the Project's Config.
-* **Guided Collection & Instructions:**
-  * Step-by-step guided flow to walk the user sequentially through the exact data required for a new package.
-  * Clear user instructions and hints can be displayed for each collection step (driven by the project config).
-* **Media Capture:**
-  * Integrated custom camera for photos and videos.
-  * Real-time validation (e.g., length of video, number of required photos).
-* **Structured Info:**
-  * Forms supporting text inputs, dates/times, photos, and related field types from the project config.
-* Local auto-save/draft functionality to prevent data loss during active collection.
+| Сущность | Описание |
+|----------|----------|
+| **User** | Сборщик данных. Аутентификация через **Firebase Email/Password**; на сервере — `CollectorUser` с привязкой к проектам. |
+| **Project** | Инициатива сбора. Каталог в Django DB; **конфиг** — в Git-репозитории (`collector/config.json`). См. [git-backed-projects.md](git-backed-projects.md). |
+| **Config** | JSON-схема: `config.fields` + `config.flow.steps` — что и в каком порядке собирать. Гайд: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md). |
+| **Package** | Единица работы: JSON-манифест + бинарные blobs. Локально — Drift + файловая система; на сервере — per-project DB + fsspec-хранилище. |
+| **Enriched data** | Результаты pipeline (keypoints, YOLO, depth, CVAT) в project DB; визуализация в админке через `collector/viz.json`. |
 
-### 3.4 Packaging & Upload Management
-* Bundling of media files and JSON metadata into a structured payload (Package).
-* Reliable background uploader:
-  * Chunked file uploads for large video files (if supported by backend).
-  * Auto-resume capabilities for lost network connections.
-  * Visual queue showing the status of uploads (Pending, Uploading, Failed, Completed).
+## 3. Ключевые возможности (реализовано)
 
-### 3.5 History & Enriched Data Viewer
-* Browse history of collected Packages within a specific Project.
-* Filter packages by status (Draft, Uploaded, Processed).
-* **Enriched View:** Upon backend processing, the app can fetch ML predictions (e.g., detected objects, OCR results, validation failures) and display them alongside the original package data. This could include drawing bounding boxes over the original uploaded images or showing parsed text.
+### 3.1 Аутентификация
 
-## 4. Technical Architecture (Proposed)
+- Firebase Email/Password на клиенте; `Authorization: Bearer <ID token>` на `/v1/*`.
+- Веб-админка: Django staff (логин без `@`) или Firebase client-admin (только назначенные проекты).
+- Офлайн-режим без `API_BASE_URL`: bundled `assets/config/` без авторизации.
 
-* **Framework:** Flutter (Targeting Android/iOS).
-* **State Management:** Riverpod, BLoC, or Provider (depending on team preference and complexity).
-* **Local Storage & Database:** 
-  * *Relational Data:* drift or sqflite for caching Projects, Configs, and metadata.
-  * *Binary Data:* Local file system for staging photos/videos.
-  * *Key-Value:* `flutter_secure_storage` for auth tokens.
-* **Networking:** `dio` for handling standard REST APIs and complex multipart background uploads with interceptors for auth and retry logic.
-* **Camera:** `camera` plugin for low-level control, or `image_picker` / `record` if standard OS UI is sufficient.
+### 3.2 Проекты и конфиги
 
-## 5. Security & Offline Capabilities
-* **Offline-First Data Entry:** Projects and Configs are cached. Data can be entirely collected and saved locally without an internet connection.
-* **Secure Storage:** Sensitive data and credentials are encrypted.
+- Каталог `GET /v1/projects` с ETag; полный конфиг `GET /v1/projects/{id}/config` (источник — Git, ETag = `last_synced_sha`).
+- Кэш на устройстве: `ApplicationSupport/server_project_cache/`.
+- Медиа инструкций: `GET /v1/projects/{id}/assets/{path}` из `collector/media/` в Git.
 
-## 6. Open Questions / Next Steps
-* **Config Format:** What does the exact JSON schema for the UI Config look like? (e.g., forms rendering engine like JSON Schema).
-* **Enriched Data Tools:** The app will eventually provide a suite of tools for both read-only visualization and active tweaking/correction of the enriched ML data (e.g., modifying bounding boxes). For Stage 1, the app will strictly focus on read-only visualization.
-* **Backend API Approach:** The Backend API will be developed in parallel with the app. The app's needs and network payloads (e.g., chunked uploads, JSON syncing) will dictate and shape the exact API contract.
+### 3.3 Сбор данных
+
+- UI строится из `config.flow.steps`: шаги **`scroll_form`** (все поля шага на одном экране) и опционально **`review`**.
+- Типы полей: `text_input`, `datetime`, `instruction`, `camera_photo`.
+- Локальный черновик и materialization в каталог пакета при submit.
+- Метаданные камеры: `camera_session`, `camera_debug`, `frame_camera`, `camera_supplement` (см. [07-package-payload-structure.md](07-package-payload-structure.md)).
+
+### 3.4 Загрузка на сервер
+
+- Протокол: `POST` сессия → `PUT` blobs → `PUT` manifest → `POST` commit ([08-server-api-package-upload.md](08-server-api-package-upload.md)).
+- Отправка **вручную** с вкладки «Сервер» (`ServerSyncTab`); фоновый workmanager — не реализован.
+- Статусы доставки в Drift: `pending` / `uploading` / `completed` / `failed`.
+
+### 3.5 История и админка
+
+- Локальная история пакетов с индикацией статуса доставки на сервер.
+- Django `/ui/packages/`: список, workspace (Данные / Медиа / Визуализация / Changelog), фильтры, редактирование манифеста.
+
+## 4. Архитектура
+
+```text
+┌─────────────────┐     HTTPS /v1/*      ┌──────────────────────────────────┐
+│  Flutter app    │ ◄──────────────────► │  django_server                   │
+│  Riverpod+Drift │     Firebase Bearer    │  API + /ui/ (Django templates)   │
+└─────────────────┘                        │  Catalog DB (Postgres/SQLite)    │
+                                           │  Per-project: SQLAlchemy + fsspec│
+                                           │  Config: Git cache               │
+                                           └──────────────────────────────────┘
+```
+
+- **Клиент:** Flutter, Riverpod, Drift (SQLite), Dio, GoRouter, Firebase Auth.
+- **Сервер каталога:** Django 5.x ORM — `Project`, `CollectorUser`, `GitCredential`.
+- **Данные проекта:** SQLAlchemy 2.x + Alembic (`database_uri`); blobs через fsspec (`storage_uri`). См. [project-storage-uris.md](project-storage-uris.md).
+- **Конфиг проекта:** Git SSH deploy key → `collector/config.json`, `collector/media/`, `collector/viz.json`.
+
+## 5. Режимы работы клиента
+
+| Режим | Условие | Источник проектов |
+|-------|---------|-------------------|
+| Офлайн / демо | `API_BASE_URL` не задан | `assets/config/projects.json` + bundled JSON |
+| Онлайн | `--dart-define=API_BASE_URL=...` | Только сервер (`ServerProjectCatalog`) |
+
+## 6. Известные ограничения и backlog
+
+См. [todo](todo). Кратко:
+
+- Нет фоновой автозагрузки пакетов (workmanager).
+- Web-клиент: известная проблема с Firebase credentials.
+- Админка: нет удаления пакетов, просмотра сырого JSON, привязки фото к полям формы.
+- Enriched data в мобильном приложении — не реализован (только в веб-админке).
+
+## 7. Связанные документы
+
+| Тема | Файл |
+|------|------|
+| Модели и JSON-схема | [02-data-models-schema.md](02-data-models-schema.md) |
+| Экраны приложения | [03-user-journey-screens.md](03-user-journey-screens.md) |
+| Стек и структура кода | [04-tech-stack-architecture.md](04-tech-stack-architecture.md) |
+| MVP (история) | [05-stage-1-mvp.md](05-stage-1-mvp.md) |
+| Загрузка пакетов | [06-upload-lifecycle.md](06-upload-lifecycle.md), [08-server-api-package-upload.md](08-server-api-package-upload.md) |
+| Доставка конфигов | [09-server-project-config-delivery.md](09-server-project-config-delivery.md) |
+| Git-конфиг | [git-backed-projects.md](git-backed-projects.md) |
+| Хранилища проекта | [project-storage-uris.md](project-storage-uris.md) |

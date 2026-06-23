@@ -1,5 +1,7 @@
 # 9 — Доставка конфигов проектов с сервера (каталог, первый запуск, привязка пакетов)
 
+Статус: **актуально** (июнь 2026). Конфиг — **Git** (`collector/config.json`), не Django DB. См. [git-backed-projects.md](git-backed-projects.md).
+
 Документ описывает **откуда мобильное приложение берёт список проектов и полные JSON-конфиги**, как это согласуется с **созданием таблиц приёмки на сервере**, и **как сервер однозначно понимает проект** при приёме пакета с клиента.
 
 **Связанные документы:** [08-server-api-package-upload.md](08-server-api-package-upload.md) (загрузка пакета, `project_id` в URL), [07-package-payload-structure.md](07-package-payload-structure.md) (`project_id` в `payload.json`), [config/json-driven-collection-ui.md](config/json-driven-collection-ui.md) (модель `Project` и парсинг JSON на клиенте), [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md) (как собирать JSON проекта).
@@ -23,7 +25,7 @@
 |--------|--------|
 | **Каталог проектов** | Список записей `{ project_id, name, config_version, updated_at, … }` для экрана «выбор проекта». |
 | **Полный конфиг** | JSON документ, парсабельный в `Project` на клиенте (как файл `*.json` из `assets/config/`). |
-| **config_version** | Монотонный идентификатор версии конфига на сервере (целое, семвер строкой или UUID релиза — зафиксировать в OpenAPI). |
+| **config_version** | В каталоге — короткий префикс Git SHA (`last_synced_sha[:12]`). Поле `version` в JSON — для отображения в приложении. |
 | **Приём пакета** | Последовательность из спеки `08`: сессия, блобы, манифест, `commit`. |
 
 ---
@@ -41,16 +43,16 @@
 
 ---
 
-## 4. Сервер: от конфига к таблице приёмки
+## 4. Сервер: от конфига к хранилищу приёмки
 
-Цепочка (логическая, порядок шагов должен быть атомарен с точки зрения «проект опубликован»):
+Цепочка (реализовано):
 
-1. **Определение проекта** на сервере: `project_id`, человекочитаемое имя, права, лимиты.
-2. **Сохранение JSON-конфига** (и `config_version`) в хранилище конфигураций.
-3. **Проекция в схему приёма данных:** по полям конфига (и правилам продукта) создаётся или мигрирует **таблица / набор колонок / JSONB-схема** для строк, соответствующих **завершённым** пакетам (`commit` из `08`). Инвариант: пока миграция не успешна, версию конфига **нельзя** отдавать клиентам как «текущую».
-4. **Публикация:** каталог и `GET …/config` начинают отдавать новую версию; старые клиенты с устаревшим кэшем подтягивают обновление по `ETag` / `config_version`.
+1. **Project** в Django: `project_id`, Git remote, deploy key, `database_uri` / `storage_uri`.
+2. **Конфиг** — commit в Git (`collector/config.json`); `git push` обновляет `last_synced_sha`.
+3. **Схема приёма** — фиксированные таблицы SQLAlchemy (`package_session`, `uploaded_blob`, …) в per-project DB; Alembic `upgrade head` при первом обращении / «Проверить хранилище».
+4. **Публикация:** `GET …/config` после `git pull` в кэш; **ETag** = полный SHA; клиент — `If-None-Match` → `304`.
 
-Обратное внимание: **удаление поля** в конфиге не должно ломать уже принятые строки — версионирование схемы БД или мягкая депрекация колонок (отдельная продуктовая политика).
+Автоматической проекции полей конфига в колонки БД **нет** — манифест хранится как JSON; pipeline-таблицы заполняются отдельными импортами.
 
 ---
 
@@ -128,13 +130,13 @@
 1. После `GET /v1/projects` клиент сравнивает `config_version` с кэшем по каждому `project_id`.
 2. Для новых или изменённых — `GET /v1/projects/{id}/config` с `If-None-Match`.
 3. Успешный ответ → запись в локальное хранилище (файл на проект или одна БД-таблица `project_id → json + etag + fetched_at`).
-4. Парсинг в `Project` — тот же код, что для asset-пути; **единственный** источник для UI после синка — кэш с сервера (fallback на встроенные assets допустим только как аварийный режим / демо, если продукт явно разрешает).
+4. Парсинг в `Project` — тот же код, что для asset-пути. При заданном `API_BASE_URL` **только сервер** (`project_providers.dart`); bundled assets — только без API.
 
 ---
 
 ## 10. Порядок взаимодействия (кратко)
 
-1. **Админ** задаёт конфиг на сервере → миграция таблицы приёмки → публикация версии.
+1. **Админ** сохраняет конфиг в Git через `/ui/projects/{id}/config/` → push → новый SHA / ETag.
 2. **Клиент** при старте: auth → каталог → догрузка конфигов → UI.
 3. **Сбор:** пользователь выбирает проект из списка → формируется пакет с `project_id` этого проекта.
 4. **Upload:** все запросы под `/v1/projects/{project_id}/packages/…`; манифест содержит тот же `project_id`.
@@ -165,6 +167,8 @@
 |---------|------------|
 | Маршруты API | `django_server/api/urls.py` |
 | Каталог, конфиг, ассеты | `django_server/api/views.py` — `ProjectsCatalogView`, `ProjectConfigView`, `ProjectAssetGetView` |
-| Импорт проектов из Flutter `assets/config/` в БД | устарело — проекты только через `/ui/projects/new/` и Git (см. `specs/git-backed-projects.md`) |
+| Импорт из `assets/config/` в БД | **удалено** — проекты только через `/ui/projects/new/` + Git |
+| Git sync | `api/project_git.py`, `project_config_service.py` |
+| Per-project storage | `api/project_storage_config.py` — см. `project-storage-uris.md` |
 | Клиент: синк каталога и конфигов, ETag / 304 | `lib/features/projects/server_project_catalog.dart` |
 | Клиент: загрузка пакета по `project_id` из URL и манифеста | `lib/features/collection/logic/package_server_upload.dart` (см. спеку `08`) |

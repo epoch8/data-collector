@@ -1,6 +1,6 @@
 # collector/viz.json — визуализация пакета
 
-Отдельный конфиг в Git-репозитории проекта (не в `collector/config.json`).
+Статус: **актуально** (июнь 2026). Отдельный конфиг в Git-репозитории проекта (не в `collector/config.json`).
 
 ## Путь
 
@@ -57,7 +57,7 @@ Django читает файл из кэша Git после `pull` (как `collec
 | `join_key` | Фиксировано: `manifest_blob_key` — связь строки таблицы с blob пакета |
 | `layers[].id` | Уникальный id слоя в UI |
 | `layers[].plugin` | Id встроенного плагина (см. ниже) |
-| `layers[].table` | Таблица project SQLite |
+| `layers[].table` | Таблица project DB (SQLAlchemy / SQLite или Postgres) |
 | `layers[].palette` | Для `keypoint_korovas`: `gt` \| `inference` (цвета оверлея) |
 | `layers[].default_visible` | Включён ли слой при открытии вкладки |
 
@@ -119,7 +119,7 @@ python manage.py import_yolo_labels <project_id> <package_id> path/to/labels.txt
 ## Когда показывается вкладка «Визуализация»
 
 1. В репо есть валидный `collector/viz.json`
-2. В project SQLite есть хотя бы одна строка для `package_id` в таблице любого слоя
+2. В project DB есть хотя бы одна строка для `package_id` в таблице любого слоя
 
 ## API
 

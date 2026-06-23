@@ -45,10 +45,12 @@ python manage.py runserver
 
 ### Хранение пакетов (per project)
 
-- **Метаданные** — `project_db/{project_id}/project.sqlite3`: таблицы `package_session`, `uploaded_blob`, `package_field_change` + pipeline (yolo, depth, …).
-- **Медиа пакетов** — `project_media/{project_id}/packages/{package_id}/…` (dev) или отдельный GCS-бакет на проект (prod, шаблон `PROJECT_MEDIA_BUCKET_TEMPLATE`, переопределение в `Project.media_bucket`).
-- Миграция с Django DB: `python manage.py migrate_packages_to_project_storage --delete-legacy`, затем `python manage.py migrate`.
-- Если таблицы пакетов уже удалены: `python manage.py recover_legacy_packages` (читает остатки из `db.sqlite3` + `media/pkg/`).
+Метаданные и pipeline — **per-project DB** (`database_uri`, default SQLite в `project_db/{project_id}/`). Blobs — **fsspec** (`storage_uri`, default `project_media/{project_id}/`). См. `specs/project-storage-uris.md`.
+
+- Таблицы: `package_session`, `uploaded_blob`, `package_field_change` + pipeline (yolo, depth, …).
+- Путь blob: `packages/{package_id}/blobs/...` относительно `storage_uri`.
+- Legacy `media_bucket` deprecated → `storage_uri` (`gs://…`).
+- Миграция с Django ORM: `migrate_packages_to_project_storage`, `recover_legacy_packages`.
 
 Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
 

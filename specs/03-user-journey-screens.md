@@ -1,33 +1,87 @@
 # User Journey & Screens
 
-## 1. Authentication Flow
-* **Login Screen:** User enters credentials.
-* *Error Handling:* Invalid credentials flash message.
-* *Success:* Proceed to Dashboard; tokens stored securely.
+Статус: **актуально** (июнь 2026). Код: `lib/main.dart` (GoRouter), `lib/features/*/presentation/`.
 
-## 2. Dashboard & Projects List
-* **Dashboard Screen:** 
-  * Header shows User Profile & Sync Status.
-  * List of assigned `Projects`.
-  * Visual indicator for Projects (e.g., "X packages collected", "Y configs pending update").
-* **Action:** Clicking a Project opens the Project Details Screen.
+## 1. Аутентификация
 
-## 3. Project Details & History
-* **Project Dashboard:**
-  * Tab 1: **History:** List of all packages collected for this project. Shows indicators for (Draft, Pending Upload, Uploaded, Enriched).
-  * Tab 2: **Config Overview:** Brief overview of what this project collects.
-* **Action:** Floating Action Button (FAB) -> `"+" (New Collection)` triggers the Guided Collection Flow.
+| Режим | Поведение |
+|-------|-----------|
+| **Онлайн** (`API_BASE_URL` задан) | `LoginScreen`: email + password → Firebase Auth. Токен автоматически в Dio (`dio_provider.dart`). |
+| **Офлайн** | Логин пропускается; проекты из bundled assets. |
 
-## 4. Data Collection Form (Open Flow)
-* Single scrollable UI ordered by the `Config` schema's priority fields.
-* **Form Layout (Dynamic):**
-  * All required fields are displayed on a single scrollable form.
-  * User can fill out fields out-of-order if they need to.
-  * Inputs: Camera viewfinder, text fields, or selection widgets depending on `type`.
-  * Visual indicators for validation (e.g., green checkmark for completed photo).
-* **Auto-Save:** User can exit at any point; the drafted Package is saved locally.
-* **Action:** Submit -> Validates fields exist, saves Package as "Completed" and optionally triggers the Upload worker.
+Ошибки входа — snackbar. После успеха → Dashboard.
 
-## 5. Enriched Data Viewer
-* Accessible from the History tab in the Project Dashboard.
-* **Visualizing specific steps:** If a photo step has an ML prediction, we display read-only bounding boxes or tags layered over the image.
+## 2. Dashboard (главный экран)
+
+`main.dart` — нижняя навигация с вкладками:
+
+| Вкладка | Экран | Содержимое |
+|---------|-------|------------|
+| **Проекты** | Список `Project` из `projectsProvider` | Карточки проектов; tap → начало сбора |
+| **История** | `HistoryTab` | Локальные пакеты всех проектов; цвет рамки по `serverDeliveryState` |
+| **Сервер** | `ServerSyncTab` | Очередь на загрузку; «Загрузить все» / по одному |
+| **Справка** | `HelpTab` | Статическая справка |
+
+Индикатор синхронизации конфигов — при pull-to-refresh / перезапуске `projectsProvider`.
+
+## 3. Сбор данных
+
+**Вход:** tap на проект → `CollectionFlowScreen(projectId)`.
+
+### 3.1 Один шаг `scroll_form`
+
+Если в конфиге единственный шаг и он `scroll_form` → сразу `ScrollFormCollectionScreen` (все поля шага на одном скролле).
+
+### 3.2 Несколько шагов
+
+`CollectionFlowScreen` + `_FlowStepShell`:
+
+1. Один или несколько шагов **`scroll_form`** — поля из `field_ids` шага.
+2. Опционально **`review`** — сводка перед submit.
+
+Типы виджетов по `field.type`: текст, дата/время, Markdown-инструкция, камера (`camera_photo`).
+
+### 3.3 Submit
+
+- Валидация required-полей.
+- `submitLocalPackage` → materialization (`blobs/` + payload) → Drift, `status: completed`, `serverDeliveryState: pending`.
+- **Автозагрузка на сервер не запускается** — пользователь идёт на вкладку «Сервер».
+
+## 4. Вкладка «Сервер» (outbox)
+
+`ServerSyncTab`:
+
+- Список пакетов с `serverDeliveryState != completed` и `status != draft`.
+- Кнопки массовой и поштучной отправки.
+- Прогресс: `uploading` / `failed` с текстом ошибки.
+- Протокол: см. [08-server-api-package-upload.md](08-server-api-package-upload.md).
+
+## 5. История
+
+`HistoryTab` / детальный просмотр пакета:
+
+| `serverDeliveryState` | Индикация |
+|----------------------|-----------|
+| `pending` | Жёлтый — только на устройстве |
+| `uploading` | В процессе |
+| `completed` | Зелёный — принят сервером |
+| `failed` | Ошибка, можно повторить с вкладки «Сервер» |
+
+Экспорт manifest (share) — `history/` feature.
+
+## 6. Веб-админка (`/ui/`)
+
+Не часть Flutter-приложения; Django templates:
+
+| Роль | Доступ |
+|------|--------|
+| Staff | Проекты, пользователи, все пакеты |
+| Client-admin (Firebase) | Только пакеты назначенных проектов |
+
+Workspace пакета: **Данные / Медиа / Визуализация / История изменений**.
+
+## 7. Не реализовано в мобильном клиенте
+
+- Enriched / ML viewer (bounding boxes на устройстве) — только в админке.
+- Фоновая загрузка при появлении сети.
+- Видеозахват.
