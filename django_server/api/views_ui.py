@@ -718,7 +718,7 @@ def package_list(request):
     )
 
 
-def _enrich_blob(project_id, package_id, blob, form_blob_paths):
+def _enrich_blob(project_id, package_id, blob, form_blob_paths, *, field_id="", field_label=""):
     path = blob["logical_path"]
     return {
         "blob_id": blob["blob_id"],
@@ -727,11 +727,32 @@ def _enrich_blob(project_id, package_id, blob, form_blob_paths):
         "size_bytes": blob["size_bytes"],
         "is_image": pui.is_image_path(path),
         "in_form": path in form_blob_paths,
+        "field_id": field_id,
+        "field_label": field_label,
         "url": reverse(
             "ui_package_blob_download",
             args=[project_id, package_id, path],
         ),
     }
+
+
+def _build_media_context(project_id, package_id, config, fields, data, raw_blobs):
+    form_blob_paths = pui.collect_form_blob_paths(data)
+    media_sections, used_paths = pui.build_media_sections(config, fields, data)
+    blobs_by_path = {}
+    for b in raw_blobs:
+        path = b["logical_path"]
+        blobs_by_path[path] = _enrich_blob(
+            project_id, package_id, b, form_blob_paths,
+        )
+    media_sections = pui.attach_blobs_to_media_sections(media_sections, blobs_by_path)
+    orphan_blobs = [
+        blobs_by_path[path]
+        for path in sorted(blobs_by_path)
+        if path not in used_paths
+    ]
+    all_blobs = list(blobs_by_path.values())
+    return media_sections, orphan_blobs, all_blobs, form_blob_paths
 
 
 def _build_data_sections(sections, data, editable):
@@ -777,11 +798,14 @@ def package_workspace(request, project_id: str, package_id: str):
     data_sections = _build_data_sections(sections, data, is_editable)
 
     form_blob_paths = pui.collect_form_blob_paths(data)
-    blobs = [_enrich_blob(project_id, package_id, b, form_blob_paths) for b in body["blobs"]]
+    media_sections, orphan_blobs, blobs, _ = _build_media_context(
+        project_id, package_id, config, fields, data, body["blobs"],
+    )
 
     entries = pui.read_changelog(project_id, package_id)
     has_viz = pui.has_visualisation(project_id, package_id)
     blob_map = {b["logical_path"]: b["url"] for b in blobs}
+    manifest_json = json.dumps(manifest, ensure_ascii=False, indent=2)
 
     # Sidebar: без manifest_json — только колонки сессии
     side_items, _ = pas.list_package_summaries(project_id)
@@ -814,14 +838,18 @@ def package_workspace(request, project_id: str, package_id: str):
             "phase_label": pui.phase_label(session["phase"]),
             "is_editable": is_editable,
             "data_sections": data_sections,
+            "media_sections": media_sections,
+            "orphan_blobs": orphan_blobs,
             "blobs": blobs,
             "blob_count": len(blobs),
+            "manifest_json": manifest_json,
             "entries": entries,
             "has_viz": has_viz,
             "blob_map_json": json.dumps(blob_map, ensure_ascii=False),
             "sidebar": sidebar,
             "list_url": reverse("ui_package_list") + f"?project={project_id}",
             "save_url": reverse("ui_package_manifest_save", args=[project_id, package_id]),
+            "delete_url": reverse("ui_package_delete", args=[project_id, package_id]),
             "viz_data_url": reverse("ui_package_viz_data", args=[project_id, package_id]),
             "verifier_email": _ui_verifier_email(request),
         },
@@ -914,6 +942,35 @@ def package_manifest_save(request, project_id: str, package_id: str):
     )
     messages.success(request, f"Сохранено. Изменено полей: {len(changes)}.")
     return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+
+@packages_ui_required
+@require_POST
+def package_delete(request, project_id: str, package_id: str):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+
+    project = Project.objects.filter(project_id=project_id).first()
+    if not project:
+        raise Http404("Project not found")
+
+    session = ppkg.get_session(project_id, package_id)
+    if not session:
+        messages.error(request, "Пакет не найден.")
+        return redirect(reverse("ui_package_list") + f"?project={project_id}")
+
+    if request.POST.get("confirm") != "yes":
+        messages.error(request, "Подтвердите удаление.")
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    ppkg.delete_session(
+        project_id,
+        package_id,
+        media_bucket=(project.media_bucket or ""),
+    )
+    messages.success(request, f"Пакет {pui.short_package_id(package_id)} удалён.")
+    return redirect(reverse("ui_package_list") + f"?project={project_id}")
 
 
 @packages_ui_required

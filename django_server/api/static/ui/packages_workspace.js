@@ -174,4 +174,58 @@
   }
 
   refreshDirty();
+
+  // ── JSON copy ─────────────────────────────────────────────────────────────
+  var jsonPre = document.getElementById("pkgJsonPre");
+  var jsonCopyBtn = document.getElementById("pkgJsonCopyBtn");
+  if (jsonCopyBtn && jsonPre) {
+    jsonCopyBtn.addEventListener("click", function () {
+      var text = jsonPre.textContent || "";
+      if (!text) return;
+      function done() {
+        var prev = jsonCopyBtn.innerHTML;
+        jsonCopyBtn.innerHTML = '<i class="bi bi-check2 me-1"></i>Скопировано';
+        setTimeout(function () { jsonCopyBtn.innerHTML = prev; }, 1600);
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(function () {
+          window.prompt("Скопируйте JSON:", text);
+        });
+      } else {
+        window.prompt("Скопируйте JSON:", text);
+        done();
+      }
+    });
+  }
+
+  // ── Delete modal ──────────────────────────────────────────────────────────
+  var deleteBtn = document.getElementById("pkgDeleteBtn");
+  var deleteAck = document.getElementById("pkgDeleteAck");
+  var deleteSubmit = document.getElementById("pkgDeleteSubmit");
+  var deleteModalEl = document.getElementById("pkgDeleteModal");
+  if (deleteModalEl && deleteModalEl.parentElement && deleteModalEl.parentElement !== document.body) {
+    document.body.appendChild(deleteModalEl);
+  }
+  var deleteModal = deleteModalEl && window.bootstrap
+    ? new window.bootstrap.Modal(deleteModalEl, { focus: true })
+    : null;
+  function refreshDeleteAck() {
+    if (deleteSubmit && deleteAck) deleteSubmit.disabled = !deleteAck.checked;
+  }
+  if (deleteAck) {
+    deleteAck.addEventListener("change", refreshDeleteAck);
+  }
+  if (deleteBtn && deleteModal) {
+    deleteBtn.addEventListener("click", function () {
+      if (deleteAck) deleteAck.checked = false;
+      refreshDeleteAck();
+      deleteModal.show();
+    });
+  }
+  if (deleteModalEl) {
+    deleteModalEl.addEventListener("hidden.bs.modal", function () {
+      if (deleteAck) deleteAck.checked = false;
+      refreshDeleteAck();
+    });
+  }
 })();

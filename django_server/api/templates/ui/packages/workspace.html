@@ -18,6 +18,7 @@
 {% block content %}
 <div class="pkg-ws" id="pkgWorkspace"
      data-editable="{{ is_editable|yesno:'1,0' }}"
+     data-package-id="{{ package_id }}"
      data-viz-url="{{ viz_data_url }}">
 
   {# ── Sidebar: package switcher ── #}
@@ -43,31 +44,32 @@
 
   {# ── Main ── #}
   <div class="pkg-ws__main">
+    <header class="pkg-head">
+      <div class="min-w-0">
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <h1 class="pkg-head__title" title="{{ package_id }}">{{ short_package_id }}</h1>
+          {% include 'ui/_phase_badge.html' with phase=session.phase label=phase_label %}
+          <span class="pkg-head__dirty" id="pkgDirtyBadge">не сохранено</span>
+        </div>
+        <p class="pkg-head__meta">{{ session.uploader_email|default:"—" }} · {{ session.created_at|slice:":16" }}</p>
+      </div>
+      <div class="d-flex gap-2 flex-shrink-0">
+        <button type="button" class="btn btn-outline-danger btn-sm" id="pkgDeleteBtn">Удалить</button>
+        <button type="button" class="btn btn-outline-light btn-sm" id="pkgRevertBtn" disabled form="pkgForm">Откатить</button>
+        <button type="button" class="btn btn-primary btn-sm" id="pkgSaveBtn" disabled form="pkgForm"
+                {% if not is_editable %}data-locked="1"{% endif %}>Сохранить</button>
+      </div>
+    </header>
+
+    {% if not is_editable %}
+    <div class="alert alert-warning mt-3 mb-0 py-2 small">
+      Только просмотр: правки доступны для пакетов в статусе «Завершён».
+    </div>
+    {% endif %}
+
     <form id="pkgForm" method="post" action="{{ save_url }}">
       {% csrf_token %}
       <input type="hidden" name="reason" id="pkgReasonInput">
-
-      <header class="pkg-head">
-        <div class="min-w-0">
-          <div class="d-flex align-items-center gap-2 flex-wrap">
-            <h1 class="pkg-head__title" title="{{ package_id }}">{{ short_package_id }}</h1>
-            {% include 'ui/_phase_badge.html' with phase=session.phase label=phase_label %}
-            <span class="pkg-head__dirty">не сохранено</span>
-          </div>
-          <p class="pkg-head__meta">{{ session.uploader_email|default:"—" }} · {{ session.created_at|slice:":16" }}</p>
-        </div>
-        <div class="d-flex gap-2">
-          <button type="button" class="btn btn-outline-light btn-sm" id="pkgRevertBtn" disabled>Откатить</button>
-          <button type="button" class="btn btn-primary btn-sm" id="pkgSaveBtn" disabled
-                  {% if not is_editable %}data-locked="1"{% endif %}>Сохранить</button>
-        </div>
-      </header>
-
-      {% if not is_editable %}
-      <div class="alert alert-warning mt-3 mb-0 py-2 small">
-        Только просмотр: правки доступны для пакетов в статусе «Завершён».
-      </div>
-      {% endif %}
 
       {# ── Tabs ── #}
       <div class="pkg-tabs" role="tablist">
@@ -75,6 +77,7 @@
         <button type="button" class="pkg-tab" data-tab="media">Медиа<span class="pkg-tab__count">{{ blob_count }}</span></button>
         {% if has_viz %}<button type="button" class="pkg-tab" data-tab="viz">Визуализация</button>{% endif %}
         <button type="button" class="pkg-tab" data-tab="history">История изменений<span class="pkg-tab__count">{{ entries|length }}</span></button>
+        <button type="button" class="pkg-tab" data-tab="json">JSON</button>
       </div>
 
       {# ── Data panel ── #}
@@ -120,30 +123,43 @@
 
       {# ── Media panel ── #}
       <section class="pkg-panel" data-panel="media">
-        {% if blobs %}
-        <p class="ui-muted small mb-3">{{ blob_count }} файл(ов) · снимки с формы отмечены «в форме».</p>
-        <div class="pkg-media-grid">
-          {% for b in blobs %}
-          <div class="pkg-media-card">
-            <div class="pkg-media-card__thumb"
-                 {% if b.is_image %}data-lightbox="{{ b.url }}" data-name="{{ b.file_name }}"{% endif %}>
-              {% if b.in_form %}<span class="pkg-media-card__badge">в форме</span>{% endif %}
-              {% if b.is_image %}
-              <img loading="lazy" src="{{ b.url }}" alt="{{ b.file_name }}">
-              {% else %}
-              <span class="pkg-media-card__noimg"><i class="bi bi-file-earmark"></i></span>
-              {% endif %}
+        {% if media_sections or orphan_blobs %}
+        <div class="pkg-media-summary"><i class="bi bi-images me-1"></i>{{ blob_count }} файл(ов) в пакете</div>
+        {% for sec in media_sections %}
+        <section class="pkg-media-group">
+          <header class="pkg-media-group__head">
+            <span class="pkg-media-group__title">{{ sec.title }}</span>
+          </header>
+          {% for fld in sec.fields %}
+          <div class="pkg-media-block">
+            <div class="pkg-media-block__label">
+              <i class="bi bi-camera"></i>
+              <span>{{ fld.label }}</span>
+              <span class="pkg-media-block__count">{{ fld.shots|length }}</span>
             </div>
-            <div class="pkg-media-card__body">
-              <span class="pkg-media-card__name">{{ b.file_name }}</span>
-              <div class="pkg-media-card__meta">
-                <span>{{ b.size_bytes|filesizeformat }}</span>
-                <a href="{{ b.url }}" download="{{ b.file_name }}"><i class="bi bi-download me-1"></i>скачать</a>
-              </div>
+            <div class="pkg-media-gallery">
+              {% for sh in fld.shots %}
+              {% include 'ui/packages/_media_shot.html' with sh=sh %}
+              {% endfor %}
             </div>
           </div>
           {% endfor %}
-        </div>
+        </section>
+        {% endfor %}
+        {% if orphan_blobs %}
+        <section class="pkg-media-group pkg-media-group--orphan">
+          <header class="pkg-media-group__head">
+            <span class="pkg-media-group__title"><i class="bi bi-paperclip me-1"></i>Без привязки к форме</span>
+          </header>
+          <div class="pkg-media-block">
+            <div class="pkg-media-gallery">
+              {% for b in orphan_blobs %}
+              {% include 'ui/packages/_media_shot.html' with sh=b %}
+              {% endfor %}
+            </div>
+          </div>
+        </section>
+        {% endif %}
         {% else %}
         <div class="card p-5 text-center ui-muted">В пакете нет файлов.</div>
         {% endif %}
@@ -185,12 +201,51 @@
         <div class="card p-5 text-center ui-muted">История изменений пуста.</div>
         {% endif %}
       </section>
+
+      {# ── JSON panel (last) ── #}
+      <section class="pkg-panel" data-panel="json">
+        <div class="pkg-json">
+          <div class="pkg-json__toolbar">
+            <span class="pkg-json__hint ui-muted small">Манифест пакета (payload.json)</span>
+            <button type="button" class="btn btn-outline-light btn-sm" id="pkgJsonCopyBtn">
+              <i class="bi bi-clipboard me-1"></i>Копировать
+            </button>
+          </div>
+          <pre class="pkg-json__pre" id="pkgJsonPre">{{ manifest_json }}</pre>
+        </div>
+      </section>
     </form>
   </div>
 </div>
 {% endblock %}
 
 {% block modals %}
+<div class="modal fade" id="pkgDeleteModal" tabindex="-1" aria-labelledby="pkgDeleteModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form method="post" action="{{ delete_url }}">
+        {% csrf_token %}
+        <div class="modal-header border-danger">
+          <h5 class="modal-title text-danger" id="pkgDeleteModalTitle">Удалить пакет</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        </div>
+        <div class="modal-body">
+          <p class="small mb-3">Будут удалены манифест, все файлы и история изменений. Это действие нельзя отменить.</p>
+          <p class="small ui-muted mb-2">Пакет: <code class="user-select-all">{{ package_id }}</code></p>
+          <label class="pkg-delete-ack">
+            <input type="checkbox" id="pkgDeleteAck" autocomplete="off">
+            <span>Я понимаю, что удаление необратимо</span>
+          </label>
+          <input type="hidden" name="confirm" value="yes">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Отмена</button>
+          <button type="submit" class="btn btn-danger btn-sm" id="pkgDeleteSubmit" disabled>Удалить пакет</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 <div class="modal fade" id="pkgReasonModal" tabindex="-1" aria-labelledby="pkgReasonModalTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
