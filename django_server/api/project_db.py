@@ -27,6 +27,7 @@ from sqlalchemy import (
     UniqueConstraint,
     create_engine,
     event,
+    inspect,
 )
 from sqlalchemy.pool import NullPool
 
@@ -38,6 +39,9 @@ package_session = Table(
     "package_session",
     metadata,
     Column("package_id", Text, primary_key=True),
+    # project_id — для разделения проектов, когда несколько проектов делят одну БД.
+    # Nullable ради совместимости со старыми БД (бэкфилл из manifest при инициализации).
+    Column("project_id", Text, index=True),
     Column("phase", Text, nullable=False),
     Column("manifest_json", Text, nullable=False),
     Column("failure_reason", Text, nullable=False),
@@ -175,6 +179,51 @@ def _prepare_sqlite(uri: str) -> None:
         legacy.rename(path)
 
 
+def _project_id_from_manifest(manifest_json: Any) -> str:
+    raw = (manifest_json or "").strip() if isinstance(manifest_json, str) else ""
+    if not raw:
+        return ""
+    try:
+        data = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        return ""
+    if isinstance(data, dict):
+        pid = data.get("project_id")
+        if isinstance(pid, str):
+            return pid.strip()
+    return ""
+
+
+def _ensure_package_session_project_id(engine) -> None:
+    """Добавить колонку project_id в старые БД и заполнить её из manifest_json.
+
+    Нужно для разделения проектов в общей БД: create_all не меняет существующие
+    таблицы, поэтому колонку добавляем вручную (ALTER) и делаем разовый бэкфилл.
+    """
+    try:
+        cols = {c["name"] for c in inspect(engine).get_columns("package_session")}
+    except Exception:
+        return
+    if "project_id" not in cols:
+        with engine.begin() as conn:
+            conn.exec_driver_sql("ALTER TABLE package_session ADD COLUMN project_id TEXT")
+    is_pg = engine.dialect.name != "sqlite"
+    ph = "%s" if is_pg else "?"
+    with engine.begin() as conn:
+        rows = conn.exec_driver_sql(
+            "SELECT package_id, manifest_json FROM package_session "
+            "WHERE project_id IS NULL OR project_id = ''",
+        ).fetchall()
+        for row in rows:
+            pid = _project_id_from_manifest(row[1])
+            if not pid:
+                continue
+            conn.exec_driver_sql(
+                f"UPDATE package_session SET project_id = {ph} WHERE package_id = {ph}",
+                (pid, row[0]),
+            )
+
+
 def get_engine_for_uri(uri: str):
     engine = _engines.get(uri)
     if engine is None:
@@ -192,6 +241,7 @@ def get_engine_for_uri(uri: str):
         _engines[uri] = engine
     if uri not in _initialized:
         metadata.create_all(engine)
+        _ensure_package_session_project_id(engine)
         _initialized.add(uri)
     return engine
 
