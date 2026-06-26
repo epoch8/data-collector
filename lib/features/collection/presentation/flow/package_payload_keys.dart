@@ -34,7 +34,7 @@ abstract final class CapturedPhotoPaths {
 
   static bool hasPhotos(dynamic v) => list(v).isNotEmpty;
 
-  /// For Korovas-style flow: merge list/legacy values into a path → metadata map (metadata may be empty).
+  /// For subject-grouped flow: merge list/legacy values into a path → metadata map (metadata may be empty).
   static Map<String, dynamic> coerceToPathMetadataMap(dynamic v) {
     if (v == null) return {};
     if (v is Map) {

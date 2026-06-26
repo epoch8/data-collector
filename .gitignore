@@ -86,8 +86,18 @@ django_server/project_assets/
 django_server/firebase-service-account.json
 *.pem
 
+# --- Node / фронтенд-артефакты ---
+node_modules/
+**/.vite/
+
 # --- Прочее ---
 *.log
 .env
 .env.local
 *.orig
+
+# --- legacy/: вложенные внешние репозитории (своя git-история, локально) ---
+legacy/cowmetric/
+legacy/korovas/
+# client-admin: только сборочные бинарники/node_modules, исходников нет
+legacy/client-admin/

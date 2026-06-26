@@ -110,7 +110,7 @@ class ResolvedCollectionFlow {
     return 1;
   }
 
-  /// Группировать историю по субъекту: несколько camera_photo и поле cow на scroll-шаге.
+  /// Группировать историю по субъекту: несколько camera_photo и поле идентификатора субъекта на scroll-шаге.
   bool get shouldGroupHistoryBySubject {
     if (cameraPoseCount <= 1) return false;
     for (final s in steps) {

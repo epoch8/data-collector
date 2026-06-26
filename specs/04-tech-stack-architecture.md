@@ -10,10 +10,13 @@
 | `django_server/` | Django 5.x: API `/v1/*`, админка `/ui/`, Django admin `/admin/` |
 | `assets/config/` | Bundled offline-конфиги (7 демо-проектов) |
 | `test_dev/` | Docker Compose: Postgres + MinIO для локальной проверки URI |
-| `mock_server/` | Reference Shelf-сервер для спек 08–09 (не production) |
 | `specs/` | Продуктовая документация и диаграммы |
+| `docs/` | Инженерные заметки; `docs/business/` — коммерческие материалы |
+| `legacy/` | Неиспользуемое в основном пайплайне (см. `legacy/README.md`) |
 
-Папка `client-admin/` содержит только артефакты сборки; **админка — Django templates**, не отдельный SPA.
+Reference Shelf-сервер под спеки 08–09 (`legacy/mock_server/`, не production) и
+задумывавшийся отдельный SPA `client-admin` (только артефакты сборки) вынесены в `legacy/`.
+Админка — это **Django templates** в `django_server/`, не отдельный фронтенд.
 
 ## 2. Flutter-клиент
 

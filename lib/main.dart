@@ -116,10 +116,10 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
         },
       ),
       GoRoute(
-        path: '/history/project/:projectId/cow/:cowId',
-        builder: (context, state) => CowHistoryScreen(
+        path: '/history/project/:projectId/subject/:subjectId',
+        builder: (context, state) => SubjectHistoryScreen(
           projectId: state.pathParameters['projectId']!,
-          cowId: state.pathParameters['cowId']!,
+          subjectId: state.pathParameters['subjectId']!,
         ),
       ),
       GoRoute(
@@ -685,18 +685,18 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
   }
 }
 
-class CowHistoryScreen extends ConsumerWidget {
-  const CowHistoryScreen({super.key, required this.projectId, required this.cowId});
+class SubjectHistoryScreen extends ConsumerWidget {
+  const SubjectHistoryScreen({super.key, required this.projectId, required this.subjectId});
 
   final String projectId;
-  final String cowId;
+  final String subjectId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loc = AppLocalizations.of(context);
     final packagesAsync = ref.watch(packagesStreamProvider);
     return Scaffold(
-      appBar: AppBar(title: _epoch8AppBarTitle('${loc.objectLabel} $cowId')),
+      appBar: AppBar(title: _epoch8AppBarTitle('${loc.objectLabel} $subjectId')),
       body: packagesAsync.when(
         data: (packages) {
           final filtered = packages
@@ -704,7 +704,7 @@ class CowHistoryScreen extends ConsumerWidget {
                 (p) =>
                     p.status != 'draft' &&
                     p.projectId == projectId &&
-                    _extractCowIdFromPackage(p) == cowId,
+                    _extractSubjectIdFromPackage(p) == subjectId,
               )
               .toList()
             ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -712,7 +712,7 @@ class CowHistoryScreen extends ConsumerWidget {
             return Epoch8EmptyState(
               icon: Icons.cloud_off_outlined,
               title: loc.packageNotFoundShort,
-              subtitle: loc.noPackagesForCow,
+              subtitle: loc.noPackagesForSubject,
             );
           }
           return ListView.separated(
@@ -852,7 +852,7 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
       );
   final projMeta = _projectById(projectsList, pkg.projectId);
   final groupSubject = projMeta != null && resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
-  final subjectLabel = _extractCowId(raw);
+  final subjectLabel = _extractSubjectId(raw);
   return ListView(
     padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
     children: [
@@ -1088,7 +1088,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
         ),
       ),
       if (bySubject) ...[
-        for (final g in _groupPackagesByCow(packages)) ...[
+        for (final g in _groupPackagesBySubject(packages)) ...[
           Epoch8Card(
             highlightBorderColor: historyGroupBorderColor(g.packages),
             child: ListTile(
@@ -1101,19 +1101,19 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                   color: Epoch8Theme.accent.withValues(alpha: 0.12),
                   border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
                 ),
-                child: Icon(Icons.pets_outlined, color: Epoch8Theme.accent, size: 24),
+                child: Icon(Icons.badge_outlined, color: Epoch8Theme.accent, size: 24),
               ),
-              title: Text('${AppLocalizations.of(context).objectLabel} ${g.cowId}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text('${AppLocalizations.of(context).objectLabel} ${g.subjectId}', style: const TextStyle(fontWeight: FontWeight.w600)),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  _historyCowGroupSubtitle(context, g.packages),
+                  _historySubjectGroupSubtitle(context, g.packages),
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
               isThreeLine: true,
               trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
-              onTap: () => context.push('/history/project/${proj.id}/cow/${Uri.encodeComponent(g.cowId)}'),
+              onTap: () => context.push('/history/project/${proj.id}/subject/${Uri.encodeComponent(g.subjectId)}'),
             ),
           ),
           const SizedBox(height: 12),
@@ -1177,7 +1177,7 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
   );
 }
 
-String _historyCowGroupSubtitle(BuildContext context, List<Package> packages) {
+String _historySubjectGroupSubtitle(BuildContext context, List<Package> packages) {
   final loc = AppLocalizations.of(context);
   final n = packages.length;
   final photos = packages.fold<int>(0, (a, p) => a + _extractImagePaths(p).length);
@@ -1321,25 +1321,25 @@ List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic>
   return out;
 }
 
-class _CowGroup {
-  const _CowGroup({required this.cowId, required this.packages, required this.totalPhotos});
+class _SubjectGroup {
+  const _SubjectGroup({required this.subjectId, required this.packages, required this.totalPhotos});
 
-  final String cowId;
+  final String subjectId;
   final List<Package> packages;
   final int totalPhotos;
 }
 
-List<_CowGroup> _groupPackagesByCow(List<Package> packages) {
-  final byCow = <String, List<Package>>{};
+List<_SubjectGroup> _groupPackagesBySubject(List<Package> packages) {
+  final bySubject = <String, List<Package>>{};
   for (final pkg in packages) {
-    final cowId = _extractCowIdFromPackage(pkg);
-    byCow.putIfAbsent(cowId, () => <Package>[]).add(pkg);
+    final subjectId = _extractSubjectIdFromPackage(pkg);
+    bySubject.putIfAbsent(subjectId, () => <Package>[]).add(pkg);
   }
 
-  final groups = byCow.entries
+  final groups = bySubject.entries
       .map(
-        (entry) => _CowGroup(
-          cowId: entry.key,
+        (entry) => _SubjectGroup(
+          subjectId: entry.key,
           packages: entry.value..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
           totalPhotos: entry.value.fold<int>(0, (sum, pkg) => sum + _extractImagePaths(pkg).length),
         ),
@@ -1380,11 +1380,11 @@ Widget _packageHistoryFieldRow(BuildContext context, String label, String? value
   );
 }
 
-String _extractCowIdFromPackage(Package pkg) => _extractCowId(_decodePackageData(pkg));
+String _extractSubjectIdFromPackage(Package pkg) => _extractSubjectId(_decodePackageData(pkg));
 
 Map<String, dynamic> _decodePackageData(Package pkg) => unpackPackageFormData(pkg.dataJson);
 
-String _extractCowId(Map<String, dynamic> data) {
+String _extractSubjectId(Map<String, dynamic> data) {
   const keys = ['cow_identifier', 'cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
   for (final k in keys) {
     final value = data[k]?.toString().trim();

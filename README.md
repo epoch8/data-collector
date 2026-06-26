@@ -1,109 +1,125 @@
 # data_collector
 
-Клиент для сбора данных (Flutter) + бэкенд Django с веб-админкой.
+**Фреймворк** для сбора размеченных данных: **Flutter-клиент** (сбор на устройстве, offline-first)
++ **Django-бэкенд** с веб-админкой (`/ui/`) и мобильным API (`/v1/*`).
 
-## Структура репозитория
+Ядро нейтрально к предметной области. Что и как собирать задаётся **конфигом проекта**
+(`collector/config.json` в Git). Конкретные сценарии — это **проекты на базе фреймворка**:
+готовые примеры лежат в [`examples/`](examples/), нейтральные демо для бандла — в `assets/config/`.
 
-- **`django_server/`** — API и **веб-админка** (`/ui/`). Свой `manage.py`, миграции, `runserver`. Подробнее: [`django_server/README.md`](django_server/README.md).
-- **Корень** — Flutter-приложение (`lib/`, `pubspec.yaml`, `android/`, `ios/`, `web/`). Точка входа: `lib/main.dart`.
-- **`test_dev/`** — Docker Compose (PostgreSQL + MinIO) для локальной проверки прод-подобных хранилищ. Подробнее: [`test_dev/README.md`](test_dev/README.md).
+Пример развёрнутого инстанса (проект «korovas»): `https://data-collector-app.korovas.ml.epoch8.dev`
+(админка `/ui/`, API с того же хоста; в `API_BASE_URL` не добавляйте завершающий `/`).
+Домен и имена docker-образов в `Makefile` — значения этого конкретного деплоя, а не часть фреймворка.
 
-## Локальный запуск
+---
 
-### Django (простой режим)
+## Навигатор: что где лежит
 
-По умолчанию **`local`**: каталог Django — SQLite, пакеты проектов — SQLite + файлы в `project_db/` и `project_media/`.
+```
+data-collector/
+├── lib/                # Flutter-приложение (клиент сбора). Точка входа: lib/main.dart
+├── android/ ios/ web/ macos/ linux/ windows/   # платформенные обёртки Flutter
+├── assets/             # ассеты клиента: нейтральные демо-конфиги (assets/config/), плейсхолдеры (assets/placeholders/)
+├── examples/           # доменные проекты-примеры на базе фреймворка (см. examples/README.md)
+├── django_server/      # API + веб-админка (/ui/). Свой manage.py, миграции, runserver
+├── test_dev/           # Docker Compose: PostgreSQL + MinIO для прод-подобной локалки
+├── specs/              # спецификации, схемы (.drawio), презентация, статус
+├── docs/               # руководства пользователя и инженерные заметки
+└── legacy/             # неиспользуемое в основном пайплайне (см. legacy/README.md)
+```
+
+Подробности по подсистемам: [`django_server/README.md`](django_server/README.md),
+[`test_dev/README.md`](test_dev/README.md), [`legacy/README.md`](legacy/README.md).
+
+---
+
+## Гайды и материалы
+
+Самый быстрый способ понять продукт — начните отсюда:
+
+| Материал | Что внутри |
+|----------|------------|
+| **[Презентация продукта](specs/presentation/Data-Collector.pptx)** (`specs/presentation/Data-Collector.pptx`) | Обзор продукта, сценарии, скриншоты. Исходники кадров — в `specs/presentation/img/`. |
+| **[Руководство: админ-панель](docs/admin-panel/README.md)** | Создание проектов, визуальный редактор конфига, доступы, просмотр пакетов и **визуализация** результатов pipeline. |
+| **[Руководство: мобильное приложение](docs/mobile-app/README.md)** | Путь оператора на примере проекта КРС: вход → проект → форма → отправка пакета. |
+| **[Примеры проектов](examples/README.md)** | Готовые доменные конфиги на базе фреймворка (напр. `examples/cow-keypoints/`). |
+
+---
+
+## Быстрый старт
 
 ```bash
+# 1. Бэкенд (local-режим, SQLite)
 cd django_server
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000
-```
+# админка: http://127.0.0.1:8000/ui/login/
 
-- Вход в админку: http://127.0.0.1:8000/ui/login/ (staff — галочка «Админ-доступ»)
-- Django admin: http://127.0.0.1:8000/admin/
-
-Конфиг проекта хранится в **Git-репозитории** (`collector/config.json`), не в БД — см. [`specs/git-backed-projects.md`](specs/git-backed-projects.md).
-
-### Flutter (Android)
-
-Из корня репозитория:
-
-```bash
+# 2. Клиент (Android-эмулятор; 10.0.2.2 — хост-ПК)
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
-Для эмулятора `10.0.2.2` — хост-ПК. На физическом устройстве подставьте IP машины с Django.
+> **Важно (offline-first):** после заполнения формы пакет сохраняется **локально на устройстве**.
+> На сервер он попадает только после ручного шага: экран **«Очередь на сервер» → «Отправить»**.
 
-### Flutter Web (опционально)
+Детали запуска, конфигурации, Firebase и продакшена — в [`django_server/README.md`](django_server/README.md),
+[`test_dev/README.md`](test_dev/README.md), [`docs/deploy-flutter-web.md`](docs/deploy-flutter-web.md)
+и в спеках ниже.
 
-```bash
-flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
-```
+---
 
-Отличия web/Android: [`docs/web-vs-android.md`](docs/web-vs-android.md).
+## Документация
 
-### test_dev — имитация прод-хранилищ
-
-Если нужно проверить **PostgreSQL + S3** (per-project `database_uri` / `storage_uri`) без облака:
-
-```bash
-cp test_dev/.env.example test_dev/.env
-docker compose -f test_dev/docker-compose.yml up -d
-```
-
-Поднимутся Postgres (`localhost:55432`) и MinIO (`http://localhost:9000`). URI задаются в UI проекта («Изменить хранилище»); полная инструкция — в [`test_dev/README.md`](test_dev/README.md) и [`specs/project-storage-uris.md`](specs/project-storage-uris.md).
-
-## Продакшен
-
-**Каталог платформы** (Django): PostgreSQL + Google Cloud Storage. Задайте `POSTGRES_*` (или явно `DJANGO_ENV=production`); зависимости — `requirements.txt`.
-
-**Данные проектов** (пакеты, медиа, pipeline) настраиваются **отдельно на каждый проект** через `database_uri` и `storage_uri` в UI. Если поля пустые — SQLite + локальная папка на сервере (часто смонтированный диск). В проде типично Postgres + `gs://` или `s3://`.
-
-Развёрнутый инстанс: `https://data-collector-app.korovas.ml.epoch8.dev` — админка `/ui/`, API с того же хоста. В `API_BASE_URL` не добавляйте завершающий `/`.
-
-Полезные переменные: `DJANGO_SECRET_KEY`, `DJANGO_ALLOWED_HOSTS`, `DJANGO_CSRF_TRUSTED_ORIGINS`, Firebase (`FIREBASE_SERVICE_ACCOUNT_PATH` или JSON в окружении).
-
-## Сборка и авторизация
-
-- **Firebase** (Email/Password): `lib/firebase_options.dart`, для Android — `android/app/google-services.json`. Обновить конфиг:
-
-```bash
-dart run flutterfire_cli:flutterfire configure
-```
-
-(подробности в комментариях в `firebase_options.dart`).
-
-- **Django API:** при запуске/сборке передайте базовый URL без завершающего `/`.
-- Если на Django **не** включена проверка Firebase-токена, опционально:
-
-```bash
-flutter run --dart-define=API_BASE_URL=... --dart-define=API_BEARER_TOKEN=...
-```
-
-См. `lib/core/api/api_environment.dart`.
-
-## Основные схемы и спеки (`specs/`)
+### Обзор и архитектура
 
 | Файл | О чём |
-|------|--------|
-| [`specs/01-overview.md`](specs/01-overview.md) | Обзор продукта и текущего scope |
-| [`specs/02-data-models-schema.md`](specs/02-data-models-schema.md) | JSON-конфиг, Django/SQLAlchemy/Drift модели |
+|------|-------|
+| [`specs/01-overview.md`](specs/01-overview.md) | Обзор продукта и текущий scope |
 | [`specs/03-user-journey-screens.md`](specs/03-user-journey-screens.md) | Экраны Flutter и `/ui/` |
 | [`specs/04-tech-stack-architecture.md`](specs/04-tech-stack-architecture.md) | Стек и структура репозитория |
 | [`specs/06-upload-lifecycle.md`](specs/06-upload-lifecycle.md) | Жизненный цикл upload на устройстве |
 | [`specs/07-package-payload-structure.md`](specs/07-package-payload-structure.md) | Структура пакета и camera metadata |
-| [`specs/main-scheme/01-abstract-config-entities.drawio`](specs/main-scheme/01-abstract-config-entities.drawio) | Абстрактный конфиг: сущности и как из них **собираются проекты**. |
-| [`specs/main-scheme/02-client-server-config-and-package.drawio`](specs/main-scheme/02-client-server-config-and-package.drawio) + [`specs/09-server-project-config-delivery.md`](specs/09-server-project-config-delivery.md) | Как конфиг **создаётся и доставляется** клиенту; как клиент **заполняет** данные по конфигу и что **ожидает сервер**. |
-| [`specs/main-scheme/03_server_api.drawio`](specs/main-scheme/03_server_api.drawio) + [`specs/08-server-api-package-upload.md`](specs/08-server-api-package-upload.md) | **Загрузка пакета** на сервер (API и поток). |
-| [`specs/main-scheme/04-auth-firebase-django.drawio`](specs/main-scheme/04-auth-firebase-django.drawio) | **Аутентификация:** Firebase на клиенте и связка с Django. |
-| [`specs/main-scheme/05-admin-roles-access.drawio`](specs/main-scheme/05-admin-roles-access.drawio) | **Роли админки:** staff (E8), client-admin, сотрудник. |
-| [`specs/git-backed-projects.md`](specs/git-backed-projects.md) | **Git-репозиторий** проекта: deploy key, `config.json`, синхронизация. |
-| [`specs/project-storage-uris.md`](specs/project-storage-uris.md) | **Хранилища проекта:** `database_uri`, `storage_uri`, Postgres/S3/GCS. |
-| [`specs/collector-vis-config.md`](specs/collector-vis-config.md) | **`collector/viz.json`** — визуализация pipeline в админке. |
-| [`specs/config/09-project-json-builder-guide.md`](specs/config/09-project-json-builder-guide.md) | Гайд по сборке JSON проекта. |
 
-Backlog: [`specs/todo`](specs/todo). Диаграммы `.drawio` — при ревизии сверять с `specs/main-scheme/todo.txt`.
+### Конфиг проекта и сборка JSON
+
+| Файл | О чём |
+|------|-------|
+| [`specs/config/09-project-json-builder-guide.md`](specs/config/09-project-json-builder-guide.md) | **Канон**: гайд по сборке JSON-конфига проекта |
+| [`specs/config/json-driven-collection-ui.md`](specs/config/json-driven-collection-ui.md) | JSON-driven UI сбора (экраны flow) |
+| [`specs/config/json-ui-flow.drawio`](specs/config/json-ui-flow.drawio) | Схема flow конфига |
+| [`specs/git-backed-projects.md`](specs/git-backed-projects.md) | Git-репозиторий проекта: deploy key, `config.json`, синхронизация |
+| [`specs/09-server-project-config-delivery.md`](specs/09-server-project-config-delivery.md) | Создание и доставка конфига клиенту |
+
+### Сервер, API, хранилища
+
+| Файл | О чём |
+|------|-------|
+| [`specs/08-server-api-package-upload.md`](specs/08-server-api-package-upload.md) | API и поток загрузки пакета на сервер |
+| [`specs/project-storage-uris.md`](specs/project-storage-uris.md) | `database_uri`, `storage_uri`: Postgres / S3 / GCS |
+| [`specs/collector-vis-config.md`](specs/collector-vis-config.md) | `collector/viz.json` — визуализация pipeline в админке |
+| [`django_server/README.md`](django_server/README.md) | Роли, запуск, хранение пакетов |
+
+### Схемы (`specs/main-scheme/`, `.drawio`)
+
+| Файл | О чём |
+|------|-------|
+| [`specs/main-scheme/01-abstract-config-entities.drawio`](specs/main-scheme/01-abstract-config-entities.drawio) | Абстрактный конфиг: сущности → проекты |
+| [`specs/main-scheme/02-client-server-config-and-package.drawio`](specs/main-scheme/02-client-server-config-and-package.drawio) | Конфиг ↔ клиент ↔ пакет |
+| [`specs/main-scheme/03_server_api.drawio`](specs/main-scheme/03_server_api.drawio) | Загрузка пакета (API и поток) |
+| [`specs/main-scheme/04-auth-firebase-django.drawio`](specs/main-scheme/04-auth-firebase-django.drawio) | Аутентификация: Firebase ↔ Django |
+| [`specs/main-scheme/05-admin-roles-access.drawio`](specs/main-scheme/05-admin-roles-access.drawio) | Роли админки: staff / client-admin / сотрудник |
+| [`specs/main-scheme/`](specs/main-scheme/) | Прочие схемы (06–11), `todo.txt` для ревизии |
+
+### Статус и backlog
+
+- Статус/выгрузки: [`specs/status/`](specs/status/).
+- Коммерческие материалы (план обучения): [`docs/business/`](docs/business/).
+- Текущие задачи: [`specs/todo`](specs/todo).
+- Внешний разбор репозитория: [`docs/todo-renat.md`](docs/todo-renat.md).
+
+> Историческое замечание: спеки [`specs/02-data-models-schema.md`](specs/02-data-models-schema.md)
+> и [`specs/05-stage-1-mvp.md`](specs/05-stage-1-mvp.md) описывают раннюю модель данных и могут
+> расходиться с актуальным кодом (`flow.steps` со `scroll_form`/`review`).

@@ -18,7 +18,7 @@ Color historyPackageBorderColor(String serverDeliveryState) {
   }
 }
 
-/// Рамка для группы пакетов (корова): приоритет ошибка → есть незагруженные → все на сервере.
+/// Рамка для группы пакетов (по субъекту): приоритет ошибка → есть незагруженные → все на сервере.
 Color historyGroupBorderColor(List<Package> packages) {
   if (packages.isEmpty) return Epoch8Theme.border.withValues(alpha: 0.85);
   if (packages.any((p) => p.serverDeliveryState == 'failed')) {
