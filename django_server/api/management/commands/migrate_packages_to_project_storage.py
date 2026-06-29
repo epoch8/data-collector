@@ -79,12 +79,13 @@ class Command(BaseCommand):
                 conn.execute(
                     """
                     INSERT INTO package_session (
-                        package_id, phase, manifest_json, failure_reason,
+                        package_id, project_id, phase, manifest_json, failure_reason,
                         uploader_uid, uploader_email, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         package_id,
+                        project_id,
                         session.phase,
                         session.manifest_json or "",
                         session.failure_reason or "",

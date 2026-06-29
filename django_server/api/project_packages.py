@@ -121,9 +121,15 @@ def _row_to_change(row: sqlite3.Row) -> FieldChange:
 
 def get_session(project_id: str, package_id: str) -> PackageSession | None:
     with pdb.connect(project_id) as conn:
+        # project_id-фильтр изолирует проекты в общей БД. Legacy-строки с пустым
+        # project_id остаются доступны по прямому package_id (UUID уникален).
         row = conn.execute(
-            "SELECT * FROM package_session WHERE package_id = ?",
-            (package_id,),
+            """
+            SELECT * FROM package_session
+            WHERE package_id = ?
+              AND (project_id = ? OR project_id IS NULL OR project_id = '')
+            """,
+            (package_id, project_id),
         ).fetchone()
     return _row_to_session(row) if row else None
 
@@ -145,11 +151,11 @@ def get_or_create_session(
         conn.execute(
             """
             INSERT INTO package_session (
-                package_id, phase, manifest_json, failure_reason,
+                package_id, project_id, phase, manifest_json, failure_reason,
                 uploader_uid, uploader_email, created_at
-            ) VALUES (?, ?, '', '', '', '', ?)
+            ) VALUES (?, ?, ?, '', '', '', '', ?)
             """,
-            (package_id, phase, now),
+            (package_id, project_id, phase, now),
         )
         row = conn.execute(
             "SELECT * FROM package_session WHERE package_id = ?",
@@ -184,24 +190,26 @@ def list_sessions(
     limit: int = 500,
 ) -> list[PackageSession]:
     with pdb.connect(project_id) as conn:
+        # Строгий фильтр по project_id — в общей БД проект видит только свои пакеты.
         if phase:
             rows = conn.execute(
                 """
                 SELECT * FROM package_session
-                WHERE phase = ?
+                WHERE project_id = ? AND phase = ?
                 ORDER BY created_at DESC
                 LIMIT ?
                 """,
-                (phase, limit),
+                (project_id, phase, limit),
             ).fetchall()
         else:
             rows = conn.execute(
                 """
                 SELECT * FROM package_session
+                WHERE project_id = ?
                 ORDER BY created_at DESC
                 LIMIT ?
                 """,
-                (limit,),
+                (project_id, limit),
             ).fetchall()
     return [_row_to_session(r) for r in rows]
 
@@ -311,18 +319,18 @@ def save_manifest(project_id: str, package_id: str, manifest_json: str) -> None:
         conn.execute(
             """
             UPDATE package_session
-            SET manifest_json = ?, phase = ?
+            SET manifest_json = ?, phase = ?, project_id = ?
             WHERE package_id = ?
             """,
-            (manifest_json, Phase.READY_TO_COMMIT, package_id),
+            (manifest_json, Phase.READY_TO_COMMIT, project_id, package_id),
         )
 
 
 def update_manifest(project_id: str, package_id: str, manifest_json: str) -> None:
     with pdb.connect(project_id) as conn:
         conn.execute(
-            "UPDATE package_session SET manifest_json = ? WHERE package_id = ?",
-            (manifest_json, package_id),
+            "UPDATE package_session SET manifest_json = ?, project_id = ? WHERE package_id = ?",
+            (manifest_json, project_id, package_id),
         )
 
 

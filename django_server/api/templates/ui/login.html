@@ -1,19 +1,22 @@
 {% extends "ui/base.html" %}
-{% load static %}
-{% block title %}Вход{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Вход" %}{% endblock %}
 {% block body_class %}ui-auth-body{% endblock %}
 {% block topnav %}{% endblock topnav %}
 {% block footer %}{% endblock %}
 {% block content %}
+<div class="ui-lang-toggle-wrap">
+  {% include "ui/_lang_toggle.html" %}
+</div>
 <div class="row justify-content-center">
   <div class="col-11 col-sm-8 col-md-5 col-lg-4">
     <div class="card p-4 login-form-card">
-      <h1 class="h5 mb-1 text-white">Вход</h1>
+      <h1 class="h5 mb-1 text-white">{% trans "Вход" %}</h1>
       <p class="small ui-muted mb-3" id="login-hint">
         {% if firebase_auth_enabled %}
-        Email и пароль Firebase. Доступ к пакетам — по назначению в «Пользователи».
+        {% trans "Email и пароль Firebase. Доступ к пакетам — по назначению в «Пользователи»." %}
         {% else %}
-        Логин администратора Django (staff).
+        {% trans "Логин администратора Django (staff)." %}
         {% endif %}
       </p>
 
@@ -31,14 +34,14 @@
         {% if firebase_auth_enabled %}
         <div class="form-check mb-1">
           <input class="form-check-input" type="checkbox" name="admin_access" value="1" id="admin-access">
-          <label class="form-check-label small" for="admin-access">Админ-доступ</label>
+          <label class="form-check-label small" for="admin-access">{% trans "Админ-доступ" %}</label>
         </div>
         {% else %}
         <input type="hidden" name="admin_access" value="1">
         {% endif %}
 
         <label class="small" for="login-username">
-          <span id="login-id-label">{% if firebase_auth_enabled %}Email{% else %}Логин{% endif %}</span>
+          <span id="login-id-label">{% if firebase_auth_enabled %}Email{% else %}{% trans "Логин" %}{% endif %}</span>
           <input type="{% if firebase_auth_enabled %}email{% else %}text{% endif %}"
                  class="form-control mt-1" name="username" id="login-username"
                  autocomplete="{% if firebase_auth_enabled %}username{% else %}username{% endif %}"
@@ -48,7 +51,7 @@
         <p class="small text-danger mb-0">{{ form.username.errors|join:", " }}</p>
         {% endif %}
 
-        <label class="small" for="login-password">Пароль
+        <label class="small" for="login-password">{% trans "Пароль" %}
           <input type="password" class="form-control mt-1" name="password" id="login-password"
                  autocomplete="current-password" required>
         </label>
@@ -57,7 +60,7 @@
         {% endif %}
 
         <p id="login-error" class="small text-danger mb-0 d-none"></p>
-        <button type="submit" class="btn btn-primary w-100 mt-2" id="login-submit">Войти</button>
+        <button type="submit" class="btn btn-primary w-100 mt-2" id="login-submit">{% trans "Войти" %}</button>
       </form>
     </div>
   </div>

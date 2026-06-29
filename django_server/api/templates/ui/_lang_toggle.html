@@ -1,0 +1,16 @@
+{% load i18n %}
+<div class="ui-lang-toggle" role="group" aria-label="{% trans 'Язык интерфейса' %}">
+  <span class="ui-lang-toggle__icon" aria-hidden="true"><i class="bi bi-translate"></i></span>
+  <div class="ui-lang-toggle__group">
+    <a class="ui-lang-toggle__btn{% if LANGUAGE_CODE == 'ru' %} is-active{% endif %}"
+       href="{% url 'ui_set_language' %}?lang=ru&amp;next={{ request.get_full_path|urlencode }}"
+       title="Русский"
+       hreflang="ru"
+       {% if LANGUAGE_CODE == 'ru' %}aria-current="true"{% endif %}>RU</a>
+    <a class="ui-lang-toggle__btn{% if LANGUAGE_CODE == 'en' %} is-active{% endif %}"
+       href="{% url 'ui_set_language' %}?lang=en&amp;next={{ request.get_full_path|urlencode }}"
+       title="English"
+       hreflang="en"
+       {% if LANGUAGE_CODE == 'en' %}aria-current="true"{% endif %}>EN</a>
+  </div>
+</div>

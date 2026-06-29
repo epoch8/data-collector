@@ -5,6 +5,7 @@ from .views_auth import UiLoginView, ui_firebase_login, ui_staff_login_api
 
 urlpatterns = [
     path("", views_ui.ui_home, name="ui_home"),
+    path("set-language/", views_ui.ui_set_language, name="ui_set_language"),
     path("login/", UiLoginView.as_view(), name="ui_login"),
     path("login/firebase/", ui_firebase_login, name="ui_login_firebase"),
     path("login/submit/", ui_staff_login_api, name="ui_login_submit"),
@@ -60,14 +61,14 @@ urlpatterns = [
         name="ui_package_depth_blob",
     ),
     path(
-        "projects/<str:project_id>/packages/<str:package_id>/",
-        views_ui.package_workspace,
-        name="ui_package_workspace",
-    ),
-    path(
         "projects/<str:project_id>/packages/<str:package_id>/save/",
         views_ui.package_manifest_save,
         name="ui_package_manifest_save",
+    ),
+    path(
+        "projects/<str:project_id>/packages/<str:package_id>/delete/",
+        views_ui.package_delete,
+        name="ui_package_delete",
     ),
     path(
         "projects/<str:project_id>/packages/<str:package_id>/viz-data/",
@@ -78,5 +79,10 @@ urlpatterns = [
         "projects/<str:project_id>/packages/<str:package_id>/blobs/<path:logical_path>/",
         views_ui.package_blob_download,
         name="ui_package_blob_download",
+    ),
+    path(
+        "projects/<str:project_id>/packages/<str:package_id>/",
+        views_ui.package_workspace,
+        name="ui_package_workspace",
     ),
 ]

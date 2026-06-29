@@ -1,10 +1,10 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="ru" data-bs-theme="dark">
+<html lang="{{ LANGUAGE_CODE }}" data-bs-theme="dark">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}Data Collector — админка{% endblock %}</title>
+  <title>{% block title %}{% trans "Data Collector — админка" %}{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -49,7 +49,7 @@
           {% endif %}
         </span>
       </a>
-      <button class="navbar-toggler border-secondary text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#uiNavCollapse" aria-controls="uiNavCollapse" aria-expanded="false" aria-label="Меню">
+      <button class="navbar-toggler border-secondary text-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#uiNavCollapse" aria-controls="uiNavCollapse" aria-expanded="false" aria-label="{% trans 'Меню' %}">
         <span class="navbar-toggler-icon"></span>
       </button>
       <div class="collapse navbar-collapse justify-content-end" id="uiNavCollapse">
@@ -57,22 +57,26 @@
           {% with u=request.resolver_match.url_name|default:"" %}
           {% if ui_is_staff %}
             <a class="nav-link ui-nav-link {% if 'ui_project' in u %}active{% endif %}" href="{% url 'ui_project_list' %}">
-              <i class="bi bi-folder2-open"></i> Проекты
+              <i class="bi bi-folder2-open"></i> {% trans "Проекты" %}
             </a>
             <a class="nav-link ui-nav-link {% if 'ui_collector_user' in u %}active{% endif %}" href="{% url 'ui_collector_user_list' %}">
-              <i class="bi bi-people"></i> Пользователи
+              <i class="bi bi-people"></i> {% trans "Пользователи" %}
             </a>
             <a class="nav-link ui-nav-link {% if 'ui_package' in u %}active{% endif %}" href="{% url 'ui_package_list' %}">
-              <i class="bi bi-box-seam"></i> Пакеты
+              <i class="bi bi-box-seam"></i> {% trans "Пакеты" %}
             </a>
             <span class="nav-link ui-nav-user d-none d-md-inline border-start border-secondary ps-md-3 ms-md-1">{{ user.username }}</span>
-            <a class="btn btn-sm btn-outline-light ms-md-2" href="{% url 'ui_logout' %}"><i class="bi bi-box-arrow-right me-1"></i>Выход</a>
+            {% include "ui/_lang_toggle.html" %}
+            <a class="btn btn-sm btn-outline-light ms-md-2" href="{% url 'ui_logout' %}"><i class="bi bi-box-arrow-right me-1"></i>{% trans "Выход" %}</a>
           {% elif ui_collector_user %}
             <a class="nav-link ui-nav-link {% if 'ui_package' in u %}active{% endif %}" href="{% url 'ui_package_list' %}">
-              <i class="bi bi-box-seam"></i> Пакеты
+              <i class="bi bi-box-seam"></i> {% trans "Пакеты" %}
             </a>
             <span class="nav-link ui-nav-user d-none d-md-inline border-start border-secondary ps-md-3 ms-md-1">{{ ui_collector_label }}</span>
-            <a class="btn btn-sm btn-outline-light ms-md-2" href="{% url 'ui_logout' %}"><i class="bi bi-box-arrow-right me-1"></i>Выход</a>
+            {% include "ui/_lang_toggle.html" %}
+            <a class="btn btn-sm btn-outline-light ms-md-2" href="{% url 'ui_logout' %}"><i class="bi bi-box-arrow-right me-1"></i>{% trans "Выход" %}</a>
+          {% else %}
+            {% include "ui/_lang_toggle.html" %}
           {% endif %}
           {% endwith %}
         </div>

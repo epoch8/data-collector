@@ -268,10 +268,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                   helperText: typedCowId.isEmpty
                       ? null
                       : hasExactMatch
-                          ? loc.flowFormCowHintExact
+                          ? loc.flowFormSubjectHintExact
                           : hasAnyMatches
-                              ? loc.flowFormCowHintSimilar
-                              : loc.flowFormCowHintNew,
+                              ? loc.flowFormSubjectHintSimilar
+                              : loc.flowFormSubjectHintNew,
                   helperStyle: TextStyle(
                     color: hasExactMatch
                         ? Epoch8Theme.success

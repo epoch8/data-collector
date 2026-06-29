@@ -8,6 +8,8 @@ from django.urls import path, reverse
 
 from django.utils.html import format_html
 
+from django.utils.translation import gettext, gettext_lazy as _
+
 
 
 from .firebase_user_sync import sync_collector_users_from_firebase
@@ -88,9 +90,10 @@ class CollectorUserAdmin(admin.ModelAdmin):
 
                 format_html(
 
-                    "Синхронизация с Firebase Auth: всего в Firebase — {}, создано записей — {}, "
-
-                    "обновлён email — {}, без изменений — {}.",
+                    gettext(
+                        "Синхронизация с Firebase Auth: всего в Firebase — {}, создано записей — {}, "
+                        "обновлён email — {}, без изменений — {}."
+                    ),
 
                     r.total_firebase,
 
@@ -130,13 +133,13 @@ class CollectorUserAdmin(admin.ModelAdmin):
 
         (
 
-            "Мобильное приложение",
+            _("Мобильное приложение"),
 
             {
 
                 "fields": ("mobile_projects",),
 
-                "description": (
+                "description": _(
 
                     "Каталог проектов и загрузка пакетов через API <code>/v1/…</code>. "
 
@@ -150,13 +153,13 @@ class CollectorUserAdmin(admin.ModelAdmin):
 
         (
 
-            "Client-admin",
+            _("Client-admin"),
 
             {
 
                 "fields": ("admin_projects",),
 
-                "description": (
+                "description": _(
 
                     "Веб-админка пакетов <code>/ui/</code> — просмотр и правка. "
 
@@ -172,7 +175,7 @@ class CollectorUserAdmin(admin.ModelAdmin):
 
 
 
-    @admin.display(description="Мобильное")
+    @admin.display(description=_("Мобильное"))
 
     def mobile_projects_summary(self, obj: CollectorUser) -> str:
 
@@ -180,7 +183,7 @@ class CollectorUserAdmin(admin.ModelAdmin):
 
 
 
-    @admin.display(description="Client-admin")
+    @admin.display(description=_("Client-admin"))
 
     def admin_projects_summary(self, obj: CollectorUser) -> str:
 

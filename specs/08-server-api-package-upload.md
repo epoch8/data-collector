@@ -1,5 +1,7 @@
 # 8 — Загрузка пакета на сервер (клиент и API)
 
+Статус: **актуально** (июнь 2026). Референс: `django_server/api/views.py`, `project_db.py`, `project_media.py`.
+
 Одна спека на русском: **как** приложение отправляет пакет в **конкретный проект** на **конкретный сервер**, что видит пользователь (очередь, история), и **HTTP-контракт** (порядок шагов, коды, идемпотентность).
 
 **Связанные документы:** [06-upload-lifecycle.md](06-upload-lifecycle.md) (жизненный цикл и ретраи на устройстве), [07-package-payload-structure.md](07-package-payload-structure.md) (`payload.json`, `blobs/`), [02-data-models-schema.md](02-data-models-schema.md) (идентификаторы).
@@ -108,7 +110,7 @@
 
 Переходы **монотонны** из `completed` / `failed` назад без администратора — нет.
 
-**Референс-сервер в репозитории** (`django_server/api`): в БД используются фазы `awaiting_blobs`, `ready_to_commit`, `completed`, `failed` (без отдельного `created`, без `awaiting_manifest` и без `abandoned`). В модели есть поле `failure_reason`, но в ответе `GET …/packages/{package_id}` оно пока не отдаётся.
+**Референс Django** (`django_server/api`): сессии и блобы хранятся в **per-project DB** (SQLAlchemy, `database_uri`), файлы — через **fsspec** (`storage_uri`). Фазы: `awaiting_blobs`, `ready_to_commit`, `completed`, `failed` (без `created`, `awaiting_manifest`, `abandoned`). Поле `failure_reason` в модели есть; в `GET …/packages/{package_id}` пока не отдаётся.
 
 ---
 

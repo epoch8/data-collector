@@ -1,8 +1,10 @@
 # JSON → экран сбора (как в коде)
 
-Пайплайн от файлов в `assets/config/` до Flutter-виджетов. **Как писать JSON** — [09-project-json-builder-guide.md](09-project-json-builder-guide.md). Модель данных (часть устарела) — [../02-data-models-schema.md](../02-data-models-schema.md). Экраны — [../03-user-journey-screens.md](../03-user-journey-screens.md).
+Статус: **актуально** (июнь 2026).
 
-Схема: [json-ui-flow.drawio](json-ui-flow.drawio). Старый поток Korovas + пакет: [../korovas/v0_shema.drawio](../korovas/v0_shema.drawio).
+Пайплайн от JSON до Flutter-виджетов. **Как писать JSON** — [09-project-json-builder-guide.md](09-project-json-builder-guide.md). Модель данных — [../02-data-models-schema.md](../02-data-models-schema.md). Экраны — [../03-user-journey-screens.md](../03-user-journey-screens.md).
+
+Схема: [json-ui-flow.drawio](json-ui-flow.drawio).
 
 ---
 
@@ -10,26 +12,33 @@
 
 ```mermaid
 flowchart LR
-  subgraph assets
-    M["projects.json"]
-    P["*.json проектов"]
+  subgraph offline
+    M["assets/config/projects.json"]
+    P["bundled *.json"]
+  end
+  subgraph online
+    API["GET /v1/projects + /config"]
+    Cache["server_project_cache/"]
   end
   M --> PC[ProjectCatalog.loadAll]
   P --> PC
+  API --> SPC[ServerProjectCatalog]
+  SPC --> Cache
   PC --> PR[List Project]
+  SPC --> PR
   PR --> PP[projectsProvider]
   PP --> Dash[Dashboard]
   PP --> CFS[CollectionFlowScreen]
 ```
 
-| Шаг | Где | Действие |
-|-----|-----|----------|
-| 1 | `assets/config/projects.json` | Массив `projects` — пути к JSON. |
-| 2 | `project_catalog.dart` | Читает манифест, `rootBundle.loadString`, `Project.fromJson`. |
-| 3 | `pubspec.yaml` | `flutter.assets` включает `assets/config/`. |
-| 4 | `project_providers.dart` | `projectsProvider` → UI. |
+| Режим | Условие | Источник |
+|-------|---------|----------|
+| Офлайн | `API_BASE_URL` не задан | `project_catalog.dart` → `rootBundle` |
+| Онлайн | `ApiEnvironment.isConfigured` | `server_project_catalog.dart` → Dio + ETag cache |
 
-`id` проекта должен быть **уникален** во всех файлах манифеста; иначе `firstWhere` по `projectId` возьмёт первый попавшийся.
+`projectsProvider` (`lib/features/projects/providers/project_providers.dart`) ждёт Firebase session перед `/v1/projects`.
+
+`id` проекта должен быть **уникален**; иначе `firstWhere` по `projectId` возьмёт первый попавшийся.
 
 ---
 
@@ -39,119 +48,98 @@ flowchart LR
 
 | JSON | Назначение |
 |------|------------|
-| `id`, `name`, `version` | Роутинг, БД, заголовки. |
-| `config.fields` | Справочник полей. |
-| `config.flow.steps` | Сценарий экранов. |
-| `config.ui` | Опционально: строки для `ProjectUi`. |
-
-В **пошаговом** режиме поля на шаге `form` только из **`field_ids`**. В **одном шаге `scroll_form`** на экран попадают **все** `config.fields` по `priority` (см. §4.1).
+| `id`, `name`, `version` | Роутинг, заголовки, manifest |
+| `config.fields` | Справочник полей |
+| `config.flow.steps` | Сценарий: только `scroll_form` и `review` |
+| `config.ui` | Опционально: `ProjectUi` |
 
 ---
 
 ## 3. Резолвер
 
-`collection_flow_resolver.dart` — **`resolveCollectionFlow(Project)`**: обход `flow.steps` по порядку → `ResolvedCollectionStep` с `kind`.
+`collection_flow_resolver.dart` — **`resolveCollectionFlow(Project)`**:
 
-### 3.1. `screen` → вид
+- Поддерживаются **только** `screen: scroll_form` и `screen: review`.
+- Legacy `form` / `instruction` / `camera_pose` → **`FormatException`**.
+- Каждое поле из `fields` должно быть в **ровно одном** `scroll_form.field_ids`.
 
-| `screen` | `kind` | Поля шага |
-|----------|--------|-----------|
-| `scroll_form` | scrollForm | `field_ids` в резолвере не ограничивают **ScrollFormCollectionScreen**: экран берёт **все** `config.fields` по `priority`. |
-| `form` | form | Обязательны **`field_ids`**; только `text_input` и `datetime`. Опционально `cow_id_hints`, `cow_id_field_id`. |
-| `instruction` | instruction | **`field_id`** → тип `instruction`. |
-| `camera_pose` | cameraPose | **`field_id`** → тип `camera_photo`. |
-| `review` | review | Только `id`. |
+### 3.1. `scroll_form`
 
-Несовместимый `screen`/тип → **`FormatException`**.
+| Свойство | Поведение |
+|----------|-----------|
+| `field_ids` | Обязателен, непустой; порядок = порядок на экране |
+| `form_title` | Подпись блока на review |
+| `cow_id_hints`, `cow_id_field_id` | Подсказки идентификатора субъекта |
 
-Алиасы парсера: `scrollform`, `cameraphoto`; регистр и дефисы нормализуются.
+Поля на шаге могут быть любых поддерживаемых типов (`text_input`, `datetime`, `instruction`, `camera_photo`) в одном скролле.
 
-### 3.2. Один скролл vs мастер
+### 3.2. `review`
 
-Один шаг и он `scroll_form` → **`isSingleScrollOnly`** → сразу `ScrollFormCollectionScreen`.
+Только `id`; показывает сводку перед submit.
 
-Если шагов **> 1**, среди них **не должно** быть `scroll_form` — иначе исключение при резолве.
+### 3.3. Один vs несколько шагов
 
-### 3.3. Камера: индекс позы
+- Один шаг и он `scroll_form` → **`isSingleScrollOnly`** → сразу `ScrollFormCollectionScreen`.
+- Несколько шагов → `CollectionFlowScreen` + `_FlowStepShell` по порядку `flow.steps`.
 
-По порядку шагов `camera_pose` считаются `poseIndex1Based` (1…N среди камер) и `poseTotal` — для ленты и `camera_capture_context`.
+### 3.4. Камера
 
-### 3.4. `review`
-
-Есть `camera_pose`, но нет шага `review` → резолвер **добавляет** `review` в конец.
+Глобальный номер ракурса (`poseIndex1Based`) считается по порядку полей `camera_photo` во всех `scroll_form` шагах.
 
 ---
 
-## 4. Две ветки UI
-
-Вход: **`CollectionFlowScreen(projectId)`** (`collection_flow_screen.dart`).
+## 4. UI-ветки
 
 ```mermaid
 flowchart TD
   A[CollectionFlowScreen] --> B{isSingleScrollOnly?}
   B -->|да| S[ScrollFormCollectionScreen]
   B -->|нет| W[_FlowStepShell]
-  W --> F{kind}
-  F -->|form| FS[_FlowFormStep]
-  F -->|instruction| IS[_InstructionBriefingStep]
-  F -->|cameraPose| CS[_CameraPoseStep]
-  F -->|review| RS[_FlowReviewStep]
+  W --> SF[scroll_form step]
+  W --> RV[review step]
 ```
 
-### 4.1. Scroll
+Файлы:
 
-Файл: `scroll_form_screen.dart`. Данные: **`project.config.fields`**, сортировка **`priority`**. Ограничить набор полей без правки кода нельзя — убрать лишнее из `fields` или перейти на пошаговый `form`.
-
-### 4.2. Мастер
-
-`_step` → `resolvedFlow.steps[_step]`; `_buildStep` — `switch` по `kind`. Лента и подписи частично из **`ProjectUi`** → `config.ui`.
+- `scroll_form_screen.dart` — один скролл с полями шага.
+- `collection_flow_screen.dart` — оболочка мастера.
+- `scroll_form_flow_step.dart` — виджет шага в мастере.
 
 ---
 
-## 5. Данные по шагам (мастер)
+## 5. Данные по шагам
 
-```mermaid
-sequenceDiagram
-  participant Step as flow.steps[i]
-  participant Res as resolveCollectionFlow
-  participant CF as fields by field_id
-  participant W as WizardState
-  Step->>Res: screen + ids
-  Res->>CF: lookup
-  Res->>W: ключи field_id
-```
-
-- **`form`**: значения в `wizardState` по **`field_id`**.
-- **`camera_pose`**: пути под **`field_id`** поля `camera_photo`; плюс **`camera_capture_context`** (см. `PackagePayloadKeys`).
+- Значения в `wizardState` по **`field_id`**.
+- `camera_photo`: map path → metadata; плюс **`camera_capture_context`** до materialize.
+- Submit → `materializeLocalPackage` → относительные `blobs/...`, `camera_session` / `frame_camera`.
 
 ---
 
 ## 6. `config.ui` и `ProjectUi`
 
-`project_ui.dart`: **`ProjectUi(project)`** читает **`project.config.ui`**.
+`project_ui.dart`: вложенные ключи, шаблоны `tpl`, `strings`, `listAt`.
 
-- `str(['flow', 'ribbon', 'form'], fallback)` — вложенные ключи.
-- `tpl(..., {'count': ...})` — подстановки в строке.
-- `strings`, `listAt` — списки.
-
-`ShootingGuideBody` — ветка **`ui.shooting_guide`**, в т.ч. **`pose_cards`**.
+Блок **`ui.shooting_guide`** в текущей версии клиента **не используется** (см. гайд `09`).
 
 ---
 
-## 7. Пример `korovas-2026.json`
+## 7. Медиа в инструкциях
 
-`form` → `instruction` → три `camera_pose` → `review`. Группировка истории по «субъекту» — если включено в резолвере (`shouldGroupHistoryBySubject`).
+Пути в Markdown (`instruction`) → файлы в **`collector/media/`** Git-репо.
+
+Клиент: `GET /v1/projects/{id}/assets/{path}`; кэш `project_asset_paths.dart`.
+
+Загрузка медиа — страница «Файлы» проекта в админке (`/ui/projects/{id}/media/`).
 
 ---
 
 ## 8. Поле есть в JSON, в UI нет
 
-1. Дублирующийся **`id`** у другого файла.  
-2. Нет пути в **`projects.json`**.  
-3. Нет записи в **`config.fields`** с нужным **`field_id`**.  
-4. **Scroll**: порядок — `priority`; `field_ids` у шага не фильтруют экран.  
-5. **Мастер**: для `form` — поле в **`field_ids`**; для `instruction` / `camera_pose` — **`field_id`**.  
-6. После правок **assets** — полный **restart** (hot reload не гарантирует).
+1. Дублирующийся **`id`** у другого файла.
+2. Проект не в каталоге / не синкнулся с сервера.
+3. Поле не в **`field_ids`** ни одного `scroll_form`.
+4. Поле не в **`config.fields`**.
+5. После правок assets — **full restart**; после правок Git-конфига — pull / перезапуск приложения.
 
 ---
 
@@ -159,13 +147,15 @@ sequenceDiagram
 
 | Тема | Файл |
 |------|------|
-| Загрузка проектов | `lib/features/projects/project_catalog.dart` |
+| Offline catalog | `lib/features/projects/project_catalog.dart` |
+| Server catalog | `lib/features/projects/server_project_catalog.dart` |
+| Providers | `lib/features/projects/providers/project_providers.dart` |
 | Модели | `lib/models/project_config.dart` |
-| Резолв шагов | `lib/features/collection/logic/collection_flow_resolver.dart` |
-| Вход scroll/wizard | `lib/features/collection/presentation/flow/collection_flow_screen.dart` |
-| Скролл | `.../scroll_form_screen.dart` |
-| Состояние мастера | `.../providers/wizard_state_provider.dart` |
+| Резолв | `lib/features/collection/logic/collection_flow_resolver.dart` |
+| Вход | `lib/features/collection/presentation/flow/collection_flow_screen.dart` |
+| Скролл | `lib/features/collection/presentation/flow/scroll_form_screen.dart` |
+| Состояние | `.../providers/wizard_state_provider.dart` |
 | Тексты UI | `.../flow/project_ui.dart` |
-| Гайд по съёмке | `.../flow/shooting_guide.dart` |
+| Валидация на сервере | `django_server/api/project_config_validate.py` |
 
-Меняете резолвер или `CollectionFlowScreen` — обновите этот файл и гайд `09` в том же изменении.
+Меняете резолвер — обновите этот файл и [09-project-json-builder-guide.md](09-project-json-builder-guide.md).

@@ -1,46 +1,48 @@
 {% extends "ui/base.html" %}
-{% load static %}
-{% block title %}SSH-ключ — {{ project.name }}{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "SSH-ключ" %} — {{ project.name }}{% endblock %}
 {% block breadcrumb %}
-<nav class="ui-breadcrumb" aria-label="Навигация">
+<nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
-    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>
     <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">SSH-ключ</li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans "SSH-ключ" %}</li>
   </ol>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="ui-page-head mb-4">
   <div>
-    <h1 class="ui-page-title">SSH-ключ Git</h1>
-    <p class="ui-page-sub mb-0">Проект <code>{{ project.project_id }}</code></p>
+    <h1 class="ui-page-title">{% trans "SSH-ключ Git" %}</h1>
+    <p class="ui-page-sub mb-0">{% trans "Проект" %} <code>{{ project.project_id }}</code></p>
   </div>
 </div>
 
 <div class="row g-4">
   <div class="col-lg-7">
     <div class="card p-4">
-      <div class="ui-card-title"><i class="bi bi-key me-1"></i>Приватный ключ (deploy)</div>
+      <div class="ui-card-title"><i class="bi bi-key me-1"></i>{% trans "Приватный ключ (deploy)" %}</div>
       <p class="small ui-muted mb-3">
+        {% blocktrans trimmed %}
         Нужен только если Git пишет <code>error in libcrypto</code> или ключ утерян.
         Формат OpenSSH (<code>-----BEGIN OPENSSH PRIVATE KEY-----</code>), не PuTTY .ppk.
+        {% endblocktrans %}
       </p>
       <form method="post" action="{% url 'ui_project_update_ssh_key' project.project_id %}">
         {% csrf_token %}
         <textarea class="form-control font-monospace small mb-3" name="private_key" rows="8" placeholder="-----BEGIN OPENSSH PRIVATE KEY-----"></textarea>
-        <button type="submit" class="btn btn-primary btn-sm">Сохранить ключ</button>
-        <a class="btn btn-outline-secondary btn-sm ms-2" href="{% url 'ui_project_detail' project.project_id %}">Отмена</a>
+        <button type="submit" class="btn btn-primary btn-sm">{% trans "Сохранить ключ" %}</button>
+        <a class="btn btn-outline-secondary btn-sm ms-2" href="{% url 'ui_project_detail' project.project_id %}">{% trans "Отмена" %}</a>
       </form>
     </div>
   </div>
   <div class="col-lg-5">
     <div class="card p-4">
-      <div class="ui-card-title"><i class="bi bi-git me-1"></i>Deploy key (public)</div>
-      <p class="small ui-muted mb-2">GitHub → Settings → Deploy keys:</p>
+      <div class="ui-card-title"><i class="bi bi-git me-1"></i>{% trans "Deploy key (public)" %}</div>
+      <p class="small ui-muted mb-2">{% trans "GitHub → Settings → Deploy keys:" %}</p>
       <div class="d-flex gap-2 align-items-start">
         <pre id="deploy-public-key" class="small bg-dark border border-secondary rounded p-2 mb-0 text-break flex-grow-1" style="font-size: 0.7rem; max-height: 200px; overflow: auto;">{{ git_public_key }}</pre>
-        <button type="button" class="btn btn-sm btn-outline-light flex-shrink-0 ui-copy-btn" data-copy-target="deploy-public-key" title="Копировать">
+        <button type="button" class="btn btn-sm btn-outline-light flex-shrink-0 ui-copy-btn" data-copy-target="deploy-public-key" title="{% trans 'Копировать' %}">
           <i class="bi bi-clipboard"></i>
         </button>
       </div>

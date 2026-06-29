@@ -84,7 +84,7 @@ flutter:
 
   assets:
     - e8_logo.png
-    - assets/korovas/
+    - assets/placeholders/
     - assets/config/
   #   - images/a_dot_ham.jpeg
 

@@ -1,24 +1,32 @@
 # Stage 1: MVP Scope
 
-To avoid feature bloat, we strictly limit Stage 1.
+Статус: **завершён** (исторический документ). Текущее состояние продукта — см. [01-overview.md](01-overview.md).
 
-## What is IN scope for Stage 1:
-1. **Mock Authentication:** A simple dummy login screen (no real API call) that routes to the Dashboard.
-2. **Mock Projects & Configs:** Hardcode a realistic project Config into the app (e.g., loaded from a local JSON asset, bypassing backend sync for now).
-3. **Dynamic Wizard Logic (Basic Types):**
-   * Support field types such as `text_input`, `datetime`, and `camera_photo` (see project config schema).
-   * Basic required validations.
-4. **Local Saving:** 
-   * Collect the data.
-   * Save media to disk.
-   * Serialize the results into a `Package` JSON and save it to the local SQLite database.
-5. **History View (Basic):** 
-   * Be able to see a list of locally collected Draft/Completed packages.
+## Что было в scope Stage 1 (выполнено)
 
-## What is OUT of scope for Stage 1:
-* **No Real Backend API Integration:** No syncing of configs from servers, and no uploading of packages.
-* **No Enriched Data Viewer:** No ML feedback UI yet.
-* **No Video Capture:** Videos are complex to handle and chunk; stick to photos first.
-* **No Background Workers:** Offline/online queued background syncing is deferred.
+1. ~~Mock Authentication~~ → **Firebase Email/Password** + опциональный офлайн-режим без API.
+2. ~~Mock Projects & Configs~~ → bundled `assets/config/` + **серверный каталог** `GET /v1/projects`.
+3. **Dynamic UI from config:** `scroll_form` + `review`; типы `text_input`, `datetime`, `instruction`, `camera_photo`.
+4. **Local saving:** materialization в `packages/{id}/`, Drift index, `serverDeliveryState`.
+5. **History view:** список локальных пакетов со статусом доставки.
 
-*The goal of Stage 1 is strictly to validate the "Dynamic UI Driven by Config" architecture and the user interaction with the step-by-step wizard.*
+## Что было out of scope Stage 1 и текущий статус
+
+| Было out of scope | Сейчас |
+|-------------------|--------|
+| Real backend API | **Реализовано:** Django `/v1/*`, Git-backed config |
+| Enriched data viewer (mobile) | **Не реализовано** (только админка `/ui/`) |
+| Video capture | **Не реализовано** |
+| Background workers | **Не реализовано** (ручная загрузка с вкладки «Сервер») |
+
+## Текущий scope (после MVP)
+
+**В продакшене:**
+
+- Flutter Android (+ Web с ограничениями)
+- Django API + веб-админка (staff + client-admin)
+- Git-backed project config, per-project storage URIs
+- Package upload protocol (blobs → manifest → commit)
+- Admin visualization (`collector/viz.json`, pipeline plugins)
+
+**Backlog:** см. [todo](todo).

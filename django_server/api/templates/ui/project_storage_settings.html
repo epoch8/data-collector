@@ -1,19 +1,20 @@
 {% extends "ui/base.html" %}
-{% block title %}Хранилище — {{ project.name }}{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Хранилище" %} — {{ project.name }}{% endblock %}
 {% block breadcrumb %}
-<nav class="ui-breadcrumb" aria-label="Навигация">
+<nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
-    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>
     <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Хранилище</li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans "Хранилище" %}</li>
   </ol>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="ui-page-head mb-4">
   <div>
-    <h1 class="ui-page-title">Хранилище данных</h1>
-    <p class="ui-page-sub mb-0">Проект <code>{{ project.project_id }}</code></p>
+    <h1 class="ui-page-title">{% trans "Хранилище данных" %}</h1>
+    <p class="ui-page-sub mb-0">{% trans "Проект" %} <code>{{ project.project_id }}</code></p>
   </div>
 </div>
 
@@ -24,11 +25,11 @@
         {% csrf_token %}
         {% include "ui/_project_storage_fields.html" %}
         <div class="alert alert-secondary py-2 small mb-4 mt-3">
-          Смена адреса не переносит уже сохранённые данные. После сохранения нажмите «Проверить хранилище» на странице проекта.
+          {% trans "Смена адреса не переносит уже сохранённые данные. После сохранения нажмите «Проверить хранилище» на странице проекта." %}
         </div>
         <div class="d-flex flex-wrap gap-2">
-          <button type="submit" class="btn btn-primary"><i class="bi bi-hdd-stack me-1"></i>Сохранить</button>
-          <a href="{% url 'ui_project_detail' project.project_id %}" class="btn btn-outline-secondary">Отмена</a>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-hdd-stack me-1"></i>{% trans "Сохранить" %}</button>
+          <a href="{% url 'ui_project_detail' project.project_id %}" class="btn btn-outline-secondary">{% trans "Отмена" %}</a>
         </div>
       </form>
     </div>

@@ -49,8 +49,9 @@ if DJANGO_ENV == "production":
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
@@ -69,6 +70,7 @@ TEMPLATES = [
         "OPTIONS": {
             "context_processors": [
                 "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "api.ui_context.ui_template_context",
@@ -92,10 +94,8 @@ if DJANGO_ENV == "production":
     }
     STORAGES = {
         "default": {
-            "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
-            "OPTIONS": {
-                "bucket_name": os.environ.get("GS_STORAGE", "korovas-dc-prod"),
-            },
+            "BACKEND": "storages.backends.s3.S3Storage",
+            "OPTIONS": {},
         },
         "staticfiles": {
             "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
@@ -109,10 +109,17 @@ else:
         }
     }
 
-LANGUAGE_CODE = "ru-ru"
+LANGUAGE_CODE = "ru"
 TIME_ZONE = "Europe/Moscow"
 USE_I18N = True
 USE_TZ = True
+
+# Языки интерфейса /ui (переключаются тумблером в шапке; см. ui_set_language).
+LANGUAGES = [
+    ("ru", "Русский"),
+    ("en", "English"),
+]
+LOCALE_PATHS = [BASE_DIR / "locale"]
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

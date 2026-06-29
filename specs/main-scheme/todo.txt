@@ -1,5 +1,21 @@
-TODO:
-    Перейти на конфигруцию через slq алхимию
-    Перенести коров на Post (uri базы и она переносится)
-    Хранилище данных конфигрурируется fs spec uri
-    Тесты 
+# main-scheme — backlog диаграмм
+
+Обновлено: июнь 2026.
+
+## Реализовано (отразить на диаграммах при ревизии)
+
+- [x] Git-backed config (`collector/config.json`)
+- [x] Per-project storage: `database_uri` + `storage_uri` (SQLAlchemy + fsspec)
+- [x] Package upload API `/v1/projects/.../packages`
+- [x] Django admin UI `/ui/` (templates, не SPA)
+- [x] Firebase auth + CollectorUser project access
+- [x] `collector/viz.json` + viz plugins
+
+## Актуальный backlog
+
+- [ ] Диаграмма: default storage → Yandex Cloud S3 (не сетевой диск)
+- [ ] Диаграмма: изоляция проектов при общем Postgres/bucket
+- [ ] OpenAPI 3.1 для `/v1/*`
+- [ ] Фоновая upload-очередь на клиенте
+
+См. также `specs/todo`.

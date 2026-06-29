@@ -488,7 +488,11 @@ def resolve_media_file(project_id: str, asset_path: str) -> Path | None:
 
 
 def _git_add_commit_push(project: Project, git_paths: list[str], commit_message: str) -> str:
-    pull(project, force=True)
+    # ВАЖНО: не делаем здесь pull(force=True). Вызывающие (write_media_file /
+    # delete_media_file) уже синхронизировали репозиторий ДО изменения файлов.
+    # Повторный pull выполнил бы `git clean -fd` + `reset --hard`, что стёрло бы
+    # только что записанный untracked-файл (отсюда "pathspec did not match")
+    # и восстановило бы удалённый файл при delete.
     dest = repo_dir(project.project_id)
     for p in git_paths:
         _run_git(["add", "--", p], credential=project.git_credential, cwd=dest)

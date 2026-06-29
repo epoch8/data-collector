@@ -176,8 +176,15 @@
   }
   function gtLabelColor(label) {
     var h = 0;
+    label = String(label || "");
     for (var i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) >>> 0;
     return "hsl(" + (h % 360) + " 70% 52%)";
+  }
+  // GT и Inference красят кейпоинты одинаково — по имени точки, чтобы
+  // совпадающие кейпоинты на обоих слоях имели один и тот же цвет.
+  function keypointColor(palette, label, pal) {
+    if (palette === "gt" || palette === "inference") return gtLabelColor(label);
+    return pal ? pal.point : "#3b82f6";
   }
 
   // ── SVG helpers ───────────────────────────────────────────────────────────
@@ -218,8 +225,94 @@
     index: 0, layerVisible: {}, showBoxes: false, showLabels: false,
     showDepth: false, depthLayerId: null, depthMode: "split", depthOpacity: 0.5,
     selected: null, probe: null, depthData: null, depthLoading: false, depthError: null,
+    zoom: 1, panX: 0, panY: 0, dragging: false,
   };
   var depthResizeObs = [];
+
+  // ── Zoom / pan ────────────────────────────────────────────────────────────
+  var ZOOM_MIN = 1, ZOOM_MAX = 12, ZOOM_WHEEL = 1.15, ZOOM_BTN = 1.6;
+  function clampZoom(z) { return Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, z)); }
+
+  // Базовый размер кадра (contain-fit) внутри вьюпорта при zoom = 1.
+  function stageBaseSize() {
+    var frame = refs.stageFrame;
+    if (!frame) return null;
+    var fw = frame.clientWidth, fh = frame.clientHeight;
+    if (fw <= 0 || fh <= 0) return null;
+    var sz = imageSize(currentSlide());
+    var iw = (refs.img && refs.img.naturalWidth) || sz.w;
+    var ih = (refs.img && refs.img.naturalHeight) || sz.h;
+    if (iw <= 0 || ih <= 0) { iw = sz.w; ih = sz.h; }
+    var scale0 = Math.min(fw / iw, fh / ih);
+    if (!isFinite(scale0) || scale0 <= 0) scale0 = 1;
+    return { fw: fw, fh: fh, baseW: iw * scale0, baseH: ih * scale0 };
+  }
+
+  // Применить текущий zoom/pan: меняем РАЗМЕР внутреннего слоя (а не CSS-scale),
+  // поэтому фото и SVG всегда отрисованы чётко на любом увеличении.
+  function relayoutStage() {
+    if (!refs.stageInner) return;
+    var b = stageBaseSize();
+    if (!b) return;
+    var z = state.zoom;
+    var w = b.baseW * z, h = b.baseH * z;
+    var maxPanX = Math.max(0, (w - b.fw) / 2);
+    var maxPanY = Math.max(0, (h - b.fh) / 2);
+    state.panX = Math.min(maxPanX, Math.max(-maxPanX, state.panX));
+    state.panY = Math.min(maxPanY, Math.max(-maxPanY, state.panY));
+    var left = (b.fw - w) / 2 + state.panX;
+    var top = (b.fh - h) / 2 + state.panY;
+    refs.stageInner.style.width = w + "px";
+    refs.stageInner.style.height = h + "px";
+    refs.stageInner.style.transform = "translate(" + left + "px," + top + "px)";
+    updateZoomUI();
+    updateStageCursor();
+  }
+
+  function updateZoomUI() {
+    if (refs.zoomLabel) refs.zoomLabel.textContent = Math.round(state.zoom * 100) + "%";
+    if (refs.zoomOut) refs.zoomOut.disabled = state.zoom <= ZOOM_MIN + 1e-3;
+    if (refs.zoomIn) refs.zoomIn.disabled = state.zoom >= ZOOM_MAX - 1e-3;
+    if (refs.zoomReset) refs.zoomReset.disabled = state.zoom <= ZOOM_MIN + 1e-3 && !state.panX && !state.panY;
+  }
+
+  function updateStageCursor() {
+    var f = refs.stageFrame;
+    if (!f) return;
+    var depthActive = state.showDepth && state.depthData;
+    f.classList.toggle("is-pannable", state.zoom > 1 && !depthActive);
+    f.classList.toggle("is-panning", state.dragging);
+  }
+
+  function resetZoom() {
+    state.zoom = 1; state.panX = 0; state.panY = 0; state.dragging = false;
+    relayoutStage();
+  }
+
+  // Увеличение с сохранением точки под курсором (clientX/clientY).
+  function zoomTo(newZoom, clientX, clientY) {
+    var b = stageBaseSize();
+    if (!b) return;
+    newZoom = clampZoom(newZoom);
+    var frame = refs.stageFrame;
+    var rect = frame.getBoundingClientRect();
+    var fx = (clientX != null ? clientX : rect.left + b.fw / 2) - rect.left;
+    var fy = (clientY != null ? clientY : rect.top + b.fh / 2) - rect.top;
+    var oldW = b.baseW * state.zoom, oldH = b.baseH * state.zoom;
+    var oldLeft = (b.fw - oldW) / 2 + state.panX;
+    var oldTop = (b.fh - oldH) / 2 + state.panY;
+    // Точка под курсором в долях внутреннего слоя.
+    var u = oldW ? (fx - oldLeft) / oldW : 0.5;
+    var v = oldH ? (fy - oldTop) / oldH : 0.5;
+    var newW = b.baseW * newZoom, newH = b.baseH * newZoom;
+    // Хотим, чтобы (u,v) остался под курсором: fx = newLeft + u*newW.
+    var newLeft = fx - u * newW;
+    var newTop = fy - v * newH;
+    state.zoom = newZoom;
+    state.panX = newLeft - (b.fw - newW) / 2;
+    state.panY = newTop - (b.fh - newH) / 2;
+    relayoutStage();
+  }
 
   function currentSlide() { return slides[state.index] || null; }
 
@@ -432,7 +525,7 @@
       layer.points.forEach(function (pt, idx) {
         var isActive = active && active.layerId === layer.id && active.index === idx;
         var dimmed = state.selected && !(state.selected.layerId === layer.id && state.selected.index === idx);
-        var color = layer.palette === "gt" ? gtLabelColor(pt.label) : p.point;
+        var color = keypointColor(layer.palette, pt.label, p);
         var pg = svgEl("g", { class: "annotation-keypoint", opacity: dimmed && !isActive ? 0.35 : 1 });
         pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: 14, fill: "transparent" }));
         pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: isActive ? 8 : 6, fill: "rgba(15,17,23,0.8)", stroke: color, "stroke-width": isActive ? 2.5 : 2, "vector-effect": "non-scaling-stroke" }));
@@ -493,7 +586,7 @@
           li.className = "pkg-kp";
           var sel = state.selected;
           if (sel && sel.layerId === layer.id && sel.index === idx) li.classList.add("active");
-          var color = layer.palette === "gt" ? gtLabelColor(pt.label) : p.point;
+          var color = keypointColor(layer.palette, pt.label, p);
           var conf = pt.confidence != null ? '<span class="pkg-kp__conf">' + Math.round(pt.confidence * 100) + "%</span>" : "";
           li.innerHTML = '<span class="pkg-kp__label"><span class="pkg-kp__dot" style="background:' + color + '"></span><span class="text">' + escapeHtml(pt.label) + "</span></span>" + conf;
           li.addEventListener("click", function () {
@@ -757,6 +850,7 @@
       refs.probeBar.splitBtn.classList.toggle("depth-mode-btn--on", state.depthMode === "split");
       refs.probeBar.overlayBtn.classList.toggle("depth-mode-btn--on", state.depthMode === "overlay");
     }
+    updateStageCursor();
   }
 
   function observeDepthFrame(frame) {
@@ -896,6 +990,7 @@
   }
 
   function handleProbePointer(e, frameEl) {
+    if (state.dragging) return;
     if (!state.showDepth || !state.depthData) return;
     var slide = currentSlide();
     if (!slide) return;
@@ -905,6 +1000,87 @@
     var depthM = sampleDepthAtImage(state.depthData, c.x, c.y, sz.w, sz.h);
     if (depthM == null) { setProbe(null); return; }
     setProbe({ x: c.x, y: c.y, depthM: depthM });
+  }
+
+  // ── Zoom controls + pan binding ─────────────────────────────────────────────
+  function buildZoomControls() {
+    var box = document.createElement("div");
+    box.className = "pkg-zoom";
+    refs.zoomOut = document.createElement("button");
+    refs.zoomOut.type = "button";
+    refs.zoomOut.className = "pkg-zoom__btn";
+    refs.zoomOut.title = "Уменьшить";
+    refs.zoomOut.innerHTML = "&minus;";
+    refs.zoomLabel = document.createElement("button");
+    refs.zoomLabel.type = "button";
+    refs.zoomLabel.className = "pkg-zoom__label";
+    refs.zoomLabel.title = "Сбросить масштаб";
+    refs.zoomLabel.textContent = "100%";
+    refs.zoomIn = document.createElement("button");
+    refs.zoomIn.type = "button";
+    refs.zoomIn.className = "pkg-zoom__btn";
+    refs.zoomIn.title = "Увеличить";
+    refs.zoomIn.innerHTML = "+";
+    refs.zoomReset = refs.zoomLabel;
+    box.appendChild(refs.zoomOut);
+    box.appendChild(refs.zoomLabel);
+    box.appendChild(refs.zoomIn);
+    function stop(e) { e.stopPropagation(); }
+    box.addEventListener("pointerdown", stop);
+    box.addEventListener("wheel", stop);
+    refs.zoomOut.addEventListener("click", function () { zoomTo(state.zoom / ZOOM_BTN); });
+    refs.zoomIn.addEventListener("click", function () { zoomTo(state.zoom * ZOOM_BTN); });
+    refs.zoomLabel.addEventListener("click", function () { resetZoom(); });
+    return box;
+  }
+
+  function bindStageZoomPan() {
+    var frame = refs.stageFrame;
+    if (!frame) return;
+
+    frame.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      var factor = e.deltaY < 0 ? ZOOM_WHEEL : 1 / ZOOM_WHEEL;
+      zoomTo(state.zoom * factor, e.clientX, e.clientY);
+    }, { passive: false });
+
+    frame.addEventListener("dblclick", function (e) {
+      if (state.showDepth && state.depthData) return;
+      if (state.zoom > 1) resetZoom();
+      else zoomTo(2.5, e.clientX, e.clientY);
+    });
+
+    var down = null;
+    frame.addEventListener("pointerdown", function (e) {
+      if (e.button !== 0) return;
+      if (state.zoom <= 1) return;
+      if (state.showDepth && state.depthData) return;
+      down = { x: e.clientX, y: e.clientY, panX: state.panX, panY: state.panY, id: e.pointerId, moved: false };
+    });
+    frame.addEventListener("pointermove", function (e) {
+      if (!down) return;
+      var dx = e.clientX - down.x, dy = e.clientY - down.y;
+      if (!down.moved) {
+        if (Math.abs(dx) < 3 && Math.abs(dy) < 3) return;
+        down.moved = true;
+        state.dragging = true;
+        setProbe(null);
+        try { frame.setPointerCapture(down.id); } catch (err) {}
+        updateStageCursor();
+      }
+      state.panX = down.panX + dx;
+      state.panY = down.panY + dy;
+      relayoutStage();
+    });
+    function endDrag() {
+      if (!down) return;
+      try { frame.releasePointerCapture(down.id); } catch (err) {}
+      down = null;
+      state.dragging = false;
+      updateStageCursor();
+    }
+    frame.addEventListener("pointerup", endDrag);
+    frame.addEventListener("pointercancel", endDrag);
   }
 
   // ── Full render of current slide ──────────────────────────────────────────
@@ -919,6 +1095,7 @@
     refs.img.src = slide.url;
     refs.svg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
     if (refs.probeSvg) refs.probeSvg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
+    resetZoom();
 
     var cvat = cvatUrlFor(slide);
     refs.cvat.style.display = cvat ? "" : "none";
@@ -1184,18 +1361,24 @@
     stage.className = "pkg-stage";
     refs.stageFrame = document.createElement("div");
     refs.stageFrame.className = "pkg-stage__frame";
+    // Внутренний слой, размер которого мы меняем при зуме (чёткая отрисовка).
+    refs.stageInner = document.createElement("div");
+    refs.stageInner.className = "pkg-stage__inner";
     refs.img = document.createElement("img");
     refs.img.className = "pkg-stage__img";
     refs.img.alt = "";
-    refs.img.addEventListener("load", function () { repaintDepthViews(); });
+    refs.img.draggable = false;
+    refs.img.addEventListener("load", function () { relayoutStage(); repaintDepthViews(); });
     refs.depthOverlay = buildDepthView(true);
     refs.depthOverlay.root.style.display = "none";
     refs.svg = svgEl("svg", { class: "pkg-stage__svg", preserveAspectRatio: "xMidYMid meet" });
     refs.probeSvg = svgEl("svg", { class: "annotation-stage__probe-svg", preserveAspectRatio: "xMidYMid meet" });
-    refs.stageFrame.appendChild(refs.img);
-    refs.stageFrame.appendChild(refs.svg);
-    refs.stageFrame.appendChild(refs.depthOverlay.root);
-    refs.stageFrame.appendChild(refs.probeSvg);
+    refs.stageInner.appendChild(refs.img);
+    refs.stageInner.appendChild(refs.svg);
+    refs.stageInner.appendChild(refs.depthOverlay.root);
+    refs.stageInner.appendChild(refs.probeSvg);
+    refs.stageFrame.appendChild(refs.stageInner);
+    refs.stageFrame.appendChild(buildZoomControls());
     stage.appendChild(refs.stageFrame);
     var legend = document.createElement("div");
     legend.className = "pkg-stage__legend";
@@ -1232,12 +1415,18 @@
       frame.addEventListener("pointermove", function (e) { handleProbePointer(e, frame); });
       frame.addEventListener("pointerleave", function () { setProbe(null); });
     }
-    bindProbe(refs.stageFrame);
+    // Замер глубины на фото берём по внутреннему слою — его rect уже учитывает zoom/pan.
+    bindProbe(refs.stageInner);
     bindProbe(refs.depthSplit.frame);
     bindProbe(refs.depthOverlay.frame);
     observeDepthFrame(refs.depthSplit.frame);
     observeDepthFrame(refs.depthOverlay.frame);
-    observeDepthFrame(refs.stageFrame);
+    bindStageZoomPan();
+    if (typeof ResizeObserver !== "undefined") {
+      var stageRo = new ResizeObserver(function () { relayoutStage(); repaintDepthViews(); });
+      stageRo.observe(refs.stageFrame);
+      depthResizeObs.push(stageRo);
+    }
 
     updateProbeBar();
 
@@ -1248,6 +1437,10 @@
       if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
       if (e.key === "ArrowLeft") goTo(state.index - 1);
       else if (e.key === "ArrowRight") goTo(state.index + 1);
+      else if (e.key === "+" || e.key === "=") zoomTo(state.zoom * ZOOM_BTN);
+      else if (e.key === "-" || e.key === "_") zoomTo(state.zoom / ZOOM_BTN);
+      else if (e.key === "0") resetZoom();
+      else if (e.key === "Escape" && state.zoom > 1) resetZoom();
       else if (e.key === "Escape" && state.selected) { state.selected = null; rerenderDynamic(); }
     });
   }

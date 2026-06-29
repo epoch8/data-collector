@@ -1,29 +1,29 @@
 {% extends "ui/base.html" %}
-{% load static %}
-{% block title %}Редактор — {{ project.project_id }}{% endblock %}
+{% load static i18n %}
+{% block title %}{% trans "Редактор" %} — {{ project.project_id }}{% endblock %}
 {% block breadcrumb %}
-<nav class="ui-breadcrumb" aria-label="Навигация">
+<nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
-    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>
+    <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>
     <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">Визуальный редактор</li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans "Визуальный редактор" %}</li>
   </ol>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="ui-page-head">
   <div>
-    <h1 class="ui-page-title">Конфигурация: визуальный редактор</h1>
-    <p class="ui-page-sub mb-0">Поля задаются <strong>внутри каждого экрана</strong> (карточки «Экран 1», «Экран 2»…), а не отдельной таблицей. Финальный экран «Проверка и отправка» обязателен и всегда в конце.</p>
+    <h1 class="ui-page-title">{% trans "Конфигурация: визуальный редактор" %}</h1>
+    <p class="ui-page-sub mb-0">{% blocktrans trimmed %}Поля задаются <strong>внутри каждого экрана</strong> (карточки «Экран 1», «Экран 2»…), а не отдельной таблицей. Финальный экран «Проверка и отправка» обязателен и всегда в конце.{% endblocktrans %}</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>Только JSON</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>{% trans "Только JSON" %}</a>
   </div>
 </div>
 
 {% if validation_errors %}
 <div class="alert alert-danger mb-3">
-  <strong>Не сохранено:</strong>
+  <strong>{% trans "Не сохранено:" %}</strong>
   <ul class="mb-0 small">{% for e in validation_errors %}<li>{{ e }}</li>{% endfor %}</ul>
 </div>
 {% endif %}
@@ -42,19 +42,19 @@
         <div class="card p-3 p-md-4 mb-3">
           <div class="row g-3 align-items-end">
             <div class="col-md-7">
-              <label class="form-label mb-1" for="b-name">Название проекта</label>
+              <label class="form-label mb-1" for="b-name">{% trans "Название проекта" %}</label>
               <input type="text" class="form-control" id="b-name" name="name_meta" autocomplete="off">
             </div>
             <div class="col-md-3">
-              <label class="form-label mb-1" for="b-version">Версия</label>
+              <label class="form-label mb-1" for="b-version">{% trans "Версия" %}</label>
               <input type="text" class="form-control" id="b-version" autocomplete="off">
             </div>
           </div>
         </div>
 
         <div class="builder-canvas-head d-flex align-items-center justify-content-between mb-2">
-          <h2 class="h6 mb-0 text-white"><i class="bi bi-diagram-3 me-2"></i>Сценарий: экраны и поля</h2>
-          <span class="small ui-muted d-none d-md-inline"><i class="bi bi-grip-vertical me-1"></i>тяните за ручку, чтобы менять порядок</span>
+          <h2 class="h6 mb-0 text-white"><i class="bi bi-diagram-3 me-2"></i>{% trans "Сценарий: экраны и поля" %}</h2>
+          <span class="small ui-muted d-none d-md-inline"><i class="bi bi-grip-vertical me-1"></i>{% trans "тяните за ручку, чтобы менять порядок" %}</span>
         </div>
 
         <div id="builder-boot-error" class="alert alert-danger py-2 small mb-2 d-none" role="alert"></div>
@@ -66,36 +66,36 @@
         <div id="builder-errors" class="my-3"></div>
 
         <details class="builder-json-details mb-3">
-          <summary class="small ui-muted"><i class="bi bi-braces me-1"></i>Показать итоговый JSON (только чтение)</summary>
+          <summary class="small ui-muted"><i class="bi bi-braces me-1"></i>{% trans "Показать итоговый JSON (только чтение)" %}</summary>
           <textarea class="form-control json-block font-monospace mt-2" rows="18" readonly id="builder-json-readonly"></textarea>
         </details>
 
         <div class="d-flex flex-wrap gap-2">
-          <button type="button" class="btn btn-outline-light" id="builder-btn-validate"><i class="bi bi-shield-check me-1"></i>Проверить</button>
-          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>Сохранить в Git</button>
+          <button type="button" class="btn btn-outline-light" id="builder-btn-validate"><i class="bi bi-shield-check me-1"></i>{% trans "Проверить" %}</button>
+          <button type="submit" class="btn btn-primary"><i class="bi bi-save me-1"></i>{% trans "Сохранить в Git" %}</button>
         </div>
       </div>
 
       <div class="col-xl-5">
         <div class="builder-preview-sticky">
-          <div class="ui-card-title mb-2"><i class="bi bi-phone me-1"></i>Превью приложения</div>
+          <div class="ui-card-title mb-2"><i class="bi bi-phone me-1"></i>{% trans "Превью приложения" %}</div>
           <div class="builder-preview-phone">
             <div class="builder-preview-notch"></div>
             <div class="builder-preview-bar">
-              <span class="small ui-muted">Сбор данных</span>
+              <span class="small ui-muted">{% trans "Сбор данных" %}</span>
               <strong id="builder-preview-title" class="d-block text-truncate"></strong>
             </div>
             <div class="builder-preview-body" id="builder-preview-steps"></div>
           </div>
           <div class="card border-secondary mt-3 builder-help-card">
             <div class="card-body py-3 px-3">
-              <div class="small mb-2"><i class="bi bi-lightbulb me-1 text-info"></i><strong>Как пользоваться</strong></div>
+              <div class="small mb-2"><i class="bi bi-lightbulb me-1 text-info"></i><strong>{% trans "Как пользоваться" %}</strong></div>
               <ul class="small ui-muted mb-0 ps-3">
-                <li>Кнопки под экраном — добавить поле нужного типа.</li>
-                <li>Тяните <i class="bi bi-grip-vertical"></i> у поля — порядок и перенос между экранами.</li>
-                <li>Тяните <i class="bi bi-grip-vertical"></i> у шапки экрана — порядок экранов.</li>
-                <li><i class="bi bi-lock-fill"></i> «Проверка и отправка» — финальный экран.</li>
-                <li>«Проверить» — валидация без сохранения.</li>
+                <li>{% trans "Кнопки под экраном — добавить поле нужного типа." %}</li>
+                <li>{% blocktrans trimmed %}Тяните <i class="bi bi-grip-vertical"></i> у поля — порядок и перенос между экранами.{% endblocktrans %}</li>
+                <li>{% blocktrans trimmed %}Тяните <i class="bi bi-grip-vertical"></i> у шапки экрана — порядок экранов.{% endblocktrans %}</li>
+                <li>{% blocktrans trimmed %}<i class="bi bi-lock-fill"></i> «Проверка и отправка» — финальный экран.{% endblocktrans %}</li>
+                <li>{% trans "«Проверить» — валидация без сохранения." %}</li>
               </ul>
             </div>
           </div>

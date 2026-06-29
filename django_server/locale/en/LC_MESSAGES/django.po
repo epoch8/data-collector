@@ -1,0 +1,909 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: data-collector\n"
+"Report-Msgid-Bugs-To: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "%(n)s файл(ов) в пакете"
+msgstr "%(n)s file(s) in package"
+
+msgid "<i class=\"bi bi-lock-fill\"></i> «Проверка и отправка» — финальный экран."
+msgstr "<i class=\"bi bi-lock-fill\"></i> “Review and submit” — the final screen."
+
+msgid "Client-admin"
+msgstr "Client-admin"
+
+msgid "Data Collector — админка"
+msgstr "Data Collector — Admin"
+
+msgid "Deploy key (public)"
+msgstr "Deploy key (public)"
+
+msgid "Deploy key (public) — GitHub → Settings → Deploy keys:"
+msgstr "Deploy key (public) — GitHub → Settings → Deploy keys:"
+
+msgid "Email"
+msgstr "Email"
+
+msgid "Email и пароль Firebase. Доступ к пакетам — по назначению в «Пользователи»."
+msgstr "Firebase email and password. Package access is granted under “Users”."
+
+msgid "Firebase Auth. <strong>Мобильное</strong> — каталог и загрузка (<code>/v1/</code>). <strong>Client-admin</strong> — веб-пакеты (<code>/ui/packages/</code>), вход через Firebase; видны только отмеченные проекты."
+msgstr "Firebase Auth. <strong>Mobile</strong> — catalog and upload (<code>/v1/</code>). <strong>Client-admin</strong> — web packages (<code>/ui/packages/</code>), sign in via Firebase; only the checked projects are visible."
+
+msgid "Firebase UID"
+msgstr "Firebase UID"
+
+msgid "Firebase отключён на сервере."
+msgstr "Firebase is disabled on the server."
+
+msgid "Firebase: импортировано пользователей из консоли — {total} (новых записей {created}, обновлён email {updated})."
+msgstr "Firebase: users imported from the console — {total} (new records {created}, email updated {updated})."
+
+msgid "Git"
+msgstr "Git"
+
+msgid "Git HEAD"
+msgstr "Git HEAD"
+
+msgid "Git обновлён: {remote}, ветка {ref}. Кэш пересоздан."
+msgstr "Git updated: {remote}, branch {ref}. Cache rebuilt."
+
+msgid "Git: {error}"
+msgstr "Git: {error}"
+
+msgid "Git: подключение OK, репозиторий обновлён."
+msgstr "Git: connection OK, repository updated."
+
+msgid "GitHub репозиторий"
+msgstr "GitHub repository"
+
+msgid "GitHub → Settings → Deploy keys:"
+msgstr "GitHub → Settings → Deploy keys:"
+
+msgid "ID"
+msgstr "ID"
+
+msgid "ID / email"
+msgstr "ID / email"
+
+msgid "JSON"
+msgstr "JSON"
+
+msgid "Markdown-текст"
+msgstr "Markdown text"
+
+msgid "Markdown-текст инструкции"
+msgstr "Instruction Markdown text"
+
+msgid "PostgreSQL — адрес"
+msgstr "PostgreSQL — address"
+
+msgid "PostgreSQL — логин и пароль"
+msgstr "PostgreSQL — username and password"
+
+msgid "S3 / MinIO"
+msgstr "S3 / MinIO"
+
+msgid "SSH-ключ"
+msgstr "SSH key"
+
+msgid "SSH-ключ Git"
+msgstr "Git SSH key"
+
+msgid "UUID или email…"
+msgstr "UUID or email…"
+
+msgid "field_id (латиница)"
+msgstr "field_id (Latin letters)"
+
+msgid "password"
+msgstr "password"
+
+msgid "project_id"
+msgstr "project_id"
+
+msgid "secret (пусто — не менять)"
+msgstr "secret (empty — keep unchanged)"
+
+msgid "secret key"
+msgstr "secret key"
+
+msgid "«Проверить» — валидация без сохранения."
+msgstr "“Validate” — checks without saving."
+
+msgid "«Файлы»"
+msgstr "“Files”"
+
+msgid "Админ-доступ"
+msgstr "Admin access"
+
+msgid "БД проекта недоступна. Проверьте настройки хранилища или нажмите «Проверить хранилище»."
+msgstr "The project database is unavailable. Check the storage settings or click “Check storage”."
+
+msgid "БД проекта: {msg}"
+msgstr "Project database: {msg}"
+
+msgid "База (database_uri)"
+msgstr "Database (database_uri)"
+
+msgid "Без логина и пароля. Пример: <code>postgresql+psycopg2://localhost:55432/proj_my_project</code>. База создаётся автоматически при сохранении."
+msgstr "Without username and password. Example: <code>postgresql+psycopg2://localhost:55432/proj_my_project</code>. The database is created automatically on save."
+
+msgid "Без привязки к форме"
+msgstr "Not linked to a form"
+
+msgid "Будут удалены манифест, все файлы и история изменений. Это действие нельзя отменить."
+msgstr "The manifest, all files, and change history will be deleted. This action cannot be undone."
+
+msgid "Было"
+msgstr "Before"
+
+msgid "В конфиге проекта нет полей для отображения."
+msgstr "The project config has no fields to display."
+
+msgid "В пакете нет файлов."
+msgstr "The package has no files."
+
+msgid "В системе ещё нет проектов — создайте их в разделе «Проекты»."
+msgstr "There are no projects yet — create them in the “Projects” section."
+
+msgid "В токене нет uid."
+msgstr "The token has no uid."
+
+msgid "Введите <code>%(pid)s</code> для подтверждения"
+msgstr "Type <code>%(pid)s</code> to confirm"
+
+msgid "Введите подтверждение: id проекта в поле confirm."
+msgstr "Enter confirmation: the project id in the confirm field."
+
+msgid "Веб-админка пакетов <code>/ui/</code> — просмотр и правка. Можно выдать доступ только в админку, без мобильного приложения, и наоборот."
+msgstr "The package web admin <code>/ui/</code> — view and edit. You can grant admin-only access without the mobile app, and vice versa."
+
+msgid "Веб-пакеты <code>/ui/packages/</code>: пользователь входит через <strong>Firebase</strong> (тот же email) и видит только отмеченные проекты и их пакеты."
+msgstr "Web packages <code>/ui/packages/</code>: the user signs in via <strong>Firebase</strong> (the same email) and sees only the checked projects and their packages."
+
+msgid "Версия"
+msgstr "Version"
+
+msgid "Ветка"
+msgstr "Branch"
+
+msgid "Ветка:"
+msgstr "Branch:"
+
+msgid "Визуализация"
+msgstr "Visualization"
+
+msgid "Визуальный редактор"
+msgstr "Visual editor"
+
+msgid "Войти"
+msgstr "Sign in"
+
+msgid "Все"
+msgstr "All"
+
+msgid "Все пакеты"
+msgstr "All packages"
+
+msgid "Вставьте приватный ключ OpenSSH."
+msgstr "Paste the OpenSSH private key."
+
+msgid "Вход"
+msgstr "Sign in"
+
+msgid "Выберите файл для загрузки."
+msgstr "Choose a file to upload."
+
+msgid "Выход"
+msgstr "Sign out"
+
+msgid "Готов к commit"
+msgstr "Ready to commit"
+
+msgid "Данные"
+msgstr "Data"
+
+msgid "Дата"
+msgstr "Date"
+
+msgid "Дата и время"
+msgstr "Date and time"
+
+msgid "Действие"
+msgstr "Action"
+
+msgid "Для входа клиента снимите «Админ-доступ» и укажите email Firebase."
+msgstr "To sign in as a client, uncheck “Admin access” and enter your Firebase email."
+
+msgid "До 500 последних сессий приёма"
+msgstr "Up to 500 most recent intake sessions"
+
+msgid "Добавить поле:"
+msgstr "Add field:"
+
+msgid "Добавить экран"
+msgstr "Add screen"
+
+msgid "Добавьте deploy key в GitHub (Settings → Deploy keys, с write access). Публичный ключ — на странице проекта."
+msgstr "Add the deploy key to GitHub (Settings → Deploy keys, with write access). The public key is on the project page."
+
+msgid "Дополнительно"
+msgstr "Advanced"
+
+msgid "Если включена генерация — поле ключа можно оставить пустым."
+msgstr "If generation is enabled, you can leave the key field empty."
+
+msgid "Завершён"
+msgstr "Completed"
+
+msgid "Заголовок экрана (необязательно)"
+msgstr "Screen title (optional)"
+
+msgid "Загрузил"
+msgstr "Uploaded by"
+
+msgid "Загрузить и отправить в Git"
+msgstr "Upload and push to Git"
+
+msgid "Загрузить через data-collector"
+msgstr "Upload via data-collector"
+
+msgid "Загрузка"
+msgstr "Uploading"
+
+msgid "Загрузка визуализации…"
+msgstr "Loading visualization…"
+
+msgid "Закоммичено в Git: {path}"
+msgstr "Committed to Git: {path}"
+
+msgid "Закрыть"
+msgstr "Close"
+
+msgid "Значение: %(t)s…"
+msgstr "Value: %(t)s…"
+
+msgid "Идентификатор поля"
+msgstr "Field identifier"
+
+msgid "Изменений нет."
+msgstr "No changes."
+
+msgid "Изменения: <span id=\"pkgChangeCount\">0</span> полей. Укажите причину — она попадёт в историю."
+msgstr "Changes: <span id=\"pkgChangeCount\">0</span> field(s). Provide a reason — it will be added to the history."
+
+msgid "Изменить репозиторий или ветку"
+msgstr "Change repository or branch"
+
+msgid "Изменить хранилище"
+msgstr "Change storage"
+
+msgid "Или вставьте приватный ключ (OpenSSH)"
+msgstr "Or paste a private key (OpenSSH)"
+
+msgid "Инструкция"
+msgstr "Instruction"
+
+msgid "Исправьте ошибки и сохраните снова:"
+msgstr "Fix the errors and save again:"
+
+msgid "История изменений"
+msgstr "Change history"
+
+msgid "История изменений пуста."
+msgstr "Change history is empty."
+
+msgid "Источник: Git <code>collector/config.json</code> · сохранение = commit + push. Поле <code>id</code> = <code>%(pid)s</code>."
+msgstr "Source: Git <code>collector/config.json</code> · saving = commit + push. The <code>id</code> field = <code>%(pid)s</code>."
+
+msgid "К списку"
+msgstr "Back to list"
+
+msgid "Как пользоваться"
+msgstr "How to use"
+
+msgid "Как при создании: <code>https://github.com/org/repo</code> или <code>git@github.com:org/repo.git</code>."
+msgstr "Same as on creation: <code>https://github.com/org/repo</code> or <code>git@github.com:org/repo.git</code>."
+
+msgid "Картинки для Markdown — в Git <code>collector/media/</code>"
+msgstr "Markdown images — in Git <code>collector/media/</code>"
+
+msgid "Каталог <code>collector/media/</code> в репозитории <code>%(remote)s</code>. Клиент: <code>/v1/projects/%(pid)s/assets/collector/media/…</code>. В конфиге и Markdown — путь <code>collector/media/uploads/…</code>."
+msgstr "The <code>collector/media/</code> folder in repository <code>%(remote)s</code>. Client: <code>/v1/projects/%(pid)s/assets/collector/media/…</code>. In config and Markdown use the path <code>collector/media/uploads/…</code>."
+
+msgid "Каталог проектов и загрузка пакетов через API <code>/v1/…</code>."
+msgstr "Project catalog and package upload via the <code>/v1/…</code> API."
+
+msgid "Каталог проектов и загрузка пакетов через API <code>/v1/…</code>. Без проектов каталог пустой, загрузка вернёт 403."
+msgstr "Project catalog and package upload via the <code>/v1/…</code> API. Without projects the catalog is empty and uploads return 403."
+
+msgid "Каталог проектов; конфиг в Git-репозитории каждого проекта."
+msgstr "Project catalog; the config lives in each project’s Git repository."
+
+msgid "Кнопки под экраном — добавить поле нужного типа."
+msgstr "Buttons under a screen add a field of the chosen type."
+
+msgid "Код шага (латиница)"
+msgstr "Step code (Latin letters)"
+
+msgid "Конфиг"
+msgstr "Config"
+
+msgid "Конфиг закоммичен и отправлен в Git."
+msgstr "Config committed and pushed to Git."
+
+msgid "Конфиг хранится в Git: <code>collector/config.json</code>. На GitHub — deploy key с write access."
+msgstr "The config is stored in Git: <code>collector/config.json</code>. On GitHub use a deploy key with write access."
+
+msgid "Конфигурация (JSON)"
+msgstr "Configuration (JSON)"
+
+msgid "Конфигурация: визуальный редактор"
+msgstr "Configuration: visual editor"
+
+msgid "Копировать"
+msgstr "Copy"
+
+msgid "Копировать ID"
+msgstr "Copy ID"
+
+msgid "Копировать путь"
+msgstr "Copy path"
+
+msgid "Логин"
+msgstr "Username"
+
+msgid "Логин администратора Django (staff)."
+msgstr "Django administrator login (staff)."
+
+msgid "Манифест пакета (payload.json)"
+msgstr "Package manifest (payload.json)"
+
+msgid "Медиа"
+msgstr "Media"
+
+msgid "Медиа (blobs)"
+msgstr "Media (blobs)"
+
+msgid "Медиа (storage_uri)"
+msgstr "Media (storage_uri)"
+
+msgid "Медиа в Git"
+msgstr "Media in Git"
+
+msgid "Меню"
+msgstr "Menu"
+
+msgid "Мобильное"
+msgstr "Mobile"
+
+msgid "Мобильное приложение"
+msgstr "Mobile app"
+
+msgid "Навигация"
+msgstr "Navigation"
+
+msgid "Название"
+msgstr "Name"
+
+msgid "Название проекта"
+msgstr "Project name"
+
+msgid "Например: Проверьте данные"
+msgstr "For example: Review the data"
+
+msgid "Настроить"
+msgstr "Configure"
+
+msgid "Настройки Git"
+msgstr "Git settings"
+
+msgid "Настройки Git не изменились."
+msgstr "Git settings did not change."
+
+msgid "Настройки сохранены, но подключение не удалось: {error}"
+msgstr "Settings saved, but the connection failed: {error}"
+
+msgid "Настройки хранилища сохранены."
+msgstr "Storage settings saved."
+
+msgid "Не сохранено:"
+msgstr "Not saved:"
+
+msgid "Не удалось сохранить: {msg}"
+msgstr "Could not save: {msg}"
+
+msgid "Невалидный JSON."
+msgstr "Invalid JSON."
+
+msgid "Невалидный JSON: {error}"
+msgstr "Invalid JSON: {error}"
+
+msgid "Неверный или просроченный токен Firebase."
+msgstr "Invalid or expired Firebase token."
+
+msgid "Неверный логин или пароль."
+msgstr "Invalid username or password."
+
+msgid "Некорректный путь."
+msgstr "Invalid path."
+
+msgid "Необязательно. Пустые поля — SQLite и локальная папка на сервере."
+msgstr "Optional. Empty fields mean SQLite and a local folder on the server."
+
+msgid "Нет collector/viz.json или данных pipeline для пакета."
+msgstr "No collector/viz.json or pipeline data for this package."
+
+msgid "Нет доступа к проектам: отметьте Client-admin в «Пользователи» для этого email."
+msgstr "No project access: enable Client-admin under “Users” for this email."
+
+msgid "Нет доступа к этому проекту."
+msgstr "No access to this project."
+
+msgid "Нет доступных проектов."
+msgstr "No available projects."
+
+msgid "Нет пакетов по выбранному фильтру."
+msgstr "No packages match the selected filter."
+
+msgid "Нет пользователей — синхронизируйте с Firebase или дождитесь первого входа с телефона."
+msgstr "No users — sync with Firebase or wait for the first sign-in from a phone."
+
+msgid "Нет проектов — создайте первый."
+msgstr "No projects — create the first one."
+
+msgid "Нет файла"
+msgstr "No file"
+
+msgid "Нет файлов в кэше. Загрузите здесь или сделайте push в Git и «Обновить из Git»."
+msgstr "No files in the cache. Upload here, or push to Git and click “Refresh from Git”."
+
+msgid "Новый"
+msgstr "New"
+
+msgid "Новый проект"
+msgstr "New project"
+
+msgid "Нужен id_token."
+msgstr "id_token is required."
+
+msgid "Нужен аккаунт администратора (staff)."
+msgstr "An administrator (staff) account is required."
+
+msgid "Нужен только если Git пишет <code>error in libcrypto</code> или ключ утерян. Формат OpenSSH (<code>-----BEGIN OPENSSH PRIVATE KEY-----</code>), не PuTTY .ppk."
+msgstr "Needed only if Git reports <code>error in libcrypto</code> or the key is lost. OpenSSH format (<code>-----BEGIN OPENSSH PRIVATE KEY-----</code>), not PuTTY .ppk."
+
+msgid "Нужно только для <code>s3://</code>."
+msgstr "Needed only for <code>s3://</code>."
+
+msgid "Обновить SSH-ключ"
+msgstr "Update SSH key"
+
+msgid "Обновить из Git"
+msgstr "Refresh from Git"
+
+msgid "Обновлён"
+msgstr "Updated"
+
+msgid "Обязательное поле"
+msgstr "Required field"
+
+msgid "Ожидает файлы"
+msgstr "Awaiting files"
+
+msgid "Опасная зона"
+msgstr "Danger zone"
+
+msgid "Откатить"
+msgstr "Revert"
+
+msgid "Открыть"
+msgstr "Open"
+
+msgid "Открыть пакеты"
+msgstr "Open packages"
+
+msgid "Отмена"
+msgstr "Cancel"
+
+msgid "Отображаемое имя"
+msgstr "Display name"
+
+msgid "Ошибка"
+msgstr "Failed"
+
+msgid "Ошибка загрузки конфига из Git"
+msgstr "Failed to load config from Git"
+
+msgid "Ошибка сохранения"
+msgstr "Save error"
+
+msgid "Пакет"
+msgstr "Package"
+
+msgid "Пакет {pid} удалён."
+msgstr "Package {pid} deleted."
+
+msgid "Пакет не найден."
+msgstr "Package not found."
+
+msgid "Пакет:"
+msgstr "Package:"
+
+msgid "Пакеты"
+msgstr "Packages"
+
+msgid "Пароль"
+msgstr "Password"
+
+msgid "Перетащить шаг"
+msgstr "Drag step"
+
+msgid "По полю"
+msgstr "By field"
+
+msgid "Подпись (видна пользователю)"
+msgstr "Label (visible to the user)"
+
+msgid "Подсказка под полем (необязательно)"
+msgstr "Hint below the field (optional)"
+
+msgid "Подсказки из локальной истории по ID объекта"
+msgstr "Hints from local history by subject ID"
+
+msgid "Подтвердите удаление."
+msgstr "Confirm deletion."
+
+msgid "Поиск"
+msgstr "Search"
+
+msgid "Поиск по ID / email…"
+msgstr "Search by ID / email…"
+
+msgid "Пока нет полей — нажмите кнопку типа ниже."
+msgstr "No fields yet — click a type button below."
+
+msgid "Показано <strong>%(shown)s</strong> из %(total)s"
+msgstr "Showing <strong>%(shown)s</strong> of %(total)s"
+
+msgid "Показать итоговый JSON (только чтение)"
+msgstr "Show the resulting JSON (read-only)"
+
+msgid "Поле ID объекта (для подсказок)"
+msgstr "Subject ID field (for hints)"
+
+msgid "Пользователи"
+msgstr "Users"
+
+msgid "Пользователь"
+msgstr "User"
+
+msgid "Поля задаются <strong>внутри каждого экрана</strong> (карточки «Экран 1», «Экран 2»…), а не отдельной таблицей. Финальный экран «Проверка и отправка» обязателен и всегда в конце."
+msgstr "Fields are defined <strong>inside each screen</strong> (the “Screen 1”, “Screen 2”… cards), not in a separate table. The final “Review and submit” screen is required and always last."
+
+msgid "Поля на этом экране"
+msgstr "Fields on this screen"
+
+msgid "После смены репозитория или ветки локальный git-кэш удаляется и репозиторий клонируется заново. Deploy key на GitHub должен иметь доступ к <strong>новому</strong> репозиторию (тот же SSH-ключ — на странице проекта)."
+msgstr "After changing the repository or branch, the local git cache is removed and the repository is cloned again. The GitHub deploy key must have access to the <strong>new</strong> repository (the same SSH key is on the project page)."
+
+msgid "Права доступа"
+msgstr "Access rights"
+
+msgid "Права доступа сохранены."
+msgstr "Access rights saved."
+
+msgid "Превью приложения"
+msgstr "App preview"
+
+msgid "Приватный ключ (deploy)"
+msgstr "Private key (deploy)"
+
+msgid "Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub."
+msgstr "Private key updated. If the public key changed, update the deploy key on GitHub."
+
+msgid "Пример: <code>s3://dc-packages/my-project/</code> или <code>gs://my-bucket/</code>. Пусто — локальная папка на сервере."
+msgstr "Example: <code>s3://dc-packages/my-project/</code> or <code>gs://my-bucket/</code>. Empty means a local folder on the server."
+
+msgid "Причина корректировки"
+msgstr "Reason for the correction"
+
+msgid "Причина: %(reason)s · проверил: %(verifier)s"
+msgstr "Reason: %(reason)s · verified by: %(verifier)s"
+
+msgid "Приём пакетов"
+msgstr "Package intake"
+
+msgid "Проверить"
+msgstr "Validate"
+
+msgid "Проверить Git"
+msgstr "Check Git"
+
+msgid "Проверить хранилище"
+msgstr "Check storage"
+
+msgid "Проверка и отправка"
+msgstr "Review and submit"
+
+msgid "Проект"
+msgstr "Project"
+
+msgid "Проект {pid} создан. Git: {git}"
+msgstr "Project {pid} created. Git: {git}"
+
+msgid "Проект с таким id уже есть."
+msgstr "A project with this id already exists."
+
+msgid "Проект удалён."
+msgstr "Project deleted."
+
+msgid "Проекты"
+msgstr "Projects"
+
+msgid "Публичный или приватный — доступ по SSH deploy key."
+msgstr "Public or private — access via the SSH deploy key."
+
+msgid "Путь в config"
+msgstr "Path in config"
+
+msgid "Размер"
+msgstr "Size"
+
+msgid "Редактировать можно только пакеты в статусе «Завершён»."
+msgstr "Only packages in the “Completed” status can be edited."
+
+msgid "Редактор"
+msgstr "Editor"
+
+msgid "Режим поиска"
+msgstr "Search mode"
+
+msgid "Репозиторий"
+msgstr "Repository"
+
+msgid "Сбор данных"
+msgstr "Data collection"
+
+msgid "Сбросить дату"
+msgstr "Reset date"
+
+msgid "Своя причина"
+msgstr "Custom reason"
+
+msgid "Сгенерировать SSH-ключ на сервере"
+msgstr "Generate an SSH key on the server"
+
+msgid "Сейчас:"
+msgstr "Current:"
+
+msgid "Сессий загрузки:"
+msgstr "Upload sessions:"
+
+msgid "Синхронизация с Firebase Auth: всего в Firebase — {}, создано записей — {}, обновлён email — {}, без изменений — {}."
+msgstr "Firebase Auth sync: total in Firebase — {}, records created — {}, emails updated — {}, unchanged — {}."
+
+msgid "Синхронизировать с Firebase"
+msgstr "Sync with Firebase"
+
+msgid "Скачать"
+msgstr "Download"
+
+msgid "Смена адреса не переносит уже сохранённые данные. После сохранения нажмите «Проверить хранилище» на странице проекта."
+msgstr "Changing the address does not migrate already stored data. After saving, click “Check storage” on the project page."
+
+msgid "Совпадает с полем <code>id</code> в <code>collector/config.json</code>."
+msgstr "Matches the <code>id</code> field in <code>collector/config.json</code>."
+
+msgid "Создан"
+msgstr "Created"
+
+msgid "Создать проект"
+msgstr "Create project"
+
+msgid "Сохранено. Изменено полей: {n}."
+msgstr "Saved. Fields changed: {n}."
+
+msgid "Сохранить"
+msgstr "Save"
+
+msgid "Сохранить в Git"
+msgstr "Save to Git"
+
+msgid "Сохранить и проверить"
+msgstr "Save and check"
+
+msgid "Сохранить ключ"
+msgstr "Save key"
+
+msgid "Стало"
+msgstr "After"
+
+msgid "Статус"
+msgstr "Status"
+
+msgid "Сценарий: экраны и поля"
+msgstr "Flow: screens and fields"
+
+msgid "Текст"
+msgstr "Text"
+
+msgid "Тело JSON"
+msgstr "JSON body"
+
+msgid "Тело запроса не является JSON."
+msgstr "The request body is not JSON."
+
+msgid "Тип поля"
+msgstr "Field type"
+
+msgid "Только JSON"
+msgstr "JSON only"
+
+msgid "Только просмотр (веб-клиент)."
+msgstr "View only (web client)."
+
+msgid "Только просмотр: правки доступны для пакетов в статусе «Завершён»."
+msgstr "View only: edits are available for packages in the “Completed” status."
+
+msgid "Тяните <i class=\"bi bi-grip-vertical\"></i> у поля — порядок и перенос между экранами."
+msgstr "Drag <i class=\"bi bi-grip-vertical\"></i> on a field — reorder and move between screens."
+
+msgid "Тяните <i class=\"bi bi-grip-vertical\"></i> у шапки экрана — порядок экранов."
+msgstr "Drag <i class=\"bi bi-grip-vertical\"></i> on a screen header — reorder screens."
+
+msgid "Удаляется только запись в каталоге, локальный git-кэш и SSH credential (если не используется в других проектах). Файлы пакетов и база данных проекта сохраняются."
+msgstr "Only the catalog record, local git cache, and SSH credential (if not used by other projects) are removed. Package files and the project database are kept."
+
+msgid "Удаление проекта необратимо: запись в каталоге, git-кэш, SSH credential (если не используется в других проектах), пакеты."
+msgstr "Deleting a project is irreversible: the catalog record, git cache, SSH credential (if not used by other projects), and packages."
+
+msgid "Удалено из Git: {path}"
+msgstr "Removed from Git: {path}"
+
+msgid "Удалить"
+msgstr "Delete"
+
+msgid "Удалить collector/media/%(rel)s из Git?"
+msgstr "Delete collector/media/%(rel)s from Git?"
+
+msgid "Удалить пакет"
+msgstr "Delete package"
+
+msgid "Удалить поле"
+msgstr "Delete field"
+
+msgid "Удалить проект"
+msgstr "Delete project"
+
+msgid "Удалить проект из каталога?"
+msgstr "Remove the project from the catalog?"
+
+msgid "Удалить проект и все пакеты?"
+msgstr "Delete the project and all packages?"
+
+msgid "Удалить экран"
+msgstr "Delete screen"
+
+msgid "Укажите URL репозитория GitHub."
+msgstr "Enter the GitHub repository URL."
+
+msgid "Укажите project_id (как поле id в config.json)."
+msgstr "Enter project_id (the id field in config.json)."
+
+msgid "Укажите причину корректировки."
+msgstr "Provide a reason for the correction."
+
+msgid "Файл"
+msgstr "File"
+
+msgid "Файл попадёт в <code>collector/media/uploads/</code> с уникальным именем, затем commit и push в ветку проекта. Альтернатива — положить файлы в репозиторий локально и сделать <code>git push</code>."
+msgstr "The file goes to <code>collector/media/uploads/</code> with a unique name, then commit and push to the project branch. Alternatively, add files to the repository locally and run <code>git push</code>."
+
+msgid "Файлы"
+msgstr "Files"
+
+msgid "Финальный экран"
+msgstr "Final screen"
+
+msgid "Формы"
+msgstr "Forms"
+
+msgid "Фото"
+msgstr "Photo"
+
+msgid "Хранилище"
+msgstr "Storage"
+
+msgid "Хранилище данных"
+msgstr "Data storage"
+
+msgid "Хранилище: ошибка подключения — {error}"
+msgstr "Storage: connection error — {error}"
+
+msgid "Хранилище: проверка завершена."
+msgstr "Storage: check completed."
+
+msgid "Экран %(n)s"
+msgstr "Screen %(n)s"
+
+msgid "Я понимаю, что удаление необратимо"
+msgstr "I understand that deletion is irreversible"
+
+msgid "Язык интерфейса"
+msgstr "Interface language"
+
+msgid "выбор даты/времени"
+msgstr "date/time picker"
+
+msgid "дата"
+msgstr "date"
+
+msgid "другое…"
+msgstr "other…"
+
+msgid "задано"
+msgstr "set"
+
+msgid "или смене ключа."
+msgstr "or when changing the key."
+
+msgid "конфиг"
+msgstr "config"
+
+msgid "не сохранено"
+msgstr "not saved"
+
+msgid "не указан"
+msgstr "not specified"
+
+msgid "необязательно"
+msgstr "optional"
+
+msgid "неправильный формат данных"
+msgstr "incorrect data format"
+
+msgid "нет"
+msgstr "none"
+
+msgid "обяз."
+msgstr "req."
+
+msgid "однострочный ввод"
+msgstr "single-line input"
+
+msgid "ошибка в введённых данных"
+msgstr "error in the entered data"
+
+msgid "пакет"
+msgstr "package"
+
+msgid "пакетов"
+msgstr "packages"
+
+msgid "пароль (пусто — не менять)"
+msgstr "password (empty — keep unchanged)"
+
+msgid "по умолчанию"
+msgstr "default"
+
+msgid "снимок с камеры"
+msgstr "camera snapshot"
+
+msgid "тяните за ручку, чтобы менять порядок"
+msgstr "drag the handle to reorder"
+
+msgid "устаревшие данные"
+msgstr "outdated data"
+
+msgid "— field_id, подпись, тип, подсказка"
+msgstr "— field_id, label, type, hint"
+
+msgid "— только при ошибке"
+msgstr "— only on error"

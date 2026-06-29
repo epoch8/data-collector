@@ -1,0 +1,28 @@
+{% load i18n %}
+<figure class="pkg-shot">
+  <div class="pkg-shot__frame{% if sh.is_image %} pkg-shot__frame--img{% endif %}"
+       {% if sh.is_image %}data-lightbox="{{ sh.url }}" data-name="{{ sh.file_name }}"{% endif %}>
+    {% if sh.is_image %}
+    <img loading="lazy" src="{{ sh.url }}" alt="{{ sh.file_name }}">
+    <span class="pkg-shot__zoom" aria-hidden="true"><i class="bi bi-arrows-fullscreen"></i></span>
+    {% if sh.meta.primary or sh.meta.when %}
+    <figcaption class="pkg-shot__overlay">
+      {% if sh.meta.primary %}<span class="pkg-shot__res">{{ sh.meta.primary }}</span>{% endif %}
+      {% if sh.meta.when %}<span class="pkg-shot__when">{{ sh.meta.when }}</span>{% endif %}
+    </figcaption>
+    {% endif %}
+    {% else %}
+    <span class="pkg-shot__fileicon"><i class="bi bi-file-earmark"></i></span>
+    {% endif %}
+  </div>
+  <div class="pkg-shot__bar">
+    <span class="pkg-shot__name" title="{{ sh.file_name }}">{{ sh.file_name }}</span>
+    <a href="{{ sh.url }}" download="{{ sh.file_name }}" class="pkg-shot__dl" title="{% trans 'Скачать' %}" aria-label="{% trans 'Скачать' %}">
+      <i class="bi bi-download"></i>
+    </a>
+  </div>
+  <div class="pkg-shot__sub">
+    <span>{{ sh.size_bytes|filesizeformat }}</span>
+    {% if sh.meta.secondary %}<span class="pkg-shot__dot">·</span><span>{{ sh.meta.secondary }}</span>{% endif %}
+  </div>
+</figure>

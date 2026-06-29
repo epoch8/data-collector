@@ -79,9 +79,9 @@ class AppLocalizations {
       ? 'Скачать JSON манифеста (как на сервер)'
       : 'Download manifest JSON (server format)';
   String get packageNotFoundShort => _isRu ? 'Пакеты не найдены' : 'Packages not found';
-  String get noPackagesForCow => _isRu
-      ? 'Для этой коровы пока нет сохранённых пакетов.'
-      : 'There are no saved packages for this cow yet.';
+  String get noPackagesForSubject => _isRu
+      ? 'Для этого объекта пока нет сохранённых пакетов.'
+      : 'There are no saved packages for this subject yet.';
   String get historyEmptyTitle => _isRu ? 'История пуста' : 'History is empty';
   String get historyEmptySubtitle => _isRu
       ? 'Отправленные пакеты появятся здесь.'
@@ -245,9 +245,9 @@ class AppLocalizations {
       ? '{$keyCount ключей} — см. полный JSON ниже'
       : '{$keyCount keys} — see full JSON below';
 
-  String get flowFormCowHintExact => _isRu ? 'ID есть в локальной истории' : 'ID found in local history';
-  String get flowFormCowHintSimilar => _isRu ? 'В истории есть похожие ID' : 'There are similar IDs in history';
-  String get flowFormCowHintNew => _isRu ? 'Новый ID (нет в истории)' : 'New ID (not found in history)';
+  String get flowFormSubjectHintExact => _isRu ? 'ID есть в локальной истории' : 'ID found in local history';
+  String get flowFormSubjectHintSimilar => _isRu ? 'В истории есть похожие ID' : 'There are similar IDs in history';
+  String get flowFormSubjectHintNew => _isRu ? 'Новый ID (нет в истории)' : 'New ID (not found in history)';
   String get flowFormPrefillButton =>
       _isRu ? 'Подставить поля из последней записи' : 'Prefill fields from latest record';
   String get flowFormDatetimeChange => _isRu ? 'Изменить' : 'Change';

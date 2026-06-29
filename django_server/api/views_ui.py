@@ -7,6 +7,7 @@ import re
 from pathlib import Path
 from uuid import uuid4
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth import logout
 from django.http import (
@@ -18,6 +19,8 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils.translation import check_for_language, gettext as _
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_http_methods, require_POST
 
@@ -58,7 +61,7 @@ def _provision_project_database(request, project) -> None:
     if ok:
         messages.info(request, msg)
     else:
-        messages.warning(request, f"БД проекта: {msg}")
+        messages.warning(request, _("БД проекта: {msg}").format(msg=msg))
 
 
 from .project_config_service import (
@@ -100,6 +103,29 @@ def ui_logout(request):
         logout(request)
     ui_logout_clear_collector_session(request)
     return redirect("ui_login")
+
+
+def ui_set_language(request):
+    """Переключает язык интерфейса /ui через cookie (тумблер RU/EN в шапке)."""
+    lang = (request.GET.get("lang") or "").strip()
+    next_url = request.GET.get("next") or request.META.get("HTTP_REFERER") or "/ui/"
+    if not url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        next_url = "/ui/"
+    response = redirect(next_url)
+    if lang in dict(settings.LANGUAGES) and check_for_language(lang):
+        response.set_cookie(
+            settings.LANGUAGE_COOKIE_NAME,
+            lang,
+            max_age=settings.LANGUAGE_COOKIE_AGE,
+            path=settings.LANGUAGE_COOKIE_PATH,
+            domain=settings.LANGUAGE_COOKIE_DOMAIN,
+            samesite=settings.LANGUAGE_COOKIE_SAMESITE,
+        )
+    return response
 
 
 def _safe_rel_path(s: str) -> str | None:
@@ -157,10 +183,10 @@ def project_new(request):
         private_key = (request.POST.get("private_key") or "").strip()
         generate_key = request.POST.get("generate_key") == "1"
         if not pid:
-            messages.error(request, "Укажите project_id (как поле id в config.json).")
+            messages.error(request, _("Укажите project_id (как поле id в config.json)."))
             return redirect("ui_project_new")
         if Project.objects.filter(project_id=pid).exists():
-            messages.error(request, "Проект с таким id уже есть.")
+            messages.error(request, _("Проект с таким id уже есть."))
             return redirect("ui_project_detail", project_id=pid)
         try:
             git_remote = normalize_git_remote(git_url)
@@ -169,7 +195,7 @@ def project_new(request):
             return redirect("ui_project_new")
         try:
             if generate_key:
-                cred, public_key, _ = create_credential_generated(label=f"{pid} deploy")
+                cred, public_key, _unused = create_credential_generated(label=f"{pid} deploy")
             else:
                 cred = create_credential(label=f"{pid} deploy", private_key=private_key)
                 public_key = cred.public_key
@@ -195,10 +221,15 @@ def project_new(request):
         if generate_key:
             messages.info(
                 request,
-                "Добавьте deploy key в GitHub (Settings → Deploy keys, с write access). "
-                "Публичный ключ — на странице проекта.",
+                _(
+                    "Добавьте deploy key в GitHub (Settings → Deploy keys, с write access). "
+                    "Публичный ключ — на странице проекта."
+                ),
             )
-        messages.success(request, f"Проект {pid} создан. Git: {git_remote}")
+        messages.success(
+            request,
+            _("Проект {pid} создан. Git: {git}").format(pid=pid, git=git_remote),
+        )
         request.session[f"git_public_key_{pid}"] = public_key
         return redirect("ui_project_detail", project_id=pid)
     return render(request, "ui/project_new.html", {})
@@ -212,7 +243,7 @@ def project_detail(request, project_id: str):
     try:
         package_count = len(ppkg.list_sessions(project.project_id))
     except Exception:
-        project_db_error = (
+        project_db_error = _(
             "БД проекта недоступна. Проверьте настройки хранилища "
             "или нажмите «Проверить хранилище»."
         )
@@ -244,14 +275,14 @@ def project_update_ssh_key(request, project_id: str):
     if request.method == "POST":
         private_key = (request.POST.get("private_key") or "").strip()
         if not private_key:
-            messages.error(request, "Вставьте приватный ключ OpenSSH.")
+            messages.error(request, _("Вставьте приватный ключ OpenSSH."))
             return redirect("ui_project_update_ssh_key", project_id=project_id)
         try:
             public_key = update_credential_private_key(project.git_credential, private_key)
             request.session[f"git_public_key_{project_id}"] = public_key
             messages.success(
                 request,
-                "Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub.",
+                _("Приватный ключ обновлён. Если public key изменился — обновите Deploy key на GitHub."),
             )
         except GitProjectError as e:
             messages.error(request, e.message)
@@ -271,7 +302,7 @@ def project_git_settings(request, project_id: str):
         git_url = (request.POST.get("git_repo_url") or "").strip()
         git_ref = (request.POST.get("git_default_ref") or "main").strip() or "main"
         if not git_url:
-            messages.error(request, "Укажите URL репозитория GitHub.")
+            messages.error(request, _("Укажите URL репозитория GitHub."))
             return redirect("ui_project_git_settings", project_id=project_id)
         try:
             git_remote = normalize_git_remote(git_url)
@@ -298,19 +329,23 @@ def project_git_settings(request, project_id: str):
             git_remove_cache(project_id)
         else:
             project.save(update_fields=["git_remote", "git_default_ref", "updated_at"])
-            messages.info(request, "Настройки Git не изменились.")
+            messages.info(request, _("Настройки Git не изменились."))
             return redirect("ui_project_detail", project_id=project_id)
         try:
             test_remote(project)
             pull(project, force=True)
             messages.success(
                 request,
-                f"Git обновлён: {git_remote}, ветка {git_ref}. Кэш пересоздан.",
+                _("Git обновлён: {remote}, ветка {ref}. Кэш пересоздан.").format(
+                    remote=git_remote, ref=git_ref,
+                ),
             )
         except GitProjectError as e:
             messages.warning(
                 request,
-                f"Настройки сохранены, но подключение не удалось: {e.message}",
+                _("Настройки сохранены, но подключение не удалось: {error}").format(
+                    error=e.message,
+                ),
             )
         return redirect("ui_project_detail", project_id=project_id)
     return render(
@@ -333,9 +368,9 @@ def project_git_sync(request, project_id: str):
         pull(project, force=True)
         seed = seed_project_json(project.project_id, project.name)
         bootstrap_new_project(project, seed=seed, try_seed_push=True)
-        messages.success(request, "Git: подключение OK, репозиторий обновлён.")
+        messages.success(request, _("Git: подключение OK, репозиторий обновлён."))
     except GitProjectError as e:
-        messages.error(request, f"Git: {e.message}")
+        messages.error(request, _("Git: {error}").format(error=e.message))
     return redirect("ui_project_detail", project_id=project_id)
 
 
@@ -365,7 +400,7 @@ def project_storage_settings(request, project_id: str):
             ]
         )
         _provision_project_database(request, project)
-        messages.success(request, "Настройки хранилища сохранены.")
+        messages.success(request, _("Настройки хранилища сохранены."))
         return redirect("ui_project_detail", project_id=project_id)
     return render(
         request,
@@ -382,9 +417,9 @@ def project_storage_check(request, project_id: str):
     try:
         for note in psc.check_storage(cfg):
             messages.info(request, note)
-        messages.success(request, "Хранилище: проверка завершена.")
+        messages.success(request, _("Хранилище: проверка завершена."))
     except Exception as e:  # noqa: BLE001 — показываем причину пользователю
-        messages.error(request, f"Хранилище: ошибка подключения — {e}")
+        messages.error(request, _("Хранилище: ошибка подключения — {error}").format(error=e))
     return redirect("ui_project_detail", project_id=project_id)
 
 
@@ -397,7 +432,7 @@ def project_config(request, project_id: str):
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            messages.error(request, f"Невалидный JSON: {e}")
+            messages.error(request, _("Невалидный JSON: {error}").format(error=e))
             return redirect("ui_project_config", project_id=project_id)
         errs = save_config_to_git(project, project_id, data)
         if errs:
@@ -417,15 +452,15 @@ def project_config(request, project_id: str):
                     "read_only": False,
                 },
             )
-        messages.success(request, "Конфиг закоммичен и отправлен в Git.")
+        messages.success(request, _("Конфиг закоммичен и отправлен в Git."))
         return redirect("ui_project_detail", project_id=project_id)
     data, err = load_config_dict(project_id)
     if err is not None:
         try:
             body = json.loads(err.content.decode())
-            msg = body.get("error", {}).get("message", "Ошибка загрузки конфига из Git")
+            msg = body.get("error", {}).get("message", _("Ошибка загрузки конфига из Git"))
         except (json.JSONDecodeError, AttributeError):
-            msg = "Ошибка загрузки конфига из Git"
+            msg = _("Ошибка загрузки конфига из Git")
         messages.error(request, msg)
         pretty = json.dumps(seed_project_json(project_id, project.name), ensure_ascii=False, indent=2)
     else:
@@ -463,7 +498,7 @@ def project_config_builder(request, project_id: str):
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
-            messages.error(request, f"Невалидный JSON: {e}")
+            messages.error(request, _("Невалидный JSON: {error}").format(error=e))
             return redirect("ui_project_config_builder", project_id=project_id)
         errs = save_config_to_git(project, project_id, data)
         if errs:
@@ -478,7 +513,7 @@ def project_config_builder(request, project_id: str):
                 "ui/project_config_builder.html",
                 _builder_context(project, initial_data, validation_errors=errs),
             )
-        messages.success(request, "Конфиг закоммичен и отправлен в Git.")
+        messages.success(request, _("Конфиг закоммичен и отправлен в Git."))
         return redirect("ui_project_detail", project_id=project_id)
     data, err = load_config_dict(project_id)
     if err is not None or not data:
@@ -499,7 +534,7 @@ def project_config_validate_api(request, project_id: str):
     try:
         data = json.loads(request.body.decode())
     except (json.JSONDecodeError, UnicodeDecodeError):
-        return JsonResponse({"ok": False, "errors": ["Тело запроса не является JSON."]}, status=400)
+        return JsonResponse({"ok": False, "errors": [_("Тело запроса не является JSON.")]}, status=400)
     errs = validate_project_payload(data, project_id)
     return JsonResponse({"ok": not bool(errs), "errors": errs})
 
@@ -512,17 +547,20 @@ def project_media(request, project_id: str):
         if "delete" in request.POST:
             rel = normalize_media_rel(request.POST.get("rel_path", ""))
             if not rel:
-                messages.error(request, "Некорректный путь.")
+                messages.error(request, _("Некорректный путь."))
             else:
                 try:
                     delete_media_file(project, rel)
-                    messages.success(request, f"Удалено из Git: {media_config_path(rel)}")
+                    messages.success(
+                        request,
+                        _("Удалено из Git: {path}").format(path=media_config_path(rel)),
+                    )
                 except GitProjectError as e:
                     messages.error(request, e.message)
             return redirect("ui_project_media", project_id=project_id)
         f = request.FILES.get("file")
         if not f:
-            msg = "Выберите файл для загрузки."
+            msg = _("Выберите файл для загрузки.")
             if request.POST.get("respond") == "json":
                 return JsonResponse({"ok": False, "error": msg}, status=400)
             messages.error(request, msg)
@@ -537,7 +575,7 @@ def project_media(request, project_id: str):
             messages.error(request, e.message)
             return redirect("ui_project_media", project_id=project_id)
         cfg_path = media_config_path(rel)
-        messages.success(request, f"Закоммичено в Git: {cfg_path}")
+        messages.success(request, _("Закоммичено в Git: {path}").format(path=cfg_path))
         if request.POST.get("respond") == "json":
             return JsonResponse(
                 {
@@ -576,18 +614,15 @@ def project_media(request, project_id: str):
 def project_delete(request, project_id: str):
     project = get_object_or_404(Project, project_id=project_id)
     if request.POST.get("confirm") != project_id:
-        messages.error(request, "Введите подтверждение: id проекта в поле confirm.")
+        messages.error(request, _("Введите подтверждение: id проекта в поле confirm."))
         return redirect("ui_project_detail", project_id=project_id)
     cred = project.git_credential
     cred_pk = cred.pk
-    media_bucket = project.media_bucket
-    cfg = psc.resolve(project)
-    ppkg.remove_project_packages(project_id, media_bucket=media_bucket, config=cfg)
     project.delete()
     git_remove_cache(project_id)
     if not Project.objects.filter(git_credential_id=cred_pk).exists():
         cred.delete()
-    messages.success(request, "Проект удалён.")
+    messages.success(request, _("Проект удалён."))
     return redirect("ui_project_list")
 
 
@@ -602,7 +637,7 @@ def _package_projects_queryset(request):
 def _forbid_package_project(request, project_id: str) -> HttpResponseForbidden | None:
     allowed = allowed_package_project_ids(request)
     if allowed is not None and project_id not in allowed:
-        return HttpResponseForbidden("Нет доступа к этому проекту.")
+        return HttpResponseForbidden(_("Нет доступа к этому проекту."))
     return None
 
 
@@ -670,7 +705,7 @@ def package_list(request):
         items = items or []
         total = len(items)
         phase_chips = [
-            {"id": p, "label": ("Все" if p == "all" else pui.phase_label(p)), "active": p == phase}
+            {"id": p, "label": (_("Все") if p == "all" else pui.phase_label(p)), "active": p == phase}
             for p in pui.phase_options(items)
         ]
         filtered = pui.filter_packages(
@@ -718,7 +753,7 @@ def package_list(request):
     )
 
 
-def _enrich_blob(project_id, package_id, blob, form_blob_paths):
+def _enrich_blob(project_id, package_id, blob, form_blob_paths, *, field_id="", field_label=""):
     path = blob["logical_path"]
     return {
         "blob_id": blob["blob_id"],
@@ -727,11 +762,32 @@ def _enrich_blob(project_id, package_id, blob, form_blob_paths):
         "size_bytes": blob["size_bytes"],
         "is_image": pui.is_image_path(path),
         "in_form": path in form_blob_paths,
+        "field_id": field_id,
+        "field_label": field_label,
         "url": reverse(
             "ui_package_blob_download",
             args=[project_id, package_id, path],
         ),
     }
+
+
+def _build_media_context(project_id, package_id, config, fields, data, raw_blobs):
+    form_blob_paths = pui.collect_form_blob_paths(data)
+    media_sections, used_paths = pui.build_media_sections(config, fields, data)
+    blobs_by_path = {}
+    for b in raw_blobs:
+        path = b["logical_path"]
+        blobs_by_path[path] = _enrich_blob(
+            project_id, package_id, b, form_blob_paths,
+        )
+    media_sections = pui.attach_blobs_to_media_sections(media_sections, blobs_by_path)
+    orphan_blobs = [
+        blobs_by_path[path]
+        for path in sorted(blobs_by_path)
+        if path not in used_paths
+    ]
+    all_blobs = list(blobs_by_path.values())
+    return media_sections, orphan_blobs, all_blobs, form_blob_paths
 
 
 def _build_data_sections(sections, data, editable):
@@ -777,11 +833,14 @@ def package_workspace(request, project_id: str, package_id: str):
     data_sections = _build_data_sections(sections, data, is_editable)
 
     form_blob_paths = pui.collect_form_blob_paths(data)
-    blobs = [_enrich_blob(project_id, package_id, b, form_blob_paths) for b in body["blobs"]]
+    media_sections, orphan_blobs, blobs, _ = _build_media_context(
+        project_id, package_id, config, fields, data, body["blobs"],
+    )
 
     entries = pui.read_changelog(project_id, package_id)
     has_viz = pui.has_visualisation(project_id, package_id)
     blob_map = {b["logical_path"]: b["url"] for b in blobs}
+    manifest_json = json.dumps(manifest, ensure_ascii=False, indent=2)
 
     # Sidebar: без manifest_json — только колонки сессии
     side_items, _ = pas.list_package_summaries(project_id)
@@ -814,14 +873,18 @@ def package_workspace(request, project_id: str, package_id: str):
             "phase_label": pui.phase_label(session["phase"]),
             "is_editable": is_editable,
             "data_sections": data_sections,
+            "media_sections": media_sections,
+            "orphan_blobs": orphan_blobs,
             "blobs": blobs,
             "blob_count": len(blobs),
+            "manifest_json": manifest_json,
             "entries": entries,
             "has_viz": has_viz,
             "blob_map_json": json.dumps(blob_map, ensure_ascii=False),
             "sidebar": sidebar,
             "list_url": reverse("ui_package_list") + f"?project={project_id}",
             "save_url": reverse("ui_package_manifest_save", args=[project_id, package_id]),
+            "delete_url": reverse("ui_package_delete", args=[project_id, package_id]),
             "viz_data_url": reverse("ui_package_viz_data", args=[project_id, package_id]),
             "verifier_email": _ui_verifier_email(request),
         },
@@ -857,7 +920,7 @@ def package_manifest_save(request, project_id: str, package_id: str):
 
     session = body["session"]
     if session["phase"] != ppkg.Phase.COMPLETED:
-        messages.error(request, "Редактировать можно только пакеты в статусе «Завершён».")
+        messages.error(request, _("Редактировать можно только пакеты в статусе «Завершён»."))
         return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
     manifest = body["manifest"]
@@ -884,12 +947,12 @@ def package_manifest_save(request, project_id: str, package_id: str):
             data[fid] = after
 
     if not changes:
-        messages.info(request, "Изменений нет.")
+        messages.info(request, _("Изменений нет."))
         return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
     reason = (request.POST.get("reason") or "").strip()
     if not reason:
-        messages.error(request, "Укажите причину корректировки.")
+        messages.error(request, _("Укажите причину корректировки."))
         return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
     manifest["data"] = data
@@ -903,17 +966,49 @@ def package_manifest_save(request, project_id: str, package_id: str):
     if patch_resp.status_code != 200:
         try:
             detail = json.loads(patch_resp.content.decode("utf-8"))
-            msg = detail.get("error", {}).get("message", "Ошибка сохранения")
+            msg = detail.get("error", {}).get("message", _("Ошибка сохранения"))
         except (json.JSONDecodeError, AttributeError):
-            msg = "Ошибка сохранения"
-        messages.error(request, f"Не удалось сохранить: {msg}")
+            msg = _("Ошибка сохранения")
+        messages.error(request, _("Не удалось сохранить: {msg}").format(msg=msg))
         return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
 
     pui.append_changelog(
         project_id, package_id, reason, _ui_verifier_email(request), changes,
     )
-    messages.success(request, f"Сохранено. Изменено полей: {len(changes)}.")
+    messages.success(request, _("Сохранено. Изменено полей: {n}.").format(n=len(changes)))
     return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+
+@packages_ui_required
+@require_POST
+def package_delete(request, project_id: str, package_id: str):
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+
+    project = Project.objects.filter(project_id=project_id).first()
+    if not project:
+        raise Http404("Project not found")
+
+    session = ppkg.get_session(project_id, package_id)
+    if not session:
+        messages.error(request, _("Пакет не найден."))
+        return redirect(reverse("ui_package_list") + f"?project={project_id}")
+
+    if request.POST.get("confirm") != "yes":
+        messages.error(request, _("Подтвердите удаление."))
+        return redirect("ui_package_workspace", project_id=project_id, package_id=package_id)
+
+    ppkg.delete_session(
+        project_id,
+        package_id,
+        media_bucket=(project.media_bucket or ""),
+    )
+    messages.success(
+        request,
+        _("Пакет {pid} удалён.").format(pid=pui.short_package_id(package_id)),
+    )
+    return redirect(reverse("ui_package_list") + f"?project={project_id}")
 
 
 @packages_ui_required
@@ -930,7 +1025,7 @@ def package_viz_data(request, project_id: str, package_id: str):
         return JsonResponse({"error": e.message, "code": e.code}, status=502)
     if payload is None:
         return JsonResponse(
-            {"error": "Нет collector/viz.json или данных pipeline для пакета."},
+            {"error": _("Нет collector/viz.json или данных pipeline для пакета.")},
             status=404,
         )
     return JsonResponse(payload)
@@ -981,7 +1076,7 @@ def package_blob_download(request, project_id: str, package_id: str, logical_pat
         media_bucket=(project.media_bucket if project else "") or "",
     )
     if resp is None:
-        return HttpResponseForbidden("Нет файла")
+        return HttpResponseForbidden(_("Нет файла"))
     return resp
 
 
@@ -1000,8 +1095,14 @@ def collector_user_sync_firebase(request):
         r = sync_collector_users_from_firebase()
         messages.success(
             request,
-            f"Firebase: импортировано пользователей из консоли — {r.total_firebase} "
-            f"(новых записей {r.created}, обновлён email {r.updated_email}).",
+            _(
+                "Firebase: импортировано пользователей из консоли — {total} "
+                "(новых записей {created}, обновлён email {updated})."
+            ).format(
+                total=r.total_firebase,
+                created=r.created,
+                updated=r.updated_email,
+            ),
         )
     except Exception as e:
         messages.error(request, str(e))
@@ -1027,7 +1128,7 @@ def collector_user_detail(request, pk: int):
         )
         cu.mobile_projects.set(Project.objects.filter(project_id__in=mobile_allowed))
         cu.admin_projects.set(Project.objects.filter(project_id__in=admin_allowed))
-        messages.success(request, "Права доступа сохранены.")
+        messages.success(request, _("Права доступа сохранены."))
         return redirect("ui_collector_user_detail", pk=cu.pk)
     selected_mobile = list(cu.mobile_projects.values_list("project_id", flat=True))
     selected_admin = list(cu.admin_projects.values_list("project_id", flat=True))

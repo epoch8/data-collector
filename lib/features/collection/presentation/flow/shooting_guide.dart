@@ -23,7 +23,7 @@ class PoseGuide {
   final String exampleAssetPath;
 }
 
-const String _defaultExampleAsset = 'assets/korovas/example_pose_placeholder.jpg';
+const String _defaultExampleAsset = 'assets/placeholders/example_pose_placeholder.jpg';
 
 final List<PoseGuide> _builtinPoseGuides = [
   PoseGuide(
