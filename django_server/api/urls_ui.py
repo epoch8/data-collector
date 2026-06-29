@@ -5,6 +5,7 @@ from .views_auth import UiLoginView, ui_firebase_login, ui_staff_login_api
 
 urlpatterns = [
     path("", views_ui.ui_home, name="ui_home"),
+    path("set-language/", views_ui.ui_set_language, name="ui_set_language"),
     path("login/", UiLoginView.as_view(), name="ui_login"),
     path("login/firebase/", ui_firebase_login, name="ui_login_firebase"),
     path("login/submit/", ui_staff_login_api, name="ui_login_submit"),

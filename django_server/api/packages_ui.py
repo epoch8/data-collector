@@ -5,17 +5,19 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any
 
+from django.utils.translation import gettext_lazy as _
+
 from . import project_packages as ppkg
 from .models import Project
 
 # ── Phases ──────────────────────────────────────────────────────────────────
 
-PHASE_LABELS: dict[str, str] = {
-    "completed": "Завершён",
-    "awaiting_blobs": "Ожидает файлы",
-    "ready_to_commit": "Готов к commit",
-    "failed": "Ошибка",
-    "uploading": "Загрузка",
+PHASE_LABELS: dict[str, Any] = {
+    "completed": _("Завершён"),
+    "awaiting_blobs": _("Ожидает файлы"),
+    "ready_to_commit": _("Готов к commit"),
+    "failed": _("Ошибка"),
+    "uploading": _("Загрузка"),
 }
 
 

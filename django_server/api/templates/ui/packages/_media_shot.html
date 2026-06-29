@@ -1,3 +1,4 @@
+{% load i18n %}
 <figure class="pkg-shot">
   <div class="pkg-shot__frame{% if sh.is_image %} pkg-shot__frame--img{% endif %}"
        {% if sh.is_image %}data-lightbox="{{ sh.url }}" data-name="{{ sh.file_name }}"{% endif %}>
@@ -16,7 +17,7 @@
   </div>
   <div class="pkg-shot__bar">
     <span class="pkg-shot__name" title="{{ sh.file_name }}">{{ sh.file_name }}</span>
-    <a href="{{ sh.url }}" download="{{ sh.file_name }}" class="pkg-shot__dl" title="Скачать" aria-label="Скачать">
+    <a href="{{ sh.url }}" download="{{ sh.file_name }}" class="pkg-shot__dl" title="{% trans 'Скачать' %}" aria-label="{% trans 'Скачать' %}">
       <i class="bi bi-download"></i>
     </a>
   </div>

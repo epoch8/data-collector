@@ -1,20 +1,21 @@
 {% extends "ui/base.html" %}
-{% block title %}Проекты{% endblock %}
+{% load i18n %}
+{% block title %}{% trans "Проекты" %}{% endblock %}
 {% block breadcrumb %}
-<nav class="ui-breadcrumb" aria-label="Навигация">
+<nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
-    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-folder2-open me-1"></i>Проекты</li>
+    <li class="breadcrumb-item active" aria-current="page"><i class="bi bi-folder2-open me-1"></i>{% trans "Проекты" %}</li>
   </ol>
 </nav>
 {% endblock %}
 {% block content %}
 <div class="ui-page-head">
   <div>
-    <h1 class="ui-page-title">Проекты</h1>
-    <p class="ui-page-sub mb-0">Каталог проектов; конфиг в Git-репозитории каждого проекта.</p>
+    <h1 class="ui-page-title">{% trans "Проекты" %}</h1>
+    <p class="ui-page-sub mb-0">{% trans "Каталог проектов; конфиг в Git-репозитории каждого проекта." %}</p>
   </div>
   {% if is_staff %}
-  <a class="btn btn-primary" href="{% url 'ui_project_new' %}"><i class="bi bi-plus-lg me-1"></i>Новый проект</a>
+  <a class="btn btn-primary" href="{% url 'ui_project_new' %}"><i class="bi bi-plus-lg me-1"></i>{% trans "Новый проект" %}</a>
   {% endif %}
 </div>
 <div class="ui-table-card">
@@ -22,11 +23,11 @@
     <table class="table table-hover align-middle mb-0">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Название</th>
-          <th>Git HEAD</th>
-          <th>Обновлён</th>
-          <th class="text-end">Действие</th>
+          <th>{% trans "ID" %}</th>
+          <th>{% trans "Название" %}</th>
+          <th>{% trans "Git HEAD" %}</th>
+          <th>{% trans "Обновлён" %}</th>
+          <th class="text-end">{% trans "Действие" %}</th>
         </tr>
       </thead>
       <tbody>
@@ -36,10 +37,10 @@
           <td class="fw-medium">{{ p.name }}</td>
           <td><span class="badge rounded-pill bg-dark border border-secondary text-secondary">{{ p.config_version_label }}</span></td>
           <td class="ui-muted small">{{ p.updated_at }}</td>
-          <td class="text-end"><a class="btn btn-sm btn-outline-light" href="{% url 'ui_project_detail' p.project_id %}">Открыть<i class="bi bi-arrow-right ms-1"></i></a></td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-light" href="{% url 'ui_project_detail' p.project_id %}">{% trans "Открыть" %}<i class="bi bi-arrow-right ms-1"></i></a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="5" class="text-center py-5 ui-muted">Нет проектов — создайте первый.</td></tr>
+        <tr><td colspan="5" class="text-center py-5 ui-muted">{% trans "Нет проектов — создайте первый." %}</td></tr>
         {% endfor %}
       </tbody>
     </table>

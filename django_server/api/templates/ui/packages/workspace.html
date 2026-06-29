@@ -1,16 +1,16 @@
 {% extends "ui/base.html" %}
-{% load static %}
+{% load static i18n %}
 {% block body_class %}ui-body--pkg-ws{% endblock %}
-{% block title %}{{ short_package_id }} — пакет{% endblock %}
+{% block title %}{{ short_package_id }} — {% trans "пакет" %}{% endblock %}
 {% block extra_head %}
 <link href="{% static 'ui/packages.css' %}" rel="stylesheet">
 <link href="{% static 'ui/packages_viz.css' %}" rel="stylesheet">
 {% endblock %}
 {% block breadcrumb %}
-<nav class="ui-breadcrumb" aria-label="Навигация">
+<nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
-    {% if is_staff %}<li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">Проекты</a></li>{% endif %}
-    <li class="breadcrumb-item"><a href="{{ list_url }}">Пакеты</a></li>
+    {% if is_staff %}<li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>{% endif %}
+    <li class="breadcrumb-item"><a href="{{ list_url }}">{% trans "Пакеты" %}</a></li>
     <li class="breadcrumb-item active" aria-current="page"><code class="small">{{ short_package_id }}</code></li>
   </ol>
 </nav>
@@ -24,13 +24,13 @@
   {# ── Sidebar: package switcher ── #}
   <aside class="pkg-ws__sidebar">
     <div class="pkg-sidebar__head">
-      <a class="pkg-sidebar__back" href="{{ list_url }}"><i class="bi bi-arrow-left me-1"></i>Все пакеты</a>
+      <a class="pkg-sidebar__back" href="{{ list_url }}"><i class="bi bi-arrow-left me-1"></i>{% trans "Все пакеты" %}</a>
       <div class="pkg-sidebar__project" title="{{ project_name }}">{{ project_name }}</div>
     </div>
     <div class="pkg-sidebar__search">
-      <input type="search" class="form-control form-control-sm" id="pkgSidebarSearch" placeholder="Поиск по ID / email…">
+      <input type="search" class="form-control form-control-sm" id="pkgSidebarSearch" placeholder="{% trans 'Поиск по ID / email…' %}">
     </div>
-    <div class="pkg-sidebar__count"><span id="pkgSidebarCount">{{ sidebar|length }}</span> пакетов</div>
+    <div class="pkg-sidebar__count"><span id="pkgSidebarCount">{{ sidebar|length }}</span> {% trans "пакетов" %}</div>
     <nav class="pkg-sidebar__list" id="pkgSidebarList">
       {% for s in sidebar %}
       <a class="pkg-sidebar__item {% if s.active %}pkg-sidebar__item--active{% endif %}"
@@ -49,21 +49,21 @@
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <h1 class="pkg-head__title" title="{{ package_id }}">{{ short_package_id }}</h1>
           {% include 'ui/_phase_badge.html' with phase=session.phase label=phase_label %}
-          <span class="pkg-head__dirty" id="pkgDirtyBadge">не сохранено</span>
+          <span class="pkg-head__dirty" id="pkgDirtyBadge">{% trans "не сохранено" %}</span>
         </div>
         <p class="pkg-head__meta">{{ session.uploader_email|default:"—" }} · {{ session.created_at|slice:":16" }}</p>
       </div>
       <div class="d-flex gap-2 flex-shrink-0">
-        <button type="button" class="btn btn-outline-danger btn-sm" id="pkgDeleteBtn">Удалить</button>
-        <button type="button" class="btn btn-outline-light btn-sm" id="pkgRevertBtn" disabled form="pkgForm">Откатить</button>
+        <button type="button" class="btn btn-outline-danger btn-sm" id="pkgDeleteBtn">{% trans "Удалить" %}</button>
+        <button type="button" class="btn btn-outline-light btn-sm" id="pkgRevertBtn" disabled form="pkgForm">{% trans "Откатить" %}</button>
         <button type="button" class="btn btn-primary btn-sm" id="pkgSaveBtn" disabled form="pkgForm"
-                {% if not is_editable %}data-locked="1"{% endif %}>Сохранить</button>
+                {% if not is_editable %}data-locked="1"{% endif %}>{% trans "Сохранить" %}</button>
       </div>
     </header>
 
     {% if not is_editable %}
     <div class="alert alert-warning mt-3 mb-0 py-2 small">
-      Только просмотр: правки доступны для пакетов в статусе «Завершён».
+      {% trans "Только просмотр: правки доступны для пакетов в статусе «Завершён»." %}
     </div>
     {% endif %}
 
@@ -73,11 +73,11 @@
 
       {# ── Tabs ── #}
       <div class="pkg-tabs" role="tablist">
-        <button type="button" class="pkg-tab active" data-tab="data">Данные</button>
-        <button type="button" class="pkg-tab" data-tab="media">Медиа<span class="pkg-tab__count">{{ blob_count }}</span></button>
-        {% if has_viz %}<button type="button" class="pkg-tab" data-tab="viz">Визуализация</button>{% endif %}
-        <button type="button" class="pkg-tab" data-tab="history">История изменений<span class="pkg-tab__count">{{ entries|length }}</span></button>
-        <button type="button" class="pkg-tab" data-tab="json">JSON</button>
+        <button type="button" class="pkg-tab active" data-tab="data">{% trans "Данные" %}</button>
+        <button type="button" class="pkg-tab" data-tab="media">{% trans "Медиа" %}<span class="pkg-tab__count">{{ blob_count }}</span></button>
+        {% if has_viz %}<button type="button" class="pkg-tab" data-tab="viz">{% trans "Визуализация" %}</button>{% endif %}
+        <button type="button" class="pkg-tab" data-tab="history">{% trans "История изменений" %}<span class="pkg-tab__count">{{ entries|length }}</span></button>
+        <button type="button" class="pkg-tab" data-tab="json">{% trans "JSON" %}</button>
       </div>
 
       {# ── Data panel ── #}
@@ -85,7 +85,7 @@
         {% if data_sections %}
         <div class="pkg-data">
           <nav class="pkg-data__nav">
-            <div class="pkg-data__nav-title">Формы</div>
+            <div class="pkg-data__nav-title">{% trans "Формы" %}</div>
             {% for sec in data_sections %}
             <a class="pkg-data__nav-link" href="#sec-{{ sec.id }}">{{ sec.title }}</a>
             {% endfor %}
@@ -117,14 +117,14 @@
           </div>
         </div>
         {% else %}
-        <div class="card p-5 text-center ui-muted">В конфиге проекта нет полей для отображения.</div>
+        <div class="card p-5 text-center ui-muted">{% trans "В конфиге проекта нет полей для отображения." %}</div>
         {% endif %}
       </section>
 
       {# ── Media panel ── #}
       <section class="pkg-panel" data-panel="media">
         {% if media_sections or orphan_blobs %}
-        <div class="pkg-media-summary"><i class="bi bi-images me-1"></i>{{ blob_count }} файл(ов) в пакете</div>
+        <div class="pkg-media-summary"><i class="bi bi-images me-1"></i>{% blocktrans with n=blob_count %}{{ n }} файл(ов) в пакете{% endblocktrans %}</div>
         {% for sec in media_sections %}
         <section class="pkg-media-group">
           <header class="pkg-media-group__head">
@@ -149,7 +149,7 @@
         {% if orphan_blobs %}
         <section class="pkg-media-group pkg-media-group--orphan">
           <header class="pkg-media-group__head">
-            <span class="pkg-media-group__title"><i class="bi bi-paperclip me-1"></i>Без привязки к форме</span>
+            <span class="pkg-media-group__title"><i class="bi bi-paperclip me-1"></i>{% trans "Без привязки к форме" %}</span>
           </header>
           <div class="pkg-media-block">
             <div class="pkg-media-gallery">
@@ -161,7 +161,7 @@
         </section>
         {% endif %}
         {% else %}
-        <div class="card p-5 text-center ui-muted">В пакете нет файлов.</div>
+        <div class="card p-5 text-center ui-muted">{% trans "В пакете нет файлов." %}</div>
         {% endif %}
       </section>
 
@@ -170,7 +170,7 @@
       <section class="pkg-panel" data-panel="viz">
         <div id="pkgViz" class="pkg-viz" data-project="{{ project_id }}" data-package="{{ package_id }}">
           <script type="application/json" id="pkgBlobMap">{{ blob_map_json|safe }}</script>
-          <div class="pkg-viz__loading ui-muted p-5 text-center">Загрузка визуализации…</div>
+          <div class="pkg-viz__loading ui-muted p-5 text-center">{% trans "Загрузка визуализации…" %}</div>
         </div>
       </section>
       {% endif %}
@@ -184,21 +184,22 @@
             <span class="pkg-history__field">{{ e.field_id }}</span>
             <span class="pkg-history__date">{{ e.changed_at|slice:":19" }}</span>
           </div>
-          <div class="pkg-history__reason">Причина: {{ e.reason }} · проверил: {{ e.verifier_email|default:"не указан" }}</div>
+          {% trans "не указан" as not_specified %}
+          <div class="pkg-history__reason">{% blocktrans with reason=e.reason verifier=e.verifier_email|default:not_specified %}Причина: {{ reason }} · проверил: {{ verifier }}{% endblocktrans %}</div>
           <div class="pkg-history__diff">
             <div class="pkg-diff pkg-diff--before">
-              <div class="pkg-diff__label">Было</div>
+              <div class="pkg-diff__label">{% trans "Было" %}</div>
               <pre>{{ e.before|default:"—" }}</pre>
             </div>
             <div class="pkg-diff pkg-diff--after">
-              <div class="pkg-diff__label">Стало</div>
+              <div class="pkg-diff__label">{% trans "Стало" %}</div>
               <pre>{{ e.after|default:"—" }}</pre>
             </div>
           </div>
         </div>
         {% endfor %}
         {% else %}
-        <div class="card p-5 text-center ui-muted">История изменений пуста.</div>
+        <div class="card p-5 text-center ui-muted">{% trans "История изменений пуста." %}</div>
         {% endif %}
       </section>
 
@@ -206,9 +207,9 @@
       <section class="pkg-panel" data-panel="json">
         <div class="pkg-json">
           <div class="pkg-json__toolbar">
-            <span class="pkg-json__hint ui-muted small">Манифест пакета (payload.json)</span>
+            <span class="pkg-json__hint ui-muted small">{% trans "Манифест пакета (payload.json)" %}</span>
             <button type="button" class="btn btn-outline-light btn-sm" id="pkgJsonCopyBtn">
-              <i class="bi bi-clipboard me-1"></i>Копировать
+              <i class="bi bi-clipboard me-1"></i>{% trans "Копировать" %}
             </button>
           </div>
           <pre class="pkg-json__pre" id="pkgJsonPre">{{ manifest_json }}</pre>
@@ -226,21 +227,21 @@
       <form method="post" action="{{ delete_url }}">
         {% csrf_token %}
         <div class="modal-header border-danger">
-          <h5 class="modal-title text-danger" id="pkgDeleteModalTitle">Удалить пакет</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+          <h5 class="modal-title text-danger" id="pkgDeleteModalTitle">{% trans "Удалить пакет" %}</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
         </div>
         <div class="modal-body">
-          <p class="small mb-3">Будут удалены манифест, все файлы и история изменений. Это действие нельзя отменить.</p>
-          <p class="small ui-muted mb-2">Пакет: <code class="user-select-all">{{ package_id }}</code></p>
+          <p class="small mb-3">{% trans "Будут удалены манифест, все файлы и история изменений. Это действие нельзя отменить." %}</p>
+          <p class="small ui-muted mb-2">{% trans "Пакет:" %} <code class="user-select-all">{{ package_id }}</code></p>
           <label class="pkg-delete-ack">
             <input type="checkbox" id="pkgDeleteAck" autocomplete="off">
-            <span>Я понимаю, что удаление необратимо</span>
+            <span>{% trans "Я понимаю, что удаление необратимо" %}</span>
           </label>
           <input type="hidden" name="confirm" value="yes">
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Отмена</button>
-          <button type="submit" class="btn btn-danger btn-sm" id="pkgDeleteSubmit" disabled>Удалить пакет</button>
+          <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
+          <button type="submit" class="btn btn-danger btn-sm" id="pkgDeleteSubmit" disabled>{% trans "Удалить пакет" %}</button>
         </div>
       </form>
     </div>
@@ -250,22 +251,22 @@
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="pkgReasonModalTitle">Причина корректировки</h5>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+        <h5 class="modal-title" id="pkgReasonModalTitle">{% trans "Причина корректировки" %}</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="{% trans 'Закрыть' %}"></button>
       </div>
       <div class="modal-body">
-        <p class="small ui-muted">Изменения: <span id="pkgChangeCount">0</span> полей. Укажите причину — она попадёт в историю.</p>
+        <p class="small ui-muted">{% blocktrans trimmed %}Изменения: <span id="pkgChangeCount">0</span> полей. Укажите причину — она попадёт в историю.{% endblocktrans %}</p>
         <div class="d-flex flex-column gap-2">
-          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="ошибка в введенных данных" checked> ошибка в введённых данных</label>
-          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="устаревшие данные"> устаревшие данные</label>
-          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="неправильный формат данных"> неправильный формат данных</label>
-          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="__custom__"> другое…</label>
-          <textarea class="form-control mt-1 d-none" id="pkgReasonCustom" rows="2" placeholder="Своя причина"></textarea>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="{% trans 'ошибка в введённых данных' %}" checked> {% trans "ошибка в введённых данных" %}</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="{% trans 'устаревшие данные' %}"> {% trans "устаревшие данные" %}</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="{% trans 'неправильный формат данных' %}"> {% trans "неправильный формат данных" %}</label>
+          <label class="pkg-reason-opt"><input type="radio" name="reasonPreset" value="__custom__"> {% trans "другое…" %}</label>
+          <textarea class="form-control mt-1 d-none" id="pkgReasonCustom" rows="2" placeholder="{% trans 'Своя причина' %}"></textarea>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">Отмена</button>
-        <button type="button" class="btn btn-primary btn-sm" id="pkgConfirmSave">Сохранить</button>
+        <button type="button" class="btn btn-outline-light btn-sm" data-bs-dismiss="modal">{% trans "Отмена" %}</button>
+        <button type="button" class="btn btn-primary btn-sm" id="pkgConfirmSave">{% trans "Сохранить" %}</button>
       </div>
     </div>
   </div>
