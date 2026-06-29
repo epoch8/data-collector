@@ -195,7 +195,7 @@ def project_new(request):
             return redirect("ui_project_new")
         try:
             if generate_key:
-                cred, public_key, _ = create_credential_generated(label=f"{pid} deploy")
+                cred, public_key, _unused = create_credential_generated(label=f"{pid} deploy")
             else:
                 cred = create_credential(label=f"{pid} deploy", private_key=private_key)
                 public_key = cred.public_key
@@ -618,9 +618,6 @@ def project_delete(request, project_id: str):
         return redirect("ui_project_detail", project_id=project_id)
     cred = project.git_credential
     cred_pk = cred.pk
-    media_bucket = project.media_bucket
-    cfg = psc.resolve(project)
-    ppkg.remove_project_packages(project_id, media_bucket=media_bucket, config=cfg)
     project.delete()
     git_remove_cache(project_id)
     if not Project.objects.filter(git_credential_id=cred_pk).exists():

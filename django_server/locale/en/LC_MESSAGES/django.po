@@ -758,6 +758,9 @@ msgstr "Drag <i class=\"bi bi-grip-vertical\"></i> on a field — reorder and mo
 msgid "Тяните <i class=\"bi bi-grip-vertical\"></i> у шапки экрана — порядок экранов."
 msgstr "Drag <i class=\"bi bi-grip-vertical\"></i> on a screen header — reorder screens."
 
+msgid "Удаляется только запись в каталоге, локальный git-кэш и SSH credential (если не используется в других проектах). Файлы пакетов и база данных проекта сохраняются."
+msgstr "Only the catalog record, local git cache, and SSH credential (if not used by other projects) are removed. Package files and the project database are kept."
+
 msgid "Удаление проекта необратимо: запись в каталоге, git-кэш, SSH credential (если не используется в других проектах), пакеты."
 msgstr "Deleting a project is irreversible: the catalog record, git cache, SSH credential (if not used by other projects), and packages."
 
@@ -778,6 +781,9 @@ msgstr "Delete field"
 
 msgid "Удалить проект"
 msgstr "Delete project"
+
+msgid "Удалить проект из каталога?"
+msgstr "Remove the project from the catalog?"
 
 msgid "Удалить проект и все пакеты?"
 msgstr "Delete the project and all packages?"

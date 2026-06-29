@@ -106,10 +106,10 @@
 {% if is_staff %}
 <hr class="border-secondary my-5">
 <h2 class="h6 text-danger mb-3"><i class="bi bi-shield-exclamation me-1"></i>{% trans "Опасная зона" %}</h2>
-<form method="post" action="{% url 'ui_project_delete' project.project_id %}" onsubmit="return confirm('{% trans 'Удалить проект и все пакеты?' %}');">
+<form method="post" action="{% url 'ui_project_delete' project.project_id %}" onsubmit="return confirm('{% trans 'Удалить проект из каталога?' %}');">
   {% csrf_token %}
   <div class="card p-4 border-danger border-opacity-50">
-    <p class="small mb-3">{% trans "Удаление проекта необратимо: запись в каталоге, git-кэш, SSH credential (если не используется в других проектах), пакеты." %}</p>
+    <p class="small mb-3">{% trans "Удаляется только запись в каталоге, локальный git-кэш и SSH credential (если не используется в других проектах). Файлы пакетов и база данных проекта сохраняются." %}</p>
     <label class="form-label small">{% blocktrans with pid=project.project_id %}Введите <code>{{ pid }}</code> для подтверждения{% endblocktrans %}</label>
     <input class="form-control mb-3" type="text" name="confirm" autocomplete="off">
     <button type="submit" class="btn btn-outline-danger btn-sm">{% trans "Удалить проект" %}</button>
