@@ -1,8 +1,34 @@
-> **Language / Язык:** **English** · [Русский](README.ru.md)
+<div align="center">
 
-# Data collector
+<img src="e8_data_collector_logo.png" alt="E8 Data Collector" width="460">
 
-A **framework** for collecting labeled data: a **Flutter client** (on-device collection, offline-first) and a **Django backend** with a web admin panel (`/ui/`) and mobile API (`/v1/*`).
+<h1>Data Collector</h1>
+
+<p><b>A framework for collecting labeled data.</b><br>
+Flutter client (on-device, offline-first) + Django backend with a web admin panel and mobile API.</p>
+
+<p>
+<img src="https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter">
+<img src="https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+<img src="https://img.shields.io/badge/S3%20%2F%20GCS-FF9900?style=flat-square&logo=amazons3&logoColor=white" alt="S3 / GCS">
+<img src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
+</p>
+
+<p>
+<a href="#quick-start"><b>Quick start</b></a> ·
+<a href="#how-it-looks">How it looks</a> ·
+<a href="docs/admin-panel/README.md">Admin guide</a> ·
+<a href="docs/mobile-app/README.md">Mobile guide</a> ·
+<a href="#documentation">Docs</a>
+</p>
+
+<sub><b>Language / Язык:</b> <b>English</b> · <a href="README.ru.md">Русский</a></sub>
+
+</div>
+
+---
 
 The core is domain-neutral. What and how to collect is defined by the **project config**
 (`collector/config.json` in Git). Concrete scenarios are **projects built on the framework**:

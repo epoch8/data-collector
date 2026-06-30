@@ -1,8 +1,34 @@
-> **Language / Язык:** [English](README.md) · **Русский**
+<div align="center">
 
-# Data collector
+<img src="e8_data_collector_logo.png" alt="E8 Data Collector" width="460">
 
-**Фреймворк** для сбора размеченных данных: **Flutter-клиент** (сбор на устройстве, offline-first) и **Django-бэкенд** с веб-админкой (`/ui/`) и мобильным API (`/v1/*`).
+<h1>Data Collector</h1>
+
+<p><b>Фреймворк для сбора размеченных данных.</b><br>
+Flutter-клиент (на устройстве, offline-first) + Django-бэкенд с веб-админкой и мобильным API.</p>
+
+<p>
+<img src="https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter">
+<img src="https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+<img src="https://img.shields.io/badge/S3%20%2F%20GCS-FF9900?style=flat-square&logo=amazons3&logoColor=white" alt="S3 / GCS">
+<img src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
+</p>
+
+<p>
+<a href="#быстрый-старт"><b>Быстрый старт</b></a> ·
+<a href="#как-это-выглядит">Как это выглядит</a> ·
+<a href="docs/admin-panel/README.ru.md">Гайд админки</a> ·
+<a href="docs/mobile-app/README.ru.md">Гайд приложения</a> ·
+<a href="#документация">Документация</a>
+</p>
+
+<sub><b>Language / Язык:</b> <a href="README.md">English</a> · <b>Русский</b></sub>
+
+</div>
+
+---
 
 Ядро нейтрально к предметной области. Что и как собирать задаётся **конфигом проекта**
 (`collector/config.json` в Git). Конкретные сценарии — это **проекты на базе фреймворка**:
