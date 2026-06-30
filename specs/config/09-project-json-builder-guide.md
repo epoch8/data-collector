@@ -1,27 +1,29 @@
-# Гайд: JSON проекта
+> **Language / Язык:** **English** · [Русский](09-project-json-builder-guide.ru.md)
 
-Как собрать конфиг под текущее приложение. Детали реализации: `collection_flow_resolver.dart`, `scroll_form_flow_step.dart`, пайплайн в [json-driven-collection-ui.md](json-driven-collection-ui.md).
+# Guide: project JSON
 
----
-
-## Принцип сборки
-
-1. **`config.fields`** — справочник всех полей: `field_id`, `type`, `title`, `instructions`, при необходимости `validation` и `multiple` (камера). Типы: `text_input`, `datetime`, `instruction`, `camera_photo`.
-2. **`config.flow.steps`** — сценарий по порядку. Поддерживаются только **`scroll_form`** и **`review`**. Шаг **`scroll_form`** — один экран со скроллом; список **`field_ids`** задаёт, какие поля на нём и в каком порядке. **Каждое поле из `fields` должно встретиться ровно в одном шаге `scroll_form`.**
-3. **`review`** — по желанию, финальный экран проверки перед отправкой. Подписи блоков на нём задаёт **`form_title`** у шага `scroll_form` (человекочитаемое имя формы).
-4. **`config.ui`** — по желанию: вложенные строки для подписей в приложении (`ProjectUi`). Блок **`ui.shooting_guide`** клиентом не используется.
-5. **Картинки в инструкциях** — в Markdown в поле `instruction` пути должны указывать на файлы, **загруженные в медиа проекта** в админке (страница «Файлы» у проекта). Клиент подтягивает их через API проекта.
-
-Корневые **`id`**, **`name`**, **`version`** обязательны; **`id`** совпадает с идентификатором проекта на сервере / в манифесте.
+How to build config for the current app. Implementation details: `collection_flow_resolver.dart`, `scroll_form_flow_step.dart`, pipeline in [json-driven-collection-ui.md](json-driven-collection-ui.md).
 
 ---
 
-## Минимальный каркас
+## Assembly principles
+
+1. **`config.fields`** — catalog of all fields: `field_id`, `type`, `title`, `instructions`, optionally `validation` and `multiple` (camera). Types: `text_input`, `datetime`, `instruction`, `camera_photo`.
+2. **`config.flow.steps`** — scenario in order. Only **`scroll_form`** and **`review`** are supported. A **`scroll_form`** step is one scrollable screen; **`field_ids`** list defines which fields appear and in what order. **Every field from `fields` must appear in exactly one `scroll_form` step.**
+3. **`review`** — optional, final review screen before submit. Block labels on it come from **`form_title`** on the `scroll_form` step (human-readable form name).
+4. **`config.ui`** — optional: nested strings for app labels (`ProjectUi`). Block **`ui.shooting_guide`** is not used by the client.
+5. **Images in instructions** — Markdown in the `instruction` field must reference files **uploaded to project media** in admin (project "Files" page). The client fetches them via the project API.
+
+Root **`id`**, **`name`**, **`version`** are required; **`id`** matches the project identifier on the server / in the manifest.
+
+---
+
+## Minimal skeleton
 
 ```json
 {
   "id": "my-project-2026",
-  "name": "Имя в UI",
+  "name": "Name in UI",
   "version": "1.0",
   "config": {
     "flow": { "steps": [] },
@@ -30,43 +32,43 @@
 }
 ```
 
-`config.ui` добавляйте при необходимости.
+Add `config.ui` as needed.
 
 ---
 
-## Поля (`config.fields`)
+## Fields (`config.fields`)
 
-| Ключ | Роль |
-|------|------|
-| `field_id` | Ключ в состоянии мастера и в payload. |
-| `type` | Виджет и тип данных. |
-| `title`, `instructions` | Подписи; у `instruction` в `instructions` допускается Markdown. |
-| `validation` | Для типов с вводом/камерой: например `required`. У **`instruction` обязательность не используется** приложением. |
-| `multiple`, `validation.min_items` | Только у `camera_photo` (несколько снимков). |
-
----
-
-## Сценарий (`config.flow.steps`)
-
-У шага: **`id`** (технический код), **`screen`**: `scroll_form` или `review`.
-
-У **`scroll_form`** обязательны непустые **`field_ids`**. Опционально: **`form_title`**, **`cow_id_hints`**, **`cow_id_field_id`**.
-
-У **`review`** отдельных полей нет.
+| Key | Role |
+|-----|------|
+| `field_id` | Key in wizard state and payload. |
+| `type` | Widget and data type. |
+| `title`, `instructions` | Labels; `instruction` type allows Markdown in `instructions`. |
+| `validation` | For input/camera types: e.g. `required`. **`instruction` requiredness is not used** by the app. |
+| `multiple`, `validation.min_items` | Only for `camera_photo` (multiple shots). |
 
 ---
 
-## Валидация и UI на сервере
+## Scenario (`config.flow.steps`)
 
-В админке Django: визуальный редактор проекта и проверка JSON перед сохранением (`project_config_validate.py`) согласованы с клиентом.
+Each step has **`id`** (technical code), **`screen`**: `scroll_form` or `review`.
+
+For **`scroll_form`**, non-empty **`field_ids`** are required. Optional: **`form_title`**, **`cow_id_hints`**, **`cow_id_field_id`**.
+
+**`review`** has no separate fields.
 
 ---
 
-## Чеклист
+## Validation and UI on server
 
-- [ ] Валидный JSON, уникальный `id`.
-- [ ] Каждый `field_id` из шагов есть в `fields`, типы соответствуют экрану.
-- [ ] Ни одно поле не пропущено и не продублировано между шагами `scroll_form`.
-- [ ] Медиа для картинок в инструкциях загружены на странице «Файлы» проекта.
+In Django admin: visual project editor and JSON validation before save (`project_config_validate.py`) aligned with the client.
 
-При смене поведения в коде обновляйте этот файл и **json-driven-collection-ui.md**.
+---
+
+## Checklist
+
+- [ ] Valid JSON, unique `id`.
+- [ ] Every `field_id` from steps exists in `fields`, types match the screen.
+- [ ] No field skipped or duplicated across `scroll_form` steps.
+- [ ] Media for instruction images uploaded on project "Files" page.
+
+When behavior changes in code, update this file and **json-driven-collection-ui.md**.

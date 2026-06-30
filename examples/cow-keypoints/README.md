@@ -1,33 +1,35 @@
-# Пример проекта: Cow Keypoints (КРС)
+> **Language / Язык:** **English** · [Русский](README.ru.md)
 
-Показательный, **доменно-специфичный** проект на базе фреймворка data_collector.
-Демонстрирует, как из общих сущностей собирается конкретный сценарий сбора — здесь это
-съёмка крупного рогатого скота по нескольким ракурсам для разметки ключевых точек и оценок.
+# Example project: Cow Keypoints (cattle)
 
-Этот пример **не входит в дефолтный бандл клиента** — ядро фреймворка нейтрально.
-Используйте его как референс при создании собственного проекта.
+A demonstration, **domain-specific** project built on the data_collector framework.
+Shows how concrete collection scenarios are assembled from shared entities — here,
+photographing cattle from multiple viewpoints for keypoint labeling and scoring.
 
-## Состав
+This example is **not included in the default client bundle** — the framework core is neutral.
+Use it as a reference when creating your own project.
 
-| Файл | Назначение |
-|------|------------|
-| `config.json` | Конфиг сбора (`flow.steps`, `fields`, `ui`). Кладётся в Git-репозиторий проекта как `collector/config.json`. |
-| `viz.json` | Конфиг визуализации пайплайна в админке. Кладётся как `collector/viz.json`. |
-| `schemas/` | Исходные доменные схемы (`.drawio`) ранних версий. |
+## Contents
 
-## Что показывает пример
+| File | Purpose |
+|------|---------|
+| `config.json` | Collection config (`flow.steps`, `fields`, `ui`). Placed in the project Git repository as `collector/config.json`. |
+| `viz.json` | Pipeline visualization config in the admin panel. Placed as `collector/viz.json`. |
+| `schemas/` | Source domain schemas (`.drawio`) from early versions. |
 
-- **Сбор по ракурсам** (`scroll_form` + `camera_photo` + `instruction`) с примерами поз.
-- **Подсказки по идентификатору субъекта** — поля `cow_id_hints` / `cow_id_field_id`
-  (общий механизм «подсказать значения из прошлых пакетов по ID субъекта»; здесь субъект — животное).
-- **Визуализация** через viz-плагины: `keypoint_korovas` (ключевые точки КРС), `cvat_link`, `depth_map`.
+## What this example demonstrates
 
-## Как использовать
+- **Viewpoint-based collection** (`scroll_form` + `camera_photo` + `instruction`) with pose examples.
+- **Subject ID hints** — `cow_id_hints` / `cow_id_field_id` fields
+  (shared mechanism to "suggest values from past packages by subject ID"; here the subject is an animal).
+- **Visualization** via viz plugins: `keypoint_korovas` (cattle keypoints), `cvat_link`, `depth_map`.
 
-1. Создайте в админке (`/ui/projects/`) проект с Git-репозиторием.
-2. Положите `config.json` → `collector/config.json` и `viz.json` → `collector/viz.json` в этот репозиторий.
-3. Если в шагах есть `example_asset_path` (примеры поз), добавьте картинки в сборку клиента
-   (по умолчанию ядро ищет плейсхолдер `assets/placeholders/example_pose_placeholder.jpg`).
+## How to use
 
-Подробнее о формате конфига — [`specs/config/09-project-json-builder-guide.md`](../../specs/config/09-project-json-builder-guide.md),
-о визуализации — [`specs/collector-vis-config.md`](../../specs/collector-vis-config.md).
+1. Create a project with a Git repository in the admin panel (`/ui/projects/`).
+2. Place `config.json` → `collector/config.json` and `viz.json` → `collector/viz.json` in that repository.
+3. If steps include `example_asset_path` (pose examples), add images to the client build
+   (by default the core looks for placeholder `assets/placeholders/example_pose_placeholder.jpg`).
+
+For config format details — [`specs/config/09-project-json-builder-guide.md`](../../specs/config/09-project-json-builder-guide.md),
+for visualization — [`specs/collector-vis-config.md`](../../specs/collector-vis-config.md).

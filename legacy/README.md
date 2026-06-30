@@ -1,26 +1,27 @@
+> **Language / Язык:** **English** · [Русский](README.ru.md)
+
 # legacy/
 
-Сюда вынесено всё, что **не участвует в основном пайплайне** data_collector
-(Flutter-клиент + `django_server/`), но сохраняется для истории и справки.
+Everything that **does not participate in the main pipeline** of data_collector
+(Flutter client + `django_server/`) but is kept for history and reference.
 
-Перенос сделан в рамках наведения порядка в репозитории. Поведение основного
-приложения не менялось.
+The move was done as part of repository cleanup. Main application behavior was not changed.
 
-## Что здесь
+## What's here
 
-| Папка/файл | Что это | Откуда перенесено |
-|------------|---------|-------------------|
-| `cowmetric/` | Отдельный ML-проект (pipeline/minio/cvat/core server-app). Вложенный git-репозиторий со своей историей. | корень репо (был gitlink) |
-| `korovas/` | Отдельный ML-проект (jetson-web-ui, эксперименты depth/keypoints, demo_app). Вложенный git-репозиторий со своей историей. | корень репо (был gitlink) |
-| `client-admin/` | Задумывавшийся отдельный веб-кабинет «Client Admin». В git были только случайные Windows-бинарники из `node_modules`/`.vite`, исходного кода нет. Роль закрыта вкладкой «Пакеты» в Django `/ui`. | корень репо |
-| `mock_server/` | Reference Shelf-сервер под спеки 08–09 (Dart). Не production. | корень репо |
-| `samples/` | Тяжёлые примеры-картинки (визуализации), лежавшие в корне репо. | корень репо |
-| `presentation-archive/` | Старые версии презентации продукта. Канон — `specs/presentation/Data-Collector-Canva-Template-v4.pptx`. | `specs/presentation/` |
+| Folder/file | What it is | Moved from |
+|-------------|------------|------------|
+| `cowmetric/` | Separate ML project (pipeline/minio/cvat/core server-app). Nested git repository with its own history. | repo root (was a gitlink) |
+| `korovas/` | Separate ML project (jetson-web-ui, depth/keypoints experiments, demo_app). Nested git repository with its own history. | repo root (was a gitlink) |
+| `client-admin/` | Planned separate "Client Admin" web portal. Git only had accidental Windows binaries from `node_modules`/`.vite`, no source code. Role covered by Django `/ui` Packages tab. | repo root |
+| `mock_server/` | Reference Shelf server for specs 08–09 (Dart). Not production. | repo root |
+| `samples/` | Heavy sample images (visualizations) that lived in repo root. | repo root |
+| `presentation-archive/` | Old product presentation versions. Canonical — `specs/presentation/Data-Collector-Canva-Template-v4.pptx`. | `specs/presentation/` |
 
-## Про `cowmetric/` и `korovas/`
+## About `cowmetric/` and `korovas/`
 
-Раньше они были подключены как **gitlink'и** (mode `160000`) без `.gitmodules`,
-поэтому на чистом клоне выглядели пустыми. Теперь это обычные локальные папки,
-не отслеживаемые основным репозиторием (см. `.gitignore`). Их собственная
-git-история сохранена внутри их `.git`. Если они нужны под версионный контроль —
-их следует вести как отдельные репозитории или оформить полноценными submodule.
+They were previously connected as **gitlinks** (mode `160000`) without `.gitmodules`,
+so on a clean clone they appeared empty. Now they are regular local folders,
+not tracked by the main repository (see `.gitignore`). Their own
+git history is preserved inside their `.git`. If version control is needed —
+manage them as separate repositories or set up proper submodules.

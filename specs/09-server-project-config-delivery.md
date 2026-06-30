@@ -1,174 +1,176 @@
-# 9 — Доставка конфигов проектов с сервера (каталог, первый запуск, привязка пакетов)
+> **Language / Язык:** **English** · [Русский](09-server-project-config-delivery.ru.md)
 
-Статус: **актуально** (июнь 2026). Конфиг — **Git** (`collector/config.json`), не Django DB. См. [git-backed-projects.md](git-backed-projects.md).
+# 9 — Server delivery of project configs (catalog, first launch, package binding)
 
-Документ описывает **откуда мобильное приложение берёт список проектов и полные JSON-конфиги**, как это согласуется с **созданием таблиц приёмки на сервере**, и **как сервер однозначно понимает проект** при приёме пакета с клиента.
+Status: **current** (June 2026). Config is **Git** (`collector/config.json`), not Django DB. See [git-backed-projects.md](git-backed-projects.md).
 
-**Связанные документы:** [08-server-api-package-upload.md](08-server-api-package-upload.md) (загрузка пакета, `project_id` в URL), [07-package-payload-structure.md](07-package-payload-structure.md) (`project_id` в `payload.json`), [config/json-driven-collection-ui.md](config/json-driven-collection-ui.md) (модель `Project` и парсинг JSON на клиенте), [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md) (как собирать JSON проекта).
+This document describes **where the mobile app gets the project list and full JSON configs**, how that aligns with **creating intake tables on the server**, and **how the server unambiguously identifies the project** when accepting a package from the client.
 
-**Схема:** [09_server_project_config.drawio](09_server_project_config.drawio) — админ/сервер, первый запуск клиента, доставка конфига, приём пакета.
+**Related documents:** [08-server-api-package-upload.md](08-server-api-package-upload.md) (package upload, `project_id` in URL), [07-package-payload-structure.md](07-package-payload-structure.md) (`project_id` in `payload.json`), [config/json-driven-collection-ui.md](config/json-driven-collection-ui.md) (`Project` model and JSON parsing on client), [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md) (how to build project JSON).
 
----
-
-## 1. Цели
-
-- При **первом открытии** приложения (и далее при обновлениях) пользователь видит **актуальный список проектов**, разрешённых ему на сервере, **без ручной сборки** `assets/config/`.
-- Конфиг проекта на сервере — **источник правды** для UI сбора (те же поля, что описаны для локальных JSON в `json-driven-collection-ui`).
-- Создание/изменение конфига на сервере **согласовано** с **схемой хранения принятых пакетов** (таблица или эквивалент под этот `project_id`).
-- При **приёме пакета** сервер **всегда** знает целевой проект: из маршрута, из тела манифеста и из прав доступа субъекта.
+**Diagram:** [09_server_project_config.drawio](09_server_project_config.drawio) — admin/server, client first launch, config delivery, package intake.
 
 ---
 
-## 2. Термины
+## 1. Goals
 
-| Термин | Смысл |
-|--------|--------|
-| **Каталог проектов** | Список записей `{ project_id, name, config_version, updated_at, … }` для экрана «выбор проекта». |
-| **Полный конфиг** | JSON документ, парсабельный в `Project` на клиенте (как файл `*.json` из `assets/config/`). |
-| **config_version** | В каталоге — короткий префикс Git SHA (`last_synced_sha[:12]`). Поле `version` в JSON — для отображения в приложении. |
-| **Приём пакета** | Последовательность из спеки `08`: сессия, блобы, манифест, `commit`. |
+- On **first app open** (and on updates) the user sees an **up-to-date project list** allowed on the server, **without manually building** `assets/config/`.
+- Project config on the server is the **source of truth** for collection UI (same fields as local JSON in `json-driven-collection-ui`).
+- Creating/changing config on the server is **aligned** with the **accepted package storage schema** (table or equivalent for that `project_id`).
+- On **package intake** the server **always** knows the target project: from route, manifest body, and subject access rights.
 
 ---
 
-## 3. Первый запуск и отображение списка проектов
+## 2. Terms
 
-1. Пользователь открывает приложение после установки.
-2. Клиент выполняет **аутентификацию** (если включена): токен ограничивает доступные `project_id` (как для upload в `08` §12).
-3. Клиент запрашивает **каталог проектов** с сервера (см. §6).
-4. Ответ сохраняется в **локальном кэше** (например SQLite / файлы в `ApplicationSupport`): список для UI + метаданные версий.
-5. Для каждого проекта из каталога клиент обеспечивает наличие **полного конфига** (см. §7): при отсутствии или устаревшей версии — докачка, затем парсинг в `Project`.
-6. **Дашборд** строится из **закэшированных** `Project` (аналог текущего `projectsProvider`, но источник — сервер, а не только `rootBundle`). В коде этого репозитория: `ServerProjectCatalog` (`lib/features/projects/server_project_catalog.dart`), кэш в `ApplicationSupport/server_project_cache/` (`catalog.json`, `configs/<project_id>.json`, ETag в метаданных).
-
-**Офлайн после первого успешного синка:** показывать последний закэшированный каталог и конфиги; индикировать «данные могли устареть», если нет сети и прошло время с последней синхронизации (детали продукта).
+| Term | Meaning |
+|------|---------|
+| **Project catalog** | List of entries `{ project_id, name, config_version, updated_at, … }` for the project picker screen. |
+| **Full config** | JSON document parseable into `Project` on the client (like a `*.json` file from `assets/config/`). |
+| **config_version** | In catalog — short Git SHA prefix (`last_synced_sha[:12]`). Field `version` in JSON — for display in the app. |
+| **Package intake** | Sequence from spec `08`: session, blobs, manifest, `commit`. |
 
 ---
 
-## 4. Сервер: от конфига к хранилищу приёмки
+## 3. First launch and project list display
 
-Цепочка (реализовано):
+1. User opens the app after install.
+2. Client performs **authentication** (if enabled): token limits accessible `project_id` (as for upload in `08` §12).
+3. Client requests **project catalog** from server (see §6).
+4. Response saved in **local cache** (e.g. SQLite / files in `ApplicationSupport`): list for UI + version metadata.
+5. For each project in the catalog the client ensures a **full config** exists (see §7): if missing or stale — download, then parse into `Project`.
+6. **Dashboard** built from **cached** `Project` (analog of current `projectsProvider`, but source is server, not only `rootBundle`). In this repo: `ServerProjectCatalog` (`lib/features/projects/server_project_catalog.dart`), cache in `ApplicationSupport/server_project_cache/` (`catalog.json`, `configs/<project_id>.json`, ETag in metadata).
 
-1. **Project** в Django: `project_id`, Git remote, deploy key, `database_uri` / `storage_uri`.
-2. **Конфиг** — commit в Git (`collector/config.json`); `git push` обновляет `last_synced_sha`.
-3. **Схема приёма** — фиксированные таблицы SQLAlchemy (`package_session`, `uploaded_blob`, …) в per-project DB; Alembic `upgrade head` при первом обращении / «Проверить хранилище».
-4. **Публикация:** `GET …/config` после `git pull` в кэш; **ETag** = полный SHA; клиент — `If-None-Match` → `304`.
-
-Автоматической проекции полей конфига в колонки БД **нет** — манифест хранится как JSON; pipeline-таблицы заполняются отдельными импортами.
-
----
-
-## 5. Приём пакета: в какой проект кладём данные
-
-Сервер определяет проект **в три слоя** (все должны согласовываться):
-
-| Слой | Где | Требование |
-|------|-----|------------|
-| **Маршрут** | `…/projects/{project_id}/packages/…` | `project_id` из пути — основной ключ маршрутизации сессии и хранения. |
-| **Манифест** | Корень `payload.json` | Поле **`project_id`** (см. `07` §4.1) **должно совпадать** с `project_id` в URL. |
-| **Авторизация** | Токен / сессия | Субъект имеет право **write** в этот `project_id`. |
-
-При **несовпадении** `project_id` в URL и в JSON → **`422`** с явным кодом (например `project_id_mismatch`).  
-При отсутствии `project_id` в JSON, если продукт требует двойную проверку → **`422`**.  
-Итог: очередь обработки и запись в таблицу приёмки всегда ведутся в контексте **одного** `project_id` из пути; манифест — контроль целостности.
-
-Дополнительно клиент при создании пакета локально **привязывает** черновик к выбранному проекту (тот же `project_id`), чтобы в outbox не смешивались сценарии.
+**Offline after first successful sync:** show last cached catalog and configs; indicate "data may be stale" if no network and time since last sync elapsed (product details).
 
 ---
 
-## 6. API: каталог проектов (список для UI)
+## 4. Server: from config to intake storage
 
-**Назначение:** лёгкий ответ для первого экрана без тяжёлых JSON.
+Chain (implemented):
 
-Рекомендуемая форма: `GET /v1/projects` или `GET /v1/me/projects`.
+1. **Project** in Django: `project_id`, Git remote, deploy key, `database_uri` / `storage_uri`.
+2. **Config** — commit in Git (`collector/config.json`); `git push` updates `last_synced_sha`.
+3. **Intake schema** — fixed SQLAlchemy tables (`package_session`, `uploaded_blob`, …) in per-project DB; Alembic `upgrade head` on first access / "Verify storage".
+4. **Publication:** `GET …/config` after `git pull` into cache; **ETag** = full SHA; client — `If-None-Match` → `304`.
 
-**Ответ (логика):**
-
-- Список элементов: минимум у каждого `project_id`, `name`, `config_version`, `updated_at` (ISO 8601). Удобная обёртка для парсинга — объект **`{"projects": [ … ]}`** (так отдаёт референс-сервер Django; сырой массив тоже допустим в продукте).
-- Опционально: `description`, иконка URL, флаги «только чтение», квоты.
-
-**В референсе Django:** один маршрут **`GET /v1/projects`**. При включённом Firebase список **фильтруется** по проектам, назначенным пользователю `CollectorUser` (отдельного `GET /v1/me/projects` нет). Поле `config_version` хранится как **строка**.
-
-**Кэширование:** заголовки **`ETag`** или **`If-None-Match`** на весь список; при `304` клиент не перекачивает список, но может всё равно проверить отдельные конфиги по версиям.
-
-**Коды:** `401` / `403` как в `08` §13; пустой список — валидный `200` (нет доступных проектов).
+No automatic projection of config fields into DB columns — manifest stored as JSON; pipeline tables filled by separate imports.
 
 ---
 
-## 7. API: полный конфиг проекта
+## 5. Package intake: which project receives data
 
-**Назначение:** тело ответа должно быть **совместимо** с парсером `Project.fromJson` (см. `json-driven-collection-ui`).
+Server determines project in **three layers** (all must agree):
 
-Рекомендуемая форма: `GET /v1/projects/{project_id}/config`.
+| Layer | Where | Requirement |
+|-------|-------|-------------|
+| **Route** | `…/projects/{project_id}/packages/…` | `project_id` from path — primary key for session routing and storage. |
+| **Manifest** | `payload.json` root | Field **`project_id`** (see `07` §4.1) **must match** `project_id` in URL. |
+| **Authorization** | Token / session | Subject has **write** right to this `project_id`. |
 
-**Заголовки ответа:** `ETag` (хеш или `"{config_version}"`), опционально `Last-Modified`.
+On **`project_id` mismatch** between URL and JSON → **`422`** with explicit code (e.g. `project_id_mismatch`).  
+If `project_id` missing in JSON when product requires double check → **`422`**.  
+Result: processing queue and intake table writes always in context of **one** `project_id` from path; manifest is integrity control.
 
-**Запрос клиента:** `If-None-Match` — при совпадении **`304`**, локальный кэш остаётся действительным.
+Additionally the client when creating a package locally **binds** the draft to the selected project (same `project_id`) so outbox scenarios do not mix.
 
-**Тело:** один JSON-объект проекта (корень с `id`, `name`, `version` / `config_version`, `config` с `fields`, `flow`, `ui` — как в гайде `09-project-json-builder-guide`).
+---
 
-**Согласованность:** значение `id` в JSON **должно** совпадать с `{project_id}` в пути; иначе клиент отклоняет конфиг как повреждённый (`422` на сервере предпочтительнее, чем расхождение на устройстве).
+## 6. API: project catalog (list for UI)
 
-**В референсе Django:** при сохранении конфига через админ-UI выполняется серверная валидация (`api/project_config_validate.py`); при отдаче `GET …/config` тело — сохранённый `raw_json` без повторной проверки `id` (клиент всё равно должен согласовать с путём).
+**Purpose:** lightweight response for first screen without heavy JSON.
 
-### 7.1. Медиа по относительным путям из конфига *(опционально)*
+Recommended form: `GET /v1/projects` or `GET /v1/me/projects`.
 
-Если в JSON проекта есть ссылки на файлы примеров (не встроенные в asset bundle приложения), удобен отдельный **бинарный** маршрут чтения с сервера, например:
+**Response (logic):**
+
+- List items: at minimum each has `project_id`, `name`, `config_version`, `updated_at` (ISO 8601). Convenient wrapper for parsing — object **`{"projects": [ … ]}`** (as Django reference server returns; raw array also acceptable in product).
+- Optional: `description`, icon URL, read-only flags, quotas.
+
+**In Django reference:** single route **`GET /v1/projects`**. With Firebase enabled list **filtered** by projects assigned to `CollectorUser` (no separate `GET /v1/me/projects`). Field `config_version` stored as **string**.
+
+**Caching:** **`ETag`** or **`If-None-Match`** headers on full list; on `304` client does not re-download list but may still check individual configs by version.
+
+**Codes:** `401` / `403` as in `08` §13; empty list — valid `200` (no accessible projects).
+
+---
+
+## 7. API: full project config
+
+**Purpose:** response body must be **compatible** with `Project.fromJson` parser (see `json-driven-collection-ui`).
+
+Recommended form: `GET /v1/projects/{project_id}/config`.
+
+**Response headers:** `ETag` (hash or `"{config_version}"`), optionally `Last-Modified`.
+
+**Client request:** `If-None-Match` — on match **`304`**, local cache remains valid.
+
+**Body:** one project JSON object (root with `id`, `name`, `version` / `config_version`, `config` with `fields`, `flow`, `ui` — as in guide `09-project-json-builder-guide`).
+
+**Consistency:** `id` in JSON **must** match `{project_id}` in path; otherwise client rejects config as corrupt (`422` on server preferable to mismatch on device).
+
+**In Django reference:** on config save via admin UI server validation runs (`api/project_config_validate.py`); on `GET …/config` body is saved `raw_json` without re-checking `id` (client must still reconcile with path).
+
+### 7.1. Media by relative paths from config *(optional)*
+
+If project JSON has links to example files (not embedded in app asset bundle), a separate **binary** read route on server is convenient, e.g.:
 
 `GET /v1/projects/{project_id}/assets/{asset_path}`
 
-где `asset_path` — относительный путь без `..` (как скопированные из репозитория файлы в хранилище сервера). **В референсе Django** это реализовано в `ProjectAssetGetView`; на клиенте построение URL — `lib/features/collection/presentation/flow/project_example_image.dart`.
+where `asset_path` — relative path without `..` (as files copied from repository into server storage). **In Django reference** implemented in `ProjectAssetGetView`; client URL building — `lib/features/collection/presentation/flow/project_example_image.dart`.
 
 ---
 
-## 8. Альтернатива: один «бандл» для слабой сети
+## 8. Alternative: one bundle for weak network
 
-`GET /v1/catalog` — объединённый ответ: список проектов + вложенные полные конфиги **или** только список с URL на каждый конфиг. Имеет смысл для единичного round-trip при первом запуске; размер ответа и таймауты должны быть лимитированы.
-
----
-
-## 9. Клиент: как получает и хранит конфиг
-
-1. После `GET /v1/projects` клиент сравнивает `config_version` с кэшем по каждому `project_id`.
-2. Для новых или изменённых — `GET /v1/projects/{id}/config` с `If-None-Match`.
-3. Успешный ответ → запись в локальное хранилище (файл на проект или одна БД-таблица `project_id → json + etag + fetched_at`).
-4. Парсинг в `Project` — тот же код, что для asset-пути. При заданном `API_BASE_URL` **только сервер** (`project_providers.dart`); bundled assets — только без API.
+`GET /v1/catalog` — combined response: project list + embedded full configs **or** list only with URL per config. Useful for single round-trip on first launch; response size and timeouts must be limited.
 
 ---
 
-## 10. Порядок взаимодействия (кратко)
+## 9. Client: how config is fetched and stored
 
-1. **Админ** сохраняет конфиг в Git через `/ui/projects/{id}/config/` → push → новый SHA / ETag.
-2. **Клиент** при старте: auth → каталог → догрузка конфигов → UI.
-3. **Сбор:** пользователь выбирает проект из списка → формируется пакет с `project_id` этого проекта.
-4. **Upload:** все запросы под `/v1/projects/{project_id}/packages/…`; манифест содержит тот же `project_id`.
-
----
-
-## 11. Нефункциональные требования
-
-- TLS, версия API в префиксе пути (`/v1/`), лимиты размера JSON конфига.
-- Аудит: кто изменил конфиг, `config_version`, время публикации.
-- Защита от слишком частого полного скачивания: `ETag`, CDN (опционально).
+1. After `GET /v1/projects` client compares `config_version` with cache per `project_id`.
+2. For new or changed — `GET /v1/projects/{id}/config` with `If-None-Match`.
+3. Successful response → write to local storage (file per project or single DB table `project_id → json + etag + fetched_at`).
+4. Parse into `Project` — same code as asset path. With `API_BASE_URL` set **server only** (`project_providers.dart`); bundled assets — only without API.
 
 ---
 
-## 12. Открытые решения (зафиксировать в OpenAPI)
+## 10. Interaction order (brief)
 
-1. Нужен ли отдельный endpoint **«предпросмотр черновика конфига»** для админки до публикации.
-2. Стратегия **миграций** при смене типа поля (строгая vs только для новых пакетов).
-3. Обязательность **`project_id` в теле** манифеста при уже однозначном URL (рекомендуется **обязательна** для дублирующего контроля и офлайн-очереди).
-
-После выбора — **OpenAPI 3.1** для `GET /v1/projects`, `GET /v1/projects/{project_id}/config` и перекрёстные ссылки с `08`.
+1. **Admin** saves config to Git via `/ui/projects/{id}/config/` → push → new SHA / ETag.
+2. **Client** on start: auth → catalog → config download → UI.
+3. **Collection:** user picks project from list → package formed with that project's `project_id`.
+4. **Upload:** all requests under `/v1/projects/{project_id}/packages/…`; manifest contains same `project_id`.
 
 ---
 
-## 13. Референс в репозитории (сводка)
+## 11. Non-functional requirements
 
-| Область | Где в коде |
-|---------|------------|
-| Маршруты API | `django_server/api/urls.py` |
-| Каталог, конфиг, ассеты | `django_server/api/views.py` — `ProjectsCatalogView`, `ProjectConfigView`, `ProjectAssetGetView` |
-| Импорт из `assets/config/` в БД | **удалено** — проекты только через `/ui/projects/new/` + Git |
+- TLS, API version in path prefix (`/v1/`), JSON config size limits.
+- Audit: who changed config, `config_version`, publication time.
+- Protection from too frequent full downloads: `ETag`, CDN (optional).
+
+---
+
+## 12. Open decisions (fix in OpenAPI)
+
+1. Separate endpoint for **draft config preview** in admin before publication.
+2. **Migration** strategy on field type change (strict vs new packages only).
+3. Mandatory **`project_id` in manifest body** when URL is already unambiguous (recommended **mandatory** for duplicate control and offline queue).
+
+After decisions — **OpenAPI 3.1** for `GET /v1/projects`, `GET /v1/projects/{project_id}/config` and cross-references with `08`.
+
+---
+
+## 13. Repository reference (summary)
+
+| Area | Code location |
+|------|---------------|
+| API routes | `django_server/api/urls.py` |
+| Catalog, config, assets | `django_server/api/views.py` — `ProjectsCatalogView`, `ProjectConfigView`, `ProjectAssetGetView` |
+| Import from `assets/config/` to DB | **removed** — projects only via `/ui/projects/new/` + Git |
 | Git sync | `api/project_git.py`, `project_config_service.py` |
-| Per-project storage | `api/project_storage_config.py` — см. `project-storage-uris.md` |
-| Клиент: синк каталога и конфигов, ETag / 304 | `lib/features/projects/server_project_catalog.dart` |
-| Клиент: загрузка пакета по `project_id` из URL и манифеста | `lib/features/collection/logic/package_server_upload.dart` (см. спеку `08`) |
+| Per-project storage | `api/project_storage_config.py` — see `project-storage-uris.md` |
+| Client: catalog and config sync, ETag / 304 | `lib/features/projects/server_project_catalog.dart` |
+| Client: package upload by `project_id` from URL and manifest | `lib/features/collection/logic/package_server_upload.dart` (see spec `08`) |

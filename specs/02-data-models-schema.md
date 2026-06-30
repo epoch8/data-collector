@@ -1,10 +1,12 @@
+> **Language / Язык:** **English** · [Русский](02-data-models-schema.ru.md)
+
 # Data Models & Config Schema
 
-Статус: **актуально** (июнь 2026). Источник правды для парсинга на клиенте: `lib/models/project_config.dart`, `collection_flow_resolver.dart`.
+Status: **current** (June 2026). Source of truth for client parsing: `lib/models/project_config.dart`, `collection_flow_resolver.dart`.
 
-## 1. Project JSON (корень файла)
+## 1. Project JSON (file root)
 
-Файл `collector/config.json` в Git-репозитории проекта (или bundled `assets/config/*.json` для офлайн-демо).
+File `collector/config.json` in the project Git repo (or bundled `assets/config/*.json` for offline demo).
 
 ```json
 {
@@ -12,55 +14,55 @@
   "name": "Korovas RGB-D Capture",
   "version": "1.0",
   "config": {
-    "fields": [ /* см. §2 */ ],
+    "fields": [ /* see §2 */ ],
     "flow": {
-      "steps": [ /* см. §3 */ ]
+      "steps": [ /* see §3 */ ]
     },
-    "ui": { /* опционально, см. json-driven-collection-ui.md */ }
+    "ui": { /* optional, see json-driven-collection-ui.md */ }
   }
 }
 ```
 
-- **`id`** — совпадает с `project_id` в Django и в URL API.
-- **`version`** — семантическая версия для отображения; серверная «версия конфига» для кэша — Git SHA (`last_synced_sha` → `config_version` в каталоге).
+- **`id`** — matches `project_id` in Django and in API URLs.
+- **`version`** — semantic version for display; server "config version" for cache — Git SHA (`last_synced_sha` → `config_version` in the catalog).
 
-## 2. Поля (`config.fields`)
+## 2. Fields (`config.fields`)
 
-Справочник всех полей сбора. Ключи в JSON: **`field_id`**, **`type`**, **`title`**, **`instructions`**, опционально **`validation`**, **`multiple`** (для `camera_photo`).
+Registry of all collection fields. JSON keys: **`field_id`**, **`type`**, **`title`**, **`instructions`**, optionally **`validation`**, **`multiple`** (for `camera_photo`).
 
-Поддерживаемые типы:
+Supported types:
 
-| `type` | Значение в payload | Примечание |
+| `type` | Value in payload | Notes |
 |--------|-------------------|------------|
-| `text_input` | строка | `validation.required` |
-| `datetime` | ISO 8601 строка | |
-| `instruction` | не пишется в payload | Markdown в `instructions`; картинки из `collector/media/` |
-| `camera_photo` | map path → metadata | `multiple` + `min_items`; см. §5 |
+| `text_input` | string | `validation.required` |
+| `datetime` | ISO 8601 string | |
+| `instruction` | not written to payload | Markdown in `instructions`; images from `collector/media/` |
+| `camera_photo` | map path → metadata | `multiple` + `min_items`; see §5 |
 
 ```json
 {
   "field_id": "cow_identifier",
   "type": "text_input",
-  "title": "Идентификатор",
-  "instructions": "Уникальный код коровы.",
+  "title": "Identifier",
+  "instructions": "Unique cow code.",
   "validation": { "required": true }
 }
 ```
 
-## 3. Сценарий (`config.flow.steps`)
+## 3. Flow (`config.flow.steps`)
 
-**Только два типа экранов** (legacy `form` / `instruction` / `camera_pose` удалены):
+**Only two screen types** (legacy `form` / `instruction` / `camera_pose` removed):
 
-| `screen` | Назначение |
-|----------|------------|
-| `scroll_form` | Один скролл-экран; поля задаются **`field_ids`** (порядок = порядок на экране). |
-| `review` | Финальная проверка перед сохранением пакета. |
+| `screen` | Purpose |
+|----------|---------|
+| `scroll_form` | Single scroll screen; fields set via **`field_ids`** (order = on-screen order). |
+| `review` | Final check before saving the package. |
 
-Правила валидации (сервер + клиент):
+Validation rules (server + client):
 
-- Каждое поле из `fields` должно встретиться **ровно в одном** шаге `scroll_form`.
-- У `scroll_form` — непустой `field_ids`.
-- Опционально у шага: `form_title` (подпись на review), `cow_id_hints`, `cow_id_field_id`.
+- Every field from `fields` must appear in **exactly one** `scroll_form` step.
+- `scroll_form` must have a non-empty `field_ids`.
+- Optional step fields: `form_title` (label on review), `cow_id_hints`, `cow_id_field_id`.
 
 ```json
 {
@@ -69,7 +71,7 @@
       {
         "id": "main",
         "screen": "scroll_form",
-        "form_title": "Анкета",
+        "form_title": "Form",
         "field_ids": ["cow_identifier", "scan_notes", "pose_front"]
       },
       {
@@ -81,47 +83,47 @@
 }
 ```
 
-Гайд для авторов: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md).
+Author guide: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md).
 
-## 4. Django ORM (каталог платформы)
+## 4. Django ORM (platform catalog)
 
 `django_server/api/models.py`:
 
-| Модель | Назначение |
+| Model | Purpose |
 |--------|------------|
 | **CollectorUser** | `firebase_uid`, `email`; M2M `mobile_projects` (API `/v1/*`), M2M `admin_projects` (client-admin `/ui/packages/`) |
-| **GitCredential** | SSH deploy key (Fernet-шифрование приватного ключа) |
+| **GitCredential** | SSH deploy key (Fernet-encrypted private key) |
 | **Project** | `project_id` (PK), `name`, `git_remote`, `git_default_ref`, `git_credential`, `last_synced_sha`, `database_uri`, `database_options_encrypted`, `storage_uri`, `storage_options_encrypted`, deprecated `media_bucket` |
 
-Конфиг проекта **не хранится** в Django ORM.
+Project config is **not stored** in Django ORM.
 
 ## 5. Per-project DB (SQLAlchemy)
 
-Таблицы в БД проекта (`api/project_db.py`, миграции Alembic):
+Tables in the project DB (`api/project_db.py`, Alembic migrations):
 
-**Приём пакетов:**
+**Package intake:**
 
-- `package_session` — фазы `awaiting_blobs` / `ready_to_commit` / `completed` / `failed`
-- `uploaded_blob` — логический путь + `storage_path` относительно `storage_uri`
-- `package_field_change` — changelog правок манифеста в админке
+- `package_session` — phases `awaiting_blobs` / `ready_to_commit` / `completed` / `failed`
+- `uploaded_blob` — logical path + `storage_path` relative to `storage_uri`
+- `package_field_change` — changelog of manifest edits in admin
 
-**Pipeline (заполняется импортом / внешними job, не мобильным upload):**
+**Pipeline (filled by import / external jobs, not mobile upload):**
 
 - `cow_keypoint_annotation`, `cow_inference_result`, `yolo_detection`, `depth_map`, `cvat_link`
 
 ## 6. Flutter local models
 
-| Слой | Файл | Содержимое |
+| Layer | File | Contents |
 |------|------|------------|
-| Конфиг | `project_config.dart` | `Project`, `ProjectConfig`, `ConfigField`, `CollectionFlowDecl` |
-| Пакет (DTO) | `package.dart` | `CollectedPackage` |
-| Локальный индекс | `core/storage/database.dart` (Drift) | `packages`: `id`, `projectId`, `status`, `dataJson`, `serverDeliveryState`, `serverDeliveryError` (schema v3) |
+| Config | `project_config.dart` | `Project`, `ProjectConfig`, `ConfigField`, `CollectionFlowDecl` |
+| Package (DTO) | `package.dart` | `CollectedPackage` |
+| Local index | `core/storage/database.dart` (Drift) | `packages`: `id`, `projectId`, `status`, `dataJson`, `serverDeliveryState`, `serverDeliveryError` (schema v3) |
 
-## 7. Package payload (манифест)
+## 7. Package payload (manifest)
 
-Структура каталога и JSON — [07-package-payload-structure.md](07-package-payload-structure.md).
+Directory structure and JSON — [07-package-payload-structure.md](07-package-payload-structure.md).
 
-Минимальный пример `payload.json`:
+Minimal `payload.json` example:
 
 ```json
 {
@@ -136,4 +138,4 @@
 }
 ```
 
-Пути к фото в `data` — **относительные** (`blobs/...`) после materialization. На сервере при `PUT manifest` добавляется `submitted_by: { firebase_uid, email }`.
+Photo paths in `data` are **relative** (`blobs/...`) after materialization. On the server, `PUT manifest` adds `submitted_by: { firebase_uid, email }`.

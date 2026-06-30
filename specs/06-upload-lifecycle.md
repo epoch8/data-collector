@@ -1,88 +1,90 @@
+> **Language / Язык:** **English** · [Русский](06-upload-lifecycle.ru.md)
+
 # Upload Lifecycle & Fault Tolerance
 
-Статус: **актуально** (июнь 2026).
+Status: **current** (June 2026).
 
-HTTP-контракт и серверные фазы — [08-server-api-package-upload.md](08-server-api-package-upload.md). Структура payload — [07-package-payload-structure.md](07-package-payload-structure.md).
+HTTP contract and server phases — [08-server-api-package-upload.md](08-server-api-package-upload.md). Payload structure — [07-package-payload-structure.md](07-package-payload-structure.md).
 
-## 1. Проблема
+## 1. Problem
 
-Сбор данных часто идёт без стабильной сети. Один multipart-запрос на весь пакет (JSON + 10×5 MB фото) ненадёжен. Решение — **многошаговый протокол**: блобы по одному, затем манифест, затем commit.
+Data collection often happens without a stable network. A single multipart request for the whole package (JSON + 10×5 MB photos) is unreliable. Solution — **multi-step protocol**: blobs one at a time, then manifest, then commit.
 
-## 2. Состояния на устройстве
+## 2. Device-side states
 
-### Локальный статус пакета (`status` в Drift)
+### Local package status (`status` in Drift)
 
-| Статус | Смысл |
+| Status | Meaning |
 |--------|-------|
-| `draft` | Сбор в процессе (auto-save) |
-| `completed` | Пользователь нажал submit; пакет materialized на диске |
+| `draft` | Collection in progress (auto-save) |
+| `completed` | User pressed submit; package materialized on disk |
 
-### Статус доставки на сервер (`serverDeliveryState`)
+### Server delivery status (`serverDeliveryState`)
 
-| Статус | Смысл |
+| Status | Meaning |
 |--------|-------|
-| `pending` | Готов к отправке, ещё не начинали |
-| `uploading` | Идёт протокол upload |
-| `completed` | Успешный `commit` (или `GET` подтвердил `completed` после `409` на create) |
-| `failed` | Ошибка; пакет остаётся в очереди для повтора |
+| `pending` | Ready to send, not started yet |
+| `uploading` | Upload protocol in progress |
+| `completed` | Successful `commit` (or `GET` confirmed `completed` after `409` on create) |
+| `failed` | Error; package stays in queue for retry |
 
-Отправка **не автоматическая** после submit — пользователь инициирует с вкладки **«Сервер»** (`ServerSyncTab`).
+Upload is **not automatic** after submit — user initiates from the **Server** tab (`ServerSyncTab`).
 
-## 3. Протокол upload (клиент)
+## 3. Upload protocol (client)
 
-Код: `lib/features/collection/logic/package_server_upload_io.dart` (и `_web.dart`).
+Code: `lib/features/collection/logic/package_server_upload_io.dart` (and `_web.dart`).
 
 ### Phase 1: Initialize session
 
-`POST /v1/projects/{project_id}/packages` с `{ "package_id": "..." }`.
+`POST /v1/projects/{project_id}/packages` with `{ "package_id": "..." }`.
 
-- `201` / `200` → `awaiting_blobs` или resume.
-- `409` если уже `completed` → клиент делает `GET` и помечает локально `completed`.
+- `201` / `200` → `awaiting_blobs` or resume.
+- `409` if already `completed` → client does `GET` and marks locally `completed`.
 
 ### Phase 2: Blob upload
 
-Для каждого файла в `blobs/`:
+For each file in `blobs/`:
 
 `PUT /v1/projects/{project_id}/packages/{package_id}/blobs/{encoded_path}`
 
-- Тело: raw bytes (`application/octet-stream`).
-- Идемпотентный повтор того же файла — OK.
-- Обрыв сети → resume с незагруженного блоба.
+- Body: raw bytes (`application/octet-stream`).
+- Idempotent retry of the same file — OK.
+- Network drop → resume from the unuploaded blob.
 
 ### Phase 3: Manifest
 
-`PUT .../manifest` — JSON как `payload.json`.
+`PUT .../manifest` — JSON as `payload.json`.
 
-- Сервер проверяет все `blobs/...` ссылки → `ready_to_commit` или `422 missing_blobs`.
-- `project_id` в JSON должен совпадать с URL.
+- Server checks all `blobs/...` references → `ready_to_commit` or `422 missing_blobs`.
+- `project_id` in JSON must match the URL.
 
 ### Phase 4: Commit
 
 `POST .../commit` → `completed`.
 
-Повтор `commit` для завершённого пакета → `200` с `idempotent: true`.
+Repeat `commit` for a completed package → `200` with `idempotent: true`.
 
-### Очистка локальных файлов
+### Local file cleanup
 
-Политика: удалять тяжёлые blobs **после** подтверждённого `completed`. Текущая реализация **сохраняет** локальные файлы (удаление — продуктовое решение на будущее).
+Policy: delete heavy blobs **after** confirmed `completed`. Current implementation **keeps** local files (deletion — future product decision).
 
-## 4. Серверное хранение
+## 4. Server storage
 
-После commit:
+After commit:
 
-- Метаданные — per-project DB (`package_session`, `uploaded_blob`) через SQLAlchemy.
-- Файлы — fsspec по `storage_uri`: `packages/{package_id}/blobs/...`.
+- Metadata — per-project DB (`package_session`, `uploaded_blob`) via SQLAlchemy.
+- Files — fsspec at `storage_uri`: `packages/{package_id}/blobs/...`.
 
-## 5. Retry и фон
+## 5. Retry and background
 
-| Механизм | Статус |
+| Mechanism | Status |
 |----------|--------|
-| Ручной retry с «Сервер» | **Реализовано** |
-| `connectivity_plus` для UI | Частично |
-| Exponential backoff | В коде upload — базовая обработка ошибок Dio |
-| `workmanager` / фон при закрытом приложении | **Не реализовано** |
+| Manual retry from **Server** | **Implemented** |
+| `connectivity_plus` for UI | Partial |
+| Exponential backoff | Basic Dio error handling in upload code |
+| `workmanager` / background when app closed | **Not implemented** |
 
 ## 6. UX
 
-- Вкладка **«Сервер»**: список pending/failed, «Загрузить все».
-- **История**: цвет рамки по `serverDeliveryState` (`package_delivery_style.dart`).
+- **Server** tab: pending/failed list, "Upload all".
+- **History**: border color by `serverDeliveryState` (`package_delivery_style.dart`).

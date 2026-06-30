@@ -1,125 +1,155 @@
-# data_collector
+<div align="center">
 
-**Фреймворк** для сбора размеченных данных: **Flutter-клиент** (сбор на устройстве, offline-first)
-+ **Django-бэкенд** с веб-админкой (`/ui/`) и мобильным API (`/v1/*`).
+<a href="https://e8.team/portfolio/data-collector/"><img src="e8_data_collector_logo.png" alt="E8 Data Collector" width="460"></a>
 
-Ядро нейтрально к предметной области. Что и как собирать задаётся **конфигом проекта**
-(`collector/config.json` в Git). Конкретные сценарии — это **проекты на базе фреймворка**:
-готовые примеры лежат в [`examples/`](examples/), нейтральные демо для бандла — в `assets/config/`.
+<p><b>A framework for collecting labeled data.</b><br>
+Flutter client (on-device, offline-first) + Django backend with a web admin panel and mobile API.</p>
 
-Пример развёрнутого инстанса (проект «korovas»): `https://data-collector-app.korovas.ml.epoch8.dev`
-(админка `/ui/`, API с того же хоста; в `API_BASE_URL` не добавляйте завершающий `/`).
-Домен и имена docker-образов в `Makefile` — значения этого конкретного деплоя, а не часть фреймворка.
+<p>
+<img src="https://img.shields.io/badge/Flutter-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter">
+<img src="https://img.shields.io/badge/Django-092E20?style=flat-square&logo=django&logoColor=white" alt="Django">
+<img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
+<img src="https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL">
+<img src="https://img.shields.io/badge/S3%20%2F%20GCS-FF9900?style=flat-square&logo=amazons3&logoColor=white" alt="S3 / GCS">
+<img src="https://img.shields.io/badge/Firebase-FFCA28?style=flat-square&logo=firebase&logoColor=black" alt="Firebase">
+</p>
+
+<p>
+<a href="#quick-start"><b>Quick start</b></a> |
+<a href="#how-it-looks">How it looks</a> |
+<a href="docs/admin-panel/README.md">Admin guide</a> |
+<a href="docs/mobile-app/README.md">Mobile guide</a> |
+<a href="#documentation">Docs</a>
+</p>
+
+<sub><b>Language / Язык:</b> <b>English</b> | <a href="README.ru.md">Русский</a></sub>
+
+</div>
 
 ---
 
-## Навигатор: что где лежит
+The core is domain-neutral. What and how to collect is defined by the **project config** stored in Git. Concrete scenarios are **projects built on the framework**: ready-made examples live in [examples](examples/).
+
+## How it looks
+
+Three parts of the product in one flow: **configure the project → collect data on device → review packages in the admin panel**.
+
+**1. Project setup.** Web admin: project in Git, visual config editor, collector access.
+
+![Admin: project creation, config, access](specs/presentation/img/config-steps-admin.gif)
+
+**2. Field collection.** Flutter: sign-in, config from server, fill the form, upload queue (offline-first).
+
+![Mobile app: form and package upload](specs/presentation/img/flutter-steps-app.gif)
+
+**3. Packages and review.** List of accepted packages, filters, media and data viewer, edits, pipeline visualization.
+
+![Admin: package list and viewer](specs/presentation/img/admin-packages.gif)
+
+---
+
+## Navigator: what lives where
 
 ```
 data-collector/
-├── lib/                # Flutter-приложение (клиент сбора). Точка входа: lib/main.dart
-├── android/ ios/ web/ macos/ linux/ windows/   # платформенные обёртки Flutter
-├── assets/             # ассеты клиента: нейтральные демо-конфиги (assets/config/), плейсхолдеры (assets/placeholders/)
-├── examples/           # доменные проекты-примеры на базе фреймворка (см. examples/README.md)
-├── django_server/      # API + веб-админка (/ui/). Свой manage.py, миграции, runserver
-├── test_dev/           # Docker Compose: PostgreSQL + MinIO для прод-подобной локалки
-├── specs/              # спецификации, схемы (.drawio), презентация, статус
-├── docs/               # руководства пользователя и инженерные заметки
-└── legacy/             # неиспользуемое в основном пайплайне (см. legacy/README.md)
+├── lib/                # Flutter app (collection client). Entry point: lib/main.dart
+├── android/ ios/ web/ macos/ linux/ windows/   # Flutter platform wrappers
+├── assets/             # client assets: neutral demo configs, placeholders
+├── examples/           # domain example projects on the framework (see examples/README.md)
+├── django_server/      # API + web admin (/ui/). Own manage.py, migrations, runserver
+├── test_dev/           # Docker Compose: PostgreSQL + MinIO for prod-like local dev
+├── specs/              # specifications, diagrams (.drawio), presentation, status
+├── docs/               # user guides and engineering notes
+└── legacy/             # unused in the main pipeline (see legacy/README.md)
 ```
 
-Подробности по подсистемам: [`django_server/README.md`](django_server/README.md),
-[`test_dev/README.md`](test_dev/README.md), [`legacy/README.md`](legacy/README.md).
+Subsystem details: [django_server/README.md](django_server/README.md),
+[test_dev/README.md](test_dev/README.md), [legacy/README.md](legacy/README.md).
 
 ---
 
-## Гайды и материалы
+## Guides and materials
 
-Самый быстрый способ понять продукт — начните отсюда:
+The fastest way to understand the product: start here.
 
-| Материал | Что внутри |
-|----------|------------|
-| **[Презентация продукта](specs/presentation/Data-Collector.pptx)** (`specs/presentation/Data-Collector.pptx`) | Обзор продукта, сценарии, скриншоты. Исходники кадров — в `specs/presentation/img/`. |
-| **[Руководство: админ-панель](docs/admin-panel/README.md)** | Создание проектов, визуальный редактор конфига, доступы, просмотр пакетов и **визуализация** результатов pipeline. |
-| **[Руководство: мобильное приложение](docs/mobile-app/README.md)** | Путь оператора на примере проекта КРС: вход → проект → форма → отправка пакета. |
-| **[Примеры проектов](examples/README.md)** | Готовые доменные конфиги на базе фреймворка (напр. `examples/cow-keypoints/`). |
+| Material | Contents |
+| -------- | -------- |
+| **[Product presentation](specs/presentation/Data-Collector.pptx)** | Product overview, scenarios, screenshots. |
+| **[Guide: admin panel](docs/admin-panel/README.md)** | Project creation, visual config editor, access control, package viewer and pipeline **visualization**. |
+| **[Guide: mobile app](docs/mobile-app/README.md)** | Operator flow on the cattle (KRS) project example: sign-in → project → form → package upload. |
+| **[Example projects](examples/README.md)** | Ready-made domain configs on the framework. |
 
 ---
 
-## Быстрый старт
+## Quick start
 
 ```bash
-# 1. Бэкенд (local-режим, SQLite)
+# 1. Backend (local mode, SQLite)
 cd django_server
 pip install -r requirements.txt
 python manage.py migrate
 python manage.py createsuperuser
 python manage.py runserver 0.0.0.0:8000
-# админка: http://127.0.0.1:8000/ui/login/
+# admin panel: http://127.0.0.1:8000/ui/login/
 
-# 2. Клиент (Android-эмулятор; 10.0.2.2 — хост-ПК)
+# 2. Client (Android emulator; 10.0.2.2 = host PC)
 flutter pub get
 flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
-> **Важно (offline-first):** после заполнения формы пакет сохраняется **локально на устройстве**.
-> На сервер он попадает только после ручного шага: экран **«Очередь на сервер» → «Отправить»**.
+> **Important (offline-first):** after filling the form, the package is saved **locally on the device**.
+> It reaches the server only after a manual step: **«Upload queue» → «Send»** screen.
 
-Детали запуска, конфигурации, Firebase и продакшена — в [`django_server/README.md`](django_server/README.md),
-[`test_dev/README.md`](test_dev/README.md), [`docs/deploy-flutter-web.md`](docs/deploy-flutter-web.md)
-и в спеках ниже.
+For launch details, configuration, Firebase, and production, see [django_server/README.md](django_server/README.md),
+[test_dev/README.md](test_dev/README.md), [docs/deploy-flutter-web.md](docs/deploy-flutter-web.md)
+and the specs below.
 
 ---
 
-## Документация
+## Documentation
 
-### Обзор и архитектура
+### Overview and architecture
 
-| Файл | О чём |
-|------|-------|
-| [`specs/01-overview.md`](specs/01-overview.md) | Обзор продукта и текущий scope |
-| [`specs/03-user-journey-screens.md`](specs/03-user-journey-screens.md) | Экраны Flutter и `/ui/` |
-| [`specs/04-tech-stack-architecture.md`](specs/04-tech-stack-architecture.md) | Стек и структура репозитория |
-| [`specs/06-upload-lifecycle.md`](specs/06-upload-lifecycle.md) | Жизненный цикл upload на устройстве |
-| [`specs/07-package-payload-structure.md`](specs/07-package-payload-structure.md) | Структура пакета и camera metadata |
+| File | About |
+| ---- | ----- |
+| [specs/01-overview.md](specs/01-overview.md) | Product overview and current scope |
+| [specs/03-user-journey-screens.md](specs/03-user-journey-screens.md) | Flutter screens and `/ui/` |
+| [specs/04-tech-stack-architecture.md](specs/04-tech-stack-architecture.md) | Stack and repository structure |
+| [specs/06-upload-lifecycle.md](specs/06-upload-lifecycle.md) | Upload lifecycle on device |
+| [specs/07-package-payload-structure.md](specs/07-package-payload-structure.md) | Package structure and camera metadata |
 
-### Конфиг проекта и сборка JSON
+### Project config and JSON building
 
-| Файл | О чём |
-|------|-------|
-| [`specs/config/09-project-json-builder-guide.md`](specs/config/09-project-json-builder-guide.md) | **Канон**: гайд по сборке JSON-конфига проекта |
-| [`specs/config/json-driven-collection-ui.md`](specs/config/json-driven-collection-ui.md) | JSON-driven UI сбора (экраны flow) |
-| [`specs/config/json-ui-flow.drawio`](specs/config/json-ui-flow.drawio) | Схема flow конфига |
-| [`specs/git-backed-projects.md`](specs/git-backed-projects.md) | Git-репозиторий проекта: deploy key, `config.json`, синхронизация |
-| [`specs/09-server-project-config-delivery.md`](specs/09-server-project-config-delivery.md) | Создание и доставка конфига клиенту |
+| File | About |
+| ---- | ----- |
+| [specs/config/09-project-json-builder-guide.md](specs/config/09-project-json-builder-guide.md) | **Canonical**: project JSON config builder guide |
+| [specs/config/json-driven-collection-ui.md](specs/config/json-driven-collection-ui.md) | JSON-driven collection UI (flow screens) |
+| [specs/config/json-ui-flow.drawio](specs/config/json-ui-flow.drawio) | Config flow diagram |
+| [specs/git-backed-projects.md](specs/git-backed-projects.md) | Git project repository: deploy key, config sync |
+| [specs/09-server-project-config-delivery.md](specs/09-server-project-config-delivery.md) | Config creation and delivery to client |
 
-### Сервер, API, хранилища
+### Server, API, storage
 
-| Файл | О чём |
-|------|-------|
-| [`specs/08-server-api-package-upload.md`](specs/08-server-api-package-upload.md) | API и поток загрузки пакета на сервер |
-| [`specs/project-storage-uris.md`](specs/project-storage-uris.md) | `database_uri`, `storage_uri`: Postgres / S3 / GCS |
-| [`specs/collector-vis-config.md`](specs/collector-vis-config.md) | `collector/viz.json` — визуализация pipeline в админке |
-| [`django_server/README.md`](django_server/README.md) | Роли, запуск, хранение пакетов |
+| File | About |
+| ---- | ----- |
+| [specs/08-server-api-package-upload.md](specs/08-server-api-package-upload.md) | API and server package upload flow |
+| [specs/project-storage-uris.md](specs/project-storage-uris.md) | `database_uri`, `storage_uri`: Postgres / S3 / GCS |
+| [specs/collector-vis-config.md](specs/collector-vis-config.md) | Pipeline visualization config in admin |
+| [django_server/README.md](django_server/README.md) | Roles, launch, package storage |
 
-### Схемы (`specs/main-scheme/`, `.drawio`)
+### Diagrams (`specs/main-scheme/`, `.drawio`)
 
-| Файл | О чём |
-|------|-------|
-| [`specs/main-scheme/01-abstract-config-entities.drawio`](specs/main-scheme/01-abstract-config-entities.drawio) | Абстрактный конфиг: сущности → проекты |
-| [`specs/main-scheme/02-client-server-config-and-package.drawio`](specs/main-scheme/02-client-server-config-and-package.drawio) | Конфиг ↔ клиент ↔ пакет |
-| [`specs/main-scheme/03_server_api.drawio`](specs/main-scheme/03_server_api.drawio) | Загрузка пакета (API и поток) |
-| [`specs/main-scheme/04-auth-firebase-django.drawio`](specs/main-scheme/04-auth-firebase-django.drawio) | Аутентификация: Firebase ↔ Django |
-| [`specs/main-scheme/05-admin-roles-access.drawio`](specs/main-scheme/05-admin-roles-access.drawio) | Роли админки: staff / client-admin / сотрудник |
-| [`specs/main-scheme/`](specs/main-scheme/) | Прочие схемы (06–11), `todo.txt` для ревизии |
+| File | About |
+| ---- | ----- |
+| [specs/main-scheme/01-abstract-config-entities.drawio](specs/main-scheme/01-abstract-config-entities.drawio) | Abstract config: entities → projects |
+| [specs/main-scheme/02-client-server-config-and-package.drawio](specs/main-scheme/02-client-server-config-and-package.drawio) | Config ↔ client ↔ package |
+| [specs/main-scheme/03_server_api.drawio](specs/main-scheme/03_server_api.drawio) | Package upload (API and flow) |
+| [specs/main-scheme/04-auth-firebase-django.drawio](specs/main-scheme/04-auth-firebase-django.drawio) | Authentication: Firebase ↔ Django |
+| [specs/main-scheme/05-admin-roles-access.drawio](specs/main-scheme/05-admin-roles-access.drawio) | Admin roles: staff / client-admin / employee |
+| [specs/main-scheme/](specs/main-scheme/) | Other diagrams (06–11), `todo.txt` for review |
 
-### Статус и backlog
+### Status and backlog
 
-- Статус/выгрузки: [`specs/status/`](specs/status/).
-- Коммерческие материалы (план обучения): [`docs/business/`](docs/business/).
-- Текущие задачи: [`specs/todo`](specs/todo).
-- Внешний разбор репозитория: [`docs/todo-renat.md`](docs/todo-renat.md).
-
-> Историческое замечание: спеки [`specs/02-data-models-schema.md`](specs/02-data-models-schema.md)
-> и [`specs/05-stage-1-mvp.md`](specs/05-stage-1-mvp.md) описывают раннюю модель данных и могут
-> расходиться с актуальным кодом (`flow.steps` со `scroll_form`/`review`).
+- Status/exports: [specs/status/](specs/status/).
+- Business materials (training plan): [docs/business/](docs/business/).
+- Current tasks: [specs/todo](specs/todo).

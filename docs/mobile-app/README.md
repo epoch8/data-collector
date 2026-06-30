@@ -1,119 +1,121 @@
-# Руководство пользователя: мобильное приложение
+> **Language / Язык:** **English** · [Русский](README.ru.md)
 
-> **Это пример** пользовательского пути на конкретном проекте — сбор данных по КРС
-> (проект «Хозяйство» / `korovas`). Он показывает **общий поток фреймворка** data_collector:
-> вход → выбор проекта → заполнение формы по конфигу → отправка пакета на сервер.
-> В вашем проекте поля и шаги будут другими — они задаются конфигом в админке
-> (см. [руководство по админ-панели](../admin-panel/README.md)), но логика работы та же.
+# User guide: mobile app
 
-## **1. Вход в приложение**
+> **This is an example** user journey on a specific project — cattle data collection
+> (project "Хозяйство" / `korovas`). It shows the **general data_collector framework flow**:
+> sign-in → project selection → filling the form per config → sending a package to the server.
+> In your project, fields and steps will differ — they are defined by config in the admin panel
+> (see [admin panel guide](../admin-panel/README.md)), but the workflow is the same.
 
-Укажите учётные данные:
+## **1. Signing in to the app**
 
-- **Логин:** `kcow@epoch8.com`
-- **Пароль:** `kcow@123`
+Enter credentials:
+
+- **Login:** `kcow@epoch8.com`
+- **Password:** `kcow@123`
 
 ![photo_5467504367679247761_y (1).jpg](photo_5467504367679247761_y_(1).jpg)
 
 ---
 
-## **2. Выбор проекта**
+## **2. Selecting a project**
 
-1. Откройте вкладку **Project** (Проект).
-2. Выберите проект Хозяйство.
+1. Open the **Project** tab.
+2. Select the **Хозяйство** project.
 
-**Важно:** настройка доступа  и кастомизация шагов проектов задаются администратором в административной панели. Подробнее в гайде по админ панели.
+**Important:** access configuration and project step customization are set by the administrator in the admin panel. See the admin panel guide for details.
 
-Ожидаемая модель: **отдельный проект на каждое хозяйство**. Проекты могут совпадать по структуре, но различаться по названию (имени хозяйства).
+Expected model: **one project per farm**. Projects may share structure but differ by name (farm name).
 
 ![image.png](image.png)
 
 ---
 
-## **3. Заполнение полей проекта**
+## **3. Filling in project fields**
 
-Заполните поля выбранного проекта в соответствии с требованиями  сценария сбора данных.
+Fill in the selected project's fields according to the data collection scenario requirements.
 
-### Шаг 1. Общее параметры
+### Step 1. General parameters
 
 ![image.png](image%201.png)
 
-### Шаг 2. Общая инструкция по съемке
+### Step 2. General shooting instructions
 
 ![image.png](image%202.png)
 
-### Шаги 3-5.  Инструкция с примерами и окно для отправки фотографий (несколько ракурсов) с последовательной сменой ракурса
+### Steps 3–5. Instructions with examples and photo upload window (multiple angles) with sequential angle changes
 
 ![image.png](image%203.png)
 
-### Шаг 6.  Форма проверки результата с возможностью корректировки
+### Step 6. Review form with the option to correct
 
 ![photo_5203923388659864690_y.jpg](photo_5203923388659864690_y.jpg)
 
-## **4. Загрузка данных на сервер**
+## **4. Uploading data to the server**
 
-Изначально собранные пакеты сохраняются локально на телефоне, после сбора данных нужно отправить пакеты на сервер для дальнейшей обработки
+Collected packages are initially saved locally on the phone; after data collection, send packages to the server for further processing.
 
-1. Перейдите на вкладку **Сервер**.
-2. Нажмите кнопку **Загрузить** (иконка “облако со стрелкой”), чтобы отправить данные на сервер.
+1. Go to the **Server** tab.
+2. Click **Upload** (cloud-with-arrow icon) to send data to the server.
 
 ![image.png](image%204.png)
 
 ---
 
-## **5. Дополнительные возможности**
+## **5. Additional features**
 
-| **Возможность** | **Описание** |
+| **Feature** | **Description** |
 | --- | --- |
-| **История загрузки пакетов** | Доступен **просмотр истории** и **текущего статуса** пакета (отправка, доставка, ошибки и т. п.  уточните формулировки под ваши статусы в UI). |
-| **Тема оформления** | Переключение между светлой и тёмной темой. |
-| **Язык интерфейса** | Переключение языка; подписи и элементы интерфейса отображаются на выбранном языке. Сейчас доступны русский и английский; при необходимости можно добавить другие языки. |
-| **Справка** | Кнопка справки открывает краткое руководство по использованию приложения. |
-| **Сессия** | При повторном открытии приложения сессия **восстанавливается автоматически** (где это поддерживается логикой приложения). |
-| **Пред заполнение полей из локальной истории** | Если на телефоне ранее уже заполняли данные по корове они автоматически подтянутся из локальной базы |
-| **Проверка качества кадра** | Проверка кадра на размытие и затеменение/засветы |
-- **История загрузки пакетов**
+| **Package upload history** | **View history** and **current status** of a package (sending, delivery, errors, etc. — adjust wording to match your UI statuses). |
+| **Theme** | Switch between light and dark theme. |
+| **Interface language** | Switch language; labels and UI elements display in the selected language. Russian and English are available now; other languages can be added if needed. |
+| **Help** | The help button opens a brief guide to using the app. |
+| **Session** | When reopening the app, the session is **restored automatically** (where supported by app logic). |
+| **Pre-fill fields from local history** | If cattle data was previously entered on the phone, it is automatically pulled from the local database |
+| **Frame quality check** | Checks the frame for blur and under/over-exposure |
+- **Package upload history**
     
-    Каждая корова группируется в свой пак, историю данных собранных по корове можно посмотреть отдельно
+    Each cow is grouped into its own package; you can view history of data collected per cow separately
     
-    ![История данных разбитая по коровам и хозяйствам](photo_5203923388659864767_y.jpg)
+    ![Data history grouped by cows and farms](photo_5203923388659864767_y.jpg)
     
-    История данных разбитая по коровам и хозяйствам
+    Data history grouped by cows and farms
     
-    ![Пакеты собранные по каждой конкретной корове](photo_5203923388659864761_y.jpg)
+    ![Packages collected per individual cow](photo_5203923388659864761_y.jpg)
     
-    Пакеты собранные по каждой конкретной корове
+    Packages collected per individual cow
     
-    ![Просмотр содержимого пакета с возможностью выгрузки](photo_5203923388659864748_y.jpg)
+    ![View package contents with export option](photo_5203923388659864748_y.jpg)
     
-    Просмотр содержимого пакета с возможностью выгрузки
+    View package contents with export option
     
-- **Тема оформления**
+- **Theme**
     
-    ![Доступны светлая и темная тема для удобства использования приложения в различных условиях освещенности](photo_5467504367679247783_y_(1).jpg)
+    ![Light and dark themes available for comfortable use in different lighting conditions](photo_5467504367679247783_y_(1).jpg)
     
-    Доступны светлая и темная тема для удобства использования приложения в различных условиях освещенности
+    Light and dark themes available for comfortable use in different lighting conditions
     
-- **Язык интерфейса**
+- **Interface language**
     
     ![photo_5467504367679247784_y (1).jpg](photo_5467504367679247784_y_(1).jpg)
     
     ![photo_5467504367679247783_y (2).jpg](photo_5467504367679247783_y_(2).jpg)
     
-- **Справка**
+- **Help**
     
-    ![Форма справка открывается при нажатии на иконку знака вопроса на главном экране приложения](photo_5467504367679247803_y_(1).jpg)
+    ![Help screen opens when tapping the question mark icon on the app home screen](photo_5467504367679247803_y_(1).jpg)
     
-    Форма справка открывается при нажатии на иконку знака вопроса на главном экране приложения
+    Help screen opens when tapping the question mark icon on the app home screen
     
-- **Восстановление сессии**
+- **Session restore**
     
     ![image.png](image%205.png)
     
-- **Пред заполнение полей из локальной истории**
+- **Pre-fill fields from local history**
     
     ![image.png](image%206.png)
     
-- **Проверка качества кадра**
+- **Frame quality check**
     
     ![image.png](image%207.png)

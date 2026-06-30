@@ -1,65 +1,67 @@
-# Web vs Android: ключевые отличия
+> **Language / Язык:** **English** · [Русский](web-vs-android.ru.md)
 
-Краткое сравнение одного и того же Flutter-приложения на **Web** и **Android**. Общая бизнес-логика и API совпадают; отличается платформа и точки условной компиляции (`import …_io.dart` / `…_web.dart`, `kIsWeb`).
+# Web vs Android: key differences
 
-## Данные и файлы пакета
+A brief comparison of the same Flutter app on **Web** and **Android**. Business logic and API are the same; the platform and conditional compilation entry points differ (`import …_io.dart` / `…_web.dart`, `kIsWeb`).
 
-| Тема | Android | Web |
+## Package data and files
+
+| Topic | Android | Web |
 |------|---------|-----|
-| **База (Drift)** | Нативный SQLite (`sqlite3` + `sqlite3_flutter_libs`) | SQLite в WASM (`web/sqlite3.wasm`, `web/drift_worker.js`) |
-| **Пакет на диске (spec 07)** | Каталог `packages/<id>/` с `blobs/` и `payload.json` | Полный on-disk layout **не** строится; в БД хранится envelope JSON, бинарники остаются как `blob:` / `data:image/…` до отправки |
-| **`dart:io`** | Доступен (файлы, каталоги) | Нет; отдельные реализации под web |
+| **Database (Drift)** | Native SQLite (`sqlite3` + `sqlite3_flutter_libs`) | SQLite in WASM (`web/sqlite3.wasm`, `web/drift_worker.js`) |
+| **On-disk package ([spec 07](../../specs/07-package-payload-structure.md))** | Directory `packages/<id>/` with `blobs/` and `payload.json` | Full on-disk layout is **not** built; envelope JSON is stored in the DB, binaries remain as `blob:` / `data:image/…` until upload |
+| **`dart:io`** | Available (files, directories) | Not available; separate web implementations |
 
-### Почему пакет на диске нельзя сделать «как на Android» на web
+### Why on-disk packages cannot match Android on web
 
-Это не произвольное различие в коде, а **ограничения платформы**:
+This is not an arbitrary code difference, but **platform constraints**:
 
-- В браузере **нет `dart:io`** — нельзя так же создавать каталоги, `File.copy` и дерево `packages/<id>/blobs/` как в spec 07 на телефоне.
-- **Нет той же модели ФС**, что у приложения на Android: снимок приходит как **`blob:`** / **`data:image/…`** или выбор файла, а не как стабильный путь в каталоге приложения.
-- Поэтому на web в БД хранится **envelope JSON** с тем же смыслом полей, а бинарники до отправки на API живут в **ссылках браузера**, а не в зеркале on-disk layout.
+- The browser has **no `dart:io`** — you cannot create directories, `File.copy`, and a `packages/<id>/blobs/` tree the same way as [spec 07](../../specs/07-package-payload-structure.md) on the phone.
+- **No equivalent filesystem model** to the Android app: a shot arrives as **`blob:`** / **`data:image/…`** or a file picker selection, not as a stable path in the app directory.
+- So on web, the DB stores **envelope JSON** with the same field semantics, and binaries before API upload live in **browser references**, not in a mirror of the on-disk layout.
 
-Свести web к **полностью такому же** on-disk каталогу «как нативно» без другого хранилища (OPFS / IndexedDB и отдельного кода) **нельзя** — это уже другая реализация, не копия `dart:io` + `path_provider`.
+Making web **fully identical** to the native on-disk directory without different storage (OPFS / IndexedDB and separate code) is **not possible** — that would be a different implementation, not a copy of `dart:io` + `path_provider`.
 
-## Сбор и метаданные с камеры
+## Capture and camera metadata
 
-| Тема | Android | Web |
+| Topic | Android | Web |
 |------|---------|-----|
-| **Нативные intrinsics** | `MethodChannel` → Camera2 / iOS | Нет канала; блок пустой |
-| **EXIF** | Чтение с файла после съёмки (`exif` по байтам файла) | Чтение по байтам снимка (`XFile` / `readExifFromBytes`); зависит от того, что отдаёт браузер |
-| **Проверка качества кадра** | Включена (локальный анализ) | Пропуск (`kIsWeb`) |
-| **Выбор источника в `image_picker`** | Камера на мобильных платформах | Обычно галерея / файловый picker (ограничения браузера) |
+| **Native intrinsics** | `MethodChannel` → Camera2 / iOS | No channel; block is empty |
+| **EXIF** | Read from file after capture (`exif` from file bytes) | Read from shot bytes (`XFile` / `readExifFromBytes`); depends on what the browser provides |
+| **Frame quality check** | Enabled (local analysis) | Skipped (`kIsWeb`) |
+| **Source selection in `image_picker`** | Camera on mobile platforms | Usually gallery / file picker (browser limits) |
 
-### Нативные intrinsics в Chrome на телефоне
+### Native intrinsics in Chrome on a phone
 
-Даже если открыть приложение **в Chrome на телефоне**, это всё равно **web**, а не нативный APK:
+Even if you open the app **in Chrome on a phone**, it is still **web**, not a native APK:
 
-- **Не подтягиваются** те же данные, что из **Camera2 / AVFoundation** через ваш `MethodChannel` — для web этого моста в проекте нет, поэтому `native_back_camera` пустой.
-- **Можно опираться на другое:** **EXIF и размеры из самого JPEG** (если браузер не вырезал метаданные) — фокус, размер кадра, ориентация и т.д. Это **метаданные файла**, а не «живой» отчёт камеры ОС.
-- Отдельно можно было бы строить слой на **MediaDevices / getUserMedia**, но это не даст тот же набор intrinsics одним вызовом, что Camera2, без своей математики и без гарантий между браузерами.
+- **Does not pull** the same data as **Camera2 / AVFoundation** via your `MethodChannel` — there is no such bridge for web in this project, so `native_back_camera` is empty.
+- **You can rely on something else:** **EXIF and dimensions from the JPEG itself** (if the browser did not strip metadata) — focal length, frame size, orientation, etc. These are **file metadata**, not a "live" OS camera report.
+- A separate layer on **MediaDevices / getUserMedia** could be built, but it would not give the same intrinsics set in one call as Camera2 without custom math and without cross-browser guarantees.
 
-## Синхронизация с Django
+## Django sync
 
-| Тема | Android | Web |
+| Topic | Android | Web |
 |------|---------|-----|
-| **Базовый URL** | Эмулятор: `http://10.0.2.2:8000`; устройство в LAN: IP ПК | Тот же IP/хост, с которого открыта страница; не `localhost` для телефона в сети |
-| **CORS** | Не актуально для нативного клиента | Нужны настройки CORS на Django для origin приложения |
-| **Загрузка пакета на сервер** | Файлы с диска по путям из манифеста (`blobs/…`) | Байты через `XFile.readAsBytes()`; кандидаты на блобы — только реальные web-референсы снимка (не обход всего JSON со строками с `/`) |
-| **Картинки в инструкциях (`/v1/.../assets/...`)** | Кэш на диск + `Dio` / сеть | Часто `Dio` + `Image.memory` (Firebase Bearer), иначе 401/ограничения `Image.network` |
+| **Base URL** | Emulator: `http://10.0.2.2:8000`; LAN device: PC IP | Same IP/host as the page is opened from; not `localhost` for a phone on the network |
+| **CORS** | Not relevant for native client | Django CORS settings needed for app origin |
+| **Package upload to server** | Files from disk via manifest paths (`blobs/…`) | Bytes via `XFile.readAsBytes()`; blob candidates are only real web shot references (not scanning all JSON for strings with `/`) |
+| **Instruction images (`/v1/.../assets/...`)** | Disk cache + `Dio` / network | Often `Dio` + `Image.memory` (Firebase Bearer), otherwise 401/`Image.network` limits |
 
-### Картинки в markdown-инструкциях (тот же API, что и приложение)
+### Images in markdown instructions (same API as the app)
 
-Запрос к `/v1/projects/.../assets/...` требует **тот же Bearer**, что и остальной API (Firebase ID token через `Dio`). **`Image.network`** по умолчанию не получает этот токен (только статический `API_BEARER_TOKEN`, если задан), поэтому без отдельной загрузки через `Dio` возможны **401**. Если первый запрос вернул **404** (файла нет в `project_assets` на сервере), важно **не** делать второй неавторизованный fallback на тот же хост — иначе в логах Django будет пара **404 + 401** на один URL.
+A request to `/v1/projects/.../assets/...` requires the **same Bearer** as the rest of the API (Firebase ID token via `Dio`). **`Image.network`** does not get this token by default (only static `API_BEARER_TOKEN` if set), so without a separate `Dio` fetch you may get **401**. If the first request returns **404** (file not in `project_assets` on the server), do **not** make a second unauthenticated fallback to the same host — otherwise Django logs will show **404 + 401** for one URL.
 
-## Сборка и отладка
+## Build and debugging
 
-| Тема | Android | Web |
+| Topic | Android | Web |
 |------|---------|-----|
-| **Команда** | `flutter run` / `flutter build apk` | `flutter build web` / `flutter run -d web-server` |
-| **LAN-доступ к web** | — | `--web-hostname 0.0.0.0`, фаервол на порту web; для отладки с другого устройства часто `--release` из-за WebSocket отладки на `127.0.0.1` |
+| **Command** | `flutter run` / `flutter build apk` | `flutter build web` / `flutter run -d web-server` |
+| **LAN access to web** | — | `--web-hostname 0.0.0.0`, firewall on web port; for debugging from another device often `--release` due to WebSocket debugging on `127.0.0.1` |
 
-## Что одинаково
+## What's the same
 
-- Маршруты сценария сбора, `wizardStateProvider`, черновики в Drift, отправка манифеста на тот же API **после** реализации web-upload.
-- Конфиг проектов, Firebase Auth (если включён), спека пакета и полей формы.
+- Collection scenario routes, `wizardStateProvider`, Drift drafts, manifest upload to the same API **after** web-upload implementation.
+- Project config, Firebase Auth (if enabled), package spec and form fields.
 
-Итого: **Android** опирается на **файловую систему и нативную камеру**; **web** — на **браузерное хранилище/WASM, blob-URL и ограничения сети/CORS**, при этом один репозиторий и общая логика форм.
+In summary: **Android** relies on **filesystem and native camera**; **web** on **browser storage/WASM, blob URLs, and network/CORS limits**, with one repository and shared form logic.

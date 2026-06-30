@@ -1,87 +1,89 @@
+> **Language / Язык:** **English** · [Русский](03-user-journey-screens.ru.md)
+
 # User Journey & Screens
 
-Статус: **актуально** (июнь 2026). Код: `lib/main.dart` (GoRouter), `lib/features/*/presentation/`.
+Status: **current** (June 2026). Code: `lib/main.dart` (GoRouter), `lib/features/*/presentation/`.
 
-## 1. Аутентификация
+## 1. Authentication
 
-| Режим | Поведение |
+| Mode | Behavior |
 |-------|-----------|
-| **Онлайн** (`API_BASE_URL` задан) | `LoginScreen`: email + password → Firebase Auth. Токен автоматически в Dio (`dio_provider.dart`). |
-| **Офлайн** | Логин пропускается; проекты из bundled assets. |
+| **Online** (`API_BASE_URL` set) | `LoginScreen`: email + password → Firebase Auth. Token automatically attached in Dio (`dio_provider.dart`). |
+| **Offline** | Login skipped; projects from bundled assets. |
 
-Ошибки входа — snackbar. После успеха → Dashboard.
+Login errors — snackbar. After success → Dashboard.
 
-## 2. Dashboard (главный экран)
+## 2. Dashboard (main screen)
 
-`main.dart` — нижняя навигация с вкладками:
+`main.dart` — bottom navigation with tabs:
 
-| Вкладка | Экран | Содержимое |
+| Tab | Screen | Contents |
 |---------|-------|------------|
-| **Проекты** | Список `Project` из `projectsProvider` | Карточки проектов; tap → начало сбора |
-| **История** | `HistoryTab` | Локальные пакеты всех проектов; цвет рамки по `serverDeliveryState` |
-| **Сервер** | `ServerSyncTab` | Очередь на загрузку; «Загрузить все» / по одному |
-| **Справка** | `HelpTab` | Статическая справка |
+| **Projects** | List of `Project` from `projectsProvider` | Project cards; tap → start collection |
+| **History** | `HistoryTab` | Local packages across all projects; border color by `serverDeliveryState` |
+| **Server** | `ServerSyncTab` | Upload queue; "Upload all" / one-by-one |
+| **Help** | `HelpTab` | Static help |
 
-Индикатор синхронизации конфигов — при pull-to-refresh / перезапуске `projectsProvider`.
+Config sync indicator — on pull-to-refresh / `projectsProvider` restart.
 
-## 3. Сбор данных
+## 3. Data collection
 
-**Вход:** tap на проект → `CollectionFlowScreen(projectId)`.
+**Entry:** tap project → `CollectionFlowScreen(projectId)`.
 
-### 3.1 Один шаг `scroll_form`
+### 3.1 Single `scroll_form` step
 
-Если в конфиге единственный шаг и он `scroll_form` → сразу `ScrollFormCollectionScreen` (все поля шага на одном скролле).
+If the config has a single step and it is `scroll_form` → go directly to `ScrollFormCollectionScreen` (all step fields on one scroll).
 
-### 3.2 Несколько шагов
+### 3.2 Multiple steps
 
 `CollectionFlowScreen` + `_FlowStepShell`:
 
-1. Один или несколько шагов **`scroll_form`** — поля из `field_ids` шага.
-2. Опционально **`review`** — сводка перед submit.
+1. One or more **`scroll_form`** steps — fields from the step's `field_ids`.
+2. Optional **`review`** — summary before submit.
 
-Типы виджетов по `field.type`: текст, дата/время, Markdown-инструкция, камера (`camera_photo`).
+Widget types by `field.type`: text, date/time, Markdown instruction, camera (`camera_photo`).
 
 ### 3.3 Submit
 
-- Валидация required-полей.
+- Required field validation.
 - `submitLocalPackage` → materialization (`blobs/` + payload) → Drift, `status: completed`, `serverDeliveryState: pending`.
-- **Автозагрузка на сервер не запускается** — пользователь идёт на вкладку «Сервер».
+- **Auto-upload to server does not start** — user goes to the **Server** tab.
 
-## 4. Вкладка «Сервер» (outbox)
+## 4. Server tab (outbox)
 
 `ServerSyncTab`:
 
-- Список пакетов с `serverDeliveryState != completed` и `status != draft`.
-- Кнопки массовой и поштучной отправки.
-- Прогресс: `uploading` / `failed` с текстом ошибки.
-- Протокол: см. [08-server-api-package-upload.md](08-server-api-package-upload.md).
+- List of packages with `serverDeliveryState != completed` and `status != draft`.
+- Bulk and per-item upload buttons.
+- Progress: `uploading` / `failed` with error text.
+- Protocol: see [08-server-api-package-upload.md](08-server-api-package-upload.md).
 
-## 5. История
+## 5. History
 
-`HistoryTab` / детальный просмотр пакета:
+`HistoryTab` / package detail view:
 
-| `serverDeliveryState` | Индикация |
+| `serverDeliveryState` | Indication |
 |----------------------|-----------|
-| `pending` | Жёлтый — только на устройстве |
-| `uploading` | В процессе |
-| `completed` | Зелёный — принят сервером |
-| `failed` | Ошибка, можно повторить с вкладки «Сервер» |
+| `pending` | Yellow — device only |
+| `uploading` | In progress |
+| `completed` | Green — accepted by server |
+| `failed` | Error; retry from **Server** tab |
 
-Экспорт manifest (share) — `history/` feature.
+Manifest export (share) — `history/` feature.
 
-## 6. Веб-админка (`/ui/`)
+## 6. Web admin (`/ui/`)
 
-Не часть Flutter-приложения; Django templates:
+Not part of the Flutter app; Django templates:
 
-| Роль | Доступ |
+| Role | Access |
 |------|--------|
-| Staff | Проекты, пользователи, все пакеты |
-| Client-admin (Firebase) | Только пакеты назначенных проектов |
+| Staff | Projects, users, all packages |
+| Client-admin (Firebase) | Assigned projects' packages only |
 
-Workspace пакета: **Данные / Медиа / Визуализация / История изменений**.
+Package workspace: **Data / Media / Visualization / Change history**.
 
-## 7. Не реализовано в мобильном клиенте
+## 7. Not implemented in the mobile client
 
-- Enriched / ML viewer (bounding boxes на устройстве) — только в админке.
-- Фоновая загрузка при появлении сети.
-- Видеозахват.
+- Enriched / ML viewer (bounding boxes on device) — admin only.
+- Background upload when network appears.
+- Video capture.
