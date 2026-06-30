@@ -1,58 +1,60 @@
-# Data Collector — обзор продукта
+> **Language / Язык:** **English** · [Русский](01-overview.ru.md)
 
-Статус: **актуально** (июнь 2026). Реализация: Flutter-клиент + Django-бэкенд (`django_server/`).
+# Data Collector — Product Overview
 
-## 1. Назначение
+Status: **current** (June 2026). Implementation: Flutter client + Django backend (`django_server/`).
 
-**Data Collector** — **фреймворк** сбора данных: мобильное приложение (Flutter, Android/iOS, опционально Web) для сбора структурированных данных и медиа по **динамическому конфигу проекта**. Пакеты сохраняются локально и загружаются на сервер. Веб-админка Django (`/ui/`) позволяет управлять проектами, просматривать пакеты и визуализировать pipeline-данные (ML, depth, CVAT).
+## 1. Purpose
 
-Ядро нейтрально к предметной области: конкретные сценарии (например, съёмка КРС) — это **проекты на базе фреймворка**, см. [`examples/`](../examples/) и нейтральные демо в `assets/config/`.
+**Data Collector** is a data collection **framework**: a mobile app (Flutter, Android/iOS, optionally Web) for collecting structured data and media according to a **dynamic project config**. Packages are saved locally and uploaded to the server. The Django web admin (`/ui/`) lets you manage projects, view packages, and visualize pipeline data (ML, depth, CVAT).
 
-Пример развёрнутого инстанса (проект «korovas»): `https://data-collector-app.korovas.ml.epoch8.dev` — API `/v1/*`, админка `/ui/`. Домен и имена образов в `Makefile` — значения этого конкретного деплоя, а не часть фреймворка.
+The core is domain-agnostic: concrete scenarios (e.g. cattle capture) are **projects built on the framework** — see [`examples/`](../examples/) and neutral demos in `assets/config/`.
 
-## 2. Основные сущности
+Example deployed instance (korovas project): `https://data-collector-app.korovas.ml.epoch8.dev` — API `/v1/*`, admin `/ui/`. Domain and image names in `Makefile` are values for that specific deployment, not part of the framework.
 
-| Сущность | Описание |
-|----------|----------|
-| **User** | Сборщик данных. Аутентификация через **Firebase Email/Password**; на сервере — `CollectorUser` с привязкой к проектам. |
-| **Project** | Инициатива сбора. Каталог в Django DB; **конфиг** — в Git-репозитории (`collector/config.json`). См. [git-backed-projects.md](git-backed-projects.md). |
-| **Config** | JSON-схема: `config.fields` + `config.flow.steps` — что и в каком порядке собирать. Гайд: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md). |
-| **Package** | Единица работы: JSON-манифест + бинарные blobs. Локально — Drift + файловая система; на сервере — per-project DB + fsspec-хранилище. |
-| **Enriched data** | Результаты pipeline (keypoints, YOLO, depth, CVAT) в project DB; визуализация в админке через `collector/viz.json`. |
+## 2. Core Entities
 
-## 3. Ключевые возможности (реализовано)
+| Entity | Description |
+|--------|-------------|
+| **User** | Data collector. Authenticated via **Firebase Email/Password**; on the server — `CollectorUser` linked to projects. |
+| **Project** | Collection initiative. Catalog in Django DB; **config** in a Git repo (`collector/config.json`). See [git-backed-projects.md](git-backed-projects.md). |
+| **Config** | JSON schema: `config.fields` + `config.flow.steps` — what to collect and in what order. Guide: [config/09-project-json-builder-guide.md](config/09-project-json-builder-guide.md). |
+| **Package** | Work unit: JSON manifest + binary blobs. Locally — Drift + filesystem; on the server — per-project DB + fsspec storage. |
+| **Enriched data** | Pipeline results (keypoints, YOLO, depth, CVAT) in the project DB; visualized in admin via `collector/viz.json`. |
 
-### 3.1 Аутентификация
+## 3. Key Features (implemented)
 
-- Firebase Email/Password на клиенте; `Authorization: Bearer <ID token>` на `/v1/*`.
-- Веб-админка: Django staff (логин без `@`) или Firebase client-admin (только назначенные проекты).
-- Офлайн-режим без `API_BASE_URL`: bundled `assets/config/` без авторизации.
+### 3.1 Authentication
 
-### 3.2 Проекты и конфиги
+- Firebase Email/Password on the client; `Authorization: Bearer <ID token>` on `/v1/*`.
+- Web admin: Django staff (login without `@`) or Firebase client-admin (assigned projects only).
+- Offline mode without `API_BASE_URL`: bundled `assets/config/` with no auth.
 
-- Каталог `GET /v1/projects` с ETag; полный конфиг `GET /v1/projects/{id}/config` (источник — Git, ETag = `last_synced_sha`).
-- Кэш на устройстве: `ApplicationSupport/server_project_cache/`.
-- Медиа инструкций: `GET /v1/projects/{id}/assets/{path}` из `collector/media/` в Git.
+### 3.2 Projects and configs
 
-### 3.3 Сбор данных
+- Catalog `GET /v1/projects` with ETag; full config `GET /v1/projects/{id}/config` (source — Git, ETag = `last_synced_sha`).
+- Device cache: `ApplicationSupport/server_project_cache/`.
+- Instruction media: `GET /v1/projects/{id}/assets/{path}` from `collector/media/` in Git.
 
-- UI строится из `config.flow.steps`: шаги **`scroll_form`** (все поля шага на одном экране) и опционально **`review`**.
-- Типы полей: `text_input`, `datetime`, `instruction`, `camera_photo`.
-- Локальный черновик и materialization в каталог пакета при submit.
-- Метаданные камеры: `camera_session`, `camera_debug`, `frame_camera`, `camera_supplement` (см. [07-package-payload-structure.md](07-package-payload-structure.md)).
+### 3.3 Data collection
 
-### 3.4 Загрузка на сервер
+- UI built from `config.flow.steps`: **`scroll_form`** steps (all step fields on one screen) and optional **`review`**.
+- Field types: `text_input`, `datetime`, `instruction`, `camera_photo`.
+- Local draft and materialization into the package directory on submit.
+- Camera metadata: `camera_session`, `camera_debug`, `frame_camera`, `camera_supplement` (see [07-package-payload-structure.md](07-package-payload-structure.md)).
 
-- Протокол: `POST` сессия → `PUT` blobs → `PUT` manifest → `POST` commit ([08-server-api-package-upload.md](08-server-api-package-upload.md)).
-- Отправка **вручную** с вкладки «Сервер» (`ServerSyncTab`); фоновый workmanager — не реализован.
-- Статусы доставки в Drift: `pending` / `uploading` / `completed` / `failed`.
+### 3.4 Server upload
 
-### 3.5 История и админка
+- Protocol: `POST` session → `PUT` blobs → `PUT` manifest → `POST` commit ([08-server-api-package-upload.md](08-server-api-package-upload.md)).
+- Upload is **manual** from the **Server** tab (`ServerSyncTab`); background workmanager — not implemented.
+- Delivery statuses in Drift: `pending` / `uploading` / `completed` / `failed`.
 
-- Локальная история пакетов с индикацией статуса доставки на сервер.
-- Django `/ui/packages/`: список, workspace (Данные / Медиа / Визуализация / Changelog), фильтры, редактирование манифеста.
+### 3.5 History and admin
 
-## 4. Архитектура
+- Local package history with server delivery status indication.
+- Django `/ui/packages/`: list, workspace (Data / Media / Visualization / Changelog), filters, manifest editing.
+
+## 4. Architecture
 
 ```text
 ┌─────────────────┐     HTTPS /v1/*      ┌──────────────────────────────────┐
@@ -64,36 +66,36 @@
                                            └──────────────────────────────────┘
 ```
 
-- **Клиент:** Flutter, Riverpod, Drift (SQLite), Dio, GoRouter, Firebase Auth.
-- **Сервер каталога:** Django 5.x ORM — `Project`, `CollectorUser`, `GitCredential`.
-- **Данные проекта:** SQLAlchemy 2.x + Alembic (`database_uri`); blobs через fsspec (`storage_uri`). См. [project-storage-uris.md](project-storage-uris.md).
-- **Конфиг проекта:** Git SSH deploy key → `collector/config.json`, `collector/media/`, `collector/viz.json`.
+- **Client:** Flutter, Riverpod, Drift (SQLite), Dio, GoRouter, Firebase Auth.
+- **Catalog server:** Django 5.x ORM — `Project`, `CollectorUser`, `GitCredential`.
+- **Project data:** SQLAlchemy 2.x + Alembic (`database_uri`); blobs via fsspec (`storage_uri`). See [project-storage-uris.md](project-storage-uris.md).
+- **Project config:** Git SSH deploy key → `collector/config.json`, `collector/media/`, `collector/viz.json`.
 
-## 5. Режимы работы клиента
+## 5. Client operating modes
 
-| Режим | Условие | Источник проектов |
-|-------|---------|-------------------|
-| Офлайн / демо | `API_BASE_URL` не задан | `assets/config/projects.json` + bundled JSON |
-| Онлайн | `--dart-define=API_BASE_URL=...` | Только сервер (`ServerProjectCatalog`) |
+| Mode | Condition | Project source |
+|------|-----------|----------------|
+| Offline / demo | `API_BASE_URL` not set | `assets/config/projects.json` + bundled JSON |
+| Online | `--dart-define=API_BASE_URL=...` | Server only (`ServerProjectCatalog`) |
 
-## 6. Известные ограничения и backlog
+## 6. Known limitations and backlog
 
-См. [todo](todo). Кратко:
+See [todo](todo). In brief:
 
-- Нет фоновой автозагрузки пакетов (workmanager).
-- Web-клиент: известная проблема с Firebase credentials.
-- Админка: нет удаления пакетов, просмотра сырого JSON, привязки фото к полям формы.
-- Enriched data в мобильном приложении — не реализован (только в веб-админке).
+- No background auto-upload of packages (workmanager).
+- Web client: known issue with Firebase credentials.
+- Admin: no package deletion, raw JSON view, or linking photos to form fields.
+- Enriched data in the mobile app — not implemented (web admin only).
 
-## 7. Связанные документы
+## 7. Related documents
 
-| Тема | Файл |
+| Topic | File |
 |------|------|
-| Модели и JSON-схема | [02-data-models-schema.md](02-data-models-schema.md) |
-| Экраны приложения | [03-user-journey-screens.md](03-user-journey-screens.md) |
-| Стек и структура кода | [04-tech-stack-architecture.md](04-tech-stack-architecture.md) |
-| MVP (история) | [05-stage-1-mvp.md](05-stage-1-mvp.md) |
-| Загрузка пакетов | [06-upload-lifecycle.md](06-upload-lifecycle.md), [08-server-api-package-upload.md](08-server-api-package-upload.md) |
-| Доставка конфигов | [09-server-project-config-delivery.md](09-server-project-config-delivery.md) |
-| Git-конфиг | [git-backed-projects.md](git-backed-projects.md) |
-| Хранилища проекта | [project-storage-uris.md](project-storage-uris.md) |
+| Models and JSON schema | [02-data-models-schema.md](02-data-models-schema.md) |
+| App screens | [03-user-journey-screens.md](03-user-journey-screens.md) |
+| Stack and code structure | [04-tech-stack-architecture.md](04-tech-stack-architecture.md) |
+| MVP (history) | [05-stage-1-mvp.md](05-stage-1-mvp.md) |
+| Package upload | [06-upload-lifecycle.md](06-upload-lifecycle.md), [08-server-api-package-upload.md](08-server-api-package-upload.md) |
+| Config delivery | [09-server-project-config-delivery.md](09-server-project-config-delivery.md) |
+| Git config | [git-backed-projects.md](git-backed-projects.md) |
+| Project storage | [project-storage-uris.md](project-storage-uris.md) |

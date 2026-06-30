@@ -1,258 +1,260 @@
-# Руководство пользователя: административная панель
+> **Language / Язык:** **English** · [Русский](README.ru.md)
 
-Инструкция по настройке проектов, доступа пользователей и просмотру загруженных пакетов (с визуализацией результатов pipeline).
+# User guide: admin panel
 
-Скриншоты — из презентации продукта [`specs/presentation/Data-Collector.pptx`](../../specs/presentation/Data-Collector.pptx) (исходники кадров — в `specs/presentation/img/`). Интерфейс развивается, поэтому отдельные кадры могут отличаться от текущей версии — ориентируйтесь на текст.
+Instructions for configuring projects, user access, and viewing uploaded packages (with pipeline result visualization).
 
-**Адрес панели:** веб-админка вашего инстанса по пути `/ui/`.
+Screenshots are from the product presentation [`specs/presentation/Data-Collector.pptx`](../../specs/presentation/Data-Collector.pptx) (source frames are in `specs/presentation/img/`). The interface is evolving, so individual frames may differ from the current version — rely on the text.
 
----
-
-## **1. Вход в панель**
-
-1. Откройте веб-админку вашего инстанса по адресу `…/ui/login/`.
-2. Войдите учётной записью администратора (Django **staff**) — выдаёт администратор инстанса.
-3. После входа откроется список проектов.
+**Panel URL:** your instance's web admin at `/ui/`.
 
 ---
 
-## **2. Краткий обзор интерфейса**
+## **1. Signing in**
 
-В верхнем меню три раздела:
+1. Open your instance's web admin at `…/ui/login/`.
+2. Sign in with an administrator account (Django **staff**) — issued by the instance administrator.
+3. After sign-in, the project list opens.
 
-| **Раздел** | **Назначение** |
+---
+
+## **2. Interface overview**
+
+The top menu has three sections:
+
+| **Section** | **Purpose** |
 | --- | --- |
-| **Проекты** | Создание и настройка сценариев сбора данных, медиа для инструкций |
-| **Пользователи** | Учётки Firebase и доступ к проектам в мобильном приложении |
-| **Пакеты** | Просмотр данных, загруженных с телефонов |
+| **Projects** | Create and configure data collection scenarios, media for instructions |
+| **Users** | Firebase accounts and access to projects in the mobile app |
+| **Packages** | View data uploaded from phones |
 
-![Верхнее меню: Проекты, Пользователи, Пакеты](image.png)
-
----
-
-## **3. Проекты**
-
-### **3.1. Список проектов**
-
-Раздел **Проекты** — каталог всех проектов (инициатив сбора). Для каждого видны `project_id`, название, версия конфига и дата обновления.
-
-Под каждую площадку/инициативу заводится **отдельный проект** (например, `my-project-2026`). Структура конфига может быть одинаковой, а названия и `project_id` — разными.
-
-![Список проектов](<image 1.png>)
-
-### **3.2. Создание нового проекта**
-
-> **Важно:** конфиг проекта хранится **не в БД, а в Git-репозитории** (`collector/config.json`). Поэтому при создании проекта нужно указать репозиторий и настроить доступ по SSH deploy key. Хранилище данных (БД/медиа) — **опционально**.
-
-Нажмите **«Новый проект»** и заполните форму:
-
-1. **project_id** — латиница, совпадает с полем `id` в `collector/config.json` (например, `my-project-2026`).
-2. **Название** — как проект отображается в приложении.
-3. **Git-репозиторий** — URL репозитория с конфигом (публичный или приватный; доступ по SSH deploy key).
-4. **Ветка** — по умолчанию `main`.
-5. **SSH-ключ** — оставьте включённым **«Сгенерировать SSH-ключ на сервере»** (рекомендуется) или вставьте собственный приватный ключ (формат OpenSSH).
-6. **Хранилище данных** (необязательный блок) — см. 3.4. Если оставить пустым: SQLite + локальная папка на сервере.
-
-Нажмите **«Создать проект»**.
-
-![Форма «Новый проект»](<image 2.png>)
-
-После создания нужно **разрешить серверу доступ к репозиторию**: скопировать публичный deploy key (см. 3.3) и добавить его в настройках репозитория с правом **записи** (write access). Затем сервер сможет читать конфиг и сохранять правки.
-
-### **3.3. Git: deploy key и синхронизация конфига**
-
-Конфиг (`collector/config.json`), визуализация (`collector/viz.json`) и медиа для инструкций (`collector/media/`) живут в Git-репозитории проекта.
-
-- На карточке проекта откройте **«SSH-ключ»** — там показан **публичный deploy key**. Добавьте его в репозиторий (Deploy keys) с правом **write access**. При необходимости можно вставить и собственный приватный ключ.
-- Кнопка **«Проверить Git»** на карточке делает синхронизацию (pull) и при первом запуске может создать стартовый `config.json`.
-- Сохранение в редакторе/JSON = commit + push в репозиторий.
-
-Принцип: **1 репозиторий = 1 проект**.
-
-### **3.4. Хранилище данных (БД и медиа) — опционально**
-
-Где хранятся **пакеты и медиа** конкретного проекта, настраивается отдельно (карточка проекта → раздел «Хранилище»). Если поля пустые — **SQLite + локальная папка** на сервере (подходит для старта).
-
-Поля:
-
-- **Медиа (blobs)** — `storage_uri`: например `s3://bucket/my-project/` или `gs://bucket/`. Пусто — локальная папка.
-- **S3 / MinIO** — endpoint, ключ и секрет (нужны только для `s3://`).
-- **PostgreSQL — адрес** — `database_uri` без логина/пароля (например `postgresql+psycopg2://host:5432/proj_my_project`). **База создаётся автоматически** при сохранении.
-- **PostgreSQL — логин и пароль** — отдельными полями.
-
-После изменения адреса нажмите **«Проверить хранилище»**. Смена адреса **не переносит** уже сохранённые данные.
-
-### **3.5. Карточка проекта**
-
-Откройте проект из списка. На карточке:
-
-![Карточка проекта](<image 3.png>)
-
-**Основная информация:**
-
-- версия конфига;
-- список файлов на диске — медиа для инструкций (например, эталонные кадры/ракурсы);
-- число сессий загрузки пакетов — можно открыть загруженные пакеты этого проекта.
-
-**Кнопки:**
-
-- **Редактор** — визуальный редактор конфига;
-- **JSON** — конфигурация проекта в виде JSON;
-- **Файлы** — загрузка файлов для инструкций;
-- **Пакеты** — просмотр загруженных пакетов проекта;
-- **SSH-ключ**, **Хранилище**, **Проверить Git/хранилище** — настройка Git и хранилища (см. 3.3–3.4).
-
-![Карточка проекта: действия](<image 4.png>)
-
-### **3.6. Визуальный редактор (настройка сценария сбора)**
-
-Конфиг определяет, **что** собирает мобильное приложение: поля, экраны, порядок шагов.
-
-Для редактирования конфига перейдите в визуальный редактор (кнопка «Редактор»):
-
-![Визуальный редактор конфига](<image 5.png>)
-
-Основные элементы:
-
-1. **Поля** — задаются поля для приложения (текст, дата, инструкции (md), фото и т. д.).
-    
-    ![Редактор: поля](<image 6.png>)
-    
-2. **Сценарий (flow)** — порядок и расположение полей по экранам: `scroll_form` (форма со скроллом) и `review` (проверка перед отправкой).
-    
-    ![Редактор: сценарий (flow)](<image 7.png>)
-    
-3. **Режим JSON** — правка всего файла конфига вручную для опытных администраторов.
-    
-    ![Редактор: режим JSON](<image 8.png>)
-    
-
-### **3.7. Файлы проекта (медиа)**
-
-Раздел **«Файлы»** на карточке проекта:
-
-- загрузка картинок и других файлов для инструкций в конфиге;
-- файлы отдаются клиенту как `/v1/projects/<project_id>/assets/…`;
-- в JSON в Markdown указывайте пути вида `assets/uploads/…`.
-
-![Файлы проекта](<image 9.png>)
-
-### **3.8. Удаление проекта**
-
-Внизу карточки — **«Опасная зона»**. Для подтверждения введите точный `project_id`. Удаляется только запись в каталоге и локальный git-кэш; файлы пакетов и база данных проекта сохраняются.
+![Top menu: Projects, Users, Packages](image.png)
 
 ---
 
-## **4. Пользователи (доступ к мобильному приложению)**
+## **3. Projects**
 
-Пользователи авторизуются в приложении через **Firebase** (email/пароль). В панели хранится связка Firebase UID ↔ доступные проекты.
+### **3.1. Project list**
 
-### **4.1. Появление пользователей в списке**
+The **Projects** section is a catalog of all projects (collection initiatives). For each one you see `project_id`, name, config version, and last updated date.
 
-- Нажмите **«Синхронизировать с Firebase»** — подтянуть учётки из Firebase Authentication;
-- **или** дождитесь первого входа пользователя в приложение (запись может создаться автоматически).
+Create a **separate project** for each site/initiative (for example, `my-project-2026`). Config structure can be identical while names and `project_id` differ.
 
-![Список пользователей](<image 10.png>)
+![Project list](<image 1.png>)
 
-### **4.2. Назначение проектов**
+### **3.2. Creating a new project**
 
-1. Откройте пользователя → **«Настроить»**.
-2. Отметьте чекбоксами проекты, которые он видит в приложении и в которые может загружать пакеты.
-3. Нажмите **«Сохранить»**.
+> **Important:** project config is stored **not in the database, but in a Git repository** (`collector/config.json`). When creating a project, specify the repository and set up SSH deploy key access. Data storage (DB/media) is **optional**.
 
-![Назначение проектов пользователю](<image 11.png>)
+Click **"New project"** and fill in the form:
+
+1. **project_id** — Latin characters, must match the `id` field in `collector/config.json` (for example, `my-project-2026`).
+2. **Name** — how the project appears in the app.
+3. **Git repository** — URL of the repo with the config (public or private; access via SSH deploy key).
+4. **Branch** — defaults to `main`.
+5. **SSH key** — leave **"Generate SSH key on server"** enabled (recommended) or paste your own private key (OpenSSH format).
+6. **Data storage** (optional block) — see 3.4. If left empty: SQLite + local folder on the server.
+
+Click **"Create project"**.
+
+!["New project" form](<image 2.png>)
+
+After creation, **grant the server access to the repository**: copy the public deploy key (see 3.3) and add it in the repository settings with **write** access. The server can then read the config and save changes.
+
+### **3.3. Git: deploy key and config sync**
+
+Config (`collector/config.json`), visualization (`collector/viz.json`), and instruction media (`collector/media/`) live in the project's Git repository.
+
+- On the project card, open **"SSH key"** — the **public deploy key** is shown there. Add it to the repository (Deploy keys) with **write access**. If needed, you can paste your own private key instead.
+- The **"Check Git"** button on the card performs sync (pull) and on first run may create a starter `config.json`.
+- Saving in the editor/JSON = commit + push to the repository.
+
+Principle: **1 repository = 1 project**.
+
+### **3.4. Data storage (DB and media) — optional**
+
+Where **packages and media** for a specific project are stored is configured separately (project card → **Storage** section). If fields are empty — **SQLite + local folder** on the server (fine for getting started).
+
+Fields:
+
+- **Media (blobs)** — `storage_uri`: for example `s3://bucket/my-project/` or `gs://bucket/`. Empty — local folder.
+- **S3 / MinIO** — endpoint, key, and secret (only needed for `s3://`).
+- **PostgreSQL — address** — `database_uri` without login/password (for example `postgresql+psycopg2://host:5432/proj_my_project`). **The database is created automatically** on save.
+- **PostgreSQL — login and password** — separate fields.
+
+After changing the address, click **"Check storage"**. Changing the address **does not migrate** already stored data.
+
+### **3.5. Project card**
+
+Open a project from the list. On the card:
+
+![Project card](<image 3.png>)
+
+**Basic information:**
+
+- config version;
+- list of files on disk — media for instructions (for example, reference frames/angles);
+- number of package upload sessions — you can open uploaded packages for this project.
+
+**Buttons:**
+
+- **Editor** — visual config editor;
+- **JSON** — project configuration as JSON;
+- **Files** — upload files for instructions;
+- **Packages** — view uploaded packages for the project;
+- **SSH key**, **Storage**, **Check Git/storage** — Git and storage setup (see 3.3–3.4).
+
+![Project card: actions](<image 4.png>)
+
+### **3.6. Visual editor (collection scenario setup)**
+
+The config defines **what** the mobile app collects: fields, screens, step order.
+
+To edit the config, go to the visual editor ("Editor" button):
+
+![Visual config editor](<image 5.png>)
+
+Main elements:
+
+1. **Fields** — define fields for the app (text, date, instructions (md), photos, etc.).
+    
+    ![Editor: fields](<image 6.png>)
+    
+2. **Scenario (flow)** — order and placement of fields across screens: `scroll_form` (scrollable form) and `review` (review before submit).
+    
+    ![Editor: scenario (flow)](<image 7.png>)
+    
+3. **JSON mode** — edit the entire config file manually for experienced administrators.
+    
+    ![Editor: JSON mode](<image 8.png>)
+    
+
+### **3.7. Project files (media)**
+
+The **"Files"** section on the project card:
+
+- upload images and other files for instructions in the config;
+- files are served to the client as `/v1/projects/<project_id>/assets/…`;
+- in JSON/Markdown, use paths like `assets/uploads/…`.
+
+![Project files](<image 9.png>)
+
+### **3.8. Deleting a project**
+
+At the bottom of the card — **"Danger zone"**. To confirm, enter the exact `project_id`. Only the catalog entry and local git cache are removed; package files and the project database are preserved.
 
 ---
 
-## **5. Пакеты (данные с полей)**
+## **4. Users (mobile app access)**
 
-Раздел **Пакеты** — всё, что операторы отправили с телефонов.
+Users sign in to the app via **Firebase** (email/password). The panel stores the mapping Firebase UID ↔ accessible projects.
 
-### **5.1. Список**
+### **4.1. Users appearing in the list**
 
-- До **500** последних сессий.
-- Фильтр по проекту в выпадающем списке.
-- Колонки: проект, `package_id`, email/UID загрузившего, **фаза**, дата.
+- Click **"Sync with Firebase"** — pull accounts from Firebase Authentication;
+- **or** wait for the user's first sign-in to the app (a record may be created automatically).
 
-![Список пакетов](<image 12.png>)
+![User list](<image 10.png>)
 
-### **5.2. Фазы приёма**
+### **4.2. Assigning projects**
 
-| **Фаза** | **Смысл** |
+1. Open a user → **"Configure"**.
+2. Check the projects they see in the app and can upload packages to.
+3. Click **"Save"**.
+
+![Assigning projects to a user](<image 11.png>)
+
+---
+
+## **5. Packages (field data)**
+
+The **Packages** section contains everything operators sent from phones.
+
+### **5.1. List**
+
+- Up to **500** most recent sessions.
+- Filter by project in the dropdown.
+- Columns: project, `package_id`, uploader email/UID, **phase**, date.
+
+![Package list](<image 12.png>)
+
+### **5.2. Ingestion phases**
+
+| **Phase** | **Meaning** |
 | --- | --- |
-| **awaiting_blobs** | Ожидаются файлы (фото и т.д.) |
-| **ready_to_commit** | Файлы приняты, ожидается финализация |
-| **completed** | Пакет успешно принят |
-| **failed** | Ошибка при приёме |
+| **awaiting_blobs** | Awaiting files (photos, etc.) |
+| **ready_to_commit** | Files received, awaiting finalization |
+| **completed** | Package successfully accepted |
+| **failed** | Error during ingestion |
 
-### **5.3. Карточка пакета (workspace)**
+### **5.3. Package card (workspace)**
 
-Рабочая область пакета состоит из вкладок. Сверху — переключатель пакетов проекта и кнопки **«Откатить» / «Сохранить»** (правки манифеста пишутся в историю изменений).
+The package workspace has tabs. At the top — project package switcher and **"Revert" / "Save"** buttons (manifest edits are written to the change history).
 
-| Вкладка | Что показывает |
+| Tab | What it shows |
 | --- | --- |
-| **Данные** | Значения полей формы (по `config.fields`), сгруппированные по шагам. Поля можно править прямо здесь. |
-| **Медиа** | Все блобы пакета (фото) с превью и кнопкой **«Скачать»**; снимки «в форме» помечены бейджем. |
-| **Визуализация** | Оверлеи pipeline поверх кадров (см. 5.4). |
-| **История изменений** | Кто, когда и что менял в манифесте (было → стало, причина). |
+| **Data** | Form field values (per `config.fields`), grouped by step. Fields can be edited here. |
+| **Media** | All package blobs (photos) with preview and **"Download"** button; in-form shots are marked with a badge. |
+| **Visualization** | Pipeline overlays on frames (see 5.4). |
+| **Change history** | Who changed what in the manifest and when (before → after, reason). |
 
-**Вкладка «Данные»**
+**"Data" tab**
 
-![Вкладка Данные](workspace-data.png)
+![Data tab](workspace-data.png)
 
-**Вкладка «Медиа»**
+**"Media" tab**
 
-![Вкладка Медиа](workspace-media.png)
+![Media tab](workspace-media.png)
 
-**Вкладка «История изменений»**
+**"Change history" tab**
 
-![Вкладка История изменений](workspace-history.png)
+![Change history tab](workspace-history.png)
 
-**Подробнее** открывает также список **блобов** (файлы) с кнопкой **«Скачать»** и **манифест** (JSON после завершения загрузки).
+**Details** also opens the **blob** list (files) with **"Download"** and the **manifest** (JSON after upload completes).
 
-![Блобы и манифест пакета](<image 13.png>)
+![Package blobs and manifest](<image 13.png>)
 
-Список пакетов конкретного проекта доступен и с карточки проекта (**«Пакеты»**).
+The package list for a specific project is also available from the project card (**"Packages"**).
 
-### **5.4. Визуализация (просмотр результатов pipeline)**
+### **5.4. Visualization (viewing pipeline results)**
 
-Вкладка **«Визуализация»** рисует данные пайплайна (ключевые точки, bbox, глубина, разметка) **поверх кадров** пакета. Конфиг визуализации хранится в Git-репозитории проекта — файл `collector/viz.json` (слои → таблицы в project-БД + плагин рендеринга). Подробно — [`specs/collector-vis-config.md`](../../specs/collector-vis-config.md).
+The **"Visualization"** tab draws pipeline data (keypoints, bbox, depth, annotations) **over package frames**. Visualization config is stored in the project's Git repository — file `collector/viz.json` (layers → tables in project DB + rendering plugin). Details — [`specs/collector-vis-config.md`](../../specs/collector-vis-config.md).
 
-![Вкладка Визуализация: ключевые точки и метрики](workspace-visualization.png)
+![Visualization tab: keypoints and metrics](workspace-visualization.png)
 
-Что на экране:
+What's on screen:
 
-- **Слои-переключатели** сверху: например **GT** (эталон) и **Inference** (предсказание модели), **Глубина**, **BBox** (рамка объекта), **Подписи** (названия точек/замеров).
-- **CVAT** — ссылка на разметку кадра в CVAT; **Экспорт** — выгрузка визуализации.
-- **Список точек** справа (`kp_1`, `kp_2`, …) с уверенностью модели (%).
-- **Метрики (см)** — производные замеры для объекта (в примере с КРС: косая длина туловища, высота в холке/крестце, обхват груди за лопатками и т. п.).
-- Снизу — лента кадров пакета для переключения между фото.
+- **Layer toggles** at the top: for example **GT** (ground truth) and **Inference** (model prediction), **Depth**, **BBox** (object box), **Labels** (point/measurement names).
+- **CVAT** — link to frame annotation in CVAT; **Export** — export visualization.
+- **Point list** on the right (`kp_1`, `kp_2`, …) with model confidence (%).
+- **Metrics (cm)** — derived measurements for the object (in the cattle example: body length, withers/croup height, chest girth behind shoulder blades, etc.).
+- At the bottom — package frame strip to switch between photos.
 
-Набор слоёв и плагинов задаётся проектом. Доступные плагины рендеринга: ключевые точки, bbox/детекция (YOLO), карта глубины, ссылка на CVAT. Чтобы визуализация появилась, в репозитории проекта должен быть `collector/viz.json`, а в project-БД — таблицы с данными пайплайна.
+Layer set and plugins are defined per project. Available rendering plugins: keypoints, bbox/detection (YOLO), depth map, CVAT link. For visualization to appear, the project repository must have `collector/viz.json`, and the project DB must have tables with pipeline data.
 
 ---
 
-## **6. Типовой сценарий администратора**
+## **6. Typical administrator workflow**
 
-1. **Создать проект**: указать `project_id`, название, **Git-репозиторий** и сгенерировать SSH-ключ.
-2. **Дать серверу доступ к репозиторию**: добавить публичный deploy key с правом write, нажать **«Проверить Git»**.
-3. (Опц.) **Настроить хранилище** (БД/медиа) и нажать **«Проверить хранилище»**; иначе — SQLite + локальная папка.
-4. В **редакторе** настроить поля и сценарий сбора; при необходимости загрузить картинки в **«Файлы»**.
-5. **Сохранить** конфиг (commit/push) и проверить версию на карточке проекта.
-6. В **Пользователи** синхронизировать Firebase и выдать сотрудникам доступ к проекту.
-7. После работы в поле — в **Пакеты** проверить статус, посмотреть данные/визуализацию, скачать файлы/манифест.
+1. **Create a project**: specify `project_id`, name, **Git repository**, and generate an SSH key.
+2. **Grant server access to the repository**: add the public deploy key with write access, click **"Check Git"**.
+3. (Optional) **Configure storage** (DB/media) and click **"Check storage"**; otherwise — SQLite + local folder.
+4. In the **editor**, configure fields and the collection scenario; upload images to **"Files"** if needed.
+5. **Save** the config (commit/push) and verify the version on the project card.
+6. In **Users**, sync Firebase and grant staff access to the project.
+7. After field work — in **Packages**, check status, view data/visualization, download files/manifest.
 
 ---
 
-## **7. Связь с мобильным приложением**
+## **7. Connection to the mobile app**
 
-| **Действие в админке** | **Эффект в приложении** |
+| **Admin action** | **Effect in the app** |
 | --- | --- |
-| Создан/изменён проект и конфиг | Проект и форма сбора появляются после синхронизации |
-| Назначены проекты пользователю | Проект виден во вкладке **Project** |
-| Загружены файлы в «Файлы» | Картинки в инструкциях подтягиваются по API |
-| Пакет принят на сервер | Виден в админке; на телефоне — в истории/статусе загрузки |
+| Project and config created/changed | Project and collection form appear after sync |
+| Projects assigned to user | Project visible on the **Project** tab |
+| Files uploaded to "Files" | Images in instructions load via API |
+| Package accepted on server | Visible in admin; on phone — in upload history/status |
 
-Подробнее про работу оператора — [руководство по мобильному приложению](../mobile-app/README.md).
+More about operator workflow — [mobile app guide](../mobile-app/README.md).
 
 ---

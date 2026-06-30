@@ -1,14 +1,16 @@
-# JSON → экран сбора (как в коде)
+> **Language / Язык:** **English** · [Русский](json-driven-collection-ui.ru.md)
 
-Статус: **актуально** (июнь 2026).
+# JSON → collection screen (as in code)
 
-Пайплайн от JSON до Flutter-виджетов. **Как писать JSON** — [09-project-json-builder-guide.md](09-project-json-builder-guide.md). Модель данных — [../02-data-models-schema.md](../02-data-models-schema.md). Экраны — [../03-user-journey-screens.md](../03-user-journey-screens.md).
+Status: **current** (June 2026).
 
-Схема: [json-ui-flow.drawio](json-ui-flow.drawio).
+Pipeline from JSON to Flutter widgets. **How to write JSON** — [09-project-json-builder-guide.md](09-project-json-builder-guide.md). Data model — [../02-data-models-schema.md](../02-data-models-schema.md). Screens — [../03-user-journey-screens.md](../03-user-journey-screens.md).
+
+Diagram: [json-ui-flow.drawio](json-ui-flow.drawio).
 
 ---
 
-## 1. Откуда проект
+## 1. Where the project comes from
 
 ```mermaid
 flowchart LR
@@ -31,131 +33,131 @@ flowchart LR
   PP --> CFS[CollectionFlowScreen]
 ```
 
-| Режим | Условие | Источник |
-|-------|---------|----------|
-| Офлайн | `API_BASE_URL` не задан | `project_catalog.dart` → `rootBundle` |
-| Онлайн | `ApiEnvironment.isConfigured` | `server_project_catalog.dart` → Dio + ETag cache |
+| Mode | Condition | Source |
+|------|-----------|--------|
+| Offline | `API_BASE_URL` not set | `project_catalog.dart` → `rootBundle` |
+| Online | `ApiEnvironment.isConfigured` | `server_project_catalog.dart` → Dio + ETag cache |
 
-`projectsProvider` (`lib/features/projects/providers/project_providers.dart`) ждёт Firebase session перед `/v1/projects`.
+`projectsProvider` (`lib/features/projects/providers/project_providers.dart`) waits for Firebase session before `/v1/projects`.
 
-`id` проекта должен быть **уникален**; иначе `firstWhere` по `projectId` возьмёт первый попавшийся.
-
----
-
-## 2. Корень файла проекта
-
-Модель: `lib/models/project_config.dart` → `Project`.
-
-| JSON | Назначение |
-|------|------------|
-| `id`, `name`, `version` | Роутинг, заголовки, manifest |
-| `config.fields` | Справочник полей |
-| `config.flow.steps` | Сценарий: только `scroll_form` и `review` |
-| `config.ui` | Опционально: `ProjectUi` |
+Project `id` must be **unique**; otherwise `firstWhere` by `projectId` picks the first match.
 
 ---
 
-## 3. Резолвер
+## 2. Project file root
+
+Model: `lib/models/project_config.dart` → `Project`.
+
+| JSON | Purpose |
+|------|---------|
+| `id`, `name`, `version` | Routing, titles, manifest |
+| `config.fields` | Field catalog |
+| `config.flow.steps` | Scenario: only `scroll_form` and `review` |
+| `config.ui` | Optional: `ProjectUi` |
+
+---
+
+## 3. Resolver
 
 `collection_flow_resolver.dart` — **`resolveCollectionFlow(Project)`**:
 
-- Поддерживаются **только** `screen: scroll_form` и `screen: review`.
+- Only `screen: scroll_form` and `screen: review` supported.
 - Legacy `form` / `instruction` / `camera_pose` → **`FormatException`**.
-- Каждое поле из `fields` должно быть в **ровно одном** `scroll_form.field_ids`.
+- Every field from `fields` must be in **exactly one** `scroll_form.field_ids`.
 
 ### 3.1. `scroll_form`
 
-| Свойство | Поведение |
-|----------|-----------|
-| `field_ids` | Обязателен, непустой; порядок = порядок на экране |
-| `form_title` | Подпись блока на review |
-| `cow_id_hints`, `cow_id_field_id` | Подсказки идентификатора субъекта |
+| Property | Behavior |
+|----------|----------|
+| `field_ids` | Required, non-empty; order = on-screen order |
+| `form_title` | Block label on review |
+| `cow_id_hints`, `cow_id_field_id` | Subject identifier hints |
 
-Поля на шаге могут быть любых поддерживаемых типов (`text_input`, `datetime`, `instruction`, `camera_photo`) в одном скролле.
+Fields on a step may be any supported type (`text_input`, `datetime`, `instruction`, `camera_photo`) in one scroll.
 
 ### 3.2. `review`
 
-Только `id`; показывает сводку перед submit.
+Only `id`; shows summary before submit.
 
-### 3.3. Один vs несколько шагов
+### 3.3. Single vs multiple steps
 
-- Один шаг и он `scroll_form` → **`isSingleScrollOnly`** → сразу `ScrollFormCollectionScreen`.
-- Несколько шагов → `CollectionFlowScreen` + `_FlowStepShell` по порядку `flow.steps`.
+- One step and it is `scroll_form` → **`isSingleScrollOnly`** → directly `ScrollFormCollectionScreen`.
+- Multiple steps → `CollectionFlowScreen` + `_FlowStepShell` in `flow.steps` order.
 
-### 3.4. Камера
+### 3.4. Camera
 
-Глобальный номер ракурса (`poseIndex1Based`) считается по порядку полей `camera_photo` во всех `scroll_form` шагах.
+Global pose number (`poseIndex1Based`) counted by order of `camera_photo` fields across all `scroll_form` steps.
 
 ---
 
-## 4. UI-ветки
+## 4. UI branches
 
 ```mermaid
 flowchart TD
   A[CollectionFlowScreen] --> B{isSingleScrollOnly?}
-  B -->|да| S[ScrollFormCollectionScreen]
-  B -->|нет| W[_FlowStepShell]
+  B -->|yes| S[ScrollFormCollectionScreen]
+  B -->|no| W[_FlowStepShell]
   W --> SF[scroll_form step]
   W --> RV[review step]
 ```
 
-Файлы:
+Files:
 
-- `scroll_form_screen.dart` — один скролл с полями шага.
-- `collection_flow_screen.dart` — оболочка мастера.
-- `scroll_form_flow_step.dart` — виджет шага в мастере.
-
----
-
-## 5. Данные по шагам
-
-- Значения в `wizardState` по **`field_id`**.
-- `camera_photo`: map path → metadata; плюс **`camera_capture_context`** до materialize.
-- Submit → `materializeLocalPackage` → относительные `blobs/...`, `camera_session` / `frame_camera`.
+- `scroll_form_screen.dart` — one scroll with step fields.
+- `collection_flow_screen.dart` — wizard shell.
+- `scroll_form_flow_step.dart` — step widget in wizard.
 
 ---
 
-## 6. `config.ui` и `ProjectUi`
+## 5. Data per step
 
-`project_ui.dart`: вложенные ключи, шаблоны `tpl`, `strings`, `listAt`.
-
-Блок **`ui.shooting_guide`** в текущей версии клиента **не используется** (см. гайд `09`).
-
----
-
-## 7. Медиа в инструкциях
-
-Пути в Markdown (`instruction`) → файлы в **`collector/media/`** Git-репо.
-
-Клиент: `GET /v1/projects/{id}/assets/{path}`; кэш `project_asset_paths.dart`.
-
-Загрузка медиа — страница «Файлы» проекта в админке (`/ui/projects/{id}/media/`).
+- Values in `wizardState` by **`field_id`**.
+- `camera_photo`: map path → metadata; plus **`camera_capture_context`** until materialize.
+- Submit → `materializeLocalPackage` → relative `blobs/...`, `camera_session` / `frame_camera`.
 
 ---
 
-## 8. Поле есть в JSON, в UI нет
+## 6. `config.ui` and `ProjectUi`
 
-1. Дублирующийся **`id`** у другого файла.
-2. Проект не в каталоге / не синкнулся с сервера.
-3. Поле не в **`field_ids`** ни одного `scroll_form`.
-4. Поле не в **`config.fields`**.
-5. После правок assets — **full restart**; после правок Git-конфига — pull / перезапуск приложения.
+`project_ui.dart`: nested keys, `tpl` templates, `strings`, `listAt`.
+
+Block **`ui.shooting_guide`** is **not used** in current client version (see guide `09`).
 
 ---
 
-## 9. Файлы кода
+## 7. Media in instructions
 
-| Тема | Файл |
-|------|------|
+Paths in Markdown (`instruction`) → files in **`collector/media/`** Git repo.
+
+Client: `GET /v1/projects/{id}/assets/{path}`; cache `project_asset_paths.dart`.
+
+Media upload — project "Files" page in admin (`/ui/projects/{id}/media/`).
+
+---
+
+## 8. Field in JSON but not in UI
+
+1. Duplicate **`id`** in another file.
+2. Project not in catalog / not synced from server.
+3. Field not in **`field_ids`** of any `scroll_form`.
+4. Field not in **`config.fields`**.
+5. After asset edits — **full restart**; after Git config edits — pull / app restart.
+
+---
+
+## 9. Code files
+
+| Topic | File |
+|-------|------|
 | Offline catalog | `lib/features/projects/project_catalog.dart` |
 | Server catalog | `lib/features/projects/server_project_catalog.dart` |
 | Providers | `lib/features/projects/providers/project_providers.dart` |
-| Модели | `lib/models/project_config.dart` |
-| Резолв | `lib/features/collection/logic/collection_flow_resolver.dart` |
-| Вход | `lib/features/collection/presentation/flow/collection_flow_screen.dart` |
-| Скролл | `lib/features/collection/presentation/flow/scroll_form_screen.dart` |
-| Состояние | `.../providers/wizard_state_provider.dart` |
-| Тексты UI | `.../flow/project_ui.dart` |
-| Валидация на сервере | `django_server/api/project_config_validate.py` |
+| Models | `lib/models/project_config.dart` |
+| Resolve | `lib/features/collection/logic/collection_flow_resolver.dart` |
+| Entry | `lib/features/collection/presentation/flow/collection_flow_screen.dart` |
+| Scroll | `lib/features/collection/presentation/flow/scroll_form_screen.dart` |
+| State | `.../providers/wizard_state_provider.dart` |
+| UI strings | `.../flow/project_ui.dart` |
+| Server validation | `django_server/api/project_config_validate.py` |
 
-Меняете резолвер — обновите этот файл и [09-project-json-builder-guide.md](09-project-json-builder-guide.md).
+When changing the resolver — update this file and [09-project-json-builder-guide.md](09-project-json-builder-guide.md).

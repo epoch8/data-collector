@@ -1,32 +1,34 @@
+> **Language / Язык:** **English** · [Русский](05-stage-1-mvp.ru.md)
+
 # Stage 1: MVP Scope
 
-Статус: **завершён** (исторический документ). Текущее состояние продукта — см. [01-overview.md](01-overview.md).
+Status: **completed** (historical document). Current product state — see [01-overview.md](01-overview.md).
 
-## Что было в scope Stage 1 (выполнено)
+## What was in Stage 1 scope (done)
 
-1. ~~Mock Authentication~~ → **Firebase Email/Password** + опциональный офлайн-режим без API.
-2. ~~Mock Projects & Configs~~ → bundled `assets/config/` + **серверный каталог** `GET /v1/projects`.
-3. **Dynamic UI from config:** `scroll_form` + `review`; типы `text_input`, `datetime`, `instruction`, `camera_photo`.
-4. **Local saving:** materialization в `packages/{id}/`, Drift index, `serverDeliveryState`.
-5. **History view:** список локальных пакетов со статусом доставки.
+1. ~~Mock Authentication~~ → **Firebase Email/Password** + optional offline mode without API.
+2. ~~Mock Projects & Configs~~ → bundled `assets/config/` + **server catalog** `GET /v1/projects`.
+3. **Dynamic UI from config:** `scroll_form` + `review`; types `text_input`, `datetime`, `instruction`, `camera_photo`.
+4. **Local saving:** materialization in `packages/{id}/`, Drift index, `serverDeliveryState`.
+5. **History view:** list of local packages with delivery status.
 
-## Что было out of scope Stage 1 и текущий статус
+## What was out of Stage 1 scope and current status
 
-| Было out of scope | Сейчас |
+| Was out of scope | Now |
 |-------------------|--------|
-| Real backend API | **Реализовано:** Django `/v1/*`, Git-backed config |
-| Enriched data viewer (mobile) | **Не реализовано** (только админка `/ui/`) |
-| Video capture | **Не реализовано** |
-| Background workers | **Не реализовано** (ручная загрузка с вкладки «Сервер») |
+| Real backend API | **Implemented:** Django `/v1/*`, Git-backed config |
+| Enriched data viewer (mobile) | **Not implemented** (admin `/ui/` only) |
+| Video capture | **Not implemented** |
+| Background workers | **Not implemented** (manual upload from **Server** tab) |
 
-## Текущий scope (после MVP)
+## Current scope (post-MVP)
 
-**В продакшене:**
+**In production:**
 
-- Flutter Android (+ Web с ограничениями)
-- Django API + веб-админка (staff + client-admin)
+- Flutter Android (+ Web with limitations)
+- Django API + web admin (staff + client-admin)
 - Git-backed project config, per-project storage URIs
 - Package upload protocol (blobs → manifest → commit)
 - Admin visualization (`collector/viz.json`, pipeline plugins)
 
-**Backlog:** см. [todo](todo).
+**Backlog:** see [todo](todo).

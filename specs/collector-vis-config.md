@@ -1,16 +1,18 @@
-# collector/viz.json — визуализация пакета
+> **Language / Язык:** **English** · [Русский](collector-vis-config.ru.md)
 
-Статус: **актуально** (июнь 2026). Отдельный конфиг в Git-репозитории проекта (не в `collector/config.json`).
+# collector/viz.json — package visualization
 
-## Путь
+Status: **current** (June 2026). Separate config in the project Git repository (not in `collector/config.json`).
+
+## Path
 
 ```
 collector/viz.json
 ```
 
-Django читает файл из кэша Git после `pull` (как `collector/config.json`).
+Django reads the file from Git cache after `pull` (like `collector/config.json`).
 
-## Схема (v1)
+## Schema (v1)
 
 ```json
 {
@@ -42,7 +44,7 @@ Django читает файл из кэша Git после `pull` (как `collec
     },
     {
       "id": "depth",
-      "label": "Глубина",
+      "label": "Depth",
       "plugin": "depth_map",
       "table": "depth_map",
       "default_visible": false
@@ -51,75 +53,75 @@ Django читает файл из кэша Git после `pull` (как `collec
 }
 ```
 
-| Поле | Описание |
-|------|----------|
-| `version` | Пока только `1` |
-| `join_key` | Фиксировано: `manifest_blob_key` — связь строки таблицы с blob пакета |
-| `layers[].id` | Уникальный id слоя в UI |
-| `layers[].plugin` | Id встроенного плагина (см. ниже) |
-| `layers[].table` | Таблица project DB (SQLAlchemy / SQLite или Postgres) |
-| `layers[].palette` | Для `keypoint_korovas`: `gt` \| `inference` (цвета оверлея) |
-| `layers[].default_visible` | Включён ли слой при открытии вкладки |
+| Field | Description |
+|-------|-------------|
+| `version` | Only `1` for now |
+| `join_key` | Fixed: `manifest_blob_key` — links table row to package blob |
+| `layers[].id` | Unique layer id in UI |
+| `layers[].plugin` | Built-in plugin id (see below) |
+| `layers[].table` | Project DB table (SQLAlchemy / SQLite or Postgres) |
+| `layers[].palette` | For `keypoint_korovas`: `gt` \| `inference` (overlay colors) |
+| `layers[].default_visible` | Whether layer is enabled when opening the tab |
 
-## Плагины (реализованы в django_server)
+## Plugins (implemented in django_server)
 
-| plugin | table | Поведение |
-|--------|-------|-----------|
+| plugin | table | Behavior |
+|--------|-------|----------|
 | `keypoint_korovas` | `cow_keypoint_annotation` | GT: `annotation.points` |
 | `keypoint_korovas` | `cow_inference_result` | Inference: keypoints, bbox, segments, metrics |
-| `cvat_link` | `cvat_link` | URL задачи CVAT на кадр (`import_cvat_link`) |
-| `depth_map` | `depth_map` | Путь к `.npy` в пакете (`depth_path` → `depth_url`; `import_depth_map`) |
-| `yolo_detection` | `yolo_detection` | BBox из `detections.boxes` (импорт YOLO `.txt`) |
+| `cvat_link` | `cvat_link` | CVAT task URL per frame (`import_cvat_link`) |
+| `depth_map` | `depth_map` | Path to `.npy` in package (`depth_path` → `depth_url`; `import_depth_map`) |
+| `yolo_detection` | `yolo_detection` | BBox from `detections.boxes` (YOLO `.txt` import) |
 
-Код плагина: `django_server/api/viz_plugins/<plugin_id>/plugin.py` (реестр в `viz_plugins/__init__.py`).
+Plugin code: `django_server/api/viz_plugins/<plugin_id>/plugin.py` (registry in `viz_plugins/__init__.py`).
 
-Плагин сам знает формат строки; конфиг указывает таблицу и **опции классов** (см. ниже).
+The plugin knows the row format; config specifies the table and **class options** (see below).
 
-### Комментарии в `collector/viz.json`
+### Comments in `collector/viz.json`
 
-Поддерживаются построчные комментарии `//` (вне строк в кавычках). Шаблон с пояснениями: `django_server/examples/collector/viz_yolo.json`.
+Line comments `//` are supported (outside quoted strings). Template with explanations: `django_server/examples/collector/viz_yolo.json`.
 
-### Слой `yolo_detection` — единая схема полей
+### `yolo_detection` layer — unified field schema
 
-Общие поля слоя (как у всех плагинов): `id`, `label`, `plugin`, `table`, `palette`, `default_visible`.
+Common layer fields (as for all plugins): `id`, `label`, `plugin`, `table`, `palette`, `default_visible`.
 
-Дополнительно **только** для `yolo_detection`:
+Additionally **only** for `yolo_detection`:
 
-| Поле | Описание |
-|------|----------|
-| `include_classes` | `[0, 1]` — какие class id из YOLO `.txt` рисовать; поле убрать = все |
-| `classes` | `{"0": "имя"}` или `{"0": {"name": "…", "color": "#hex"}}` — подписи и цвета по id |
+| Field | Description |
+|-------|-------------|
+| `include_classes` | `[0, 1]` — which class ids from YOLO `.txt` to draw; omit field = all |
+| `classes` | `{"0": "name"}` or `{"0": {"name": "…", "color": "#hex"}}` — labels and colors by id |
 
-Устарело (ошибка валидации): `class_names`, `class_colors` — всё в `classes`.
+Deprecated (validation error): `class_names`, `class_colors` — everything in `classes`.
 
-Пример для другого проекта (та же таблица `yolo_detection`, другие имена):
+Example for another project (same `yolo_detection` table, different names):
 
 ```json
 {
   "id": "det",
-  "label": "Детекции",
+  "label": "Detections",
   "plugin": "yolo_detection",
   "table": "yolo_detection",
   "palette": "yolo",
   "default_visible": true,
   "include_classes": [0, 1],
   "classes": {
-    "0": { "name": "Вымень", "color": "#06b6d4" },
-    "1": { "name": "Соска", "color": "#a855f7" }
+    "0": { "name": "Udder", "color": "#06b6d4" },
+    "1": { "name": "Teat", "color": "#a855f7" }
   }
 }
 ```
 
-Пример для YOLO-проекта: `django_server/examples/collector/viz_yolo.json`. Импорт разметки:
+Example for YOLO project: `django_server/examples/collector/viz_yolo.json`. Label import:
 
 ```bash
 python manage.py import_yolo_labels <project_id> <package_id> path/to/labels.txt --blob blobs/img_0001.jpg
 ```
 
-## Когда показывается вкладка «Визуализация»
+## When the Visualization tab is shown
 
-1. В репо есть валидный `collector/viz.json`
-2. В project DB есть хотя бы одна строка для `package_id` в таблице любого слоя
+1. Valid `collector/viz.json` exists in the repo
+2. Project DB has at least one row for `package_id` in any layer table
 
 ## API
 
@@ -137,4 +139,4 @@ python manage.py import_yolo_labels <project_id> <package_id> path/to/labels.txt
 }
 ```
 
-Пример файла: `django_server/examples/collector/viz.json`.
+Example file: `django_server/examples/collector/viz.json`.

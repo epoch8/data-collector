@@ -1,46 +1,48 @@
-# Развёртывание Flutter Web (коллектор)
+> **Language / Язык:** **English** · [Русский](deploy-flutter-web.ru.md)
+
+# Deploying Flutter Web (collector)
 
 
-## Что получается на выходе
+## What you get
 
-После `flutter build web` каталог **`build/web/`** — обычный **статический сайт** (HTML, JS, WASM, ассеты). Его раздаёт nginx, CDN, объектное хранилище с публичным URL или любой другой static host. Отдельного «Flutter-сервера» для продакшена не нужно.
+After `flutter build web`, the **`build/web/`** directory is a plain **static site** (HTML, JS, WASM, assets). Serve it with nginx, a CDN, object storage with a public URL, or any other static host. No separate "Flutter server" is needed for production.
 
-## Сборка
+## Build
 
-Из **корня репозитория** (рядом с `pubspec.yaml`):
+From the **repository root** (next to `pubspec.yaml`):
 
 ```bash
 flutter pub get
-flutter build web --release --dart-define=API_BASE_URL=https://ваш-api.example.com
+flutter build web --release --dart-define=API_BASE_URL=https://your-api.example.com
 ```
 
-- **`API_BASE_URL`** — базовый URL Django админки
+- **`API_BASE_URL`** — base URL of the Django admin/API
 
 
-Подробнее: `lib/core/api/api_environment.dart`, общий контекст — `README.md`.
+More details: `lib/core/api/api_environment.dart`, general context — `README.md`.
 
-## Раздача файлов
+## Serving files
 
-1. Скопируйте содержимое **`build/web/`** на хост (или задеплойте артефакт пайплайна).
-2. Настройте **SPA-поведение**: запросы к несуществующим путям (кроме реальных файлов) отдавайте **`index.html`**, иначе прямой заход по URL или обновление страницы дадут 404.
-3. Предпочтительно **HTTPS** (Firebase и современные браузеры).
+1. Copy the contents of **`build/web/`** to your host (or deploy the pipeline artifact).
+2. Configure **SPA behavior**: for requests to non-existent paths (except real files), serve **`index.html`**; otherwise direct URL access or page refresh will return 404.
+3. Prefer **HTTPS** (Firebase and modern browsers).
 
-## Django и CORS
+## Django and CORS
 
-Браузер шлёт запросы с **origin** вашего web-приложения. В **`django_server/collector_site/settings.py`** CORS настроен через `django-cors-headers`.
+The browser sends requests from your web app's **origin**. In **`django_server/collector_site/settings.py`**, CORS is configured via `django-cors-headers`.
 
-- В **продакшене** (`DEBUG=False`) в regex по умолчанию попадают только `localhost` / `127.0.0.1` с любым портом. **Origin продакшен-приложения** нужно явно разрешить переменной окружения:
+- In **production** (`DEBUG=False`), the default regex only allows `localhost` / `127.0.0.1` on any port. You must explicitly allow the **production app origin** with the environment variable:
 
-  **`DJANGO_CORS_ALLOWED_ORIGINS`** — список через запятую, например:
+  **`DJANGO_CORS_ALLOWED_ORIGINS`** — comma-separated list, for example:
 
   `https://collector.example.com,https://www.collector.example.com`
 
-- После смены origin пересобирать Flutter **не обязательно**, если не меняли `API_BASE_URL`.
+- After changing the origin, rebuilding Flutter is **not required** if you did not change `API_BASE_URL`.
 
 ## Firebase
 
-Конфиг клиента: `lib/firebase_options.dart` (и при необходимости шаги из `README.md` / `flutterfire configure`). Для web-логина в консоли Firebase должны быть разрешены **домен приложения** (Authorized domains), с которого открывают собранный сайт.
+Client config: `lib/firebase_options.dart` (and if needed, steps from `README.md` / `flutterfire configure`). For web login, the Firebase console must allow the **app domain** (Authorized domains) from which the built site is opened.
 
-## Связанные заметки
+## Related notes
 
-Отличия web от APK (файлы, камера, сеть): **`docs/web-vs-android.md`**.
+Web vs APK differences (files, camera, network): **`docs/web-vs-android.md`**.

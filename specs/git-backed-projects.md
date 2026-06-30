@@ -1,47 +1,49 @@
-# Git-backed projects (конфиг проекта в репозитории)
+> **Language / Язык:** **English** · [Русский](git-backed-projects.ru.md)
 
-Статус: **реализовано** (июнь 2026). Код: `django_server/api/project_git.py`, `project_config_service.py`, миграция `0006_git_backed_projects`.
+# Git-backed projects (project config in repository)
 
-## Решения (v1)
+Status: **implemented** (June 2026). Code: `django_server/api/project_git.py`, `project_config_service.py`, migration `0006_git_backed_projects`.
 
-| # | Вопрос | Решение |
-|---|--------|---------|
-| 1 | Репозиторий ↔ проект | **1 репозиторий = 1 проект** |
-| 2 | Подключение | SSH deploy key; приватный ключ Fernet-шифрование в `GitCredential` |
-| 3 | Ключи | **Отдельный deploy key на каждый проект** |
-| 4 | Путь к конфигу | **`collector/config.json`** (константа `CONFIG_REL_PATH`) |
-| 5 | Медиа примеров | **`collector/media/`** в том же репо |
-| 6 | Сбой Git | **Жёсткая ошибка** — без отдачи устаревшего конфига из Django |
-| 7 | Кто меняет конфиг | **Django UI** → `git commit` + `git push` |
+## Decisions (v1)
 
-## Django DB (каталог)
+| # | Question | Decision |
+|---|----------|----------|
+| 1 | Repository ↔ project | **1 repository = 1 project** |
+| 2 | Connection | SSH deploy key; private key Fernet-encrypted in `GitCredential` |
+| 3 | Keys | **Separate deploy key per project** |
+| 4 | Config path | **`collector/config.json`** (constant `CONFIG_REL_PATH`) |
+| 5 | Example media | **`collector/media/`** in the same repo |
+| 6 | Git failure | **Hard error** — no serving stale config from Django |
+| 7 | Who changes config | **Django UI** → `git commit` + `git push` |
 
-Модель **Project** — указатель на Git, **без** `raw_json`.
+## Django DB (catalog)
 
-| Поле | Назначение |
-|------|------------|
-| `project_id` (PK) | = `id` в `collector/config.json` |
-| `name` | Для списков |
+**Project** model — pointer to Git, **without** `raw_json`.
+
+| Field | Purpose |
+|-------|---------|
+| `project_id` (PK) | = `id` in `collector/config.json` |
+| `name` | For lists |
 | `git_remote` | SSH URL (`git@github.com:org/repo.git`) |
-| `git_default_ref` | Ветка, default `main` |
+| `git_default_ref` | Branch, default `main` |
 | `git_credential` | FK → `GitCredential` |
-| `last_synced_sha`, `last_synced_at`, `sync_error` | Диагностика sync |
-| `database_uri`, `storage_uri`, `*_options_encrypted` | Per-project data storage (см. [project-storage-uris.md](project-storage-uris.md)) |
+| `last_synced_sha`, `last_synced_at`, `sync_error` | Sync diagnostics |
+| `database_uri`, `storage_uri`, `*_options_encrypted` | Per-project data storage (see [project-storage-uris.md](project-storage-uris.md)) |
 | `media_bucket` | **Deprecated** → `storage_uri` |
 
-**Не в Git:** пакеты, blobs, пользователи Firebase, права `CollectorUser`.
+**Not in Git:** packages, blobs, Firebase users, `CollectorUser` permissions.
 
-## Layout репозитория
+## Repository layout
 
 ```
 my-project/
   collector/
     config.json       # Project JSON (fields, flow, ui)
-    media/            # статика для инструкций
-    viz.json          # визуализация в админке (опционально)
+    media/            # static assets for instructions
+    viz.json          # admin visualization (optional)
 ```
 
-## Кэш на сервере
+## Server cache
 
 ```
 {PROJECT_GIT_CACHE_ROOT}/{project_id}/
@@ -49,62 +51,62 @@ my-project/
 
 Default: `django_server/project_git_cache/`.
 
-- Перед чтением/записью: `git fetch` + hard reset на `origin/{ref}`.
-- Rate limit pull: `PROJECT_GIT_PULL_MIN_INTERVAL_SEC` (default 300s), `force=True` в админке.
-- При ошибке — 502/503, **без** fallback на старый JSON.
+- Before read/write: `git fetch` + hard reset to `origin/{ref}`.
+- Pull rate limit: `PROJECT_GIT_PULL_MIN_INTERVAL_SEC` (default 300s), `force=True` in admin.
+- On error — 502/503, **no** fallback to old JSON.
 
-## Потоки
+## Flows
 
-### Создание проекта (staff)
+### Project creation (staff)
 
-`/ui/projects/new/`: `project_id`, name, GitHub URL → SSH, deploy key (генерация или вставка OpenSSH; `.ppk` отклоняется).
+`/ui/projects/new/`: `project_id`, name, GitHub URL → SSH, deploy key (generate or paste OpenSSH; `.ppk` rejected).
 
 1. `GitCredential` + `Project`.
-2. `git ls-remote` / shallow clone — проверка доступа.
-3. Seed `collector/config.json` если отсутствует (при write key).
-4. Опционально: блок «Хранилище данных» (Postgres / S3 / GCS).
+2. `git ls-remote` / shallow clone — access check.
+3. Seed `collector/config.json` if missing (with write key).
+4. Optional: "Data storage" block (Postgres / S3 / GCS).
 
-### Чтение (мобилка, admin)
+### Read (mobile, admin)
 
-1. Pull в кэш.
+1. Pull into cache.
 2. Read + validate `collector/config.json`.
 3. API: raw JSON; **ETag** = `last_synced_sha`.
 
-Медиа: `GET /v1/projects/{id}/assets/{path}` из `collector/media/`.
+Media: `GET /v1/projects/{id}/assets/{path}` from `collector/media/`.
 
-### Изменение конфига
+### Config change
 
-`/ui/projects/{id}/config/` (JSON editor) или `/config/builder/` (визуальный):
+`/ui/projects/{id}/config/` (JSON editor) or `/config/builder/` (visual):
 
 1. Pull.
 2. Write file + validate (`project_config_validate.py`).
 3. `git add` → `commit` → `push origin HEAD:{ref}`.
 4. Update `last_synced_sha`.
 
-Конфликт non-fast-forward → ошибка пользователю (merge UI — backlog).
+Non-fast-forward conflict → error to user (merge UI — backlog).
 
-### Медиа в Git
+### Media in Git
 
-`/ui/projects/{id}/media/` — upload/delete → commit в `collector/media/`.
+`/ui/projects/{id}/media/` — upload/delete → commit in `collector/media/`.
 
 ## API
 
-| Endpoint | Поведение |
-|----------|-----------|
-| `GET /v1/projects` | Каталог; `config_version` = SHA prefix |
+| Endpoint | Behavior |
+|----------|----------|
+| `GET /v1/projects` | Catalog; `config_version` = SHA prefix |
 | `GET /v1/projects/{id}/config` | Raw JSON; ETag = SHA; `304` |
-| `GET /v1/projects/{id}/assets/{path}` | Binary из git cache |
+| `GET /v1/projects/{id}/assets/{path}` | Binary from git cache |
 
 Admin JSON API: `/ui/api/v1/projects/{id}/config`.
 
-## Миграция с legacy
+## Migration from legacy
 
-- `0006_git_backed_projects` — удаление старых `Project` без Git.
-- Bundled `assets/config/` — только офлайн-fallback клиента, не source of truth сервера.
+- `0006_git_backed_projects` — removes old `Project` without Git.
+- Bundled `assets/config/` — client offline fallback only, not server source of truth.
 
-## Backlog (вне v1)
+## Backlog (outside v1)
 
-- Webhook GitHub для auto-pull.
-- Pin `config_git_sha` на `PackageSession`.
-- Monorepo (несколько проектов в одном репо).
-- HTTPS + PAT вместо SSH.
+- GitHub webhook for auto-pull.
+- Pin `config_git_sha` on `PackageSession`.
+- Monorepo (multiple projects in one repo).
+- HTTPS + PAT instead of SSH.

@@ -1,17 +1,19 @@
+> **Language / Язык:** **English** · [Русский](README.ru.md)
+
 # django_server
 
-Монолит: мобильный API и веб-админка на **Django-шаблонах** (Bootstrap + `admin.css`).
+Monolith: mobile API and web admin on **Django templates** (Bootstrap + `admin.css`).
 
-## Роли
+## Roles
 
-| Роль | Вход | Где назначают проекты | UI |
-|------|------|------------------------|-----|
-| **Админ** | `/ui/login/` — галочка **Админ-доступ**, логин без `@`, Django **staff** | — | Проекты, Пользователи, Пакеты |
-| **Клиент** | `/ui/login/` — без галочки, **email** + Firebase | Пользователи → галочки **Client-admin** | Пакеты |
+| Role | Sign-in | Where projects are assigned | UI |
+|------|---------|-------------------------------|-----|
+| **Admin** | `/ui/login/` — **Admin access** checkbox, login without `@`, Django **staff** | — | Projects, Users, Packages |
+| **Client** | `/ui/login/` — no checkbox, **email** + Firebase | Users → **Client-admin** checkboxes | Packages |
 
-Отдельных «веб-пользователей» Django нет — только Firebase + колонка Client-admin в таблице пользователей.
+There are no separate Django "web users" — only Firebase + Client-admin column in the users table.
 
-## Запуск
+## Launch
 
 ```bash
 cd django_server
@@ -20,44 +22,44 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
-- Вход: http://127.0.0.1:8000/ui/login/
-- Проекты (staff): http://127.0.0.1:8000/ui/projects/
+- Sign-in: http://127.0.0.1:8000/ui/login/
+- Projects (staff): http://127.0.0.1:8000/ui/projects/
 
-### Проекты и Git
+### Projects and Git
 
-Конфиг проекта **не хранится в БД** — только в репозитории GitHub: `collector/config.json` (см. `specs/git-backed-projects.md`).
+Project config is **not stored in the DB** — only in a GitHub repository: `collector/config.json` (see `specs/git-backed-projects.md`).
 
-- При создании проекта: URL репо + SSH deploy key (генерация на сервере или вставка приватного ключа).
-- Публичный ключ → GitHub → Deploy keys (**Allow write access**).
-- Кнопка «Проверить Git» на карточке проекта — `git pull` и при необходимости seed `config.json`.
-- Сохранение в JSON-редакторе = `git commit` + `git push`.
-- Кэш клонов: `project_git_cache/` (или `PROJECT_GIT_CACHE_ROOT`).
-- Нужны **git** и **ssh-keygen** в PATH; `pip install -r requirements.txt` (пакет `cryptography`).
+- When creating a project: repo URL + SSH deploy key (generated on server or paste private key).
+- Public key → GitHub → Deploy keys (**Allow write access**).
+- "Test Git" button on project card — `git pull` and seed `config.json` if needed.
+- Saving in JSON editor = `git commit` + `git push`.
+- Clone cache: `project_git_cache/` (or `PROJECT_GIT_CACHE_ROOT`).
+- Requires **git** and **ssh-keygen** in PATH; `pip install -r requirements.txt` (`cryptography` package).
 
-Миграция `0006_git_backed_projects` удаляет старые записи `Project` из БД (чистый старт).
-- Пакеты: http://127.0.0.1:8000/ui/packages/
+Migration `0006_git_backed_projects` removes old `Project` records from the DB (clean start).
+- Packages: http://127.0.0.1:8000/ui/packages/
 
-Пакеты полностью на **Django-шаблонах + Bootstrap**, сборка фронта не требуется:
+Packages are fully on **Django templates + Bootstrap**, no frontend build required:
 
-- **Список** — `ui/packages/list.html`: выбор проекта, чипы статусов, поиск по полю (text/datetime) или ID/email, динамическая колонка, копирование `package_id`. Фильтрация серверная (GET-параметры).
-- **Workspace** — `ui/packages/workspace.html`: сайдбар-переключатель пакетов, вкладки **Данные / Медиа / Визуализация / История изменений**, отслеживание изменений и сохранение через POST (`package_manifest_save` + changelog в project SQLite).
-- **Визуализация** — конфиг в Git: `collector/viz.json` (слои → `table` в project SQLite + `plugin`). Плагины: `keypoint_korovas`, `depth_map`, `cvat_link`, `yolo_detection`. Импорт: `import_yolo_labels`, `import_depth_map`, `import_cvat_link`. UI: `packages_viz.js` → `/viz-data/`. Пример конфига: `examples/collector/viz.json`; установка в git-кэш: `install_vis_config_example`. Спека: `specs/collector-vis-config.md`.
+- **List** — `ui/packages/list.html`: project selector, status chips, search by field (text/datetime) or ID/email, dynamic column, `package_id` copy. Server-side filtering (GET params).
+- **Workspace** — `ui/packages/workspace.html`: sidebar package switcher, tabs **Data / Media / Visualization / Change history**, change tracking and save via POST (`package_manifest_save` + changelog in project SQLite).
+- **Visualization** — config in Git: `collector/viz.json` (layers → `table` in project SQLite + `plugin`). Plugins: `keypoint_korovas`, `depth_map`, `cvat_link`, `yolo_detection`. Import: `import_yolo_labels`, `import_depth_map`, `import_cvat_link`. UI: `packages_viz.js` → `/viz-data/`. Example config: `examples/collector/viz.json`; install to git cache: `install_vis_config_example`. Spec: `specs/collector-vis-config.md`.
 
-### Хранение пакетов (per project)
+### Package storage (per project)
 
-Метаданные и pipeline — **per-project DB** (`database_uri`, default SQLite в `project_db/{project_id}/`). Blobs — **fsspec** (`storage_uri`, default `project_media/{project_id}/`). См. `specs/project-storage-uris.md`.
+Metadata and pipeline — **per-project DB** (`database_uri`, default SQLite in `project_db/{project_id}/`). Blobs — **fsspec** (`storage_uri`, default `project_media/{project_id}/`). See `specs/project-storage-uris.md`.
 
-- Таблицы: `package_session`, `uploaded_blob`, `package_field_change` + pipeline (yolo, depth, …).
-- Путь blob: `packages/{package_id}/blobs/...` относительно `storage_uri`.
+- Tables: `package_session`, `uploaded_blob`, `package_field_change` + pipeline (yolo, depth, …).
+- Blob path: `packages/{package_id}/blobs/...` relative to `storage_uri`.
 - Legacy `media_bucket` deprecated → `storage_uri` (`gs://…`).
-- Миграция с Django ORM: `migrate_packages_to_project_storage`, `recover_legacy_packages`.
+- Migration from Django ORM: `migrate_packages_to_project_storage`, `recover_legacy_packages`.
 
-Серверная логика — `api/packages_ui.py` и `api/views_ui.py`.
+Server logic — `api/packages_ui.py` and `api/views_ui.py`.
 
-## Статика
+## Static assets
 
-- `api/static/ui/admin.css` — общая тема
-- `api/static/ui/packages.css`, `packages_viz.css` — стили пакетов
-- `api/static/ui/packages_list.js`, `packages_workspace.js`, `packages_viz.js` — логика пакетов
-- `api/static/ui/project_builder.js` — визуальный редактор конфига
-- `api/static/ui/login.js` — Firebase-вход на странице логина (без галочки «Админ-доступ»)
+- `api/static/ui/admin.css` — shared theme
+- `api/static/ui/packages.css`, `packages_viz.css` — package styles
+- `api/static/ui/packages_list.js`, `packages_workspace.js`, `packages_viz.js` — package logic
+- `api/static/ui/project_builder.js` — visual config editor
+- `api/static/ui/login.js` — Firebase sign-in on login page (without "Admin access" checkbox)

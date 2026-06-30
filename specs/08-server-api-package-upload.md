@@ -1,215 +1,217 @@
-# 8 — Загрузка пакета на сервер (клиент и API)
+> **Language / Язык:** **English** · [Русский](08-server-api-package-upload.ru.md)
 
-Статус: **актуально** (июнь 2026). Референс: `django_server/api/views.py`, `project_db.py`, `project_media.py`.
+# 8 — Package upload to server (client and API)
 
-Одна спека на русском: **как** приложение отправляет пакет в **конкретный проект** на **конкретный сервер**, что видит пользователь (очередь, история), и **HTTP-контракт** (порядок шагов, коды, идемпотентность).
+Status: **current** (June 2026). Reference: `django_server/api/views.py`, `project_db.py`, `project_media.py`.
 
-**Связанные документы:** [06-upload-lifecycle.md](06-upload-lifecycle.md) (жизненный цикл и ретраи на устройстве), [07-package-payload-structure.md](07-package-payload-structure.md) (`payload.json`, `blobs/`), [02-data-models-schema.md](02-data-models-schema.md) (идентификаторы).
+A single spec describing **how** the app sends a package to a **specific project** on a **specific server**, what the user sees (queue, history), and the **HTTP contract** (step order, status codes, idempotency).
 
-**Схема:** [main-scheme/03_server_api.drawio](main-scheme/03_server_api.drawio) — порядок шагов, клиент ↔ сервер, outbox и история.
+**Related documents:** [06-upload-lifecycle.md](06-upload-lifecycle.md) (device lifecycle and retries), [07-package-payload-structure.md](07-package-payload-structure.md) (`payload.json`, `blobs/`), [02-data-models-schema.md](02-data-models-schema.md) (identifiers).
 
-Инициатор трафика — **только клиент** (push).
+**Diagram:** [main-scheme/03_server_api.drawio](main-scheme/03_server_api.drawio) — step order, client ↔ server, outbox and history.
 
----
-
-## 1. Цели
-
-- Надёжная доставка при нестабильной сети.
-- На сервере **не фиксировать «готовый» пакет** для внешних потребителей, пока не согласованы **все блобы** и **JSON-манифест** (нет ссылок «в пустоту»).
-- **Идемпотентность** повторных запросов с теми же идентификаторами.
-- На клиенте — статусы по **каждому блобу** и по **пакету**; экран **«Загрузка»** и **история** (принят на сервере / только локально).
+Traffic is initiated by the **client only** (push).
 
 ---
 
-## 2. Что такое пакет
+## 1. Goals
 
-**Пакет** — один логический сбор: каталог на устройстве с `blobs/*` и **`payload.json`** (см. `07`). На сервер уходит тот же набор: много бинарных объектов + один JSON; в JSON пути вида `blobs/...`.
-
-**`package_id`** задаёт клиент (например UUID). **`project_id`** в URL и в JSON должен совпадать с проектом конфигурации.
-
-Пакет **без файлов** допустим, если схема проекта позволяет манифест без ссылок на `blobs/`.
-
----
-
-## 3. Обязательный порядок на сервере
-
-1. Загрузить **все блобы** (отдельный HTTP-запрос на файл; путь совпадает с тем, что будет в манифесте).
-2. Загрузить **манифест** (JSON как в `07`, только ссылки на уже принятые `blobs/...`).
-3. Вызвать **`commit`**. После успешного ответа клиент может считать пакет принятым и по политике из `06` очищать локальные тяжёлые файлы.
-
-Минимальный вариант без отдельного `commit` возможен только если продукт явно согласует, что «успех после манифеста» = полная приёмка для внешних систем.
+- Reliable delivery over an unstable network.
+- On the server, **do not mark a package as "ready"** for external consumers until **all blobs** and the **JSON manifest** are consistent (no dangling references).
+- **Idempotency** for repeated requests with the same identifiers.
+- On the client — per-**blob** and per-**package** status; **Upload** screen and **history** (accepted on server / local only).
 
 ---
 
-## 4. Идемпотентность (клиент и сервер)
+## 2. What is a package
 
-- Повтор **`PUT`** того же блоба (тот же путь в рамках `package_id` и проекта) с тем же содержимым → успех, без дубликата в хранилище.
-- Повтор манифеста / **`commit`** для уже принятого пакета → предсказуемый ответ (`200` с тем же результатом или `409` по политике), без двойной постановки в очередь обработки (ключ — как минимум `package_id`).
-- Параллельные **`PUT`** разных блобов разрешены; два **`commit`** — сериализовать, второй — идемпотентный успех.
+A **package** is one logical collection: a directory on the device with `blobs/*` and **`payload.json`** (see `07`). The same set goes to the server: many binary objects + one JSON; paths in JSON look like `blobs/...`.
 
----
+**`package_id`** is assigned by the client (e.g. UUID). **`project_id`** in the URL and in JSON must match the configuration project.
 
-## 5. Клиент: учёт состояния
-
-- **По каждому блобу:** загружен / нет / ошибка (для докачки после обрыва).
-- **По пакету:** очередь, идёт отправка, принят сервером (после `commit` и при необходимости сверки `GET`), ошибка с повтором.
-
-Незагруженные пакеты появляются, если **сразу после сбора** отправить нельзя (сеть, ошибка) — пакет сохраняется локально и попадает в outbox.
+A package **without files** is allowed if the project schema permits a manifest with no `blobs/` references.
 
 ---
 
-## 6. Экран «Загрузка» (outbox)
+## 3. Required server order
 
-**Условие:** есть хотя бы один пакет, ожидающий отправку на сервер.
+1. Upload **all blobs** (one HTTP request per file; path matches what will appear in the manifest).
+2. Upload the **manifest** (JSON as in `07`, only references to already accepted `blobs/...`).
+3. Call **`commit`**. After a successful response the client may treat the package as accepted and, per policy in `06`, clean up local heavy files.
 
-**Поведение:** список пакетов; **«Загрузить все»** и/или **выбор** + **«Отправить выбранные»**; прогресс по блобам и этапу JSON/`commit`; при ошибке — сообщение, пакет остаётся в очереди (ретраи — `06`).
-
-Отдельный экран допустим в MVP; позже — фоновая отправка при той же модели состояний.
-
----
-
-## 7. История: индикация
-
-| Визуально | Смысл |
-|-----------|--------|
-| **Зелёный** (или «на сервере») | Пакет **принят сервером** (критерий: успешный `commit`, при сомнениях — `GET`). |
-| **Жёлтый** («только на устройстве») | Пакет **есть локально**, на сервер **не доставлен** или доставка не завершена. |
-
-Детали UI — в [03-user-journey-screens.md](03-user-journey-screens.md).
+A minimal variant without a separate `commit` is possible only if the product explicitly agrees that "success after manifest" = full acceptance for external systems.
 
 ---
 
-## 8. Удаление пакета с устройства
+## 4. Idempotency (client and server)
 
-Блобы и каталог пакета удалять **только после** подтверждённой полной приёмки сервером (согласовано с `06` §2), чтобы не потерять данные при обрыве. Запись в истории после удаления файлов — отдельное продуктовое решение.
-
----
-
-## 9. Сервер: термины
-
-| Что | Смысл |
-|-----|--------|
-| Сервер | Backend с базовым URL; в проде — **HTTPS** (TLS 1.2+). Желателен префикс версии, например `/v1/`. |
-| Проект | Нет проекта / нет прав на запись / только чтение → отклонять загрузку. |
-| Пакет | `package_id` от клиента — стабильный ключ сессии, докачки и идемпотентности. |
-
-Выбор центрального конфиг-хоста и upload-URL — вне документа; пути вида `/v1/projects/{project_id}/...` должны оставаться валидными.
+- Repeat **`PUT`** of the same blob (same path within `package_id` and project) with the same content → success, no duplicate in storage.
+- Repeat manifest / **`commit`** for an already accepted package → predictable response (`200` with the same result or `409` per policy), without double enqueueing for processing (key — at least `package_id`).
+- Parallel **`PUT`** of different blobs is allowed; two **`commit`** calls — serialize; the second is an idempotent success.
 
 ---
 
-## 10. Сервер: состояния пакета
+## 5. Client: state tracking
 
-| Статус | Смысл |
-|--------|--------|
-| `created` / `awaiting_blobs` | Сессия есть; принимаются `PUT` по блобам. |
-| `awaiting_manifest` | *(Опционально.)* Ждём манифест; может сливаться с предыдущим. |
-| `ready_to_commit` | Манифест валиден; каждая ссылка на `blobs/...` резолвится в уже принятый объект. |
-| `completed` | После `commit`. Повтор того же `package_id` — идемпотентный успех или `409`. |
-| `failed` | Терминально. |
-| `abandoned` | *(Опционально.)* TTL, чистка черновиков. |
+- **Per blob:** uploaded / not / error (for resume after disconnect).
+- **Per package:** queued, uploading, accepted by server (after `commit` and optionally `GET` verification), error with retry.
 
-Переходы **монотонны** из `completed` / `failed` назад без администратора — нет.
-
-**Референс Django** (`django_server/api`): сессии и блобы хранятся в **per-project DB** (SQLAlchemy, `database_uri`), файлы — через **fsspec** (`storage_uri`). Фазы: `awaiting_blobs`, `ready_to_commit`, `completed`, `failed` (без `created`, `awaiting_manifest`, `abandoned`). Поле `failure_reason` в модели есть; в `GET …/packages/{package_id}` пока не отдаётся.
+Unuploaded packages appear when upload **immediately after collection** is not possible (network, error) — the package is saved locally and enters the outbox.
 
 ---
 
-## 11. Сервер: эндпоинты (логика)
+## 6. Upload screen (outbox)
 
-Форма путей: `/v1/projects/{project_id}/packages/...`. Точные контракты — в **OpenAPI**.
+**Condition:** at least one package waiting to be sent to the server.
 
-### 11.1. `POST …/packages` — сессия
+**Behavior:** list of packages; **Upload all** and/or **selection** + **Send selected**; progress per blob and JSON/`commit` stage; on error — message, package stays in queue (retries — `06`).
 
-Тело: минимум `package_id`; опционально `client_version`, `device_id`, `created_at`; опционально `blob_inventory` → ранняя проверка квот (`422`).
+A dedicated screen is acceptable in MVP; later — background upload with the same state model.
 
-Ответ `201` (новая сессия) или `200` (сессия уже была): минимум `package_id`, `status` (`awaiting_blobs` | `ready_to_commit` | `completed` | `failed`). Опционально в продукте: `upload_session_id`, `expires_at`.
+---
 
-Повтор с тем же `package_id` → `200`/`201` с тем же состоянием или `409`, если пакет уже завершён. **В референсе Django:** для уже `completed` при повторном `POST` возвращается **`409`**, а идемпотентный успех без побочных эффектов реализован на **`POST …/commit`** (см. §11.4).
+## 7. History: indication
 
-### 11.2. `PUT …/packages/{package_id}/blobs/{blob_path}` — один файл
+| Visual | Meaning |
+|--------|---------|
+| **Green** (or "on server") | Package **accepted by server** (criterion: successful `commit`, or `GET` if uncertain). |
+| **Yellow** ("device only") | Package **exists locally**, **not delivered** to server or delivery incomplete. |
 
-`blob_path` — **URL-encoded**, как в манифесте (или presigned URL / `blob_id` — зафиксировать в продукте).
+UI details — in [03-user-journey-screens.md](03-user-journey-screens.md).
 
-Заголовки: `Content-Type`, `Content-Length` (если не chunked); опционально `Content-MD5` / `Digest`.
+---
 
-Ответ `200`/`201`: подтверждение. **В референсе Django:** тело ответа `{"path": "<логический путь>", "size": <байты>}`. Resumable (tus, `Content-Range`) — только если явно в спеке.
+## 8. Deleting a package from the device
 
-**Замечание для референса:** если сессия уже в фазе `ready_to_commit`, повторный `PUT` блоба **сбрасывает** сохранённый манифест и возвращает фазу в `awaiting_blobs` (разрешён повторный цикл «блобы → манифест → commit»).
+Delete blobs and the package directory **only after** confirmed full server acceptance (aligned with `06` §2), to avoid data loss on disconnect. Whether history entries remain after file deletion is a separate product decision.
 
-### 11.3. `PUT` или `POST …/manifest` — JSON после блобов
+---
 
-Тело как `payload.json` по `07`. Сервер: схема и доменные правила; все ссылки на `blobs/…` должны указывать на принятые объекты — иначе **`422`** со списком отсутствующих путей → `ready_to_commit`.
+## 9. Server: terms
 
-**В референсе Django** реализован только **`PUT`** на `…/manifest` (без `POST`). Неверный JSON тела — **`400`** (`invalid_json`). Отсутствующие блобы: код ошибки `missing_blobs`, пути в `error.details`. Несовпадение `project_id` в JSON и в URL — **`422`**, код `project_id_mismatch`. Если пакет уже `completed`, `PUT` манифеста возвращает **`200`** с `status: completed` (идемпотентно, без изменения данных).
+| Term | Meaning |
+|------|---------|
+| Server | Backend with a base URL; in production — **HTTPS** (TLS 1.2+). A version prefix is desirable, e.g. `/v1/`. |
+| Project | No project / no write access / read-only → reject upload. |
+| Package | `package_id` from client — stable key for session, resume, and idempotency. |
+
+Choice of central config host and upload URL is out of scope; paths like `/v1/projects/{project_id}/...` must remain valid.
+
+---
+
+## 10. Server: package states
+
+| Status | Meaning |
+|--------|---------|
+| `created` / `awaiting_blobs` | Session exists; `PUT` on blobs accepted. |
+| `awaiting_manifest` | *(Optional.)* Waiting for manifest; may merge with previous. |
+| `ready_to_commit` | Manifest valid; every `blobs/...` reference resolves to an accepted object. |
+| `completed` | After `commit`. Repeat of same `package_id` — idempotent success or `409`. |
+| `failed` | Terminal. |
+| `abandoned` | *(Optional.)* TTL, draft cleanup. |
+
+Transitions are **monotonic** — no rollback from `completed` / `failed` without an administrator.
+
+**Django reference** (`django_server/api`): sessions and blobs stored in **per-project DB** (SQLAlchemy, `database_uri`), files via **fsspec** (`storage_uri`). Phases: `awaiting_blobs`, `ready_to_commit`, `completed`, `failed` (no `created`, `awaiting_manifest`, `abandoned`). Model has `failure_reason`; not yet returned in `GET …/packages/{package_id}`.
+
+---
+
+## 11. Server: endpoints (logic)
+
+Path form: `/v1/projects/{project_id}/packages/...`. Exact contracts — in **OpenAPI**.
+
+### 11.1. `POST …/packages` — session
+
+Body: at minimum `package_id`; optionally `client_version`, `device_id`, `created_at`; optionally `blob_inventory` → early quota check (`422`).
+
+Response `201` (new session) or `200` (session already existed): at minimum `package_id`, `status` (`awaiting_blobs` | `ready_to_commit` | `completed` | `failed`). Optional in product: `upload_session_id`, `expires_at`.
+
+Repeat with same `package_id` → `200`/`201` with same state or `409` if package already completed. **In Django reference:** for already `completed`, repeat `POST` returns **`409`**; idempotent success without side effects is on **`POST …/commit`** (see §11.4).
+
+### 11.2. `PUT …/packages/{package_id}/blobs/{blob_path}` — one file
+
+`blob_path` — **URL-encoded**, as in manifest (or presigned URL / `blob_id` — fix in product).
+
+Headers: `Content-Type`, `Content-Length` (if not chunked); optionally `Content-MD5` / `Digest`.
+
+Response `200`/`201`: confirmation. **In Django reference:** body `{"path": "<logical path>", "size": <bytes>}`. Resumable (tus, `Content-Range`) — only if explicitly in spec.
+
+**Reference note:** if session is already in `ready_to_commit` phase, repeat blob `PUT` **resets** saved manifest and returns phase to `awaiting_blobs` (repeat cycle "blobs → manifest → commit" allowed).
+
+### 11.3. `PUT` or `POST …/manifest` — JSON after blobs
+
+Body as `payload.json` per `07`. Server: schema and domain rules; all `blobs/…` references must point to accepted objects — otherwise **`422`** with list of missing paths → `ready_to_commit`.
+
+**In Django reference** only **`PUT`** on `…/manifest` is implemented (no `POST`). Invalid JSON body — **`400`** (`invalid_json`). Missing blobs: error code `missing_blobs`, paths in `error.details`. `project_id` mismatch between JSON and URL — **`422`**, code `project_id_mismatch`. If package already `completed`, manifest `PUT` returns **`200`** with `status: completed` (idempotent, no data change).
 
 ### 11.4. `POST …/commit`
 
-Манифест принят, обязательные блобы на месте, хеши/размеры (если заданы). Успех → `completed`. Иначе **`409`** / **`422`**.
+Manifest accepted, required blobs present, hashes/sizes (if set). Success → `completed`. Otherwise **`409`** / **`422`**.
 
-Повтор `commit` для `completed` → **`200`** без дублирования побочных эффектов очереди.
+Repeat `commit` for `completed` → **`200`** without duplicating queue side effects.
 
-### 11.5. `GET …/packages/{package_id}` — статус
+### 11.5. `GET …/packages/{package_id}` — status
 
-После краша: `status`, список принятых блобов, опционально `expires_at`, причина `failed`.
+After crash: `status`, list of accepted blobs, optionally `expires_at`, `failed` reason.
 
-**В референсе Django:** JSON `{"package_id", "status", "blobs": [<логические пути>]}`; полей `expires_at` и причины `failed` в ответе пока нет.
+**In Django reference:** JSON `{"package_id", "status", "blobs": [<logical paths>]}`; `expires_at` and `failed` reason not yet in response.
 
-### 11.6. `DELETE …/packages/{package_id}` *(опционально)*
+### 11.6. `DELETE …/packages/{package_id}` *(optional)*
 
-Отмена черновика, пока не `completed` (или отдельная роль). **В референсе Django:** успех — **`204`**, для `completed` — **`409`**.
+Cancel draft while not `completed` (or separate role). **In Django reference:** success — **`204`**, for `completed` — **`409`**.
 
-### 11.7. Клиент Flutter в этом репозитории
+### 11.7. Flutter client in this repository
 
-Последовательность `POST` сессия → `PUT` всех файлов из `blobs/` (путь в URL с `Uri.encodeComponent` по сегментам) → `PUT` манифест → `POST` `commit`: см. `lib/features/collection/logic/package_server_upload.dart`. При **`409`** на `POST` сессии выполняется `GET` статуса; если `completed`, локальное состояние доставки помечается завершённым без повторной отправки блобов.
-
----
-
-## 12. Аутентификация
-
-Bearer / OAuth2 / mTLS — в OpenAPI явно. Токен ограничивает доступные `project_id`. Аудит: `project_id`, `package_id`, субъект, результат `commit` (GDPR для IP/UA).
-
-**В референсе Django** (`ApiV1AuthMiddleware`): при включённом Firebase — заголовок `Authorization: Bearer <Firebase ID token>`, доступ к `project_id` по связи пользователя `CollectorUser` с проектами; при выключенном Firebase и заданном `API_BEARER_TOKEN` — общий секрет; иначе локально `/v1/*` без проверки токена. Эндпоинт **`GET /health`** (вне `/v1/`) — текст `ok` для проверки живости процесса.
+Sequence `POST` session → `PUT` all files from `blobs/` (path in URL with `Uri.encodeComponent` per segment) → `PUT` manifest → `POST` `commit`: see `lib/features/collection/logic/package_server_upload.dart`. On **`409`** for session `POST`, performs status `GET`; if `completed`, local delivery state is marked done without re-sending blobs.
 
 ---
 
-## 13. HTTP-коды
+## 12. Authentication
 
-| Ситуация | Код |
-|----------|-----|
-| Нет / просрочен токен | `401` |
-| Нет прав | `403` |
-| Нет ресурса | `404` (желательно без утечки факта существования) |
-| Неверная фаза / конфликт идемпотентности | `409` |
-| Манифест, валидация, нет блоба по ссылке | `422` |
-| Размер / квота / rate limit | `413` / `429` |
-| Внутренняя ошибка | `500` (клиент — backoff) |
+Bearer / OAuth2 / mTLS — explicit in OpenAPI. Token limits accessible `project_id`. Audit: `project_id`, `package_id`, subject, `commit` result (GDPR for IP/UA).
 
-Тело ошибки: например `{ "error": { "code", "message", "details" } }`.
+**In Django reference** (`ApiV1AuthMiddleware`): with Firebase enabled — header `Authorization: Bearer <Firebase ID token>`, `project_id` access via `CollectorUser` project assignment; with Firebase disabled and `API_BEARER_TOKEN` set — shared secret; otherwise locally `/v1/*` without token check. Endpoint **`GET /health`** (outside `/v1/`) — text `ok` for liveness.
 
 ---
 
-## 14. Порядок запросов клиента
+## 13. HTTP status codes
 
-`POST` сессия → все **`PUT`** блобов → манифест → **`commit`**. Манифест «раньше блобов» может дойти по сети, но валидация ссылок упадёт.
+| Situation | Code |
+|-----------|------|
+| Missing / expired token | `401` |
+| No permission | `403` |
+| Resource not found | `404` (preferably without leaking existence) |
+| Wrong phase / idempotency conflict | `409` |
+| Manifest, validation, missing blob reference | `422` |
+| Size / quota / rate limit | `413` / `429` |
+| Internal error | `500` (client — backoff) |
 
----
-
-## 15. Нефункциональные требования к серверу
-
-- Устойчивое хранилище манифеста и блобов (не только ephemeral-диск).
-- `commit` атомарен для внешнего наблюдателя.
-- TTL и уборка незавершённых сессий и «сиротских» блобов.
-- Лимиты: размер файла, суммарный размер пакета, число файлов, RPS.
-- Upload-роуты: большие таймауты proxy, streaming без полной буферизации в RAM.
-- TLS, лимит тела на gateway, валидация `blob_path` (нет `..`, не абсолютный путь).
-- Метрики, логи с `X-Request-Id`, `GET /health`, версия API и миграции манифеста.
+Error body: e.g. `{ "error": { "code", "message", "details" } }`.
 
 ---
 
-## 16. Открытые решения
+## 14. Client request order
 
-1. Идентификация блоба: только путь в манифесте vs presigned URL / `blob_id`.
-2. Крупные файлы: один `PUT` vs обязательный resumable (tus).
-3. Пост-обработка: в транзакции `commit` vs очередь; отдельный endpoint статуса обработки.
+`POST` session → all blob **`PUT`**s → manifest → **`commit`**. Manifest may arrive on the network before blobs, but reference validation will fail.
 
-После выбора — **OpenAPI 3.1** и пример полной последовательности для одного `project_id` и `package_id`.
+---
+
+## 15. Server non-functional requirements
+
+- Durable storage for manifest and blobs (not ephemeral disk only).
+- `commit` atomic for external observers.
+- TTL and cleanup of incomplete sessions and orphan blobs.
+- Limits: file size, total package size, file count, RPS.
+- Upload routes: long proxy timeouts, streaming without full RAM buffering.
+- TLS, body limit on gateway, `blob_path` validation (no `..`, not absolute path).
+- Metrics, logs with `X-Request-Id`, `GET /health`, API version and manifest migrations.
+
+---
+
+## 16. Open decisions
+
+1. Blob identification: manifest path only vs presigned URL / `blob_id`.
+2. Large files: single `PUT` vs mandatory resumable (tus).
+3. Post-processing: in `commit` transaction vs queue; separate processing status endpoint.
+
+After decisions — **OpenAPI 3.1** and example full sequence for one `project_id` and `package_id`.
