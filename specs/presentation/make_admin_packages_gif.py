@@ -22,13 +22,21 @@ TEXT_MUTED = (156, 163, 175)
 
 STAGES_TOTAL = 3
 
-FRAMES = [
+FRAMES_RU = [
     ("1.png", 1, "Список всех принятых пакетов", None),
     ("2.png", 2, "Фильтрация пакетов по параметрам формы", None),
     ("3.png", 3, "Просмотр и редактирование пакета", "1/4"),
     ("4.png", 3, "Просмотр и редактирование пакета", "2/4"),
     ("5.png", 3, "Просмотр и редактирование пакета", "3/4"),
     ("6.png", 3, "Просмотр и редактирование пакета", "4/4"),
+]
+FRAMES_EN = [
+    ("1.png", 1, "List of all accepted packages", None),
+    ("2.png", 2, "Filtering packages by form parameters", None),
+    ("3.png", 3, "Viewing and editing a package", "1/4"),
+    ("4.png", 3, "Viewing and editing a package", "2/4"),
+    ("5.png", 3, "Viewing and editing a package", "3/4"),
+    ("6.png", 3, "Viewing and editing a package", "4/4"),
 ]
 
 HOLD_MS = 2400
@@ -68,10 +76,15 @@ def _top_header(stage: int, headline: str, sub: str | None) -> Image.Image:
     return bar
 
 
-def _bottom_bar(stage: int, frame_idx: int) -> Image.Image:
+def _bottom_bar(
+    stage: int, frame_idx: int, frames: list, stage_label: str, frame_label: str
+) -> Image.Image:
     bar = Image.new("RGBA", (TARGET_W, BOTTOM_H), (*BG, 255))
     draw = ImageDraw.Draw(bar)
-    label = f"Этап {stage} из {STAGES_TOTAL}  ·  Staff Admin  ·  кадр {frame_idx}/{len(FRAMES)}"
+    label = (
+        f"{stage_label} {stage} / {STAGES_TOTAL}  ·  Staff Admin  ·  "
+        f"{frame_label} {frame_idx}/{len(frames)}"
+    )
     draw.text((20, 8), label, font=_font(14), fill=TEXT_MUTED)
     return bar
 
@@ -102,12 +115,19 @@ def _fit_image(img: Image.Image) -> Image.Image:
 
 
 def _compose_frame(
-    img_path: Path, stage: int, headline: str, sub: str | None, frame_idx: int
+    img_path: Path,
+    stage: int,
+    headline: str,
+    sub: str | None,
+    frame_idx: int,
+    frames: list,
+    stage_label: str,
+    frame_label: str,
 ) -> Image.Image:
     out = Image.new("RGB", (TARGET_W, TARGET_H), BG)
     out.paste(_top_header(stage, headline, sub), (0, 0))
     out.paste(_fit_image(Image.open(img_path)), (0, TOP_H))
-    out.paste(_bottom_bar(stage, frame_idx), (0, TOP_H + IMG_AREA_H))
+    out.paste(_bottom_bar(stage, frame_idx, frames, stage_label, frame_label), (0, TOP_H + IMG_AREA_H))
     return out
 
 
@@ -145,10 +165,19 @@ def _save_with_ffmpeg(png_dir: Path, out_gif: Path, fps: float = 2.0) -> bool:
         return False
 
 
-def build(src_dir: Path, out_gif: Path) -> Path:
+def build(
+    src_dir: Path,
+    out_gif: Path,
+    frames: list | None = None,
+    stage_label: str = "Этап",
+    frame_label: str = "кадр",
+) -> Path:
+    frames = frames or FRAMES_RU
     key_frames = [
-        _compose_frame(src_dir / fname, stage, headline, sub, i + 1)
-        for i, (fname, stage, headline, sub) in enumerate(FRAMES)
+        _compose_frame(
+            src_dir / fname, stage, headline, sub, i + 1, frames, stage_label, frame_label
+        )
+        for i, (fname, stage, headline, sub) in enumerate(frames)
     ]
     seq = _timeline(key_frames)
 
@@ -172,10 +201,17 @@ def build(src_dir: Path, out_gif: Path) -> Path:
 
 
 if __name__ == "__main__":
+    import sys
+
     root = Path(__file__).resolve().parent
-    src = root / "img" / "UI"
-    out = root / "img" / "admin-packages.gif"
-    result = build(src, out)
+    en = "--en" in sys.argv
+    if en:
+        src = root / "img" / "UI_en"
+        out = root / "img" / "admin-packages-en.gif"
+        result = build(src, out, FRAMES_EN, "Stage", "frame")
+    else:
+        src = root / "img" / "UI"
+        out = root / "img" / "admin-packages.gif"
+        result = build(src, out, FRAMES_RU, "Этап", "кадр")
     print(f"Created: {result}")
     print(f"Size: {TARGET_W}x{TARGET_H} px, {result.stat().st_size // 1024} KB")
-    print("For slide STEP 04 - Prosmotr prinyatykh paketov")
