@@ -22,11 +22,17 @@ TEXT = (232, 234, 237)
 TEXT_MUTED = (156, 163, 175)
 
 # file, step_no, headline (shown above screenshot)
-FRAMES = [
+FRAMES_RU = [
     ("1.png", 1, "Создаёт проект и привязывает в Git"),
     ("2.png", 2, "Редактирование конфига"),
     ("3.png", 3, "Назначение сборщиков"),
     ("4.png", 4, "Сохранение проекта"),
+]
+FRAMES_EN = [
+    ("1.png", 1, "Creates project and links to Git"),
+    ("2.png", 2, "Config editing"),
+    ("3.png", 3, "Assigning collectors"),
+    ("4.png", 4, "Saving project"),
 ]
 
 HOLD_MS = 2800
@@ -66,10 +72,10 @@ def _top_header(step: int, headline: str) -> Image.Image:
     return bar
 
 
-def _bottom_bar(step: int) -> Image.Image:
+def _bottom_bar(step: int, frames: list, step_label: str) -> Image.Image:
     bar = Image.new("RGBA", (TARGET_W, BOTTOM_H), (*BG, 255))
     draw = ImageDraw.Draw(bar)
-    label = f"Шаг {step} из {len(FRAMES)}  ·  Staff Admin"
+    label = f"{step_label} {step} / {len(frames)}  ·  Staff Admin"
     draw.text((20, 8), label, font=_font(15), fill=TEXT_MUTED)
     return bar
 
@@ -99,10 +105,12 @@ def _fit_image(img: Image.Image) -> Image.Image:
     return canvas
 
 
-def _compose_frame(img_path: Path, step: int, headline: str) -> Image.Image:
+def _compose_frame(
+    img_path: Path, step: int, headline: str, frames: list, step_label: str
+) -> Image.Image:
     header = _top_header(step, headline)
     body = _fit_image(Image.open(img_path))
-    footer = _bottom_bar(step)
+    footer = _bottom_bar(step, frames, step_label)
 
     out = Image.new("RGB", (TARGET_W, TARGET_H), BG)
     out.paste(header, (0, 0))
@@ -144,8 +152,16 @@ def _save_with_ffmpeg(png_dir: Path, out_gif: Path, fps: float = 2.0) -> bool:
         return False
 
 
-def build(src_dir: Path, out_gif: Path) -> Path:
-    key_frames = [_compose_frame(src_dir / f, n, h) for f, n, h in FRAMES]
+def build(
+    src_dir: Path,
+    out_gif: Path,
+    frames: list | None = None,
+    step_label: str = "Шаг",
+) -> Path:
+    frames = frames or FRAMES_RU
+    key_frames = [
+        _compose_frame(src_dir / f, n, h, frames, step_label) for f, n, h in frames
+    ]
     seq = _timeline(key_frames)
 
     with tempfile.TemporaryDirectory() as tmp:
@@ -169,10 +185,18 @@ def build(src_dir: Path, out_gif: Path) -> Path:
 
 
 if __name__ == "__main__":
+    import sys
+
     root = Path(__file__).resolve().parent
-    src = root / "img" / "Config"
-    gif_path = root / "img" / "config-steps-admin.gif"
-    result = build(src, gif_path)
+    en = "--en" in sys.argv
+    if en:
+        src = root / "img" / "Config_en"
+        gif_path = root / "img" / "config-steps-admin-en.gif"
+        result = build(src, gif_path, FRAMES_EN, "Step")
+    else:
+        src = root / "img" / "Config"
+        gif_path = root / "img" / "config-steps-admin.gif"
+        result = build(src, gif_path, FRAMES_RU, "Шаг")
     kb = result.stat().st_size // 1024
     print(f"Created: {result}")
     print(f"Size: {TARGET_W}x{TARGET_H} px, {kb} KB")

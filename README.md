@@ -36,15 +36,15 @@ Three parts of the product in one flow: **configure the project → collect data
 
 **1. Project setup.** Web admin: project in Git, visual config editor, collector access.
 
-![Admin: project creation, config, access](specs/presentation/img/config-steps-admin.gif)
+![Admin: project creation, config, access](specs/presentation/img/config-steps-admin-en.gif)
 
 **2. Field collection.** Flutter: sign-in, config from server, fill the form, upload queue (offline-first).
 
-![Mobile app: form and package upload](specs/presentation/img/flutter-steps-app.gif)
+![Mobile app: form and package upload](specs/presentation/img/flutter-steps-app-en.gif)
 
 **3. Packages and review.** List of accepted packages, filters, media and data viewer, edits, pipeline visualization.
 
-![Admin: package list and viewer](specs/presentation/img/admin-packages.gif)
+![Admin: package list and viewer](specs/presentation/img/admin-packages-en.gif)
 
 ---
 

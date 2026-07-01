@@ -4,7 +4,7 @@
 
 Instructions for configuring projects, user access, and viewing uploaded packages (with pipeline result visualization).
 
-Screenshots are from the product presentation [`specs/presentation/Data-Collector.pptx`](../../specs/presentation/Data-Collector.pptx) (source frames are in `specs/presentation/img/`). The interface is evolving, so individual frames may differ from the current version — rely on the text.
+Screenshots below are from the product presentation ([`specs/presentation/Data-Collector.pptx`](../../specs/presentation/Data-Collector.pptx); source frames — [`Config_en/`](../../specs/presentation/img/Config_en/) and [`UI_en/`](../../specs/presentation/img/UI_en/)). The interface is evolving, so individual frames may differ from the current version — rely on the text.
 
 **Panel URL:** your instance's web admin at `/ui/`.
 
@@ -28,19 +28,21 @@ The top menu has three sections:
 | **Users** | Firebase accounts and access to projects in the mobile app |
 | **Packages** | View data uploaded from phones |
 
-![Top menu: Projects, Users, Packages](image.png)
-
 ---
 
 ## **3. Projects**
+
+### **Project setup flow**
+
+Create project in Git → edit config → assign collectors → save.
+
+![Admin: project creation, config, collector access](../../specs/presentation/img/config-steps-admin-en.gif)
 
 ### **3.1. Project list**
 
 The **Projects** section is a catalog of all projects (collection initiatives). For each one you see `project_id`, name, config version, and last updated date.
 
 Create a **separate project** for each site/initiative (for example, `my-project-2026`). Config structure can be identical while names and `project_id` differ.
-
-![Project list](<image 1.png>)
 
 ### **3.2. Creating a new project**
 
@@ -56,8 +58,6 @@ Click **"New project"** and fill in the form:
 6. **Data storage** (optional block) — see 3.4. If left empty: SQLite + local folder on the server.
 
 Click **"Create project"**.
-
-!["New project" form](<image 2.png>)
 
 After creation, **grant the server access to the repository**: copy the public deploy key (see 3.3) and add it in the repository settings with **write** access. The server can then read the config and save changes.
 
@@ -88,8 +88,6 @@ After changing the address, click **"Check storage"**. Changing the address **do
 
 Open a project from the list. On the card:
 
-![Project card](<image 3.png>)
-
 **Basic information:**
 
 - config version;
@@ -104,30 +102,17 @@ Open a project from the list. On the card:
 - **Packages** — view uploaded packages for the project;
 - **SSH key**, **Storage**, **Check Git/storage** — Git and storage setup (see 3.3–3.4).
 
-![Project card: actions](<image 4.png>)
-
 ### **3.6. Visual editor (collection scenario setup)**
 
 The config defines **what** the mobile app collects: fields, screens, step order.
 
-To edit the config, go to the visual editor ("Editor" button):
-
-![Visual config editor](<image 5.png>)
+To edit the config, go to the visual editor ("Editor" button).
 
 Main elements:
 
 1. **Fields** — define fields for the app (text, date, instructions (md), photos, etc.).
-    
-    ![Editor: fields](<image 6.png>)
-    
 2. **Scenario (flow)** — order and placement of fields across screens: `scroll_form` (scrollable form) and `review` (review before submit).
-    
-    ![Editor: scenario (flow)](<image 7.png>)
-    
 3. **JSON mode** — edit the entire config file manually for experienced administrators.
-    
-    ![Editor: JSON mode](<image 8.png>)
-    
 
 ### **3.7. Project files (media)**
 
@@ -136,8 +121,6 @@ The **"Files"** section on the project card:
 - upload images and other files for instructions in the config;
 - files are served to the client as `/v1/projects/<project_id>/assets/…`;
 - in JSON/Markdown, use paths like `assets/uploads/…`.
-
-![Project files](<image 9.png>)
 
 ### **3.8. Deleting a project**
 
@@ -154,15 +137,11 @@ Users sign in to the app via **Firebase** (email/password). The panel stores the
 - Click **"Sync with Firebase"** — pull accounts from Firebase Authentication;
 - **or** wait for the user's first sign-in to the app (a record may be created automatically).
 
-![User list](<image 10.png>)
-
 ### **4.2. Assigning projects**
 
 1. Open a user → **"Configure"**.
 2. Check the projects they see in the app and can upload packages to.
 3. Click **"Save"**.
-
-![Assigning projects to a user](<image 11.png>)
 
 ---
 
@@ -170,13 +149,17 @@ Users sign in to the app via **Firebase** (email/password). The panel stores the
 
 The **Packages** section contains everything operators sent from phones.
 
+### **Package review flow**
+
+List of accepted packages → filter by form parameters → view and edit package data.
+
+![Admin: package list, filters, viewer](../../specs/presentation/img/admin-packages-en.gif)
+
 ### **5.1. List**
 
 - Up to **500** most recent sessions.
 - Filter by project in the dropdown.
 - Columns: project, `package_id`, uploader email/UID, **phase**, date.
-
-![Package list](<image 12.png>)
 
 ### **5.2. Ingestion phases**
 
@@ -198,29 +181,13 @@ The package workspace has tabs. At the top — project package switcher and **"R
 | **Visualization** | Pipeline overlays on frames (see 5.4). |
 | **Change history** | Who changed what in the manifest and when (before → after, reason). |
 
-**"Data" tab**
-
-![Data tab](workspace-data.png)
-
-**"Media" tab**
-
-![Media tab](workspace-media.png)
-
-**"Change history" tab**
-
-![Change history tab](workspace-history.png)
-
 **Details** also opens the **blob** list (files) with **"Download"** and the **manifest** (JSON after upload completes).
-
-![Package blobs and manifest](<image 13.png>)
 
 The package list for a specific project is also available from the project card (**"Packages"**).
 
 ### **5.4. Visualization (viewing pipeline results)**
 
 The **"Visualization"** tab draws pipeline data (keypoints, bbox, depth, annotations) **over package frames**. Visualization config is stored in the project's Git repository — file `collector/viz.json` (layers → tables in project DB + rendering plugin). Details — [`specs/collector-vis-config.md`](../../specs/collector-vis-config.md).
-
-![Visualization tab: keypoints and metrics](workspace-visualization.png)
 
 What's on screen:
 
