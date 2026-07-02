@@ -68,7 +68,9 @@ Future<MaterializedLocalPackage> materializeOnDisk({
 
   final payload = envelopePayload(packageId, projectId, createdUtc, data);
   final payloadFile = File(p.join(root, 'payload.json'));
-  await payloadFile.writeAsString(const JsonEncoder.withIndent('  ').convert(payload));
+  await payloadFile.writeAsString(
+    const JsonEncoder.withIndent('  ').convert(payload),
+  );
 
   return MaterializedLocalPackage(
     packageId: packageId,

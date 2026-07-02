@@ -44,6 +44,7 @@ class Epoch8Card extends StatelessWidget {
     this.padding,
     this.onTap,
     this.accentBorder = false,
+
     /// Явный цвет границы (например статус доставки на сервер). Имеет приоритет над [accentBorder].
     this.highlightBorderColor,
     this.highlightBorderWidth = 1.5,
@@ -89,10 +90,7 @@ class Epoch8Card extends StatelessWidget {
               Epoch8Theme.card.withValues(alpha: 0.65),
             ],
           ),
-          border: Border.all(
-            color: borderColor,
-            width: borderW,
-          ),
+          border: Border.all(color: borderColor, width: borderW),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.35),
@@ -106,10 +104,7 @@ class Epoch8Card extends StatelessWidget {
         if (onTap != null) {
           return GestureDetector(
             onTap: onTap,
-            child: MouseRegion(
-              cursor: SystemMouseCursors.click,
-              child: box,
-            ),
+            child: MouseRegion(cursor: SystemMouseCursors.click, child: box),
           );
         }
         return box;
@@ -199,13 +194,19 @@ class Epoch8EmptyState extends StatelessWidget {
                 color: Epoch8Theme.accent.withValues(alpha: 0.08),
                 border: Border.all(color: Epoch8Theme.border),
               ),
-              child: Icon(icon, size: 40, color: Epoch8Theme.accent.withValues(alpha: 0.85)),
+              child: Icon(
+                icon,
+                size: 40,
+                color: Epoch8Theme.accent.withValues(alpha: 0.85),
+              ),
             ),
             const SizedBox(height: 20),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
             ),
             if (subtitle != null) ...[
               const SizedBox(height: 8),
@@ -224,11 +225,7 @@ class Epoch8EmptyState extends StatelessWidget {
 
 /// Индикатор шага для мастера (точки).
 class Epoch8StepDots extends StatelessWidget {
-  const Epoch8StepDots({
-    super.key,
-    required this.current,
-    required this.total,
-  });
+  const Epoch8StepDots({super.key, required this.current, required this.total});
 
   final int current;
   final int total;

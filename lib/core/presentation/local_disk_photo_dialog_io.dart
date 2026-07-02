@@ -18,7 +18,9 @@ Future<void> showLocalDiskPhotoDialog(BuildContext context, String path) async {
                   ? InteractiveViewer(
                       minScale: 0.8,
                       maxScale: 6,
-                      child: Center(child: Image.file(file, fit: BoxFit.contain)),
+                      child: Center(
+                        child: Image.file(file, fit: BoxFit.contain),
+                      ),
                     )
                   : Center(
                       child: Text(

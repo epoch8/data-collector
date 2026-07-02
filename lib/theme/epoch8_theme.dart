@@ -145,7 +145,10 @@ abstract final class Epoch8Theme {
         dividerColor: Colors.transparent,
         indicatorSize: TabBarIndicatorSize.tab,
         labelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500, fontSize: 14),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w500,
+          fontSize: 14,
+        ),
         overlayColor: WidgetStatePropertyAll(p.accent.withValues(alpha: 0.08)),
       ),
       cardTheme: CardThemeData(
@@ -160,7 +163,10 @@ abstract final class Epoch8Theme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: p.bgElevated,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(color: p.border),
@@ -179,11 +185,19 @@ abstract final class Epoch8Theme {
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           backgroundColor: p.accent,
-          foregroundColor: brightness == Brightness.dark ? p.bgDeep : Colors.white,
+          foregroundColor: brightness == Brightness.dark
+              ? p.bgDeep
+              : Colors.white,
           elevation: 0,
           padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: const TextStyle(fontWeight: FontWeight.w700, letterSpacing: 0.2, fontSize: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.2,
+            fontSize: 15,
+          ),
         ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -193,7 +207,9 @@ abstract final class Epoch8Theme {
           elevation: 0,
           side: BorderSide(color: p.border),
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
       outlinedButtonTheme: OutlinedButtonThemeData(
@@ -201,7 +217,9 @@ abstract final class Epoch8Theme {
           foregroundColor: p.textPrimary,
           side: BorderSide(color: p.border),
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 14),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
@@ -259,7 +277,10 @@ abstract final class Epoch8Theme {
           letterSpacing: 0.5,
         ),
       ),
-      dividerTheme: DividerThemeData(color: p.border.withValues(alpha: 0.7), thickness: 1),
+      dividerTheme: DividerThemeData(
+        color: p.border.withValues(alpha: 0.7),
+        thickness: 1,
+      ),
       snackBarTheme: SnackBarThemeData(
         backgroundColor: p.bgElevated,
         contentTextStyle: TextStyle(color: p.textPrimary, fontSize: 14),
@@ -277,7 +298,11 @@ abstract final class Epoch8Theme {
           borderRadius: BorderRadius.circular(22),
           side: BorderSide(color: p.border),
         ),
-        titleTextStyle: TextStyle(color: p.textPrimary, fontSize: 20, fontWeight: FontWeight.w700),
+        titleTextStyle: TextStyle(
+          color: p.textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
       ),
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: p.bgDeep,
@@ -287,12 +312,22 @@ abstract final class Epoch8Theme {
         ),
         dragHandleColor: p.border,
       ),
-      progressIndicatorTheme: ProgressIndicatorThemeData(color: p.accent, linearTrackColor: p.border),
+      progressIndicatorTheme: ProgressIndicatorThemeData(
+        color: p.accent,
+        linearTrackColor: p.border,
+      ),
       listTileTheme: ListTileThemeData(
         iconColor: p.accent,
         textColor: p.textPrimary,
-        titleTextStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-        subtitleTextStyle: TextStyle(color: p.textMuted, fontSize: 13, height: 1.35),
+        titleTextStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 16,
+        ),
+        subtitleTextStyle: TextStyle(
+          color: p.textMuted,
+          fontSize: 13,
+          height: 1.35,
+        ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
       ),
     );

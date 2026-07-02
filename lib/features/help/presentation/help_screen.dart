@@ -35,30 +35,39 @@ class HelpScreen extends StatelessWidget {
                 children: [
                   Text(
                     loc.helpQuickStartTitle,
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     loc.helpQuickStartBody,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.35),
                   ),
                   const SizedBox(height: 12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     decoration: BoxDecoration(
                       color: Epoch8Theme.bgElevated,
-                      borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
+                      borderRadius: BorderRadius.circular(
+                        Epoch8Layout.radiusSm,
+                      ),
                       border: Border.all(color: Epoch8Theme.border),
                     ),
                     child: Text(
                       loc.helpFlowLine,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            color: Epoch8Theme.accent,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 0.3,
-                          ),
+                        color: Epoch8Theme.accent,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.3,
+                      ),
                     ),
                   ),
                 ],
@@ -99,10 +108,17 @@ class HelpScreen extends StatelessWidget {
                 children: [
                   Text(
                     loc.helpHintTitle,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 8),
-                  Text(loc.helpHintBody, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35)),
+                  Text(
+                    loc.helpHintBody,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(height: 1.35),
+                  ),
                 ],
               ),
             ),
@@ -144,9 +160,9 @@ class _AppVersionFooterState extends State<_AppVersionFooter> {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Epoch8Theme.textMuted,
-              letterSpacing: 0.4,
-            ),
+          color: Epoch8Theme.textMuted,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }
@@ -188,15 +204,20 @@ class _HelpStepCard extends StatelessWidget {
                 child: Text(
                   '$number. $title',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: Epoch8Theme.accent,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: Epoch8Theme.accent,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          Text(body, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35)),
+          Text(
+            body,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.35),
+          ),
         ],
       ),
     );

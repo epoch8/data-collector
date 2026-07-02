@@ -25,9 +25,13 @@ abstract final class CapturedPhotoPaths {
   static List<String> list(dynamic v) {
     if (v == null) return [];
     if (v is Map) {
-      return v.keys.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+      return v.keys
+          .map((e) => e.toString())
+          .where((s) => s.isNotEmpty)
+          .toList();
     }
-    if (v is List) return v.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+    if (v is List)
+      return v.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
     if (v is String) return v.isEmpty ? [] : [v];
     return [];
   }
@@ -46,7 +50,9 @@ abstract final class CapturedPhotoPaths {
         if (val is Map<String, dynamic>) {
           out[ks] = Map<String, dynamic>.from(val);
         } else if (val is Map) {
-          out[ks] = Map<String, dynamic>.from(val.map((k, x) => MapEntry(k.toString(), x)));
+          out[ks] = Map<String, dynamic>.from(
+            val.map((k, x) => MapEntry(k.toString(), x)),
+          );
         } else {
           out[ks] = <String, dynamic>{};
         }

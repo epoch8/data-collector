@@ -8,7 +8,8 @@ abstract final class ProjectCatalog {
   static const _manifestAsset = 'assets/config/projects.json';
   static const simplePhotoNotesAsset = 'assets/config/simple-photo-notes.json';
 
-  static Future<Project> loadSimplePhotoNotes() => loadOne(simplePhotoNotesAsset);
+  static Future<Project> loadSimplePhotoNotes() =>
+      loadOne(simplePhotoNotesAsset);
 
   static Future<Project> loadOne(String assetPath) async {
     final raw = await rootBundle.loadString(assetPath);
@@ -18,7 +19,9 @@ abstract final class ProjectCatalog {
   static Future<List<Project>> loadAll() async {
     final manifestRaw = await rootBundle.loadString(_manifestAsset);
     final manifest = jsonDecode(manifestRaw) as Map<String, dynamic>;
-    final paths = (manifest['projects'] as List<dynamic>).map((e) => e.toString()).toList();
+    final paths = (manifest['projects'] as List<dynamic>)
+        .map((e) => e.toString())
+        .toList();
     final out = <Project>[];
     for (final path in paths) {
       out.add(await loadOne(path));

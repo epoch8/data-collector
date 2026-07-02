@@ -2,13 +2,19 @@ import 'package:data_collector/core/api/api_environment.dart';
 import 'package:data_collector/core/api/dio_provider.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_dio_image.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_media.dart';
-import 'project_example_resolve_rel_io.dart' if (dart.library.html) 'project_example_resolve_rel_web.dart' as rel_preview;
+import 'project_example_resolve_rel_io.dart'
+    if (dart.library.html) 'project_example_resolve_rel_web.dart'
+    as rel_preview;
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-export 'project_example_media.dart' show exampleGuideImageUri, markdownImageRefFromUri, projectAssetStorageRelativePath;
+export 'project_example_media.dart'
+    show
+        exampleGuideImageUri,
+        markdownImageRefFromUri,
+        projectAssetStorageRelativePath;
 
 /// Картинка примера: сначала локальный кэш (`server_project_cache/project_assets`), затем одна загрузка с API.
 Widget projectExampleImage({
@@ -40,7 +46,8 @@ class ProjectExampleImage extends ConsumerStatefulWidget {
   final Widget Function(BuildContext context) errorPlaceholder;
 
   @override
-  ConsumerState<ProjectExampleImage> createState() => _ProjectExampleImageState();
+  ConsumerState<ProjectExampleImage> createState() =>
+      _ProjectExampleImageState();
 }
 
 class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
@@ -56,7 +63,8 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
   @override
   void didUpdateWidget(ProjectExampleImage oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.project.id != widget.project.id || oldWidget.assetPath != widget.assetPath) {
+    if (oldWidget.project.id != widget.project.id ||
+        oldWidget.assetPath != widget.assetPath) {
       setState(() {
         _ready = false;
         _image = null;

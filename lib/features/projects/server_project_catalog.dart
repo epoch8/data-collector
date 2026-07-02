@@ -1,6 +1,8 @@
 import 'dart:convert';
 
-import 'project_asset_cache_delete_io.dart' if (dart.library.html) 'project_asset_cache_delete_web.dart' as cache_del;
+import 'project_asset_cache_delete_io.dart'
+    if (dart.library.html) 'project_asset_cache_delete_web.dart'
+    as cache_del;
 import 'package:data_collector/models/project_config.dart';
 import 'package:dio/dio.dart';
 
@@ -19,9 +21,7 @@ final class ServerProjectCatalog {
   Future<List<Project>> syncFromServer() async {
     final catRes = await _dio.get<dynamic>(
       '/v1/projects',
-      options: Options(
-        validateStatus: (s) => s == 200,
-      ),
+      options: Options(validateStatus: (s) => s == 200),
     );
 
     final data = catRes.data;
@@ -37,7 +37,9 @@ final class ServerProjectCatalog {
     return _projectsFromCatalog(catalogMap);
   }
 
-  Future<List<Project>> _projectsFromCatalog(Map<String, dynamic> catalog) async {
+  Future<List<Project>> _projectsFromCatalog(
+    Map<String, dynamic> catalog,
+  ) async {
     final items = catalog['projects'] as List<dynamic>? ?? [];
     final out = <Project>[];
     for (final raw in items) {

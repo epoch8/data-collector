@@ -28,7 +28,8 @@ class ConfigField {
     this.multiple,
   });
 
-  factory ConfigField.fromJson(Map<String, dynamic> json) => _$ConfigFieldFromJson(json);
+  factory ConfigField.fromJson(Map<String, dynamic> json) =>
+      _$ConfigFieldFromJson(json);
   Map<String, dynamic> toJson() => _$ConfigFieldToJson(this);
 }
 
@@ -41,9 +42,11 @@ class CollectionFlowStepDecl {
   final List<String>? fieldIds;
   @JsonKey(name: 'field_id')
   final String? fieldId;
+
   /// When true on a `form` step: suggest values from previous packages (see [cowIdFieldId]).
   @JsonKey(name: 'cow_id_hints')
   final bool? cowIdHints;
+
   /// `field_id` of the text field used for cow/subject matching; defaults to first `text_input` in the step.
   @JsonKey(name: 'cow_id_field_id')
   final String? cowIdFieldId;
@@ -88,13 +91,10 @@ class ProjectConfig {
   /// Optional nested strings / templates for flow UI and shooting guide (`ProjectUi`).
   final Map<String, dynamic>? ui;
 
-  ProjectConfig({
-    required this.fields,
-    required this.flow,
-    this.ui,
-  });
+  ProjectConfig({required this.fields, required this.flow, this.ui});
 
-  factory ProjectConfig.fromJson(Map<String, dynamic> json) => _$ProjectConfigFromJson(json);
+  factory ProjectConfig.fromJson(Map<String, dynamic> json) =>
+      _$ProjectConfigFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectConfigToJson(this);
 }
 
@@ -112,7 +112,8 @@ class Project {
     required this.config,
   });
 
-  factory Project.fromJson(Map<String, dynamic> json) => _$ProjectFromJson(json);
+  factory Project.fromJson(Map<String, dynamic> json) =>
+      _$ProjectFromJson(json);
   Map<String, dynamic> toJson() => _$ProjectToJson(this);
 }
 

@@ -22,19 +22,22 @@ Future<void> uploadDriftPackageToServer({
 
   Future<void> setState(String state, String? err) async {
     await (db.update(db.packages)..where((t) => t.id.equals(packageId))).write(
-          PackagesCompanion(
-            serverDeliveryState: Value(state),
-            serverDeliveryError: Value(err),
-          ),
-        );
+      PackagesCompanion(
+        serverDeliveryState: Value(state),
+        serverDeliveryError: Value(err),
+      ),
+    );
   }
 
   if (pkg.status == 'draft') {
-    throw StateError('Cannot upload unfinished draft — complete collection on device first.');
+    throw StateError(
+      'Cannot upload unfinished draft — complete collection on device first.',
+    );
   }
 
   if (!allowedProjectIds.contains(projectId)) {
-    const msg = 'No access to this project for current user (check server catalog).';
+    const msg =
+        'No access to this project for current user (check server catalog).';
     await setState('failed', msg);
     throw StateError(msg);
   }
@@ -48,7 +51,9 @@ Future<void> uploadDriftPackageToServer({
       options: Options(validateStatus: (s) => s == 200 || s == 201 || s == 409),
     );
     if (sessionRes.statusCode == 409) {
-      final st = await dio.get<Map<String, dynamic>>('/v1/projects/$projectId/packages/$packageId');
+      final st = await dio.get<Map<String, dynamic>>(
+        '/v1/projects/$projectId/packages/$packageId',
+      );
       final status = st.data?['status']?.toString();
       if (status == 'completed') {
         await setState('completed', null);
@@ -62,7 +67,9 @@ Future<void> uploadDriftPackageToServer({
 
     final dataRaw = manifestMap['data'];
     final dynamic pathSubject =
-        manifestMap.containsKey('package_id') && dataRaw is Map ? dataRaw : manifestMap;
+        manifestMap.containsKey('package_id') && dataRaw is Map
+        ? dataRaw
+        : manifestMap;
 
     final candidates = collectWebCaptureRefsFromPayloadShallow(pathSubject);
     final absToRel = <String, String>{};
@@ -76,7 +83,9 @@ Future<void> uploadDriftPackageToServer({
       try {
         bytes = await XFile(src).readAsBytes();
       } catch (e, st) {
-        debugPrint('uploadDriftPackageToServer web: skip unreadable path $src: $e\n$st');
+        debugPrint(
+          'uploadDriftPackageToServer web: skip unreadable path $src: $e\n$st',
+        );
         continue;
       }
       if (bytes.isEmpty) continue;
@@ -106,7 +115,9 @@ Future<void> uploadDriftPackageToServer({
 
     injectSubmittedByIntoServerManifest(manifestMap);
 
-    final manifestBody = const JsonEncoder.withIndent('  ').convert(manifestMap);
+    final manifestBody = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(manifestMap);
 
     await dio.put<dynamic>(
       '/v1/projects/$projectId/packages/$packageId/manifest',
@@ -116,7 +127,9 @@ Future<void> uploadDriftPackageToServer({
       ),
     );
 
-    await dio.post<dynamic>('/v1/projects/$projectId/packages/$packageId/commit');
+    await dio.post<dynamic>(
+      '/v1/projects/$projectId/packages/$packageId/commit',
+    );
 
     await setState('completed', null);
   } catch (e, st) {

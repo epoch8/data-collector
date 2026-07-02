@@ -40,7 +40,11 @@ final class ProjectUi {
   }
 
   /// Template from config at [keys], or [fallbackTemplate], then `{var}` substitution.
-  String tpl(Iterable<String> keys, String fallbackTemplate, Map<String, String> vars) {
+  String tpl(
+    Iterable<String> keys,
+    String fallbackTemplate,
+    Map<String, String> vars,
+  ) {
     final raw = _walk(keys);
     final template = (raw is String && raw.isNotEmpty) ? raw : fallbackTemplate;
     var r = template;

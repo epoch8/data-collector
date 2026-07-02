@@ -8,7 +8,11 @@ bool _isNetworkLikePreviewPath(String path) {
       p.startsWith('data:');
 }
 
-Widget localCaptureThumbnail(String path, {required double size, BoxFit fit = BoxFit.cover}) {
+Widget localCaptureThumbnail(
+  String path, {
+  required double size,
+  BoxFit fit = BoxFit.cover,
+}) {
   if (_isNetworkLikePreviewPath(path)) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),

@@ -8,7 +8,9 @@ bool projectExampleUriSameApiOrigin(Uri uri) {
   final raw = ApiEnvironment.normalizedBaseUrl();
   final base = Uri.tryParse(raw);
   if (base == null || !base.hasScheme || !uri.hasScheme) return false;
-  return uri.scheme == base.scheme && uri.host == base.host && uri.port == base.port;
+  return uri.scheme == base.scheme &&
+      uri.host == base.host &&
+      uri.port == base.port;
 }
 
 /// Загрузка изображения с того же API, что и [dio] (интерцептор подставит Firebase / static Bearer).

@@ -5,18 +5,23 @@ import 'package:flutter/services.dart';
 class DeviceCameraChannel {
   DeviceCameraChannel._();
 
-  static const MethodChannel _channel = MethodChannel('com.example.data_collector/device_camera');
+  static const MethodChannel _channel = MethodChannel(
+    'com.example.data_collector/device_camera',
+  );
 
   /// Returns serializable map; empty on web / unsupported / error.
   static Future<Map<String, dynamic>> getBackCameraIntrinsics() async {
     if (kIsWeb) {
       return {};
     }
-    if (defaultTargetPlatform != TargetPlatform.android && defaultTargetPlatform != TargetPlatform.iOS) {
+    if (defaultTargetPlatform != TargetPlatform.android &&
+        defaultTargetPlatform != TargetPlatform.iOS) {
       return {};
     }
     try {
-      final raw = await _channel.invokeMethod<dynamic>('getBackCameraIntrinsics');
+      final raw = await _channel.invokeMethod<dynamic>(
+        'getBackCameraIntrinsics',
+      );
       if (raw is Map) {
         return raw.map((k, v) => MapEntry(k.toString(), _normalize(v)));
       }

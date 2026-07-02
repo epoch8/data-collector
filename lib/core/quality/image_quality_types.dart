@@ -40,8 +40,11 @@ class ImageQualityResult {
   final double? gradientEnergy;
   final bool skipped;
 
-  static ImageQualityResult ok({bool skipped = false}) =>
-      ImageQualityResult(isAcceptable: true, issues: const [], skipped: skipped);
+  static ImageQualityResult ok({bool skipped = false}) => ImageQualityResult(
+    isAcceptable: true,
+    issues: const [],
+    skipped: skipped,
+  );
 
   static bool get _isRu => appLocaleNotifier.value.languageCode == 'ru';
 
@@ -49,7 +52,9 @@ class ImageQualityResult {
     if (issues.isEmpty) {
       return _isRu ? 'Качество кадра в порядке.' : 'Image quality looks good.';
     }
-    final title = _isRu ? 'Кадр не прошёл проверку:' : 'Frame did not pass quality check:';
+    final title = _isRu
+        ? 'Кадр не прошёл проверку:'
+        : 'Frame did not pass quality check:';
     return '$title\n${issues.map((e) => '• $e').join('\n')}';
   }
 }

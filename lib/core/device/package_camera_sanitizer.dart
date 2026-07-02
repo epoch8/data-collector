@@ -15,14 +15,18 @@ void _splitCaptureContext(Map<String, dynamic> data) {
     if (raw is Map<String, dynamic>) {
       ctx = Map<String, dynamic>.from(raw);
     } else if (raw is Map) {
-      ctx = Map<String, dynamic>.from(raw.map((k, v) => MapEntry(k.toString(), v)));
+      ctx = Map<String, dynamic>.from(
+        raw.map((k, v) => MapEntry(k.toString(), v)),
+      );
     }
   } else if (data.containsKey('korovas_camera_context')) {
     final raw = data.remove('korovas_camera_context');
     if (raw is Map<String, dynamic>) {
       ctx = Map<String, dynamic>.from(raw);
     } else if (raw is Map) {
-      ctx = Map<String, dynamic>.from(raw.map((k, v) => MapEntry(k.toString(), v)));
+      ctx = Map<String, dynamic>.from(
+        raw.map((k, v) => MapEntry(k.toString(), v)),
+      );
     }
   }
   if (ctx == null || ctx.isEmpty) return;
@@ -36,21 +40,23 @@ void _splitCaptureContext(Map<String, dynamic> data) {
     session['native_back_camera'] = _nativeSummaryWithoutCamera2(native);
   } else if (native is Map) {
     session['native_back_camera'] = _nativeSummaryWithoutCamera2(
-      Map<String, dynamic>.from(native.map((k, v) => MapEntry(k.toString(), v))),
+      Map<String, dynamic>.from(
+        native.map((k, v) => MapEntry(k.toString(), v)),
+      ),
     );
   }
 
   data[PackagePayloadKeys.cameraSession] = session;
 
-  final debug = <String, dynamic>{
-    PackagePayloadKeys.cameraCaptureContext: ctx,
-  };
+  final debug = <String, dynamic>{PackagePayloadKeys.cameraCaptureContext: ctx};
   final existing = data[PackagePayloadKeys.cameraDebug];
   if (existing is Map<String, dynamic>) {
     existing.addAll(debug);
     data[PackagePayloadKeys.cameraDebug] = existing;
   } else if (existing is Map) {
-    final m = Map<String, dynamic>.from(existing.map((k, v) => MapEntry(k.toString(), v)));
+    final m = Map<String, dynamic>.from(
+      existing.map((k, v) => MapEntry(k.toString(), v)),
+    );
     m.addAll(debug);
     data[PackagePayloadKeys.cameraDebug] = m;
   } else {
@@ -71,7 +77,9 @@ void _hoistShotSupplementsDeep(dynamic node) {
       _hoistShotSupplementsDeep(node[k]);
     }
   } else if (node is Map) {
-    final m = Map<String, dynamic>.from(node.map((k, v) => MapEntry(k.toString(), v)));
+    final m = Map<String, dynamic>.from(
+      node.map((k, v) => MapEntry(k.toString(), v)),
+    );
     _maybeHoistShotSupplement(m);
     node
       ..clear()

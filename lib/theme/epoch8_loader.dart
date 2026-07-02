@@ -67,9 +67,9 @@ class _Epoch8LoaderCentered extends StatelessWidget {
             const SizedBox(height: 14),
             Text(
               label!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Epoch8Theme.textMuted,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Epoch8Theme.textMuted),
             ),
           ],
         ],
