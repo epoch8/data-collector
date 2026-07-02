@@ -2,7 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-Widget localCaptureThumbnail(String path, {required double size, BoxFit fit = BoxFit.cover}) {
+Widget localCaptureThumbnail(
+  String path, {
+  required double size,
+  BoxFit fit = BoxFit.cover,
+}) {
   if (!File(path).existsSync()) {
     return SizedBox(
       width: size,

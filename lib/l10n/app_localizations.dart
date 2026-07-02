@@ -5,10 +5,7 @@ class AppLocalizations {
 
   final Locale locale;
 
-  static const supportedLocales = <Locale>[
-    Locale('ru'),
-    Locale('en'),
-  ];
+  static const supportedLocales = <Locale>[Locale('ru'), Locale('en')];
 
   static AppLocalizations of(BuildContext context) {
     final loc = Localizations.of<AppLocalizations>(context, AppLocalizations);
@@ -20,32 +17,41 @@ class AppLocalizations {
 
   bool get _isRu => locale.languageCode.toLowerCase().startsWith('ru');
 
-  String get appTitle => _isRu ? 'EPOCH8 Сборщик данных' : 'EPOCH8 Data Collector';
+  String get appTitle =>
+      _isRu ? 'EPOCH8 Сборщик данных' : 'EPOCH8 Data Collector';
   String get languageCodeLabel => _isRu ? 'RU' : 'EN';
-  String get languageToggleTooltip => _isRu ? 'Switch to English' : 'Переключить на русский';
+  String get languageToggleTooltip =>
+      _isRu ? 'Switch to English' : 'Переключить на русский';
   String get themeToggleTooltip => _isRu ? 'Переключить тему' : 'Toggle theme';
-  String get themeModeSystem => _isRu ? 'Тема: как в системе' : 'Theme: follow system';
+  String get themeModeSystem =>
+      _isRu ? 'Тема: как в системе' : 'Theme: follow system';
   String get themeModeLight => _isRu ? 'Тема: светлая' : 'Theme: light';
   String get themeModeDark => _isRu ? 'Тема: тёмная' : 'Theme: dark';
 
-  String get serverSetupTitle => _isRu ? 'Подключение к серверу не настроено' : 'Server connection is not configured';
+  String get serverSetupTitle => _isRu
+      ? 'Подключение к серверу не настроено'
+      : 'Server connection is not configured';
   String get serverSetupSubtitle => _isRu
       ? 'Запустите приложение, передав адрес сервера в параметре API_BASE_URL — после этого станет доступна синхронизация и отправка пакетов.'
       : 'Launch the app with API_BASE_URL pointing to your server — sync and uploads will become available after that.';
-  String get serverSetupCommandLabel => _isRu ? 'Команда запуска' : 'Launch command';
+  String get serverSetupCommandLabel =>
+      _isRu ? 'Команда запуска' : 'Launch command';
   String get serverSetupHintNote => _isRu
       ? 'Из эмулятора Android используйте 10.0.2.2 вместо localhost. Войдите в приложение через Firebase. Если на сервере не включён Firebase Auth, можно дополнительно передать --dart-define=API_BEARER_TOKEN=...'
       : 'From an Android emulator use 10.0.2.2 instead of localhost. Sign in via Firebase. If Firebase Auth is not enabled on the server, you can also pass --dart-define=API_BEARER_TOKEN=...';
   String get copyToClipboard => _isRu ? 'Скопировать' : 'Copy';
-  String get copiedToClipboard => _isRu ? 'Скопировано в буфер обмена' : 'Copied to clipboard';
+  String get copiedToClipboard =>
+      _isRu ? 'Скопировано в буфер обмена' : 'Copied to clipboard';
 
   String get appVersionLabel => _isRu ? 'Версия' : 'Version';
 
-  String get errorScreenTitle => _isRu ? 'Что-то пошло не так' : 'Something went wrong';
+  String get errorScreenTitle =>
+      _isRu ? 'Что-то пошло не так' : 'Something went wrong';
   String get errorScreenSubtitle => _isRu
       ? 'Произошла непредвиденная ошибка. Попробуйте вернуться назад или перезапустить приложение.'
       : 'An unexpected error occurred. Try going back or restarting the app.';
-  String get errorScreenDetailsLabel => _isRu ? 'Подробности (для разработчиков)' : 'Details (for developers)';
+  String get errorScreenDetailsLabel =>
+      _isRu ? 'Подробности (для разработчиков)' : 'Details (for developers)';
   String get loginTitle => 'Data Collector';
   String get loginSubtitle => _isRu
       ? 'Сбор полевых данных и фото с офлайн-историей на устройстве'
@@ -63,22 +69,26 @@ class AppLocalizations {
       : 'Project not found in configuration.';
   String get project => _isRu ? 'Проект' : 'Project';
   String get errorPrefix => _isRu ? 'Ошибка' : 'Error';
-  String get packageNotFoundTitle => _isRu ? 'Пакет не найден' : 'Package not found';
+  String get packageNotFoundTitle =>
+      _isRu ? 'Пакет не найден' : 'Package not found';
   String get packageNotFoundSubtitle => _isRu
       ? 'Возможно, он был удалён или база обновилась.'
       : 'It may have been deleted or the database has been updated.';
-  String get packageNoPhotosTitle => _isRu ? 'В пакете нет фото' : 'No photos in package';
-  String get packageNoPhotosSubtitle => _isRu
-      ? 'Сохранены только поля формы.'
-      : 'Only form fields were saved.';
+  String get packageNoPhotosTitle =>
+      _isRu ? 'В пакете нет фото' : 'No photos in package';
+  String get packageNoPhotosSubtitle =>
+      _isRu ? 'Сохранены только поля формы.' : 'Only form fields were saved.';
   String get formDataTitle => _isRu ? 'Данные анкеты' : 'Form data';
   String get openPhoto => _isRu ? 'Открыть' : 'Open';
-  String get fileNotFoundOnDevice => _isRu ? 'Файл не найден на устройстве' : 'File not found on device';
-  String get frameCameraParams => _isRu ? 'Параметры кадра и камеры' : 'Frame and camera parameters';
+  String get fileNotFoundOnDevice =>
+      _isRu ? 'Файл не найден на устройстве' : 'File not found on device';
+  String get frameCameraParams =>
+      _isRu ? 'Параметры кадра и камеры' : 'Frame and camera parameters';
   String get downloadManifestAsServer => _isRu
       ? 'Скачать JSON манифеста (как на сервер)'
       : 'Download manifest JSON (server format)';
-  String get packageNotFoundShort => _isRu ? 'Пакеты не найдены' : 'Packages not found';
+  String get packageNotFoundShort =>
+      _isRu ? 'Пакеты не найдены' : 'Packages not found';
   String get noPackagesForSubject => _isRu
       ? 'Для этого объекта пока нет сохранённых пакетов.'
       : 'There are no saved packages for this subject yet.';
@@ -87,13 +97,14 @@ class AppLocalizations {
       ? 'Отправленные пакеты появятся здесь.'
       : 'Sent packages will appear here.';
   String get noProjectsTitle => _isRu ? 'Пока нет проектов' : 'No projects yet';
-  String get clearUploadedCache => _isRu ? 'Очистить кэш загруженных' : 'Clear uploaded cache';
-  String clearUploadedCacheWithCount(int n) => _isRu
-      ? 'Очистить кэш загруженных ($n)'
-      : 'Clear uploaded cache ($n)';
+  String get clearUploadedCache =>
+      _isRu ? 'Очистить кэш загруженных' : 'Clear uploaded cache';
+  String clearUploadedCacheWithCount(int n) =>
+      _isRu ? 'Очистить кэш загруженных ($n)' : 'Clear uploaded cache ($n)';
   String get packageWordShort => _isRu ? 'пак.' : 'pkg.';
   String packageCountShort(int n) => '$n ${packageWordShort}';
-  String get allPackagesOnServer => _isRu ? 'Все пакеты на сервере' : 'All packages are on server';
+  String get allPackagesOnServer =>
+      _isRu ? 'Все пакеты на сервере' : 'All packages are on server';
   String get uploadFailed => _isRu ? 'Ошибка отправки' : 'Upload failed';
   String get notOnServer => _isRu ? 'Не на сервере' : 'Not on server';
   String get photos => _isRu ? 'Фото' : 'Photos';
@@ -110,11 +121,13 @@ class AppLocalizations {
   String get close => _isRu ? 'Закрыть' : 'Close';
   String get fileNotFound => _isRu ? 'Файл не найден' : 'File not found';
   String get pathLabel => _isRu ? 'Путь' : 'Path';
-  String projectLabel(String value) => _isRu ? 'Проект: $value' : 'Project: $value';
+  String projectLabel(String value) =>
+      _isRu ? 'Проект: $value' : 'Project: $value';
   String get firebaseNotInitialized => _isRu
       ? 'Firebase не инициализирован: проверьте lib/firebase_options.dart и google-services.json (Android). Для разработки без входа:'
       : 'Firebase is not initialized: check lib/firebase_options.dart and google-services.json (Android). For development without sign-in:';
-  String get goToWorkspace => _isRu ? 'Перейти в рабочее пространство' : 'Go to workspace';
+  String get goToWorkspace =>
+      _isRu ? 'Перейти в рабочее пространство' : 'Go to workspace';
   String get configError => _isRu ? 'Ошибка конфига' : 'Config error';
   String get serverEmptySubtitleConfigured => _isRu
       ? 'С сервера пока нечего показать: нет доступных проектов или нет сети (показан кэш/bundled). Потяните вниз для обновления.'
@@ -122,17 +135,23 @@ class AppLocalizations {
   String get serverEmptySubtitleNotConfigured => _isRu
       ? 'Задайте API_BASE_URL при запуске, чтобы подтянуть проекты с Django, или добавьте проекты в assets/config/projects.json.'
       : 'Set API_BASE_URL at startup to fetch projects from Django, or add projects to assets/config/projects.json.';
-  String get downloadManifest => _isRu ? 'Скачать JSON манифеста' : 'Download manifest JSON';
-  String get deleteFromDevice => _isRu ? 'Удалить с устройства' : 'Delete from device';
+  String get downloadManifest =>
+      _isRu ? 'Скачать JSON манифеста' : 'Download manifest JSON';
+  String get deleteFromDevice =>
+      _isRu ? 'Удалить с устройства' : 'Delete from device';
   String get photosLower => _isRu ? 'фото' : 'photos';
   String get noId => _isRu ? 'без-id' : 'no-id';
-  String get projectMissingInConfig => _isRu ? 'нет в конфиге' : 'missing in config';
+  String get projectMissingInConfig =>
+      _isRu ? 'нет в конфиге' : 'missing in config';
   String get addProjectToAssets => _isRu
       ? 'Добавьте проект в assets/config/projects.json'
       : 'Add project to assets/config/projects.json';
-  String get loadingConfigError => _isRu ? 'Ошибка загрузки конфига' : 'Config loading error';
-  String get projectNotFoundShort => _isRu ? 'Проект не найден' : 'Project not found';
-  String get projectNotFoundShortDot => _isRu ? 'Проект не найден.' : 'Project not found.';
+  String get loadingConfigError =>
+      _isRu ? 'Ошибка загрузки конфига' : 'Config loading error';
+  String get projectNotFoundShort =>
+      _isRu ? 'Проект не найден' : 'Project not found';
+  String get projectNotFoundShortDot =>
+      _isRu ? 'Проект не найден.' : 'Project not found.';
   String get unsupportedFieldType => _isRu
       ? 'Тип поля не поддерживается на этом экране.'
       : 'Field type is not supported on this screen.';
@@ -141,47 +160,66 @@ class AppLocalizations {
       : 'Supported: text_input, camera_photo.';
   String get submitPackage => _isRu ? 'Отправить пакет' : 'Submit package';
   String get capturePhoto => _isRu ? 'Сделать фото' : 'Capture photo';
-  String get takeAnotherPhoto => _isRu ? 'Сделать еще фото' : 'Take another photo';
+  String get takeAnotherPhoto =>
+      _isRu ? 'Сделать еще фото' : 'Take another photo';
   String get photosCaptured => _isRu ? 'снимков' : 'photos captured';
   String get photoSaved => _isRu ? 'Фото сохранено' : 'Photo saved';
   String get finishFocus => _isRu ? 'Завершить' : 'Finish';
   String get saveAndNext => _isRu ? 'Сохранить и дальше' : 'Save & next';
-  String get projectsUpdated => _isRu ? 'Проекты обновлены с сервера' : 'Projects synced from server';
+  String get projectsUpdated =>
+      _isRu ? 'Проекты обновлены с сервера' : 'Projects synced from server';
   String get syncError => _isRu ? 'Ошибка синхронизации' : 'Sync error';
-  String packageSent(String id) => _isRu ? 'Пакет $id отправлен' : 'Package $id sent';
+  String packageSent(String id) =>
+      _isRu ? 'Пакет $id отправлен' : 'Package $id sent';
   String get serverSetupHint => _isRu
       ? 'Чтобы ходить на Django с эмулятора, запустите приложение с:\n\nflutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000\n\n(порт как у runserver). Войдите в приложении через Firebase.\nЕсли на сервере не включён Firebase Auth, можно добавить:\n--dart-define=API_BEARER_TOKEN=...'
       : 'To access Django from an emulator, run the app with:\n\nflutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000\n\n(use your runserver port). Sign in via Firebase.\nIf Firebase Auth is not enabled on server, you can also add:\n--dart-define=API_BEARER_TOKEN=...';
   String baseUrlLabel(String url) => _isRu ? 'База: $url' : 'Base: $url';
   String get syncingConfigs => _isRu ? 'Качаем конфиги…' : 'Syncing configs...';
-  String get syncProjects => _isRu ? 'Синхронизировать проекты' : 'Sync projects';
+  String get syncProjects =>
+      _isRu ? 'Синхронизировать проекты' : 'Sync projects';
   String get serverQueue => _isRu ? 'Очередь на сервер' : 'Server queue';
-  String get noQueuePackages => _isRu ? 'Нет пакетов в очереди' : 'No packages in queue';
+  String get noQueuePackages =>
+      _isRu ? 'Нет пакетов в очереди' : 'No packages in queue';
   String get noQueuePackagesSubtitle => _isRu
       ? 'Все сохранённые пакеты уже на сервере или нет локальных данных.'
       : 'All saved packages are already on server, or there is no local data.';
-  String serverStateLabel(String state) => _isRu ? 'Сервер: $state' : 'Server: $state';
+  String serverStateLabel(String state) =>
+      _isRu ? 'Сервер: $state' : 'Server: $state';
   String get send => _isRu ? 'Отправить' : 'Send';
   String get dbError => _isRu ? 'Ошибка БД' : 'DB error';
-  String get confirmDeletePackageTitle => _isRu ? 'Удалить пакет?' : 'Delete package?';
+  String get confirmDeletePackageTitle =>
+      _isRu ? 'Удалить пакет?' : 'Delete package?';
   String confirmDeletePackageBody(String id) => _isRu
       ? 'Пакет $id будет удалён с устройства (данные и фото в локальном кэше). На сервере копия не удаляется.'
       : 'Package $id will be deleted from this device (local data and photos). Server copy will not be deleted.';
   String get cancel => _isRu ? 'Отмена' : 'Cancel';
   String get delete => _isRu ? 'Удалить' : 'Delete';
-  String deletedFromDevice(String id) => _isRu ? 'Пакет $id удалён с устройства' : 'Package $id deleted from device';
-  String get clearUploadedCacheConfirmTitle => _isRu ? 'Очистить кэш загруженных?' : 'Clear uploaded cache?';
+  String deletedFromDevice(String id) => _isRu
+      ? 'Пакет $id удалён с устройства'
+      : 'Package $id deleted from device';
+  String get clearUploadedCacheConfirmTitle =>
+      _isRu ? 'Очистить кэш загруженных?' : 'Clear uploaded cache?';
   String get clearUploadedCacheConfirmBody => _isRu
       ? 'Будут удалены только пакеты со статусом «загружен на сервер»: записи в истории и локальные файлы. Пакеты, которые ещё не отправлены, останутся.'
       : 'Only packages with state "uploaded to server" will be removed: history records and local files. Not-yet-sent packages will stay.';
   String get clear => _isRu ? 'Очистить' : 'Clear';
-  String clearedPackagesCount(int n) => _isRu ? 'Удалено пакетов с устройства: $n' : 'Packages removed from device: $n';
+  String clearedPackagesCount(int n) => _isRu
+      ? 'Удалено пакетов с устройства: $n'
+      : 'Packages removed from device: $n';
   String get nothingToDelete => _isRu ? 'Нечего удалять' : 'Nothing to delete';
-  String get webExportNotSupported => _isRu ? 'Экспорт JSON на веб пока не поддерживается.' : 'JSON export on web is not supported yet.';
+  String get webExportNotSupported => _isRu
+      ? 'Экспорт JSON на веб пока не поддерживается.'
+      : 'JSON export on web is not supported yet.';
   String manifestSubject(String id) => _isRu ? 'Манифест $id' : 'Manifest $id';
-  String get manifestShareText => _isRu ? 'JSON манифеста пакета (как на сервер)' : 'Package manifest JSON (server format)';
-  String exportJsonFailed(String e) => _isRu ? 'Не удалось экспортировать JSON: $e' : 'Failed to export JSON: $e';
-  String get packageSavedLocal => _isRu ? 'Пакет сохранен локально' : 'Package saved locally';
+  String get manifestShareText => _isRu
+      ? 'JSON манифеста пакета (как на сервер)'
+      : 'Package manifest JSON (server format)';
+  String exportJsonFailed(String e) => _isRu
+      ? 'Не удалось экспортировать JSON: $e'
+      : 'Failed to export JSON: $e';
+  String get packageSavedLocal =>
+      _isRu ? 'Пакет сохранен локально' : 'Package saved locally';
   String get cannotUploadDraft => _isRu
       ? 'Нельзя отправить незавершённый черновик — завершите сбор на устройстве.'
       : 'Cannot upload unfinished draft — complete collection on device first.';
@@ -190,7 +228,8 @@ class AppLocalizations {
       : 'No access to this project for current user (check server catalog).';
 
   // --- Collection flow: app-controlled chrome (not from project JSON) ---
-  String get flowDraftDialogTitle => _isRu ? 'Незавершённый сбор' : 'Unfinished collection';
+  String get flowDraftDialogTitle =>
+      _isRu ? 'Незавершённый сбор' : 'Unfinished collection';
   String get flowDraftDialogBody => _isRu
       ? 'Найден сохранённый прогресс по этому проекту. Продолжить с того же места или начать новый пакет?'
       : 'Saved progress was found for this project. Continue from the same place or start a new package?';
@@ -198,7 +237,8 @@ class AppLocalizations {
   String get flowDraftContinue => _isRu ? 'Продолжить' : 'Continue';
   String get flowNext => _isRu ? 'Далее' : 'Next';
   String get flowToReview => _isRu ? 'К проверке' : 'To review';
-  String get flowRibbonReview => _isRu ? 'Проверка и отправка' : 'Review and submit';
+  String get flowRibbonReview =>
+      _isRu ? 'Проверка и отправка' : 'Review and submit';
   String get flowRibbonScrollForm => _isRu ? 'Шаг сбора' : 'Collection step';
   String flowScrollCounter(int cur, int total) =>
       _isRu ? '$cur из $total' : '$cur of $total';
@@ -211,71 +251,94 @@ class AppLocalizations {
       : 'This step contains instructions only (Markdown) — no fields to review.';
   String get flowReviewNoFrames => _isRu ? 'Нет кадров' : 'No frames';
   String get flowReviewHeaderOverline => _isRu ? 'Завершение' : 'Finish';
-  String get flowReviewHeaderTitle => _isRu ? 'Проверка и отправка' : 'Review and submit';
+  String get flowReviewHeaderTitle =>
+      _isRu ? 'Проверка и отправка' : 'Review and submit';
   String get flowReviewHeaderSubtitle => _isRu
       ? 'Проверьте данные. Можно вернуться к любому шагу — введённые значения и фото сохраняются.'
       : 'Check the data. You can go back to any step — entered values and photos are preserved.';
   String get flowReviewSubmit => _isRu ? 'Отправить данные' : 'Submit data';
   String get flowReviewEmptyValue => '—';
   String flowCameraMetaFxEstimate(String value) => 'fₓ≈$value px';
-  String get flowCameraMetaTapToExpand => _isRu ? 'Нажмите, чтобы развернуть' : 'Tap to expand';
+  String get flowCameraMetaTapToExpand =>
+      _isRu ? 'Нажмите, чтобы развернуть' : 'Tap to expand';
   String get flowCameraMetaEmptyNotice => _isRu
       ? 'Метаданные камеры появятся после съёмки ракурсов.'
       : 'Camera metadata will appear after capture poses are taken.';
-  String get flowCameraMetaTileTitle => _isRu ? 'Метаданные камеры' : 'Camera metadata';
+  String get flowCameraMetaTileTitle =>
+      _isRu ? 'Метаданные камеры' : 'Camera metadata';
   String get flowCameraMetaSectionDevice => _isRu ? 'Устройство' : 'Device';
-  String get flowCameraMetaSectionNative => _isRu ? 'Нативная камера (задняя)' : 'Native camera (rear)';
-  String get flowCameraMetaJsonSection => _isRu ? 'Полный JSON (копировать)' : 'Full JSON (copy)';
-  String get flowCameraMetaNativeEmpty => _isRu ? 'Нет данных нативного API' : 'No data from native API';
-  String flowCameraMetaPoseShotTitle(int idx, int shot) => _isRu
-      ? 'Ракурс $idx — кадр $shot'
-      : 'Pose $idx — frame $shot';
+  String get flowCameraMetaSectionNative =>
+      _isRu ? 'Нативная камера (задняя)' : 'Native camera (rear)';
+  String get flowCameraMetaJsonSection =>
+      _isRu ? 'Полный JSON (копировать)' : 'Full JSON (copy)';
+  String get flowCameraMetaNativeEmpty =>
+      _isRu ? 'Нет данных нативного API' : 'No data from native API';
+  String flowCameraMetaPoseShotTitle(int idx, int shot) =>
+      _isRu ? 'Ракурс $idx — кадр $shot' : 'Pose $idx — frame $shot';
   String flowCameraMetaPoseDerivedTitle(int idx) =>
       _isRu ? 'Ракурс $idx — оценки' : 'Pose $idx — estimates';
-  String get flowCameraMetaFrameCameraHeading => _isRu ? 'Кадр (основной)' : 'Frame (primary)';
-  String get flowCameraMetaDerivedHeading =>
-      _isRu ? 'Доп. оценки фокусного (дополнение)' : 'Additional focal estimates (supplement)';
-  String get flowCameraMetaLabelFxExif => _isRu ? 'fx_px (EXIF × сенсор)' : 'fx_px (EXIF focal × sensor)';
-  String get flowCameraMetaLabelFx35mm => _isRu ? 'fx_px (экв. 35 мм)' : 'fx_px (35mm equiv)';
-  String get flowCameraMetaLabelFxNative => _isRu ? 'fx_px (нативно)' : 'fx_px (native)';
-  String get flowCameraMetaExifHeading => _isRu ? 'Фрагмент EXIF' : 'EXIF fragment';
+  String get flowCameraMetaFrameCameraHeading =>
+      _isRu ? 'Кадр (основной)' : 'Frame (primary)';
+  String get flowCameraMetaDerivedHeading => _isRu
+      ? 'Доп. оценки фокусного (дополнение)'
+      : 'Additional focal estimates (supplement)';
+  String get flowCameraMetaLabelFxExif =>
+      _isRu ? 'fx_px (EXIF × сенсор)' : 'fx_px (EXIF focal × sensor)';
+  String get flowCameraMetaLabelFx35mm =>
+      _isRu ? 'fx_px (экв. 35 мм)' : 'fx_px (35mm equiv)';
+  String get flowCameraMetaLabelFxNative =>
+      _isRu ? 'fx_px (нативно)' : 'fx_px (native)';
+  String get flowCameraMetaExifHeading =>
+      _isRu ? 'Фрагмент EXIF' : 'EXIF fragment';
   String flowCameraMetaExifMore(int n) =>
       _isRu ? '… ещё $n полей' : '… $n more fields';
   String flowCameraMetaNativeMapSummary(int keyCount) => _isRu
       ? '{$keyCount ключей} — см. полный JSON ниже'
       : '{$keyCount keys} — see full JSON below';
 
-  String get flowFormSubjectHintExact => _isRu ? 'ID есть в локальной истории' : 'ID found in local history';
-  String get flowFormSubjectHintSimilar => _isRu ? 'В истории есть похожие ID' : 'There are similar IDs in history';
-  String get flowFormSubjectHintNew => _isRu ? 'Новый ID (нет в истории)' : 'New ID (not found in history)';
-  String get flowFormPrefillButton =>
-      _isRu ? 'Подставить поля из последней записи' : 'Prefill fields from latest record';
+  String get flowFormSubjectHintExact =>
+      _isRu ? 'ID есть в локальной истории' : 'ID found in local history';
+  String get flowFormSubjectHintSimilar =>
+      _isRu ? 'В истории есть похожие ID' : 'There are similar IDs in history';
+  String get flowFormSubjectHintNew =>
+      _isRu ? 'Новый ID (нет в истории)' : 'New ID (not found in history)';
+  String get flowFormPrefillButton => _isRu
+      ? 'Подставить поля из последней записи'
+      : 'Prefill fields from latest record';
   String get flowFormDatetimeChange => _isRu ? 'Изменить' : 'Change';
-  String get flowFormInstructionEmpty =>
-      _isRu ? 'Нет текста инструкции для этого блока.' : 'No instruction text for this block.';
+  String get flowFormInstructionEmpty => _isRu
+      ? 'Нет текста инструкции для этого блока.'
+      : 'No instruction text for this block.';
   String get flowCameraPoseExampleAssetMissing =>
       _isRu ? 'Не удалось загрузить пример' : 'Could not load example image';
-  String get flowCameraPoseQualityTitle => _isRu ? 'Проверка качества кадра' : 'Frame quality check';
-  String get flowCameraPoseUseAnyway => _isRu ? 'Всё равно использовать' : 'Use anyway';
+  String get flowCameraPoseQualityTitle =>
+      _isRu ? 'Проверка качества кадра' : 'Frame quality check';
+  String get flowCameraPoseUseAnyway =>
+      _isRu ? 'Всё равно использовать' : 'Use anyway';
   String get flowCameraPoseRetake => _isRu ? 'Переснять' : 'Retake';
   String flowCameraPoseYourShots(int count) =>
       _isRu ? 'Ваши кадры ($count)' : 'Your frames ($count)';
-  String get flowCameraPoseEmptyHint =>
-      _isRu ? 'Добавьте кадры с камеры или из галереи' : 'Add frames from camera or gallery';
+  String get flowCameraPoseEmptyHint => _isRu
+      ? 'Добавьте кадры с камеры или из галереи'
+      : 'Add frames from camera or gallery';
   String get flowCameraPoseCamera => _isRu ? 'Камера' : 'Camera';
   String get flowCameraPoseGallery => _isRu ? 'Галерея' : 'Gallery';
-  String get flowCameraPoseClearAll =>
-      _isRu ? 'Удалить все кадры этого ракурса' : 'Delete all frames for this pose';
+  String get flowCameraPoseClearAll => _isRu
+      ? 'Удалить все кадры этого ракурса'
+      : 'Delete all frames for this pose';
 
   String get shootingGuideSectionOverline => _isRu ? 'Справка' : 'Guide';
   String get shootingGuideSectionTitle => _isRu ? 'Съёмка' : 'Shooting';
-  String get shootingGuideGeneralTipsHeading => _isRu ? 'Общие советы' : 'General tips';
+  String get shootingGuideGeneralTipsHeading =>
+      _isRu ? 'Общие советы' : 'General tips';
   String get shootingGuideAssetMissing =>
       _isRu ? 'Изображение недоступно' : 'Image unavailable';
   String get shootingGuideStartButton => _isRu ? 'Понятно' : 'OK';
 
-  String get helpTitle => _isRu ? 'Как пользоваться приложением' : 'How to use the app';
-  String get helpQuickStartTitle => _isRu ? 'Коротко: как работать' : 'Quick workflow';
+  String get helpTitle =>
+      _isRu ? 'Как пользоваться приложением' : 'How to use the app';
+  String get helpQuickStartTitle =>
+      _isRu ? 'Коротко: как работать' : 'Quick workflow';
   String get helpQuickStartBody => _isRu
       ? 'Процесс простой: выберите проект, пройдите шаги, отправьте пакеты на вкладке «Сервер», затем смотрите статусы и детали в «Истории».'
       : 'The flow is simple: choose a project, complete the steps, send packages on the Server tab, then check statuses and details in History.';
@@ -294,7 +357,8 @@ class AppLocalizations {
   String get helpStep3Body => _isRu
       ? 'Перейдите во вкладку «Сервер» и отправьте очередь пакетов.'
       : 'Go to the Server tab and send queued packages.';
-  String get helpStep4Title => _isRu ? 'Проверьте историю и статусы' : 'Check history and statuses';
+  String get helpStep4Title =>
+      _isRu ? 'Проверьте историю и статусы' : 'Check history and statuses';
   String get helpStep4Body => _isRu
       ? 'Во вкладке «История» доступны статусы, просмотр пакетов и фото.'
       : 'In the History tab you can see statuses, package details, and photos.';
@@ -322,12 +386,15 @@ class _Delegate extends LocalizationsDelegate<AppLocalizations> {
   const _Delegate();
 
   @override
-  bool isSupported(Locale locale) =>
-      AppLocalizations.supportedLocales.any((l) => l.languageCode == locale.languageCode);
+  bool isSupported(Locale locale) => AppLocalizations.supportedLocales.any(
+    (l) => l.languageCode == locale.languageCode,
+  );
 
   @override
-  Future<AppLocalizations> load(Locale locale) async => AppLocalizations(locale);
+  Future<AppLocalizations> load(Locale locale) async =>
+      AppLocalizations(locale);
 
   @override
-  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) => false;
+  bool shouldReload(covariant LocalizationsDelegate<AppLocalizations> old) =>
+      false;
 }

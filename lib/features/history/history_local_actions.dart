@@ -12,7 +12,8 @@ Future<void> confirmAndDeleteLocalPackage(
   Package pkg,
 ) async {
   final loc = AppLocalizations.of(context);
-  final ok = await showDialog<bool>(
+  final ok =
+      await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(loc.confirmDeletePackageTitle),
@@ -21,8 +22,14 @@ Future<void> confirmAndDeleteLocalPackage(
             style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.cancel)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.delete)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(loc.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(loc.delete),
+            ),
           ],
         ),
       ) ??
@@ -30,14 +37,18 @@ Future<void> confirmAndDeleteLocalPackage(
   if (!ok || !context.mounted) return;
   await deleteLocalPackageStorage(ref.read(databaseProvider), pkg.id);
   if (!context.mounted) return;
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(loc.deletedFromDevice(pkg.id))),
-  );
+  ScaffoldMessenger.of(
+    context,
+  ).showSnackBar(SnackBar(content: Text(loc.deletedFromDevice(pkg.id))));
 }
 
-Future<int?> confirmAndClearUploadedPackagesCache(BuildContext context, WidgetRef ref) async {
+Future<int?> confirmAndClearUploadedPackagesCache(
+  BuildContext context,
+  WidgetRef ref,
+) async {
   final loc = AppLocalizations.of(context);
-  final ok = await showDialog<bool>(
+  final ok =
+      await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(loc.clearUploadedCacheConfirmTitle),
@@ -46,8 +57,14 @@ Future<int?> confirmAndClearUploadedPackagesCache(BuildContext context, WidgetRe
             style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.cancel)),
-            FilledButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.clear)),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: Text(loc.cancel),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              child: Text(loc.clear),
+            ),
           ],
         ),
       ) ??
@@ -56,7 +73,9 @@ Future<int?> confirmAndClearUploadedPackagesCache(BuildContext context, WidgetRe
   final n = await deleteCompletedPackagesLocalCache(ref.read(databaseProvider));
   if (!context.mounted) return n;
   ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text(n == 0 ? loc.nothingToDelete : loc.clearedPackagesCount(n))),
+    SnackBar(
+      content: Text(n == 0 ? loc.nothingToDelete : loc.clearedPackagesCount(n)),
+    ),
   );
   return n;
 }

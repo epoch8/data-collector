@@ -1,1 +1,3 @@
-Future<Map<String, dynamic>?> readPayloadJsonFromDiskIfPresent(String packageId) async => null;
+Future<Map<String, dynamic>?> readPayloadJsonFromDiskIfPresent(
+  String packageId,
+) async => null;

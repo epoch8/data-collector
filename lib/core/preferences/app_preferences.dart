@@ -23,7 +23,10 @@ class AppPreferences {
   /// Доступно только после [ensureInitialized].
   static AppPreferences get instance {
     final i = _instance;
-    assert(i != null, 'AppPreferences.ensureInitialized() must be called first');
+    assert(
+      i != null,
+      'AppPreferences.ensureInitialized() must be called first',
+    );
     return i!;
   }
 

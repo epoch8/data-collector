@@ -64,24 +64,24 @@ class $PackagesTable extends Packages with TableInfo<$PackagesTable, Package> {
   @override
   late final GeneratedColumn<String> serverDeliveryState =
       GeneratedColumn<String>(
-    'server_delivery_state',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-    defaultValue: const Constant<String>('pending'),
-  );
+        'server_delivery_state',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+        defaultValue: const Constant<String>('pending'),
+      );
   static const VerificationMeta _serverDeliveryErrorMeta =
       const VerificationMeta('serverDeliveryError');
   @override
   late final GeneratedColumn<String> serverDeliveryError =
       GeneratedColumn<String>(
-    'server_delivery_error',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
+        'server_delivery_error',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -405,8 +405,10 @@ class PackagesCompanion extends UpdateCompanion<Package> {
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
       if (dataJson != null) 'data_json': dataJson,
-      if (serverDeliveryState != null) 'server_delivery_state': serverDeliveryState,
-      if (serverDeliveryError != null) 'server_delivery_error': serverDeliveryError,
+      if (serverDeliveryState != null)
+        'server_delivery_state': serverDeliveryState,
+      if (serverDeliveryError != null)
+        'server_delivery_error': serverDeliveryError,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -452,10 +454,14 @@ class PackagesCompanion extends UpdateCompanion<Package> {
       map['data_json'] = Variable<String>(dataJson.value);
     }
     if (serverDeliveryState.present) {
-      map['server_delivery_state'] = Variable<String>(serverDeliveryState.value);
+      map['server_delivery_state'] = Variable<String>(
+        serverDeliveryState.value,
+      );
     }
     if (serverDeliveryError.present) {
-      map['server_delivery_error'] = Variable<String>(serverDeliveryError.value);
+      map['server_delivery_error'] = Variable<String>(
+        serverDeliveryError.value,
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -627,11 +633,15 @@ class $$PackagesTableAnnotationComposer
   GeneratedColumn<String> get dataJson =>
       $composableBuilder(column: $table.dataJson, builder: (column) => column);
 
-  GeneratedColumn<String> get serverDeliveryState =>
-      $composableBuilder(column: $table.serverDeliveryState, builder: (column) => column);
+  GeneratedColumn<String> get serverDeliveryState => $composableBuilder(
+    column: $table.serverDeliveryState,
+    builder: (column) => column,
+  );
 
-  GeneratedColumn<String> get serverDeliveryError =>
-      $composableBuilder(column: $table.serverDeliveryError, builder: (column) => column);
+  GeneratedColumn<String> get serverDeliveryError => $composableBuilder(
+    column: $table.serverDeliveryError,
+    builder: (column) => column,
+  );
 }
 
 class $$PackagesTableTableManager

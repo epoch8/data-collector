@@ -9,24 +9,32 @@ import 'package:drift/drift.dart' show OrderingTerm, Value;
 const String kPackageStatusDraft = 'draft';
 
 /// Последний черновик по проекту (если несколько — по дате создания).
-Future<Package?> selectLatestDraftForProject(AppDatabase db, String projectId) async {
-  final rows = await (db.select(db.packages)
-        ..where((t) => t.projectId.equals(projectId))
-        ..where((t) => t.status.equals(kPackageStatusDraft))
-        ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-        ..limit(1))
-      .get();
+Future<Package?> selectLatestDraftForProject(
+  AppDatabase db,
+  String projectId,
+) async {
+  final rows =
+      await (db.select(db.packages)
+            ..where((t) => t.projectId.equals(projectId))
+            ..where((t) => t.status.equals(kPackageStatusDraft))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
+            ..limit(1))
+          .get();
   return rows.isEmpty ? null : rows.first;
 }
 
 /// Удаляет все локальные черновики по [projectId] (запись + каталог на диске при наличии).
 /// После завершённого пакета не должны оставаться «висячие» сессии, из‑за которых снова
 /// показывается диалог продолжения или подтягиваются старые данные.
-Future<int> deleteAllDraftPackagesForProject(AppDatabase db, String projectId) async {
-  final drafts = await (db.select(db.packages)
-        ..where((t) => t.projectId.equals(projectId))
-        ..where((t) => t.status.equals(kPackageStatusDraft)))
-      .get();
+Future<int> deleteAllDraftPackagesForProject(
+  AppDatabase db,
+  String projectId,
+) async {
+  final drafts =
+      await (db.select(db.packages)
+            ..where((t) => t.projectId.equals(projectId))
+            ..where((t) => t.status.equals(kPackageStatusDraft)))
+          .get();
   var n = 0;
   for (final d in drafts) {
     await deleteLocalPackageStorage(db, d.id);
@@ -61,14 +69,17 @@ Future<void> upsertCollectionDraft({
   };
   final json = jsonEncode(env);
 
-  final existing =
-      await (db.select(db.packages)..where((t) => t.id.equals(packageId))).get();
+  final existing = await (db.select(
+    db.packages,
+  )..where((t) => t.id.equals(packageId))).get();
   if (existing.isNotEmpty && existing.first.status != kPackageStatusDraft) {
     // Не откатывать завершённый пакет в черновик (гонка debounce после submit на web/mobile).
     return;
   }
   if (existing.isEmpty) {
-    await db.into(db.packages).insert(
+    await db
+        .into(db.packages)
+        .insert(
           PackagesCompanion.insert(
             id: packageId,
             projectId: projectId,
@@ -79,10 +90,10 @@ Future<void> upsertCollectionDraft({
         );
   } else {
     await (db.update(db.packages)..where((t) => t.id.equals(packageId))).write(
-          PackagesCompanion(
-            dataJson: Value(json),
-            status: const Value(kPackageStatusDraft),
-          ),
-        );
+      PackagesCompanion(
+        dataJson: Value(json),
+        status: const Value(kPackageStatusDraft),
+      ),
+    );
   }
 }

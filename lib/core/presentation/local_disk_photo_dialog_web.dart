@@ -18,7 +18,10 @@ Future<void> showLocalDiskPhotoDialog(BuildContext context, String path) async {
         title: Text(loc.fileNotFound),
         content: Text(loc.webExportNotSupported),
         actions: [
-          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: Text(loc.close)),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text(loc.close),
+          ),
         ],
       ),
     );

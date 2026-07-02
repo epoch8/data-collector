@@ -66,7 +66,9 @@ class Epoch8ThemeSwitcher extends StatelessWidget {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: appThemeModeNotifier,
       builder: (context, mode, _) {
-        final tooltip = mode == ThemeMode.light ? loc.themeModeLight : loc.themeModeDark;
+        final tooltip = mode == ThemeMode.light
+            ? loc.themeModeLight
+            : loc.themeModeDark;
         return IconButton(
           tooltip: tooltip,
           onPressed: toggleAppThemeMode,

@@ -18,6 +18,7 @@ class CollectedPackage {
     required this.data,
   });
 
-  factory CollectedPackage.fromJson(Map<String, dynamic> json) => _$CollectedPackageFromJson(json);
+  factory CollectedPackage.fromJson(Map<String, dynamic> json) =>
+      _$CollectedPackageFromJson(json);
   Map<String, dynamic> toJson() => _$CollectedPackageToJson(this);
 }

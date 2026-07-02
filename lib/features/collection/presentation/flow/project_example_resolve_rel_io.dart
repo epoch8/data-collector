@@ -2,7 +2,6 @@ import 'package:data_collector/core/api/dio_provider.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_example_media.dart';
 import 'package:data_collector/features/projects/project_asset_cache_io.dart';
 import 'package:data_collector/models/project_config.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

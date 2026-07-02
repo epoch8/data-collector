@@ -30,11 +30,14 @@ Future<void> uploadDriftPackageToServer({
   }
 
   if (pkg.status == 'draft') {
-    throw StateError('Cannot upload unfinished draft — complete collection on device first.');
+    throw StateError(
+      'Cannot upload unfinished draft — complete collection on device first.',
+    );
   }
 
   if (!allowedProjectIds.contains(projectId)) {
-    const msg = 'No access to this project for current user (check server catalog).';
+    const msg =
+        'No access to this project for current user (check server catalog).';
     await setState('failed', msg);
     throw StateError(msg);
   }
@@ -48,7 +51,9 @@ Future<void> uploadDriftPackageToServer({
       options: Options(validateStatus: (s) => s == 200 || s == 201 || s == 409),
     );
     if (sessionRes.statusCode == 409) {
-      final st = await dio.get<Map<String, dynamic>>('/v1/projects/$projectId/packages/$packageId');
+      final st = await dio.get<Map<String, dynamic>>(
+        '/v1/projects/$projectId/packages/$packageId',
+      );
       final status = st.data?['status']?.toString();
       if (status == 'completed') {
         await setState('completed', null);
@@ -71,7 +76,10 @@ Future<void> uploadDriftPackageToServer({
           continue;
         }
         final bytes = await entity.readAsBytes();
-        final pathSuffix = logical.split('/').map(Uri.encodeComponent).join('/');
+        final pathSuffix = logical
+            .split('/')
+            .map(Uri.encodeComponent)
+            .join('/');
         await dio.put(
           '/v1/projects/$projectId/packages/$packageId/blobs/$pathSuffix',
           data: bytes,
@@ -85,7 +93,9 @@ Future<void> uploadDriftPackageToServer({
 
     injectSubmittedByIntoServerManifest(manifestMap);
 
-    final manifestBody = const JsonEncoder.withIndent('  ').convert(manifestMap);
+    final manifestBody = const JsonEncoder.withIndent(
+      '  ',
+    ).convert(manifestMap);
 
     await dio.put<dynamic>(
       '/v1/projects/$projectId/packages/$packageId/manifest',
@@ -95,7 +105,9 @@ Future<void> uploadDriftPackageToServer({
       ),
     );
 
-    await dio.post<dynamic>('/v1/projects/$projectId/packages/$packageId/commit');
+    await dio.post<dynamic>(
+      '/v1/projects/$projectId/packages/$packageId/commit',
+    );
 
     await setState('completed', null);
   } catch (e, st) {

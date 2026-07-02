@@ -2,7 +2,9 @@ import 'dart:convert';
 
 import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/storage/database.dart';
-import 'package_payload_disk_io.dart' if (dart.library.html) 'package_payload_disk_web.dart' as payload_disk;
+import 'package_payload_disk_io.dart'
+    if (dart.library.html) 'package_payload_disk_web.dart'
+    as payload_disk;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 

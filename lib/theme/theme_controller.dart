@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import '../core/preferences/app_preferences.dart';
 
 /// Выбранный пользователем режим темы (только светлая/тёмная).
-final ValueNotifier<ThemeMode> appThemeModeNotifier = ValueNotifier(ThemeMode.dark);
+final ValueNotifier<ThemeMode> appThemeModeNotifier = ValueNotifier(
+  ThemeMode.dark,
+);
 
 /// Реальная яркость, применяемая к UI прямо сейчас.
 /// В бинарном режиме полностью зависит от [appThemeModeNotifier].
-final ValueNotifier<Brightness> appBrightnessNotifier = ValueNotifier(Brightness.dark);
+final ValueNotifier<Brightness> appBrightnessNotifier = ValueNotifier(
+  Brightness.dark,
+);
 
 bool get isLightThemeEnabled => appBrightnessNotifier.value == Brightness.light;
 
@@ -30,12 +34,15 @@ void initAppThemeMode() {
 
 /// Переключает только между двумя режимами: light <-> dark.
 void toggleAppThemeMode() {
-  final next =
-      appThemeModeNotifier.value == ThemeMode.light ? ThemeMode.dark : ThemeMode.light;
+  final next = appThemeModeNotifier.value == ThemeMode.light
+      ? ThemeMode.dark
+      : ThemeMode.light;
   appThemeModeNotifier.value = next;
   AppPreferences.instance.writeThemeMode(next);
 }
 
 IconData iconForThemeMode(ThemeMode mode) {
-  return mode == ThemeMode.light ? Icons.light_mode_outlined : Icons.dark_mode_outlined;
+  return mode == ThemeMode.light
+      ? Icons.light_mode_outlined
+      : Icons.dark_mode_outlined;
 }

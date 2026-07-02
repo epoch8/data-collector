@@ -3,7 +3,8 @@ import 'package:data_collector/models/project_config.dart';
 
 import '../../../projects/project_asset_paths.dart';
 
-export '../../../projects/project_asset_paths.dart' show projectAssetStorageRelativePath;
+export '../../../projects/project_asset_paths.dart'
+    show projectAssetStorageRelativePath;
 
 /// Путь из Markdown `![](...)`: относительные `uploads/…`, `assets/…`, абсолютные URL.
 String? markdownImageRefFromUri(Uri uri) {
@@ -13,7 +14,8 @@ String? markdownImageRefFromUri(Uri uri) {
   if (uri.scheme == 'data') {
     return null;
   }
-  final authoritySplitRelative = uri.scheme.isEmpty &&
+  final authoritySplitRelative =
+      uri.scheme.isEmpty &&
       uri.hasAuthority &&
       uri.host.isNotEmpty &&
       uri.userInfo.isEmpty;
@@ -60,7 +62,11 @@ Uri? exampleGuideImageUri(Project project, String path) {
   if (rel == null) {
     return null;
   }
-  final enc = rel.split('/').where((s) => s.isNotEmpty).map(Uri.encodeComponent).join('/');
+  final enc = rel
+      .split('/')
+      .where((s) => s.isNotEmpty)
+      .map(Uri.encodeComponent)
+      .join('/');
   return Uri.parse('$base/v1/projects/${project.id}/assets/$enc');
 }
 

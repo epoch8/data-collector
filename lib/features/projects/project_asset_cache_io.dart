@@ -6,20 +6,27 @@ import 'package:path_provider/path_provider.dart';
 
 Future<Directory> _projectAssetsCacheRoot() async {
   final d = await getApplicationSupportDirectory();
-  final dir = Directory(p.join(d.path, 'server_project_cache', 'project_assets'));
+  final dir = Directory(
+    p.join(d.path, 'server_project_cache', 'project_assets'),
+  );
   await dir.create(recursive: true);
   return dir;
 }
 
 /// Локальная копия `GET /v1/projects/{id}/assets/…` после первой загрузки.
-Future<File> cachedProjectAssetFile(String projectId, String relativePath) async {
+Future<File> cachedProjectAssetFile(
+  String projectId,
+  String relativePath,
+) async {
   final root = await _projectAssetsCacheRoot();
   return File(p.join(root.path, projectId, relativePath));
 }
 
 /// Сброс медиа проекта при обновлении JSON-конфига (ссылки в инструкциях могут смениться).
 Future<void> deleteCachedAssetsForProject(String projectId) async {
-  final dir = Directory(p.join((await _projectAssetsCacheRoot()).path, projectId));
+  final dir = Directory(
+    p.join((await _projectAssetsCacheRoot()).path, projectId),
+  );
   if (await dir.exists()) {
     await dir.delete(recursive: true);
   }

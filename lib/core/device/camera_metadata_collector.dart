@@ -1,4 +1,6 @@
-import 'camera_exif_io.dart' if (dart.library.html) 'camera_exif_web.dart' as camera_exif;
+import 'camera_exif_io.dart'
+    if (dart.library.html) 'camera_exif_web.dart'
+    as camera_exif;
 import 'package:data_collector/core/device/device_camera_channel.dart';
 import 'package:data_collector/core/device/device_sensor_fallback.dart';
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
@@ -52,7 +54,9 @@ class CameraMetadataCollector {
       'collected_at': DateTime.now().toUtc().toIso8601String(),
     };
 
-    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(state[poseFieldId]);
+    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(
+      state[poseFieldId],
+    );
     pathMap[imagePath] = shotMeta;
 
     notifier.updateField(poseFieldId, pathMap);
@@ -68,7 +72,9 @@ class CameraMetadataCollector {
   }) {
     final notifier = ref.read(wizardStateProvider(projectId).notifier);
     final state = ref.read(wizardStateProvider(projectId));
-    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(state[poseFieldId]);
+    final pathMap = CapturedPhotoPaths.coerceToPathMetadataMap(
+      state[poseFieldId],
+    );
     pathMap.remove(imagePath);
     notifier.updateField(poseFieldId, pathMap.isEmpty ? null : pathMap);
 
@@ -160,10 +166,12 @@ class CameraMetadataCollector {
       if (focal35 == null && ku.contains('FOCALLENGTH') && ku.contains('35')) {
         focal35 = _parseInt(e.value)?.toDouble();
       }
-      if (imgW == null && (ku.contains('EXIFIMAGEWIDTH') || ku == 'IMAGE WIDTH')) {
+      if (imgW == null &&
+          (ku.contains('EXIFIMAGEWIDTH') || ku == 'IMAGE WIDTH')) {
         imgW = _parseInt(e.value);
       }
-      if (imgH == null && (ku.contains('EXIFIMAGELENGTH') || ku == 'IMAGE LENGTH')) {
+      if (imgH == null &&
+          (ku.contains('EXIFIMAGELENGTH') || ku == 'IMAGE LENGTH')) {
         imgH = _parseInt(e.value);
       }
     }
@@ -173,8 +181,11 @@ class CameraMetadataCollector {
     final pxW = _asInt(native?['sensor_pixel_array_width']);
     final pxH = _asInt(native?['sensor_pixel_array_height']);
 
-    final calList = _asDoubleList(native?['lens_intrinsic_calibration_px']) ??
-        _calibrationFromCamera2Map(native?['camera2_characteristics'] as Map<String, dynamic>?);
+    final calList =
+        _asDoubleList(native?['lens_intrinsic_calibration_px']) ??
+        _calibrationFromCamera2Map(
+          native?['camera2_characteristics'] as Map<String, dynamic>?,
+        );
     if (calList != null && calList.length >= 4) {
       d['fx_px_from_lens_intrinsic_calibration'] = calList[0];
       d['fy_px_from_lens_intrinsic_calibration'] = calList[1];
@@ -193,7 +204,8 @@ class CameraMetadataCollector {
 
     // Pinhole: fx_px = f_mm / sensor_width_mm * image_width_px (full sensor; EXIF size may differ)
     if (focalMm != null && sensorWmm != null && sensorWmm > 0 && imgW != null) {
-      d['fx_px_from_exif_focal_and_native_sensor'] = (focalMm / sensorWmm) * imgW;
+      d['fx_px_from_exif_focal_and_native_sensor'] =
+          (focalMm / sensorWmm) * imgW;
     }
 
     // Classic 35mm equivalent scaling (when sensor intrinsics missing in EXIF)
@@ -203,9 +215,11 @@ class CameraMetadataCollector {
 
     // Prefer OEM intrinsic calibration when present, then EXIF+sensor, then pinhole native, then 35mm equiv.
     if (d.containsKey('fx_px_from_lens_intrinsic_calibration')) {
-      d['preferred_fx_px_estimate'] = d['fx_px_from_lens_intrinsic_calibration'];
+      d['preferred_fx_px_estimate'] =
+          d['fx_px_from_lens_intrinsic_calibration'];
     } else if (d.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
-      d['preferred_fx_px_estimate'] = d['fx_px_from_exif_focal_and_native_sensor'];
+      d['preferred_fx_px_estimate'] =
+          d['fx_px_from_exif_focal_and_native_sensor'];
     } else if (d.containsKey('fx_px_from_native_mm')) {
       d['preferred_fx_px_estimate'] = d['fx_px_from_native_mm'];
     } else if (d.containsKey('fx_px_from_35mm_equiv')) {
@@ -252,8 +266,12 @@ class CameraMetadataCollector {
     var focalMm = _asDouble(notesMap['focal_length_mm_exif']);
     focalMm ??= _asDouble(native?['primary_focal_length_mm']);
 
-    final sensorWmm = _asDouble(notesMap['sensor_width_mm_native']) ?? _asDouble(native?['sensor_physical_width_mm']);
-    final sensorHmm = _asDouble(notesMap['sensor_height_mm_native']) ?? _asDouble(native?['sensor_physical_height_mm']);
+    final sensorWmm =
+        _asDouble(notesMap['sensor_width_mm_native']) ??
+        _asDouble(native?['sensor_physical_width_mm']);
+    final sensorHmm =
+        _asDouble(notesMap['sensor_height_mm_native']) ??
+        _asDouble(native?['sensor_physical_height_mm']);
 
     final focal35 = _asDouble(notesMap['focal_length_35mm_equiv_exif']);
 
@@ -287,7 +305,9 @@ class CameraMetadataCollector {
         if (fyN != null) fy = fyN * sy;
         if (cxN != null) cx = cxN * sx;
         if (cyN != null) cy = cyN * sy;
-      } else if (derived.containsKey('fx_px_from_exif_focal_and_native_sensor')) {
+      } else if (derived.containsKey(
+        'fx_px_from_exif_focal_and_native_sensor',
+      )) {
         fx = _asDouble(derived['fx_px_from_exif_focal_and_native_sensor']);
         if (focalMm != null && sensorHmm != null && sensorHmm > 0) {
           fy = (focalMm / sensorHmm) * imgH;
@@ -311,11 +331,19 @@ class CameraMetadataCollector {
       }
     }
 
-    if (fx != null && imgW != null && imgH != null && _isInvalidPrincipalPoint(cx, cy, imgW, imgH)) {
+    if (fx != null &&
+        imgW != null &&
+        imgH != null &&
+        _isInvalidPrincipalPoint(cx, cy, imgW, imgH)) {
       // Some Android vendors expose LENS_INTRINSIC_CALIBRATION with cx/cy=0 placeholders.
       final estCxNative = _asDouble(native?['estimated_cx_px']);
       final estCyNative = _asDouble(native?['estimated_cy_px']);
-      if (estCxNative != null && estCyNative != null && natW != null && natH != null && natW > 0 && natH > 0) {
+      if (estCxNative != null &&
+          estCyNative != null &&
+          natW != null &&
+          natH != null &&
+          natW > 0 &&
+          natH > 0) {
         cx = estCxNative * (imgW / natW);
         cy = estCyNative * (imgH / natH);
       }
@@ -344,7 +372,10 @@ class CameraMetadataCollector {
       }
     }
 
-    if (fx != null && (cx == null || cy == null) && imgW != null && imgH != null) {
+    if (fx != null &&
+        (cx == null || cy == null) &&
+        imgW != null &&
+        imgH != null) {
       cx = imgW / 2.0;
       cy = imgH / 2.0;
     }
@@ -422,7 +453,12 @@ class CameraMetadataCollector {
     return null;
   }
 
-  static bool _isInvalidPrincipalPoint(double? cx, double? cy, int imgW, int imgH) {
+  static bool _isInvalidPrincipalPoint(
+    double? cx,
+    double? cy,
+    int imgW,
+    int imgH,
+  ) {
     if (cx == null || cy == null) return true;
     // Treat near-zero as invalid for smartphone camera calibration.
     if (cx.abs() < 1.0 && cy.abs() < 1.0) return true;

@@ -17,7 +17,10 @@ class Epoch8ErrorScreen extends StatelessWidget {
     return Material(
       color: Epoch8Theme.bgDeep,
       child: Epoch8ScreenBody(
-        padding: const EdgeInsets.symmetric(horizontal: Epoch8Layout.pagePadding, vertical: 24),
+        padding: const EdgeInsets.symmetric(
+          horizontal: Epoch8Layout.pagePadding,
+          vertical: 24,
+        ),
         child: SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -32,7 +35,9 @@ class Epoch8ErrorScreen extends StatelessWidget {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         color: Epoch8Theme.danger.withValues(alpha: 0.12),
-                        border: Border.all(color: Epoch8Theme.danger.withValues(alpha: 0.35)),
+                        border: Border.all(
+                          color: Epoch8Theme.danger.withValues(alpha: 0.35),
+                        ),
                       ),
                       alignment: Alignment.center,
                       child: Icon(
@@ -53,25 +58,29 @@ class Epoch8ErrorScreen extends StatelessWidget {
                           'An unexpected error occurred. Try going back or restarting the app.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Epoch8Theme.textMuted,
-                            height: 1.45,
-                          ),
+                        color: Epoch8Theme.textMuted,
+                        height: 1.45,
+                      ),
                     ),
                     const SizedBox(height: 18),
                     Epoch8Card(
                       child: Theme(
-                        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                        data: Theme.of(
+                          context,
+                        ).copyWith(dividerColor: Colors.transparent),
                         child: ExpansionTile(
                           tilePadding: EdgeInsets.zero,
                           childrenPadding: EdgeInsets.zero,
                           title: Text(
-                            loc?.errorScreenDetailsLabel ?? 'Details (for developers)',
+                            loc?.errorScreenDetailsLabel ??
+                                'Details (for developers)',
                             style: Theme.of(context).textTheme.titleSmall,
                           ),
                           children: [
                             SelectableText(
                               details.exceptionAsString(),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
                                     fontFamily: 'monospace',
                                     height: 1.35,
                                   ),

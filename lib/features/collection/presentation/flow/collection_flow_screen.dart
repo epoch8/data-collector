@@ -32,19 +32,24 @@ String _formatDateTime(DateTime d) {
 /// Сводит значение поля `camera_photo` к списку «кадров» для UI метаданных (путь + exif/derived/…).
 List<Map<String, dynamic>> _syntheticShotsFromPoseFieldValue(dynamic v) {
   if (v is Map) {
-    return v.entries.map((e) {
-      final path = e.key.toString();
-      final val = e.value;
-      final Map<String, dynamic> meta;
-      if (val is Map<String, dynamic>) {
-        meta = Map<String, dynamic>.from(val);
-      } else if (val is Map) {
-        meta = Map<String, dynamic>.from(val.map((k, x) => MapEntry(k.toString(), x)));
-      } else {
-        meta = <String, dynamic>{};
-      }
-      return <String, dynamic>{'image_path': path, ...meta};
-    }).where((m) => (m['image_path']?.toString() ?? '').isNotEmpty).toList();
+    return v.entries
+        .map((e) {
+          final path = e.key.toString();
+          final val = e.value;
+          final Map<String, dynamic> meta;
+          if (val is Map<String, dynamic>) {
+            meta = Map<String, dynamic>.from(val);
+          } else if (val is Map) {
+            meta = Map<String, dynamic>.from(
+              val.map((k, x) => MapEntry(k.toString(), x)),
+            );
+          } else {
+            meta = <String, dynamic>{};
+          }
+          return <String, dynamic>{'image_path': path, ...meta};
+        })
+        .where((m) => (m['image_path']?.toString() ?? '').isNotEmpty)
+        .toList();
   }
   if (v is List) {
     return v
@@ -53,14 +58,19 @@ List<Map<String, dynamic>> _syntheticShotsFromPoseFieldValue(dynamic v) {
         .toList();
   }
   if (v is String && v.isNotEmpty) {
-    return [<String, dynamic>{'image_path': v}];
+    return [
+      <String, dynamic>{'image_path': v},
+    ];
   }
   return [];
 }
 
 /// `camera_capture_context` или сохранённый `camera_session` + опционально `camera_debug`;
 /// без устаревшего `poses`, плюс синтетические `poses` из полей ракурсов.
-Map<String, dynamic>? _mergedReviewCameraContext(Map<String, dynamic> answers, List<ConfigField> cameraFields) {
+Map<String, dynamic>? _mergedReviewCameraContext(
+  Map<String, dynamic> answers,
+  List<ConfigField> cameraFields,
+) {
   final base = <String, dynamic>{};
   void mergeMap(dynamic raw) {
     if (raw is Map) {
@@ -81,7 +91,9 @@ Map<String, dynamic>? _mergedReviewCameraContext(Map<String, dynamic> answers, L
   base.remove('poses');
   final poses = <String, dynamic>{};
   for (var i = 0; i < cameraFields.length; i++) {
-    final shots = _syntheticShotsFromPoseFieldValue(answers[cameraFields[i].fieldId]);
+    final shots = _syntheticShotsFromPoseFieldValue(
+      answers[cameraFields[i].fieldId],
+    );
     if (shots.isNotEmpty) {
       poses['${i + 1}'] = <String, dynamic>{'shots': shots};
     }
@@ -100,7 +112,8 @@ class CollectionFlowScreen extends ConsumerStatefulWidget {
   final String projectId;
 
   @override
-  ConsumerState<CollectionFlowScreen> createState() => _CollectionFlowScreenState();
+  ConsumerState<CollectionFlowScreen> createState() =>
+      _CollectionFlowScreenState();
 }
 
 class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
@@ -123,7 +136,10 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
                 IconButton(
                   tooltip: loc.languageToggleTooltip,
                   onPressed: toggleAppLocale,
-                  icon: Text(loc.languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+                  icon: Text(
+                    loc.languageCodeLabel,
+                    style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
                 ),
               ],
             ),
@@ -139,11 +155,11 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
           resolvedFlow: flow,
         );
       },
-      loading: () => Scaffold(
-        body: Epoch8Loader.center(),
-      ),
+      loading: () => Scaffold(body: Epoch8Loader.center()),
       error: (e, _) => Scaffold(
-        body: Center(child: Text('${AppLocalizations.of(context).loadingConfigError}: $e')),
+        body: Center(
+          child: Text('${AppLocalizations.of(context).loadingConfigError}: $e'),
+        ),
       ),
     );
   }
@@ -164,7 +180,8 @@ class _CollectionDraftGate extends ConsumerStatefulWidget {
   final ResolvedCollectionFlow resolvedFlow;
 
   @override
-  ConsumerState<_CollectionDraftGate> createState() => _CollectionDraftGateState();
+  ConsumerState<_CollectionDraftGate> createState() =>
+      _CollectionDraftGateState();
 }
 
 class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
@@ -214,7 +231,8 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
             child: Text(loc.flowDraftStartFresh),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(ctx, _DraftResumeChoice.continueSession),
+            onPressed: () =>
+                Navigator.pop(ctx, _DraftResumeChoice.continueSession),
             child: Text(loc.flowDraftContinue),
           ),
         ],
@@ -272,7 +290,10 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
               IconButton(
                 tooltip: AppLocalizations.of(context).languageToggleTooltip,
                 onPressed: toggleAppLocale,
-                icon: Text(AppLocalizations.of(context).languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+                icon: Text(
+                  AppLocalizations.of(context).languageCodeLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
               ),
             ],
           ),
@@ -312,10 +333,12 @@ class _FlowStepShell extends ConsumerStatefulWidget {
   ConsumerState<_FlowStepShell> createState() => _FlowStepShellState();
 }
 
-class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBindingObserver {
+class _FlowStepShellState extends ConsumerState<_FlowStepShell>
+    with WidgetsBindingObserver {
   late int _step;
   String? _packageId;
   DateTime? _createdAtForRow;
+
   /// После «Отправить» не писать черновик поверх `completed`.
   bool _draftSaveSuspended = false;
   bool _submitting = false;
@@ -343,7 +366,8 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       unawaited(_persistDraftNow());
     }
   }
@@ -436,7 +460,10 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
             IconButton(
               tooltip: AppLocalizations.of(context).languageToggleTooltip,
               onPressed: toggleAppLocale,
-              icon: Text(AppLocalizations.of(context).languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+              icon: Text(
+                AppLocalizations.of(context).languageCodeLabel,
+                style: const TextStyle(fontWeight: FontWeight.w800),
+              ),
             ),
           ],
         ),
@@ -470,10 +497,18 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
     if (cur.kind == CollectionScreenKind.review) {
       return [
         Padding(
-          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 4),
+          padding: const EdgeInsets.fromLTRB(
+            Epoch8Layout.pagePadding,
+            10,
+            Epoch8Layout.pagePadding,
+            4,
+          ),
           child: Text(
             loc.flowRibbonReview,
-            style: t.labelMedium?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 0.4),
+            style: t.labelMedium?.copyWith(
+              color: Epoch8Theme.textMuted,
+              letterSpacing: 0.4,
+            ),
           ),
         ),
       ];
@@ -483,7 +518,12 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
       final ord = _scrollOrdinal1Based();
       return [
         Padding(
-          padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 10, Epoch8Layout.pagePadding, 6),
+          padding: const EdgeInsets.fromLTRB(
+            Epoch8Layout.pagePadding,
+            10,
+            Epoch8Layout.pagePadding,
+            6,
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -492,11 +532,17 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
                 children: [
                   Text(
                     loc.flowRibbonScrollForm,
-                    style: t.labelSmall?.copyWith(color: Epoch8Theme.textMuted, letterSpacing: 1.1),
+                    style: t.labelSmall?.copyWith(
+                      color: Epoch8Theme.textMuted,
+                      letterSpacing: 1.1,
+                    ),
                   ),
                   Text(
                     loc.flowScrollCounter(ord, totalScroll),
-                    style: t.labelLarge?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w800),
+                    style: t.labelLarge?.copyWith(
+                      color: Epoch8Theme.accent,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ],
               ),
@@ -514,7 +560,8 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
 
   Widget _buildStep(BuildContext context) {
     final p = widget.project;
-    if (_step < 0 || _step >= _flow.steps.length) return const SizedBox.shrink();
+    if (_step < 0 || _step >= _flow.steps.length)
+      return const SizedBox.shrink();
     final cur = _flow.steps[_step];
 
     switch (cur.kind) {
@@ -549,7 +596,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
             if (!context.mounted) return;
             _draftSaveSuspended = true;
             setState(() => _submitting = true);
-            final answers = Map<String, dynamic>.from(ref.read(wizardStateProvider(widget.projectId)));
+            final answers = Map<String, dynamic>.from(
+              ref.read(wizardStateProvider(widget.projectId)),
+            );
             await submitLocalPackage(
               ref: ref,
               context: context,
@@ -563,7 +612,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell> with WidgetsBind
       case CollectionScreenKind.form:
       case CollectionScreenKind.instruction:
       case CollectionScreenKind.cameraPose:
-        throw StateError('Unsupported flow step kind ${cur.kind} (resolver allows only scroll_form and review)');
+        throw StateError(
+          'Unsupported flow step kind ${cur.kind} (resolver allows only scroll_form and review)',
+        );
     }
   }
 }
@@ -604,7 +655,11 @@ class _FlowReviewStep extends ConsumerWidget {
   }
 
   /// Заголовок карточки: `flow.steps[].form_title` или только «Шаг n».
-  String _reviewScrollBlockTitle(AppLocalizations loc, ResolvedCollectionStep s, int scrollOrdinal) {
+  String _reviewScrollBlockTitle(
+    AppLocalizations loc,
+    ResolvedCollectionStep s,
+    int scrollOrdinal,
+  ) {
     final label = (s.formTitle ?? '').trim();
     if (label.isNotEmpty) {
       return loc.flowReviewScrollBlockTitle(scrollOrdinal, label);
@@ -635,7 +690,9 @@ class _FlowReviewStep extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       _reviewScrollBlockTitle(loc, s, scrollOrdinal),
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                   TextButton(
@@ -650,7 +707,9 @@ class _FlowReviewStep extends ConsumerWidget {
                   padding: const EdgeInsets.only(bottom: 4),
                   child: Text(
                     loc.flowReviewInstructionOnlyHint,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Epoch8Theme.textMuted,
+                    ),
                   ),
                 ),
               if (!s.isInstructionOnlyScroll)
@@ -664,7 +723,9 @@ class _FlowReviewStep extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       f.title,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Wrap(
@@ -683,7 +744,8 @@ class _FlowReviewStep extends ConsumerWidget {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           loc.flowReviewNoFrames,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: Epoch8Theme.textMuted),
                         ),
                       ),
                     const SizedBox(height: 8),
@@ -698,7 +760,12 @@ class _FlowReviewStep extends ConsumerWidget {
     if (stepCards.isNotEmpty) stepCards.removeLast();
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 32),
+      padding: const EdgeInsets.fromLTRB(
+        Epoch8Layout.pagePadding,
+        8,
+        Epoch8Layout.pagePadding,
+        32,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -722,7 +789,10 @@ class _FlowReviewStep extends ConsumerWidget {
                 ? SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Theme.of(context).colorScheme.onPrimary),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
                   )
                 : Text(loc.flowReviewSubmit),
           ),
@@ -737,7 +807,10 @@ class _FlowReviewStep extends ConsumerWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 110, child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted))),
+          SizedBox(
+            width: 110,
+            child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted)),
+          ),
           Expanded(child: Text(value)),
         ],
       ),
@@ -785,7 +858,9 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             }
             final d = _shotDerivedMap(sh);
             if (d != null && d['preferred_fx_px_estimate'] != null) {
-              fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(d['preferred_fx_px_estimate']));
+              fxHint = loc.flowCameraMetaFxEstimate(
+                _fmtNum(d['preferred_fx_px_estimate']),
+              );
               break outer;
             }
           }
@@ -797,7 +872,9 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         }
         final d = _shotDerivedMap(v);
         if (d != null && d['preferred_fx_px_estimate'] != null) {
-          fxHint = loc.flowCameraMetaFxEstimate(_fmtNum(d['preferred_fx_px_estimate']));
+          fxHint = loc.flowCameraMetaFxEstimate(
+            _fmtNum(d['preferred_fx_px_estimate']),
+          );
           break;
         }
       }
@@ -805,9 +882,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     final parts = <String>[];
     if (model != null && model.isNotEmpty) parts.add(model);
     if (fxHint != null) parts.add(fxHint);
-    return parts.isEmpty
-        ? loc.flowCameraMetaTapToExpand
-        : parts.join(' · ');
+    return parts.isEmpty ? loc.flowCameraMetaTapToExpand : parts.join(' · ');
   }
 
   static String _fmtNum(dynamic v) {
@@ -819,12 +894,18 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   static Map<String, dynamic>? _shotDerivedMap(Map<dynamic, dynamic> sh) {
     final d = sh['derived'];
     if (d is Map<String, dynamic>) return d;
-    if (d is Map) return Map<String, dynamic>.from(d.map((k, v) => MapEntry(k.toString(), v)));
+    if (d is Map)
+      return Map<String, dynamic>.from(
+        d.map((k, v) => MapEntry(k.toString(), v)),
+      );
     final sup = sh['camera_supplement'];
     if (sup is Map) {
       final inner = sup['derived'];
       if (inner is Map<String, dynamic>) return inner;
-      if (inner is Map) return Map<String, dynamic>.from(inner.map((k, v) => MapEntry(k.toString(), v)));
+      if (inner is Map)
+        return Map<String, dynamic>.from(
+          inner.map((k, v) => MapEntry(k.toString(), v)),
+        );
     }
     return null;
   }
@@ -832,12 +913,18 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   static Map<String, dynamic>? _shotExifMap(Map<dynamic, dynamic> sh) {
     final x = sh['exif'];
     if (x is Map<String, dynamic>) return x;
-    if (x is Map) return Map<String, dynamic>.from(x.map((k, v) => MapEntry(k.toString(), v)));
+    if (x is Map)
+      return Map<String, dynamic>.from(
+        x.map((k, v) => MapEntry(k.toString(), v)),
+      );
     final sup = sh['camera_supplement'];
     if (sup is Map) {
       final inner = sup['exif'];
       if (inner is Map<String, dynamic>) return inner;
-      if (inner is Map) return Map<String, dynamic>.from(inner.map((k, v) => MapEntry(k.toString(), v)));
+      if (inner is Map)
+        return Map<String, dynamic>.from(
+          inner.map((k, v) => MapEntry(k.toString(), v)),
+        );
     }
     return null;
   }
@@ -850,12 +937,18 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       return _Card(
         child: Row(
           children: [
-            Icon(Icons.info_outline, size: 20, color: Epoch8Theme.textMuted.withValues(alpha: 0.9)),
+            Icon(
+              Icons.info_outline,
+              size: 20,
+              color: Epoch8Theme.textMuted.withValues(alpha: 0.9),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 loc.flowCameraMetaEmptyNotice,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
             ),
           ],
@@ -875,7 +968,11 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           collapsedIconColor: Epoch8Theme.textMuted,
           title: Row(
             children: [
-              Icon(Icons.tune, size: 22, color: Epoch8Theme.accent.withValues(alpha: 0.95)),
+              Icon(
+                Icons.tune,
+                size: 22,
+                color: Epoch8Theme.accent.withValues(alpha: 0.95),
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -883,12 +980,16 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                   children: [
                     Text(
                       loc.flowCameraMetaTileTitle,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       _subtitle(loc, Map<String, dynamic>.from(ctx)) ?? '',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Epoch8Theme.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -909,12 +1010,16 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             ),
             ..._poseMetaSections(context, loc, ctx['poses']),
             Theme(
-              data: Theme.of(context).copyWith(dividerColor: Epoch8Theme.border),
+              data: Theme.of(
+                context,
+              ).copyWith(dividerColor: Epoch8Theme.border),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
                   loc.flowCameraMetaJsonSection,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Epoch8Theme.textMuted),
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: Epoch8Theme.textMuted,
+                  ),
                 ),
                 children: [
                   const SizedBox(height: 8),
@@ -939,12 +1044,25 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   List<Widget> _deviceRows(AppLocalizations loc, dynamic device) {
     if (device is! Map) {
       return [
-        Text(loc.flowReviewEmptyValue, style: TextStyle(color: Epoch8Theme.textMuted)),
+        Text(
+          loc.flowReviewEmptyValue,
+          style: TextStyle(color: Epoch8Theme.textMuted),
+        ),
       ];
     }
     final m = <String, dynamic>{};
     device.forEach((k, v) => m[k.toString()] = v);
-    final order = ['platform', 'model', 'machine', 'brand', 'manufacturer', 'device', 'sdk_int', 'release', 'system_version'];
+    final order = [
+      'platform',
+      'model',
+      'machine',
+      'brand',
+      'manufacturer',
+      'device',
+      'sdk_int',
+      'release',
+      'system_version',
+    ];
     final lines = <String>[];
     for (final k in order) {
       if (m[k] != null) lines.add('$k: ${m[k]}');
@@ -953,10 +1071,17 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (order.contains(e.key)) continue;
       lines.add('${e.key}: ${e.value}');
     }
-    return lines.map((s) => Padding(
-          padding: const EdgeInsets.only(bottom: 6),
-          child: SelectableText(s, style: const TextStyle(fontSize: 13, height: 1.35)),
-        )).toList();
+    return lines
+        .map(
+          (s) => Padding(
+            padding: const EdgeInsets.only(bottom: 6),
+            child: SelectableText(
+              s,
+              style: const TextStyle(fontSize: 13, height: 1.35),
+            ),
+          ),
+        )
+        .toList();
   }
 
   List<Widget> _nativeRows(AppLocalizations loc, dynamic native) {
@@ -999,10 +1124,15 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       } else {
         text = '$k: $v';
       }
-      out.add(Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: SelectableText(text, style: const TextStyle(fontSize: 13, height: 1.35)),
-      ));
+      out.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: SelectableText(
+            text,
+            style: const TextStyle(fontSize: 13, height: 1.35),
+          ),
+        ),
+      );
     }
 
     for (final k in priority) {
@@ -1018,10 +1148,19 @@ class _CameraMetaReviewPanel extends StatelessWidget {
     return out;
   }
 
-  List<Widget> _poseMetaSections(BuildContext context, AppLocalizations loc, dynamic poses) {
+  List<Widget> _poseMetaSections(
+    BuildContext context,
+    AppLocalizations loc,
+    dynamic poses,
+  ) {
     if (poses is! Map || poses.isEmpty) return [];
     final list = <Widget>[];
-    final keys = poses.keys.map((k) => int.tryParse(k.toString())).whereType<int>().toList()..sort();
+    final keys =
+        poses.keys
+            .map((k) => int.tryParse(k.toString()))
+            .whereType<int>()
+            .toList()
+          ..sort();
     for (final idx in keys) {
       final p = poses['$idx'];
       if (p is! Map) continue;
@@ -1067,17 +1206,25 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (fc is Map) ...[
         Text(
           loc.flowCameraMetaFrameCameraHeading,
-          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Epoch8Theme.accent),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: Epoch8Theme.accent,
+          ),
         ),
         const SizedBox(height: 4),
         if (fc['fx_px'] != null) _selLine('fx_px', fc['fx_px']),
         if (fc['fy_px'] != null) _selLine('fy_px', fc['fy_px']),
         if (fc['cx_px'] != null) _selLine('cx_px', fc['cx_px']),
         if (fc['cy_px'] != null) _selLine('cy_px', fc['cy_px']),
-        if (fc['image_width_px'] != null) _selLine('image_width_px', fc['image_width_px']),
-        if (fc['image_height_px'] != null) _selLine('image_height_px', fc['image_height_px']),
-        if (fc['intrinsics_source'] != null) _selLine('intrinsics_source', fc['intrinsics_source']),
-        if (fc['focal_length_mm'] != null) _selLine('focal_length_mm', fc['focal_length_mm']),
+        if (fc['image_width_px'] != null)
+          _selLine('image_width_px', fc['image_width_px']),
+        if (fc['image_height_px'] != null)
+          _selLine('image_height_px', fc['image_height_px']),
+        if (fc['intrinsics_source'] != null)
+          _selLine('intrinsics_source', fc['intrinsics_source']),
+        if (fc['focal_length_mm'] != null)
+          _selLine('focal_length_mm', fc['focal_length_mm']),
         const SizedBox(height: 8),
       ],
       if (derived != null) ...[
@@ -1087,7 +1234,10 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         if (derived['preferred_fx_px_estimate'] != null)
-          _selLine('preferred_fx_px_estimate', derived['preferred_fx_px_estimate']),
+          _selLine(
+            'preferred_fx_px_estimate',
+            derived['preferred_fx_px_estimate'],
+          ),
         if (derived['fx_px_from_exif_focal_and_native_sensor'] != null)
           _selLine(
             loc.flowCameraMetaLabelFxExif,
@@ -1111,13 +1261,17 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           style: TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
         ),
         const SizedBox(height: 4),
-        ...exif.entries.take(12).map((e) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: SelectableText(
-                '${e.key}: ${e.value}',
-                style: const TextStyle(fontSize: 12, height: 1.3),
+        ...exif.entries
+            .take(12)
+            .map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: SelectableText(
+                  '${e.key}: ${e.value}',
+                  style: const TextStyle(fontSize: 12, height: 1.3),
+                ),
               ),
-            )),
+            ),
         if (exif.length > 12)
           Text(
             loc.flowCameraMetaExifMore(exif.length - 12),
@@ -1130,15 +1284,27 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   Widget _selLine(String label, dynamic v) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
-      child: SelectableText('$label: $v', style: const TextStyle(fontSize: 13, height: 1.35)),
+      child: SelectableText(
+        '$label: $v',
+        style: const TextStyle(fontSize: 13, height: 1.35),
+      ),
     );
   }
 
-  Widget _metaSection(BuildContext context, String title, List<Widget> children) {
+  Widget _metaSection(
+    BuildContext context,
+    String title,
+    List<Widget> children,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.accent)),
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: Epoch8Theme.accent),
+        ),
         const SizedBox(height: 8),
         ...children,
       ],

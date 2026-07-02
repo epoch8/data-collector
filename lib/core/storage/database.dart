@@ -1,6 +1,7 @@
 import 'package:drift/drift.dart';
 
-import 'database_connection_io.dart' if (dart.library.html) 'database_connection_web.dart';
+import 'database_connection_io.dart'
+    if (dart.library.html) 'database_connection_web.dart';
 
 part 'database.g.dart';
 
@@ -10,8 +11,10 @@ class Packages extends Table {
   TextColumn get status => text()();
   DateTimeColumn get createdAt => dateTime()();
   TextColumn get dataJson => text()();
+
   /// `pending` | `uploading` | `completed` | `failed` — доставка на сервер (спека 08).
-  TextColumn get serverDeliveryState => text().withDefault(const Constant('pending'))();
+  TextColumn get serverDeliveryState =>
+      text().withDefault(const Constant('pending'))();
   TextColumn get serverDeliveryError => text().nullable()();
 
   @override
@@ -27,22 +30,22 @@ class AppDatabase extends _$AppDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onCreate: (Migrator m) async {
-          await m.createAll();
-          await customStatement(
-            'CREATE INDEX IF NOT EXISTS idx_packages_project_id ON packages (project_id);',
-          );
-        },
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await customStatement(
-              'CREATE INDEX IF NOT EXISTS idx_packages_project_id ON packages (project_id);',
-            );
-          }
-          if (from < 3) {
-            await m.addColumn(packages, packages.serverDeliveryState);
-            await m.addColumn(packages, packages.serverDeliveryError);
-          }
-        },
+    onCreate: (Migrator m) async {
+      await m.createAll();
+      await customStatement(
+        'CREATE INDEX IF NOT EXISTS idx_packages_project_id ON packages (project_id);',
       );
+    },
+    onUpgrade: (Migrator m, int from, int to) async {
+      if (from < 2) {
+        await customStatement(
+          'CREATE INDEX IF NOT EXISTS idx_packages_project_id ON packages (project_id);',
+        );
+      }
+      if (from < 3) {
+        await m.addColumn(packages, packages.serverDeliveryState);
+        await m.addColumn(packages, packages.serverDeliveryError);
+      }
+    },
+  );
 }

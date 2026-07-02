@@ -37,11 +37,11 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         }
         return _ScrollFormLoaded(projectId: projectId, project: project);
       },
-      loading: () => Scaffold(
-        body: Epoch8Loader.center(),
-      ),
+      loading: () => Scaffold(body: Epoch8Loader.center()),
       error: (e, _) => Scaffold(
-        body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
+        body: Center(
+          child: Text('${AppLocalizations.of(context).errorPrefix}: $e'),
+        ),
       ),
     );
   }
@@ -65,7 +65,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
   void initState() {
     super.initState();
     _fields = List<ConfigField>.from(widget.project.config.fields);
-    
+
     _focusNodes = List.generate(_fields.length, (index) {
       final node = FocusNode();
       node.addListener(() {
@@ -127,24 +127,27 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
           IconButton(
             tooltip: loc.languageToggleTooltip,
             onPressed: toggleAppLocale,
-            icon: Text(loc.languageCodeLabel, style: const TextStyle(fontWeight: FontWeight.w800)),
+            icon: Text(
+              loc.languageCodeLabel,
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
           ),
         ],
       ),
       body: Container(
         decoration: Epoch8Theme.screenGradient(),
         child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: _fields.asMap().entries.map((entry) {
-            final index = entry.key;
-            final field = entry.value;
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 32.0),
-              child: _buildFieldContent(field, answers, index),
-            );
-          }).toList(),
-        ),
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: _fields.asMap().entries.map((entry) {
+              final index = entry.key;
+              final field = entry.value;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 32.0),
+                child: _buildFieldContent(field, answers, index),
+              );
+            }).toList(),
+          ),
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -162,14 +165,21 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                 answers: answers,
               );
             },
-            child: Text(loc.submitPackage, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            child: Text(
+              loc.submitPackage,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildFieldContent(ConfigField field, Map<String, dynamic> answers, int index) {
+  Widget _buildFieldContent(
+    ConfigField field,
+    Map<String, dynamic> answers,
+    int index,
+  ) {
     final loc = AppLocalizations.of(context);
     final hasFocus = _focusNodes[index].hasFocus;
 
@@ -189,19 +199,29 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(field.title, style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: hasFocus ? FontWeight.bold : FontWeight.normal
-          )),
+          Text(
+            field.title,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: hasFocus ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
           const SizedBox(height: 8),
-          Text(field.instructions, style: Theme.of(context).textTheme.bodyMedium),
+          Text(
+            field.instructions,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
           const SizedBox(height: 24),
           if (field.type == 'text_input')
             TextFormField(
               initialValue: answers[field.fieldId] as String?,
               focusNode: _focusNodes[index],
-              textInputAction: index < _fields.length - 1 ? TextInputAction.next : TextInputAction.done,
+              textInputAction: index < _fields.length - 1
+                  ? TextInputAction.next
+                  : TextInputAction.done,
               onFieldSubmitted: (_) => _focusNext(index),
-              onChanged: (val) => ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, val),
+              onChanged: (val) => ref
+                  .read(wizardStateProvider(widget.projectId).notifier)
+                  .updateField(field.fieldId, val),
               decoration: const InputDecoration(border: OutlineInputBorder()),
             )
           else if (field.type == 'camera_photo')
@@ -224,7 +244,9 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                         onPressed: () async {
                           final picker = ImagePicker();
                           final XFile? photo = await picker.pickImage(
-                            source: (defaultTargetPlatform == TargetPlatform.android ||
+                            source:
+                                (defaultTargetPlatform ==
+                                        TargetPlatform.android ||
                                     defaultTargetPlatform == TargetPlatform.iOS)
                                 ? ImageSource.camera
                                 : ImageSource.gallery,
@@ -232,96 +254,190 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                           );
                           if (photo == null) return;
                           if (field.multiple == true) {
-                            final currentPhotos = List<String>.from(answers[field.fieldId] as List? ?? []);
+                            final currentPhotos = List<String>.from(
+                              answers[field.fieldId] as List? ?? [],
+                            );
                             currentPhotos.add(photo.path);
-                            ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, currentPhotos);
+                            ref
+                                .read(
+                                  wizardStateProvider(
+                                    widget.projectId,
+                                  ).notifier,
+                                )
+                                .updateField(field.fieldId, currentPhotos);
                           } else {
-                            ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, photo.path);
+                            ref
+                                .read(
+                                  wizardStateProvider(
+                                    widget.projectId,
+                                  ).notifier,
+                                )
+                                .updateField(field.fieldId, photo.path);
                           }
                           _focusNodes[index].requestFocus();
                         },
-                        label: Text(field.multiple == true ? loc.takeAnotherPhoto : loc.capturePhoto),
+                        label: Text(
+                          field.multiple == true
+                              ? loc.takeAnotherPhoto
+                              : loc.capturePhoto,
+                        ),
                       ),
                       if (answers[field.fieldId] != null) ...[
                         const SizedBox(height: 16),
                         if (field.multiple == true) ...[
                           Text(
                             '${(answers[field.fieldId] as List).length} ${loc.photosCaptured}',
-                            style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold),
+                            style: TextStyle(
+                              color: Epoch8Theme.accent,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 8),
                           Wrap(
                             spacing: 4,
                             runSpacing: 8,
-                            children: (answers[field.fieldId] as List).asMap().entries.map((item) {
-                              final pathIndex = item.key;
-                              return Stack(
-                                children: [
-                                  Container(
-                                    width: 60, height: 60,
-                                    margin: const EdgeInsets.only(top: 8, right: 8),
-                                    decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: localCaptureThumbnail(item.value as String, size: 60),
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 0, right: 0,
-                                    child: InkWell(
-                                      onTap: () {
-                                        final currentPhotos = List<String>.from(answers[field.fieldId] as List);
-                                        currentPhotos.removeAt(pathIndex);
-                                        if (currentPhotos.isEmpty) {
-                                          ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, null);
-                                        } else {
-                                          ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, currentPhotos);
-                                        }
-                                        _focusNodes[index].requestFocus();
-                                      },
-                                      child: Container(
-                                        padding: const EdgeInsets.all(2),
-                                        decoration: BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
-                                        child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+                            children: (answers[field.fieldId] as List)
+                                .asMap()
+                                .entries
+                                .map((item) {
+                                  final pathIndex = item.key;
+                                  return Stack(
+                                    children: [
+                                      Container(
+                                        width: 60,
+                                        height: 60,
+                                        margin: const EdgeInsets.only(
+                                          top: 8,
+                                          right: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: localCaptureThumbnail(
+                                            item.value as String,
+                                            size: 60,
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  )
-                                ],
-                              );
-                            }).toList(),
-                          )
+                                      Positioned(
+                                        top: 0,
+                                        right: 0,
+                                        child: InkWell(
+                                          onTap: () {
+                                            final currentPhotos =
+                                                List<String>.from(
+                                                  answers[field.fieldId]
+                                                      as List,
+                                                );
+                                            currentPhotos.removeAt(pathIndex);
+                                            if (currentPhotos.isEmpty) {
+                                              ref
+                                                  .read(
+                                                    wizardStateProvider(
+                                                      widget.projectId,
+                                                    ).notifier,
+                                                  )
+                                                  .updateField(
+                                                    field.fieldId,
+                                                    null,
+                                                  );
+                                            } else {
+                                              ref
+                                                  .read(
+                                                    wizardStateProvider(
+                                                      widget.projectId,
+                                                    ).notifier,
+                                                  )
+                                                  .updateField(
+                                                    field.fieldId,
+                                                    currentPhotos,
+                                                  );
+                                            }
+                                            _focusNodes[index].requestFocus();
+                                          },
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                              color: Epoch8Theme.danger,
+                                              shape: BoxShape.circle,
+                                            ),
+                                            child: Icon(
+                                              Icons.close,
+                                              size: 16,
+                                              color: Epoch8Theme.bgDeep,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                })
+                                .toList(),
+                          ),
                         ] else ...[
-                          Text('${loc.photoSaved} ✓', style: TextStyle(color: Epoch8Theme.accent, fontWeight: FontWeight.bold)),
+                          Text(
+                            '${loc.photoSaved} ✓',
+                            style: TextStyle(
+                              color: Epoch8Theme.accent,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                           const SizedBox(height: 8),
                           Stack(
                             children: [
                               Container(
-                                width: 60, height: 60,
+                                width: 60,
+                                height: 60,
                                 margin: const EdgeInsets.only(top: 8, right: 8),
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(8),
-                                  child: localCaptureThumbnail(answers[field.fieldId] as String, size: 60),
+                                  child: localCaptureThumbnail(
+                                    answers[field.fieldId] as String,
+                                    size: 60,
+                                  ),
                                 ),
                               ),
                               Positioned(
-                                top: 0, right: 0,
+                                top: 0,
+                                right: 0,
                                 child: InkWell(
                                   onTap: () {
-                                    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(field.fieldId, null);
+                                    ref
+                                        .read(
+                                          wizardStateProvider(
+                                            widget.projectId,
+                                          ).notifier,
+                                        )
+                                        .updateField(field.fieldId, null);
                                     _focusNodes[index].requestFocus();
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(color: Epoch8Theme.danger, shape: BoxShape.circle),
-                                    child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+                                    decoration: BoxDecoration(
+                                      color: Epoch8Theme.danger,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      size: 16,
+                                      color: Epoch8Theme.bgDeep,
+                                    ),
                                   ),
                                 ),
-                              )
+                              ),
                             ],
-                          )
-                        ]
-                      ]
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
@@ -332,7 +448,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
               '${loc.unsupportedFieldType} ${loc.supportedFieldTypes} (${field.type})',
               style: TextStyle(color: Epoch8Theme.danger),
             ),
-          
+
           if (hasFocus)
             Padding(
               padding: const EdgeInsets.only(top: 24.0),
@@ -341,7 +457,11 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                 child: FilledButton.icon(
                   onPressed: () => _focusNext(index),
                   icon: const Icon(Icons.check),
-                  label: Text(index == _fields.length - 1 ? loc.finishFocus : loc.saveAndNext),
+                  label: Text(
+                    index == _fields.length - 1
+                        ? loc.finishFocus
+                        : loc.saveAndNext,
+                  ),
                 ),
               ),
             ),
@@ -350,4 +470,3 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
     );
   }
 }
-

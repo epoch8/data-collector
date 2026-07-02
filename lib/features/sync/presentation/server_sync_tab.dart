@@ -51,16 +51,16 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
       ref.invalidate(projectsProvider);
       if (mounted) {
         final loc = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.projectsUpdated)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(loc.projectsUpdated)));
       }
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc.syncError}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${loc.syncError}: $e')));
       }
     } finally {
       if (mounted) setState(() => _syncing = false);
@@ -83,16 +83,16 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
       );
       if (mounted) {
         final loc = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(loc.packageSent(pkg.id))),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(loc.packageSent(pkg.id))));
       }
     } catch (e) {
       if (mounted) {
         final loc = AppLocalizations.of(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('${loc.errorPrefix}: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('${loc.errorPrefix}: $e')));
       }
     } finally {
       if (mounted) setState(() => _busyPackageId = null);
@@ -111,11 +111,18 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
 
     return Epoch8ScreenBody(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+        padding: const EdgeInsets.fromLTRB(
+          Epoch8Layout.pagePadding,
+          12,
+          Epoch8Layout.pagePadding,
+          24,
+        ),
         children: [
           Text(
             loc.baseUrlLabel(ApiEnvironment.normalizedBaseUrl()),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -132,15 +139,22 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
           const SizedBox(height: 24),
           Text(
             loc.serverQueue,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           packagesAsync.when(
             data: (packages) {
-              final queue = packages
-                  .where((p) => p.serverDeliveryState != 'completed' && p.status != 'draft')
-                  .toList()
-                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+              final queue =
+                  packages
+                      .where(
+                        (p) =>
+                            p.serverDeliveryState != 'completed' &&
+                            p.status != 'draft',
+                      )
+                      .toList()
+                    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
               if (queue.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.only(top: 16),
@@ -173,7 +187,9 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                               ? const SizedBox(
                                   width: 28,
                                   height: 28,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : IconButton(
                                   icon: const Icon(Icons.cloud_upload_outlined),
@@ -190,7 +206,10 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
               padding: const EdgeInsets.all(24),
               child: Epoch8Loader.center(),
             ),
-            error: (e, _) => Text('${loc.dbError}: $e', style: TextStyle(color: Epoch8Theme.danger)),
+            error: (e, _) => Text(
+              '${loc.dbError}: $e',
+              style: TextStyle(color: Epoch8Theme.danger),
+            ),
           ),
         ],
       ),
@@ -245,9 +264,9 @@ class _ServerNotConfiguredView extends StatelessWidget {
             loc.serverSetupSubtitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Epoch8Theme.textMuted,
-                  height: 1.45,
-                ),
+              color: Epoch8Theme.textMuted,
+              height: 1.45,
+            ),
           ),
           const SizedBox(height: 20),
           Epoch8Card(
@@ -257,10 +276,10 @@ class _ServerNotConfiguredView extends StatelessWidget {
                 Text(
                   loc.serverSetupCommandLabel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Epoch8Theme.accent,
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: Epoch8Theme.accent,
+                    letterSpacing: 1.2,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Container(
@@ -274,9 +293,9 @@ class _ServerNotConfiguredView extends StatelessWidget {
                   child: SelectableText(
                     _command,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontFamily: 'monospace',
-                          height: 1.4,
-                        ),
+                      fontFamily: 'monospace',
+                      height: 1.4,
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -284,7 +303,9 @@ class _ServerNotConfiguredView extends StatelessWidget {
                   alignment: Alignment.centerRight,
                   child: TextButton.icon(
                     onPressed: () async {
-                      await Clipboard.setData(const ClipboardData(text: _command));
+                      await Clipboard.setData(
+                        const ClipboardData(text: _command),
+                      );
                       if (!context.mounted) return;
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(loc.copiedToClipboard)),
@@ -302,9 +323,9 @@ class _ServerNotConfiguredView extends StatelessWidget {
             child: Text(
               loc.serverSetupHintNote,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Epoch8Theme.textMuted,
-                    height: 1.45,
-                  ),
+                color: Epoch8Theme.textMuted,
+                height: 1.45,
+              ),
             ),
           ),
         ],

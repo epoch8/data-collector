@@ -42,6 +42,7 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
   final ResolvedCollectionStep step;
   final String continueLabel;
   final VoidCallback onContinue;
+
   /// Триггер сохранения черновика после изменения снимков (на web игнорируется родителем).
   final VoidCallback? onPhotoChanged;
 
@@ -52,6 +53,7 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
 class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   final Map<String, TextEditingController> _textCtrls = {};
   final Map<String, DateTime> _dateTimes = {};
+
   /// Нельзя вызывать `ref` из [dispose] — элемент уже «мертвый»; нотификатор держим с initState.
   late final WizardState _wizardNotifier;
 
@@ -62,7 +64,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     final s = ref.read(wizardStateProvider(widget.projectId));
     for (final f in widget.step.fields) {
       if (f.type == 'text_input') {
-        _textCtrls[f.fieldId] = TextEditingController(text: s[f.fieldId]?.toString() ?? '');
+        _textCtrls[f.fieldId] = TextEditingController(
+          text: s[f.fieldId]?.toString() ?? '',
+        );
       } else if (f.type == 'datetime') {
         _dateTimes[f.fieldId] = _parseDt(s[f.fieldId]) ?? DateTime.now();
       }
@@ -103,11 +107,15 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   /// Текст/дата должны попадать в [wizardStateProvider] при вводе — иначе черновик в БД
   /// (слушатель в [CollectionFlowScreen]) не видит их до нажатия «Далее».
   void _syncTextFieldToWizard(String fieldId, String text) {
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(fieldId, text);
+    ref
+        .read(wizardStateProvider(widget.projectId).notifier)
+        .updateField(fieldId, text);
   }
 
   void _syncDatetimeToWizard(String fieldId, DateTime dt) {
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(fieldId, dt.toIso8601String());
+    ref
+        .read(wizardStateProvider(widget.projectId).notifier)
+        .updateField(fieldId, dt.toIso8601String());
   }
 
   bool _stepValid(Map<String, dynamic> answers) {
@@ -131,9 +139,13 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     final id = widget.step.cowIdFieldId;
     if (id != null && widget.step.fields.any((f) => f.fieldId == id)) return id;
     for (final f in widget.step.fields) {
-      if (f.type == 'text_input' && f.fieldId == 'cow_identifier') return f.fieldId;
+      if (f.type == 'text_input' && f.fieldId == 'cow_identifier')
+        return f.fieldId;
     }
-    return widget.step.fields.where((f) => f.type == 'text_input').firstOrNull?.fieldId;
+    return widget.step.fields
+        .where((f) => f.type == 'text_input')
+        .firstOrNull
+        ?.fieldId;
   }
 
   @override
@@ -145,7 +157,8 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     final typedCowId = cowCtrl?.text.trim() ?? '';
     final typedLower = typedCowId.toLowerCase();
 
-    final packages = ref.watch(packagesStreamProvider).asData?.value ?? const [];
+    final packages =
+        ref.watch(packagesStreamProvider).asData?.value ?? const [];
     final matchedIds = <String>{};
     Map<String, dynamic>? exactData;
     DateTime? exactCreatedAt;
@@ -188,7 +201,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 8, Epoch8Layout.pagePadding, 28),
+      padding: const EdgeInsets.fromLTRB(
+        Epoch8Layout.pagePadding,
+        8,
+        Epoch8Layout.pagePadding,
+        28,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -229,7 +247,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   String? _payloadCowId(Map<String, dynamic> payload, String? key) {
     final a = key != null ? payload[key]?.toString().trim() : null;
     if (a != null && a.isNotEmpty) return a;
-    final b = payload['cow_identifier']?.toString().trim() ?? payload['cow_id']?.toString().trim();
+    final b =
+        payload['cow_identifier']?.toString().trim() ??
+        payload['cow_id']?.toString().trim();
     if (b != null && b.isNotEmpty) return b;
     return null;
   }
@@ -259,7 +279,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(f.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+              Text(
+                f.title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+              ),
               const SizedBox(height: 8),
               TextField(
                 controller: c,
@@ -268,16 +293,16 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                   helperText: typedCowId.isEmpty
                       ? null
                       : hasExactMatch
-                          ? loc.flowFormSubjectHintExact
-                          : hasAnyMatches
-                              ? loc.flowFormSubjectHintSimilar
-                              : loc.flowFormSubjectHintNew,
+                      ? loc.flowFormSubjectHintExact
+                      : hasAnyMatches
+                      ? loc.flowFormSubjectHintSimilar
+                      : loc.flowFormSubjectHintNew,
                   helperStyle: TextStyle(
                     color: hasExactMatch
                         ? Epoch8Theme.success
                         : hasAnyMatches
-                            ? Epoch8Theme.accent
-                            : Epoch8Theme.textMuted,
+                        ? Epoch8Theme.accent
+                        : Epoch8Theme.textMuted,
                   ),
                 ),
                 onChanged: (_) {
@@ -294,15 +319,21 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                     final isExact = id.toLowerCase() == typedLower;
                     return ActionChip(
                       label: Text(id),
-                      backgroundColor: isExact ? Epoch8Theme.success.withValues(alpha: 0.18) : Epoch8Theme.bgElevated,
+                      backgroundColor: isExact
+                          ? Epoch8Theme.success.withValues(alpha: 0.18)
+                          : Epoch8Theme.bgElevated,
                       side: BorderSide(
-                        color: isExact ? Epoch8Theme.success.withValues(alpha: 0.6) : Epoch8Theme.border,
+                        color: isExact
+                            ? Epoch8Theme.success.withValues(alpha: 0.6)
+                            : Epoch8Theme.border,
                       ),
                       onPressed: () {
                         final cc = cowCtrl;
                         if (cc != null) {
                           cc.text = id;
-                          cc.selection = TextSelection.fromPosition(TextPosition(offset: cc.text.length));
+                          cc.selection = TextSelection.fromPosition(
+                            TextPosition(offset: cc.text.length),
+                          );
                           _syncTextFieldToWizard(f.fieldId, cc.text);
                         }
                         setState(() {});
@@ -325,7 +356,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(f.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              f.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             TextField(
               controller: c,
@@ -342,7 +378,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(f.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+            Text(
+              f.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -356,10 +397,19 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                       lastDate: DateTime(2100),
                     );
                     if (d == null || !mounted) return;
-                    final t = await showTimePicker(context: context, initialTime: TimeOfDay.fromDateTime(dt));
+                    final t = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(dt),
+                    );
                     if (t == null || !mounted) return;
                     setState(() {
-                      _dateTimes[f.fieldId] = DateTime(d.year, d.month, d.day, t.hour, t.minute);
+                      _dateTimes[f.fieldId] = DateTime(
+                        d.year,
+                        d.month,
+                        d.day,
+                        t.hour,
+                        t.minute,
+                      );
                     });
                     _syncDatetimeToWizard(f.fieldId, _dateTimes[f.fieldId]!);
                   },
@@ -377,11 +427,14 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               MarkdownBody(
                 data: f.instructions,
                 selectable: true,
-                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                  p: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.45),
-                  h1: Theme.of(context).textTheme.headlineSmall,
-                  h2: Theme.of(context).textTheme.titleLarge,
-                ),
+                styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context))
+                    .copyWith(
+                      p: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(height: 1.45),
+                      h1: Theme.of(context).textTheme.headlineSmall,
+                      h2: Theme.of(context).textTheme.titleLarge,
+                    ),
                 imageBuilder: (uri, title, alt) {
                   final ref = markdownImageRefFromUri(uri);
                   if (ref == null || ref.isEmpty) {
@@ -390,7 +443,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
+                      borderRadius: BorderRadius.circular(
+                        Epoch8Layout.radiusMd,
+                      ),
                       child: projectExampleImage(
                         project: widget.project,
                         assetPath: ref,
@@ -413,7 +468,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
             else
               Text(
                 loc.flowFormInstructionEmpty,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
           ],
         );
@@ -429,7 +486,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           onPhotoChanged: widget.onPhotoChanged,
         );
       default:
-        return Text('${loc.unsupportedFieldType} (${f.type})', style: TextStyle(color: Epoch8Theme.danger));
+        return Text(
+          '${loc.unsupportedFieldType} (${f.type})',
+          style: TextStyle(color: Epoch8Theme.danger),
+        );
     }
   }
 }
@@ -469,6 +529,7 @@ class _ScrollCameraBlock extends ConsumerStatefulWidget {
   final ConfigField field;
   final int poseIndex1Based;
   final int totalPoses;
+
   /// Сигнал родителю: пора зафиксировать состояние сборки на диск.
   final VoidCallback? onPhotoChanged;
 
@@ -497,8 +558,14 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
             title: Text(loc.flowCameraPoseQualityTitle),
             content: SingleChildScrollView(child: Text(quality.userMessage)),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, true), child: Text(loc.flowCameraPoseUseAnyway)),
-              FilledButton(onPressed: () => Navigator.pop(ctx, false), child: Text(loc.flowCameraPoseRetake)),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: Text(loc.flowCameraPoseUseAnyway),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: Text(loc.flowCameraPoseRetake),
+              ),
             ],
           ),
         );
@@ -518,14 +585,24 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
   }
 
   void _remove(String path) {
-    CameraMetadataCollector.removePoseShotByPath(ref: ref, projectId: widget.projectId, poseFieldId: _key, imagePath: path);
+    CameraMetadataCollector.removePoseShotByPath(
+      ref: ref,
+      projectId: widget.projectId,
+      poseFieldId: _key,
+      imagePath: path,
+    );
     setState(() {});
     widget.onPhotoChanged?.call();
   }
 
   void _clear() {
-    CameraMetadataCollector.stripLegacyContextPoses(ref: ref, projectId: widget.projectId);
-    ref.read(wizardStateProvider(widget.projectId).notifier).updateField(_key, null);
+    CameraMetadataCollector.stripLegacyContextPoses(
+      ref: ref,
+      projectId: widget.projectId,
+    );
+    ref
+        .read(wizardStateProvider(widget.projectId).notifier)
+        .updateField(_key, null);
     setState(() {});
     widget.onPhotoChanged?.call();
   }
@@ -546,18 +623,28 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
             Expanded(
               child: Text(
                 widget.field.title,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             Text(
               '${widget.poseIndex1Based}$sep${widget.totalPoses}',
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                color: Epoch8Theme.accent,
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ],
         ),
         if (widget.field.instructions.trim().isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(widget.field.instructions, style: Theme.of(context).textTheme.bodyMedium?.copyWith(height: 1.35)),
+          Text(
+            widget.field.instructions,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.35),
+          ),
         ],
         const SizedBox(height: 16),
         Text(
@@ -568,7 +655,9 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
         if (paths.isEmpty)
           Text(
             loc.flowCameraPoseEmptyHint,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
           )
         else
           Wrap(
@@ -576,15 +665,31 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
             runSpacing: 8,
             children: [
               for (var i = 0; i < paths.length; i++)
-                _Thumb(path: paths[i], index: i + 1, onRemove: () => _remove(paths[i])),
+                _Thumb(
+                  path: paths[i],
+                  index: i + 1,
+                  onRemove: () => _remove(paths[i]),
+                ),
             ],
           ),
         const SizedBox(height: 12),
         Row(
           children: [
-            Expanded(child: FilledButton.icon(onPressed: () => _pick(ImageSource.camera), icon: const Icon(Icons.photo_camera_outlined), label: Text(loc.flowCameraPoseCamera))),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: () => _pick(ImageSource.camera),
+                icon: const Icon(Icons.photo_camera_outlined),
+                label: Text(loc.flowCameraPoseCamera),
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: OutlinedButton.icon(onPressed: () => _pick(ImageSource.gallery), icon: const Icon(Icons.photo_library_outlined), label: Text(loc.flowCameraPoseGallery))),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => _pick(ImageSource.gallery),
+                icon: const Icon(Icons.photo_library_outlined),
+                label: Text(loc.flowCameraPoseGallery),
+              ),
+            ),
           ],
         ),
         if (paths.isNotEmpty)
@@ -599,7 +704,11 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
 }
 
 class _Thumb extends StatelessWidget {
-  const _Thumb({required this.path, required this.index, required this.onRemove});
+  const _Thumb({
+    required this.path,
+    required this.index,
+    required this.onRemove,
+  });
 
   final String path;
   final int index;
@@ -614,8 +723,37 @@ class _Thumb extends StatelessWidget {
           borderRadius: BorderRadius.circular(8),
           child: localCaptureThumbnail(path, size: 88),
         ),
-        Positioned(left: 4, top: 4, child: Container(padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2), decoration: BoxDecoration(color: Epoch8Theme.bgDeep.withValues(alpha: 0.75), borderRadius: BorderRadius.circular(6)), child: Text('$index', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)))),
-        Positioned(right: -4, top: -4, child: Material(color: Epoch8Theme.danger, shape: const CircleBorder(), child: InkWell(onTap: onRemove, customBorder: const CircleBorder(), child: Padding(padding: const EdgeInsets.all(4), child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep))))),
+        Positioned(
+          left: 4,
+          top: 4,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Epoch8Theme.bgDeep.withValues(alpha: 0.75),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              '$index',
+              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ),
+        Positioned(
+          right: -4,
+          top: -4,
+          child: Material(
+            color: Epoch8Theme.danger,
+            shape: const CircleBorder(),
+            child: InkWell(
+              onTap: onRemove,
+              customBorder: const CircleBorder(),
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -40,7 +40,10 @@ Future<void> submitLocalPackage({
 
   final payloadJson = jsonEncode(materialized.payload);
   if (existingDraftPackageId != null) {
-    final rowsUpdated = await (db.update(db.packages)..where((t) => t.id.equals(packageId))).write(
+    final rowsUpdated =
+        await (db.update(
+          db.packages,
+        )..where((t) => t.id.equals(packageId))).write(
           PackagesCompanion(
             status: const Value('completed'),
             dataJson: Value(payloadJson),
@@ -49,7 +52,9 @@ Future<void> submitLocalPackage({
           ),
         );
     if (rowsUpdated == 0) {
-      await db.into(db.packages).insert(
+      await db
+          .into(db.packages)
+          .insert(
             PackagesCompanion.insert(
               id: packageId,
               projectId: projectId,
@@ -60,7 +65,9 @@ Future<void> submitLocalPackage({
           );
     }
   } else {
-    await db.into(db.packages).insert(
+    await db
+        .into(db.packages)
+        .insert(
           PackagesCompanion.insert(
             id: packageId,
             projectId: projectId,

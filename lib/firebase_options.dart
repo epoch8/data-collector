@@ -3,7 +3,8 @@
 // (2) Firebase MCP в Cursor: firebase_login → firebase_get_sdk_config (android/ios/web).
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform, kIsWeb;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -31,7 +32,6 @@ class DefaultFirebaseOptions {
     authDomain: 'e8-gke.firebaseapp.com',
     storageBucket: 'e8-gke.firebasestorage.app',
   );
-
 
   /// Данные из android/app/google-services.json
   static const FirebaseOptions android = FirebaseOptions(
@@ -62,9 +62,10 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.dataCollector',
   );
 }
-    // apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-    // appId: '1:59903871663:android:83c40cfe504ef60952225a',
-    // messagingSenderId: '59903871663',
-    // projectId: 'e8-gke',
-    // authDomain: 'e8-gke.firebaseapp.com',
-    // storageBucket: 'e8-gke.firebasestorage.app',
+
+// apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+// appId: '1:59903871663:android:83c40cfe504ef60952225a',
+// messagingSenderId: '59903871663',
+// projectId: 'e8-gke',
+// authDomain: 'e8-gke.firebaseapp.com',
+// storageBucket: 'e8-gke.firebasestorage.app',

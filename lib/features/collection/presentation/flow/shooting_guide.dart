@@ -23,7 +23,8 @@ class PoseGuide {
   final String exampleAssetPath;
 }
 
-const String _defaultExampleAsset = 'assets/placeholders/example_pose_placeholder.jpg';
+const String _defaultExampleAsset =
+    'assets/placeholders/example_pose_placeholder.jpg';
 
 final List<PoseGuide> _builtinPoseGuides = [
   PoseGuide(
@@ -51,13 +52,25 @@ List<PoseGuide> _parsePoseCardsFromProject(Project project) {
         ? linesRaw.map((x) => x.toString()).where((s) => s.isNotEmpty).toList()
         : const <String>[];
     final asset = m['example_asset_path'] as String? ?? _defaultExampleAsset;
-    out.add(PoseGuide(index1Based: idx, title: title, shortLabel: short, descriptionLines: lines, exampleAssetPath: asset));
+    out.add(
+      PoseGuide(
+        index1Based: idx,
+        title: title,
+        shortLabel: short,
+        descriptionLines: lines,
+        exampleAssetPath: asset,
+      ),
+    );
   }
   return out;
 }
 
 /// Pose card for step [poseIndex1Based]: JSON `pose_cards` order matches camera steps, else [field] + builtins.
-PoseGuide resolvePoseGuide(Project project, int poseIndex1Based, ConfigField field) {
+PoseGuide resolvePoseGuide(
+  Project project,
+  int poseIndex1Based,
+  ConfigField field,
+) {
   final parsed = _parsePoseCardsFromProject(project);
   if (parsed.isNotEmpty) {
     final i = poseIndex1Based - 1;
@@ -69,14 +82,18 @@ PoseGuide resolvePoseGuide(Project project, int poseIndex1Based, ConfigField fie
           title: field.title,
           shortLabel: field.title,
           descriptionLines: _linesFromInstructions(field.instructions),
-          exampleAssetPath: g.exampleAssetPath.isNotEmpty ? g.exampleAssetPath : _defaultExampleAsset,
+          exampleAssetPath: g.exampleAssetPath.isNotEmpty
+              ? g.exampleAssetPath
+              : _defaultExampleAsset,
         );
       }
       return PoseGuide(
         index1Based: poseIndex1Based,
         title: g.title.isNotEmpty ? g.title : field.title,
         shortLabel: g.shortLabel.isNotEmpty ? g.shortLabel : field.title,
-        descriptionLines: g.descriptionLines.isNotEmpty ? g.descriptionLines : _linesFromInstructions(field.instructions),
+        descriptionLines: g.descriptionLines.isNotEmpty
+            ? g.descriptionLines
+            : _linesFromInstructions(field.instructions),
         exampleAssetPath: g.exampleAssetPath,
       );
     }
@@ -113,6 +130,7 @@ class ShootingGuideBody extends StatelessWidget {
     this.showStartButton = false,
     this.onStart,
     this.compact = false,
+
     /// Если false — только колонка без собственного [SingleChildScrollView] (родитель скроллит).
     this.scrollable = true,
   });
@@ -144,7 +162,10 @@ class ShootingGuideBody extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             loc.shootingGuideGeneralTipsHeading,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.accent, fontWeight: FontWeight.w700),
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: Epoch8Theme.accent,
+              fontWeight: FontWeight.w700,
+            ),
           ),
           const SizedBox(height: 8),
           ...tips.map(
@@ -154,7 +175,12 @@ class ShootingGuideBody extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('• ', style: TextStyle(color: Epoch8Theme.accent)),
-                  Expanded(child: Text(t, style: Theme.of(context).textTheme.bodyMedium)),
+                  Expanded(
+                    child: Text(
+                      t,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -173,10 +199,15 @@ class ShootingGuideBody extends StatelessWidget {
             const SizedBox(height: 8),
             FilledButton(
               onPressed: onStart,
-              style: FilledButton.styleFrom(padding: const EdgeInsets.symmetric(vertical: 16)),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
               child: Text(
                 loc.shootingGuideStartButton,
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -208,7 +239,12 @@ class _PoseGuideCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(guide.title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700)),
+          Text(
+            guide.title,
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 10),
           ClipRRect(
             borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
@@ -222,7 +258,9 @@ class _PoseGuideCard extends StatelessWidget {
                   color: Epoch8Theme.bgElevated,
                   alignment: Alignment.center,
                   child: Text(
-                    assetMissingHint.isNotEmpty ? assetMissingHint : emptyImagePlaceholder,
+                    assetMissingHint.isNotEmpty
+                        ? assetMissingHint
+                        : emptyImagePlaceholder,
                     textAlign: TextAlign.center,
                     style: TextStyle(color: Epoch8Theme.textMuted),
                   ),
@@ -239,7 +277,12 @@ class _PoseGuideCard extends StatelessWidget {
                 children: [
                   Text('– ', style: TextStyle(color: Epoch8Theme.textMuted)),
                   Expanded(
-                    child: Text(line, style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35)),
+                    child: Text(
+                      line,
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodySmall?.copyWith(height: 1.35),
+                    ),
                   ),
                 ],
               ),

@@ -13,15 +13,26 @@ ImageQualityResult analyzeCaptureQualityInIsolate(String imagePath) {
     final decoded = img.decodeImage(bytes);
     if (decoded == null) return ImageQualityResult.ok(skipped: true);
 
-    final resized = _resizeLongestSide(decoded, ImageQualityThresholds.analysisLongestSide);
+    final resized = _resizeLongestSide(
+      decoded,
+      ImageQualityThresholds.analysisLongestSide,
+    );
     final gray = img.grayscale(resized);
 
     final lumaStats = _lumaMeanAndStd(gray);
     final hist = _lumaHistogram(gray);
     final p10 = _percentileFromHistogram(hist, gray.width * gray.height, 0.10);
     final p90 = _percentileFromHistogram(hist, gray.width * gray.height, 0.90);
-    final darkFrac = _fractionBelow(hist, ImageQualityThresholds.darkPixelLumaCutoff, gray.width * gray.height);
-    final brightFrac = _fractionAbove(hist, ImageQualityThresholds.brightPixelLumaCutoff, gray.width * gray.height);
+    final darkFrac = _fractionBelow(
+      hist,
+      ImageQualityThresholds.darkPixelLumaCutoff,
+      gray.width * gray.height,
+    );
+    final brightFrac = _fractionAbove(
+      hist,
+      ImageQualityThresholds.brightPixelLumaCutoff,
+      gray.width * gray.height,
+    );
 
     final lapVar = _laplacianVariance(gray);
     final gradE = _gradientEnergy(gray);
@@ -32,48 +43,62 @@ ImageQualityResult analyzeCaptureQualityInIsolate(String imagePath) {
         appLocaleNotifier.value.languageCode == 'ru' ? ru : en;
 
     if (lumaStats.mean < ImageQualityThresholds.minMeanLuma) {
-      issues.add(m(
-        'слишком тёмно — добавьте света на объект или включите вспышку',
-        'too dark — add more light to the object or enable flash',
-      ));
+      issues.add(
+        m(
+          'слишком тёмно — добавьте света на объект или включите вспышку',
+          'too dark — add more light to the object or enable flash',
+        ),
+      );
     }
     if (lumaStats.mean > ImageQualityThresholds.maxMeanLuma) {
-      issues.add(m(
-        'слишком светло / пересвет — снимайте без прямого света в объектив, при необходимости снизьте экспозицию',
-        'too bright / overexposed — avoid direct light into lens, lower exposure if needed',
-      ));
+      issues.add(
+        m(
+          'слишком светло / пересвет — снимайте без прямого света в объектив, при необходимости снизьте экспозицию',
+          'too bright / overexposed — avoid direct light into lens, lower exposure if needed',
+        ),
+      );
     }
     if (p10 < ImageQualityThresholds.minP10Luma &&
         lumaStats.mean < ImageQualityThresholds.shadowChecksMeanGate) {
-      issues.add(m(
-        'большая часть кадра в тени — подсветите сцену равномернее',
-        'most of the frame is in shadow — light the scene more evenly',
-      ));
+      issues.add(
+        m(
+          'большая часть кадра в тени — подсветите сцену равномернее',
+          'most of the frame is in shadow — light the scene more evenly',
+        ),
+      );
     }
     if (p90 > ImageQualityThresholds.maxP90Luma) {
-      issues.add(m(
-        'много пересвеченных участков — отойдите от яркого источника или смените ракурс',
-        'too many overexposed areas — move away from bright source or change angle',
-      ));
+      issues.add(
+        m(
+          'много пересвеченных участков — отойдите от яркого источника или смените ракурс',
+          'too many overexposed areas — move away from bright source or change angle',
+        ),
+      );
     }
     if (darkFrac > ImageQualityThresholds.maxDarkPixelFraction &&
         lumaStats.mean < ImageQualityThresholds.shadowChecksMeanGate) {
-      issues.add(m(
-        'слишком много тёмных пикселей — улучшите освещение',
-        'too many dark pixels — improve lighting',
-      ));
+      issues.add(
+        m(
+          'слишком много тёмных пикселей — улучшите освещение',
+          'too many dark pixels — improve lighting',
+        ),
+      );
     }
     if (brightFrac > ImageQualityThresholds.maxBrightPixelFraction) {
-      issues.add(m(
-        'слишком много «вылезшего» белого — уберите засвет / блики',
-        'too much clipped white — remove glare / highlights',
-      ));
+      issues.add(
+        m(
+          'слишком много «вылезшего» белого — уберите засвет / блики',
+          'too much clipped white — remove glare / highlights',
+        ),
+      );
     }
     if (lumaStats.stdDev < ImageQualityThresholds.minLumaStdDev) {
-      issues.add(m(
-        'мало контраста — кадр выглядит «плоским», добавьте направленный свет',
-        'low contrast — frame looks flat, add directional light',
-      ));
+      issues.add(
+        m(
+          'мало контраста — кадр выглядит «плоским», добавьте направленный свет',
+          'low contrast — frame looks flat, add directional light',
+        ),
+      );
     }
 
     final lapLow = lapVar < ImageQualityThresholds.minLaplacianVariance;
@@ -82,14 +107,14 @@ ImageQualityResult analyzeCaptureQualityInIsolate(String imagePath) {
       final hint = lapLow && gradLow
           ? m('сильное размытие или смаз', 'strong blur or motion blur')
           : lapLow
-              ? m(
-                  'мало высокочастотных деталей (возможен смаз или сильное сжатие)',
-                  'not enough high-frequency details (possible motion blur or heavy compression)',
-                )
-              : m(
-                  'мало чётких границ (возможен смаз или недофокус)',
-                  'not enough sharp edges (possible motion blur or misfocus)',
-                );
+          ? m(
+              'мало высокочастотных деталей (возможен смаз или сильное сжатие)',
+              'not enough high-frequency details (possible motion blur or heavy compression)',
+            )
+          : m(
+              'мало чётких границ (возможен смаз или недофокус)',
+              'not enough sharp edges (possible motion blur or misfocus)',
+            );
       issues.add(
         m(
           'изображение нечёткое ($hint) — держите телефон устойчивее, дождитесь фокуса, при необходимости отойдите',
@@ -118,9 +143,17 @@ img.Image _resizeLongestSide(img.Image source, int maxSide) {
   final longest = math.max(w, h);
   if (longest <= maxSide) return source;
   if (w >= h) {
-    return img.copyResize(source, width: maxSide, interpolation: img.Interpolation.linear);
+    return img.copyResize(
+      source,
+      width: maxSide,
+      interpolation: img.Interpolation.linear,
+    );
   }
-  return img.copyResize(source, height: maxSide, interpolation: img.Interpolation.linear);
+  return img.copyResize(
+    source,
+    height: maxSide,
+    interpolation: img.Interpolation.linear,
+  );
 }
 
 double _luma(img.Pixel p) => 0.299 * p.r + 0.587 * p.g + 0.114 * p.b;
@@ -160,7 +193,11 @@ List<int> _lumaHistogram(img.Image gray) {
   return hist;
 }
 
-double _percentileFromHistogram(List<int> hist, int totalPixels, double quantile) {
+double _percentileFromHistogram(
+  List<int> hist,
+  int totalPixels,
+  double quantile,
+) {
   if (totalPixels <= 0) return 128;
   final target = (totalPixels * quantile).ceil().clamp(1, totalPixels);
   var cum = 0;
@@ -201,7 +238,8 @@ double _laplacianVariance(img.Image gray) {
   for (var y = 1; y < h - 1; y++) {
     for (var x = 1; x < w - 1; x++) {
       final c = _luma(gray.getPixel(x, y));
-      final lap = 4 * c -
+      final lap =
+          4 * c -
           _luma(gray.getPixel(x - 1, y)) -
           _luma(gray.getPixel(x + 1, y)) -
           _luma(gray.getPixel(x, y - 1)) -

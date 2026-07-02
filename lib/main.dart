@@ -43,12 +43,15 @@ Future<void> main() async {
   initAppThemeMode();
   ErrorWidget.builder = (details) => Epoch8ErrorScreen(details: details);
   try {
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     firebaseInitialized = true;
     // Дождаться первого события: сессия Email/Password уже восстановлена с диска (персистентность по умолчанию).
     await FirebaseAuth.instance.authStateChanges().first;
-    appRouterInitialLocation =
-        FirebaseAuth.instance.currentUser != null ? '/dashboard' : '/login';
+    appRouterInitialLocation = FirebaseAuth.instance.currentUser != null
+        ? '/dashboard'
+        : '/login';
   } catch (e) {
     debugPrint('Firebase.initializeApp: $e');
   }
@@ -75,10 +78,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/login',
-        builder: (context, state) => const LoginScreen(),
-      ),
+      GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/dashboard',
         builder: (context, state) => const DashboardScreen(),
@@ -104,11 +104,13 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                   }
                   return CollectionFlowScreen(projectId: id);
                 },
-                loading: () => Scaffold(
-                  body: Epoch8Loader.center(),
-                ),
+                loading: () => Scaffold(body: Epoch8Loader.center()),
                 error: (e, _) => Scaffold(
-                  body: Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
+                  body: Center(
+                    child: Text(
+                      '${AppLocalizations.of(context).errorPrefix}: $e',
+                    ),
+                  ),
                 ),
               );
             },
@@ -124,12 +126,10 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
       ),
       GoRoute(
         path: '/history/package/:packageId',
-        builder: (context, state) => PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
+        builder: (context, state) =>
+            PackageHistoryScreen(packageId: state.pathParameters['packageId']!),
       ),
-      GoRoute(
-        path: '/help',
-        builder: (context, state) => const HelpScreen(),
-      ),
+      GoRoute(path: '/help', builder: (context, state) => const HelpScreen()),
     ],
   );
 }
@@ -153,7 +153,10 @@ Widget _epoch8AppBarTitle(String title) {
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, letterSpacing: -0.2),
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
     ],
@@ -167,7 +170,8 @@ class DataCollectorApp extends StatefulWidget {
   State<DataCollectorApp> createState() => _DataCollectorAppState();
 }
 
-class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBindingObserver {
+class _DataCollectorAppState extends State<DataCollectorApp>
+    with WidgetsBindingObserver {
   late final GoRouter _router;
 
   @override
@@ -196,7 +200,9 @@ class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBinding
 
   void _syncBrightness() {
     final mode = appThemeModeNotifier.value;
-    final effective = mode == ThemeMode.light ? Brightness.light : Brightness.dark;
+    final effective = mode == ThemeMode.light
+        ? Brightness.light
+        : Brightness.dark;
     if (appBrightnessNotifier.value != effective) {
       appBrightnessNotifier.value = effective;
     } else {
@@ -220,8 +226,9 @@ class _DataCollectorAppState extends State<DataCollectorApp> with WidgetsBinding
         systemNavigationBarColor: isLight
             ? const Color(0xFFF7F8FB)
             : const Color(0xFF0E1118),
-        systemNavigationBarIconBrightness:
-            isLight ? Brightness.dark : Brightness.light,
+        systemNavigationBarIconBrightness: isLight
+            ? Brightness.dark
+            : Brightness.light,
       ),
     );
   }
@@ -321,139 +328,154 @@ class _LoginScreenState extends State<LoginScreen> {
               return Stack(
                 children: [
                   SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  Epoch8Layout.pagePadding,
-                  56,
-                  Epoch8Layout.pagePadding,
-                  0,
-                ),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 24),
-                      Container(
-                        width: 190,
-                        height: 190,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(32),
-                          color: Epoch8Theme.card.withValues(alpha: 0.9),
-                          border: Border.all(color: Epoch8Theme.border),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.45),
-                              blurRadius: 32,
-                              offset: const Offset(0, 16),
-                            ),
-                          ],
-                        ),
-                        clipBehavior: Clip.antiAlias,
-                        padding: const EdgeInsets.all(16),
-                        child: Image.asset(
-                          'e8_logo.png',
-                          fit: BoxFit.contain,
-                        ),
+                    padding: const EdgeInsets.fromLTRB(
+                      Epoch8Layout.pagePadding,
+                      56,
+                      Epoch8Layout.pagePadding,
+                      0,
+                    ),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                      const SizedBox(height: 28),
-                      Text(
-                        'EPOCH8',
-                        style: t.labelLarge?.copyWith(
-                          color: Epoch8Theme.accent,
-                          letterSpacing: 5,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        loc.loginTitle,
-                        style: t.headlineSmall,
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        loc.loginSubtitle,
-                        style: t.bodyMedium?.copyWith(fontSize: 15),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 32),
-                      if (firebaseInitialized) ...[
-                        Epoch8Card(
-                          child: Column(
-                            children: [
-                              TextField(
-                                controller: _email,
-                                keyboardType: TextInputType.emailAddress,
-                                autofillHints: const [AutofillHints.email],
-                                decoration: InputDecoration(
-                                  labelText: loc.email,
-                                  border: const OutlineInputBorder(),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: _password,
-                                obscureText: true,
-                                autofillHints: const [AutofillHints.password],
-                                decoration: InputDecoration(
-                                  labelText: loc.password,
-                                  border: OutlineInputBorder(),
-                                ),
-                                onSubmitted: (_) {
-                                  if (!_busy) _signInWithFirebase();
-                                },
-                              ),
-                              if (_error != null) ...[
-                                const SizedBox(height: 12),
-                                Text(
-                                  _error!,
-                                  style: t.bodySmall?.copyWith(color: Epoch8Theme.danger),
-                                  textAlign: TextAlign.center,
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const SizedBox(height: 24),
+                          Container(
+                            width: 190,
+                            height: 190,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(32),
+                              color: Epoch8Theme.card.withValues(alpha: 0.9),
+                              border: Border.all(color: Epoch8Theme.border),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.45),
+                                  blurRadius: 32,
+                                  offset: const Offset(0, 16),
                                 ),
                               ],
-                              const SizedBox(height: 20),
-                              SizedBox(
-                                width: double.infinity,
-                                child: FilledButton(
-                                  onPressed: _busy ? null : _signInWithFirebase,
-                                  child: _busy
-                                      ? const SizedBox(
-                                          height: 22,
-                                          width: 22,
-                                          child: CircularProgressIndicator(strokeWidth: 2),
-                                        )
-                                      : Text(loc.signIn),
-                                ),
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            padding: const EdgeInsets.all(16),
+                            child: Image.asset(
+                              'e8_logo.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                          const SizedBox(height: 28),
+                          Text(
+                            'EPOCH8',
+                            style: t.labelLarge?.copyWith(
+                              color: Epoch8Theme.accent,
+                              letterSpacing: 5,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            loc.loginTitle,
+                            style: t.headlineSmall,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            loc.loginSubtitle,
+                            style: t.bodyMedium?.copyWith(fontSize: 15),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 32),
+                          if (firebaseInitialized) ...[
+                            Epoch8Card(
+                              child: Column(
+                                children: [
+                                  TextField(
+                                    controller: _email,
+                                    keyboardType: TextInputType.emailAddress,
+                                    autofillHints: const [AutofillHints.email],
+                                    decoration: InputDecoration(
+                                      labelText: loc.email,
+                                      border: const OutlineInputBorder(),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  TextField(
+                                    controller: _password,
+                                    obscureText: true,
+                                    autofillHints: const [
+                                      AutofillHints.password,
+                                    ],
+                                    decoration: InputDecoration(
+                                      labelText: loc.password,
+                                      border: OutlineInputBorder(),
+                                    ),
+                                    onSubmitted: (_) {
+                                      if (!_busy) _signInWithFirebase();
+                                    },
+                                  ),
+                                  if (_error != null) ...[
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      _error!,
+                                      style: t.bodySmall?.copyWith(
+                                        color: Epoch8Theme.danger,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ],
+                                  const SizedBox(height: 20),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: FilledButton(
+                                      onPressed: _busy
+                                          ? null
+                                          : _signInWithFirebase,
+                                      child: _busy
+                                          ? const SizedBox(
+                                              height: 22,
+                                              width: 22,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                          : Text(loc.signIn),
+                                    ),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        ),
-                      ] else ...[
-                        Text(
-                          loc.firebaseNotInitialized,
-                          style: t.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 20),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton(
-                            onPressed: () => context.go('/dashboard'),
-                            child: Text(loc.goToWorkspace),
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
+                            ),
+                          ] else ...[
+                            Text(
+                              loc.firebaseNotInitialized,
+                              style: t.bodySmall?.copyWith(
+                                color: Epoch8Theme.textMuted,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 20),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: () => context.go('/dashboard'),
+                                child: Text(loc.goToWorkspace),
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 32),
+                        ],
+                      ),
+                    ),
                   ),
                   Positioned(
                     top: 0,
                     right: 0,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       child: Material(
                         color: Colors.transparent,
                         child: Row(
@@ -483,7 +505,8 @@ class DashboardScreen extends ConsumerStatefulWidget {
   ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsBindingObserver {
+class _DashboardScreenState extends ConsumerState<DashboardScreen>
+    with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
@@ -542,16 +565,29 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                 child: TabBar(
                   padding: const EdgeInsets.all(4),
                   indicator: BoxDecoration(
-                    borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm + 2),
+                    borderRadius: BorderRadius.circular(
+                      Epoch8Layout.radiusSm + 2,
+                    ),
                     color: Epoch8Theme.accent.withValues(alpha: 0.18),
-                    border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.35)),
+                    border: Border.all(
+                      color: Epoch8Theme.accent.withValues(alpha: 0.35),
+                    ),
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
                   dividerHeight: 0,
                   tabs: [
-                    Tab(icon: const Icon(Icons.folder_outlined, size: 20), text: loc.projectsTab),
-                    Tab(icon: const Icon(Icons.cloud_outlined, size: 20), text: loc.serverTab),
-                    Tab(icon: const Icon(Icons.history_outlined, size: 20), text: loc.historyTab),
+                    Tab(
+                      icon: const Icon(Icons.folder_outlined, size: 20),
+                      text: loc.projectsTab,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.cloud_outlined, size: 20),
+                      text: loc.serverTab,
+                    ),
+                    Tab(
+                      icon: const Icon(Icons.history_outlined, size: 20),
+                      text: loc.historyTab,
+                    ),
                   ],
                 ),
               ),
@@ -598,22 +634,38 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                     itemBuilder: (context, index) {
                       final project = projects[index];
                       return Epoch8Card(
-                        accentBorder: resolveCollectionFlow(project).shouldGroupHistoryBySubject,
+                        accentBorder: resolveCollectionFlow(
+                          project,
+                        ).shouldGroupHistoryBySubject,
                         child: ListTile(
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 4,
+                            vertical: 4,
+                          ),
                           leading: Container(
                             width: 52,
                             height: 52,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
                               color: Epoch8Theme.accent.withValues(alpha: 0.12),
-                              border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
+                              border: Border.all(
+                                color: Epoch8Theme.accent.withValues(
+                                  alpha: 0.25,
+                                ),
+                              ),
                             ),
-                            child: Icon(Icons.folder_special_outlined, color: Epoch8Theme.accent, size: 26),
+                            child: Icon(
+                              Icons.folder_special_outlined,
+                              color: Epoch8Theme.accent,
+                              size: 26,
+                            ),
                           ),
                           title: Text(
                             project.name,
-                            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                              fontSize: 16,
+                            ),
                           ),
                           subtitle: Padding(
                             padding: const EdgeInsets.only(top: 6),
@@ -624,16 +676,28 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                                   return '${loc.version} ${project.version} • ${project.config.fields.length}';
                                 }
                                 final nCam = flow.cameraPoseCount;
-                                final hasInstr = flow.steps.any((s) => s.kind == CollectionScreenKind.instruction);
-                                final hasForm = flow.steps.any((s) => s.kind == CollectionScreenKind.form);
-                                final bits = <String>['${loc.version} ${project.version}'];
+                                final hasInstr = flow.steps.any(
+                                  (s) =>
+                                      s.kind ==
+                                      CollectionScreenKind.instruction,
+                                );
+                                final hasForm = flow.steps.any(
+                                  (s) => s.kind == CollectionScreenKind.form,
+                                );
+                                final bits = <String>[
+                                  '${loc.version} ${project.version}',
+                                ];
                                 if (hasForm) bits.add(loc.formLabel);
                                 if (hasInstr) bits.add(loc.guideLabel);
-                                if (nCam > 0) bits.add(loc.cameraPosesCount(nCam));
-                                if (flow.reviewStepIndex != null) bits.add(loc.reviewLabel);
+                                if (nCam > 0)
+                                  bits.add(loc.cameraPosesCount(nCam));
+                                if (flow.reviewStepIndex != null)
+                                  bits.add(loc.reviewLabel);
                                 return bits.join(' • ');
                               }(),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.4),
+                              style: Theme.of(
+                                context,
+                              ).textTheme.bodySmall?.copyWith(height: 1.4),
                             ),
                           ),
                           trailing: Container(
@@ -642,9 +706,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
                               color: Epoch8Theme.bgElevated,
                               borderRadius: BorderRadius.circular(10),
                             ),
-                            child: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                            child: Icon(
+                              Icons.arrow_forward_ios_rounded,
+                              size: 16,
+                              color: Epoch8Theme.textMuted,
+                            ),
                           ),
-                          onTap: () => context.go('/project/${project.id}/wizard'),
+                          onTap: () =>
+                              context.go('/project/${project.id}/wizard'),
                         ),
                       );
                     },
@@ -686,7 +755,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> with WidgetsB
 }
 
 class SubjectHistoryScreen extends ConsumerWidget {
-  const SubjectHistoryScreen({super.key, required this.projectId, required this.subjectId});
+  const SubjectHistoryScreen({
+    super.key,
+    required this.projectId,
+    required this.subjectId,
+  });
 
   final String projectId;
   final String subjectId;
@@ -696,18 +769,21 @@ class SubjectHistoryScreen extends ConsumerWidget {
     final loc = AppLocalizations.of(context);
     final packagesAsync = ref.watch(packagesStreamProvider);
     return Scaffold(
-      appBar: AppBar(title: _epoch8AppBarTitle('${loc.objectLabel} $subjectId')),
+      appBar: AppBar(
+        title: _epoch8AppBarTitle('${loc.objectLabel} $subjectId'),
+      ),
       body: packagesAsync.when(
         data: (packages) {
-          final filtered = packages
-              .where(
-                (p) =>
-                    p.status != 'draft' &&
-                    p.projectId == projectId &&
-                    _extractSubjectIdFromPackage(p) == subjectId,
-              )
-              .toList()
-            ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          final filtered =
+              packages
+                  .where(
+                    (p) =>
+                        p.status != 'draft' &&
+                        p.projectId == projectId &&
+                        _extractSubjectIdFromPackage(p) == subjectId,
+                  )
+                  .toList()
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           if (filtered.isEmpty) {
             return Epoch8EmptyState(
               icon: Icons.cloud_off_outlined,
@@ -716,14 +792,21 @@ class SubjectHistoryScreen extends ConsumerWidget {
             );
           }
           return ListView.separated(
-            padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+            padding: const EdgeInsets.fromLTRB(
+              Epoch8Layout.pagePadding,
+              12,
+              Epoch8Layout.pagePadding,
+              24,
+            ),
             itemCount: filtered.length,
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final pkg = filtered[index];
               final photoCount = _extractImagePaths(pkg).length;
               return Epoch8Card(
-                highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
+                highlightBorderColor: historyPackageBorderColor(
+                  pkg.serverDeliveryState,
+                ),
                 child: ListTile(
                   title: Text(
                     '${AppLocalizations.of(context).packageWord} ${pkg.id}',
@@ -738,17 +821,32 @@ class SubjectHistoryScreen extends ConsumerWidget {
                     children: [
                       IconButton(
                         tooltip: loc.downloadManifest,
-                        icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
-                        onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                        icon: Icon(
+                          Icons.download_outlined,
+                          size: 22,
+                          color: Epoch8Theme.accent,
+                        ),
+                        onPressed: () => sharePackageServerManifestWithSnackBar(
+                          context,
+                          pkg,
+                        ),
                       ),
                       IconButton(
                         tooltip: loc.deleteFromDevice,
-                        icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                        icon: Icon(
+                          Icons.delete_outline,
+                          size: 22,
+                          color: Epoch8Theme.danger,
+                        ),
                         onPressed: () async {
                           await confirmAndDeleteLocalPackage(context, ref, pkg);
                         },
                       ),
-                      Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                        color: Epoch8Theme.textMuted,
+                      ),
                     ],
                   ),
                   onTap: () => context.push('/history/package/${pkg.id}'),
@@ -761,7 +859,10 @@ class SubjectHistoryScreen extends ConsumerWidget {
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('${loc.errorPrefix}: $e', style: TextStyle(color: Epoch8Theme.danger)),
+            child: Text(
+              '${loc.errorPrefix}: $e',
+              style: TextStyle(color: Epoch8Theme.danger),
+            ),
           ),
         ),
       ),
@@ -797,7 +898,8 @@ class PackageHistoryScreen extends ConsumerWidget {
                 IconButton(
                   tooltip: loc.downloadManifestAsServer,
                   icon: const Icon(Icons.download_outlined),
-                  onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg!),
+                  onPressed: () =>
+                      sharePackageServerManifestWithSnackBar(context, pkg!),
                 ),
                 IconButton(
                   tooltip: loc.deleteFromDevice,
@@ -825,15 +927,22 @@ class PackageHistoryScreen extends ConsumerWidget {
         );
       },
       loading: () => Scaffold(
-        appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
+        appBar: AppBar(
+          title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
+        ),
         body: Epoch8Loader.center(),
       ),
       error: (e, st) => Scaffold(
-        appBar: AppBar(title: _epoch8AppBarTitle('${loc.packageWord} $packageId')),
+        appBar: AppBar(
+          title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
+        ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text('${loc.errorPrefix}: $e', style: TextStyle(color: Epoch8Theme.danger)),
+            child: Text(
+              '${loc.errorPrefix}: $e',
+              style: TextStyle(color: Epoch8Theme.danger),
+            ),
           ),
         ),
       ),
@@ -841,46 +950,74 @@ class PackageHistoryScreen extends ConsumerWidget {
   }
 }
 
-Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pkg) {
+Widget _packageHistoryDetailBody(
+  BuildContext context,
+  WidgetRef ref,
+  Package pkg,
+) {
   final loc = AppLocalizations.of(context);
   final raw = _decodePackageData(pkg);
   final photos = _extractImagePaths(pkg);
   final metadataByPath = _extractPoseMetadataByPath(raw, pkg.id);
-  final projectsList = ref.watch(projectsProvider).maybeWhen(
-        data: (v) => v,
-        orElse: () => null,
-      );
+  final projectsList = ref
+      .watch(projectsProvider)
+      .maybeWhen(data: (v) => v, orElse: () => null);
   final projMeta = _projectById(projectsList, pkg.projectId);
-  final groupSubject = projMeta != null && resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
+  final groupSubject =
+      projMeta != null &&
+      resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
   final subjectLabel = _extractSubjectId(raw);
   return ListView(
-    padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 12, Epoch8Layout.pagePadding, 24),
+    padding: const EdgeInsets.fromLTRB(
+      Epoch8Layout.pagePadding,
+      12,
+      Epoch8Layout.pagePadding,
+      24,
+    ),
     children: [
       Epoch8Card(
-        highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
+        highlightBorderColor: historyPackageBorderColor(
+          pkg.serverDeliveryState,
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              projMeta != null ? loc.projectLabel(projMeta.name) : loc.projectLabel(pkg.projectId),
+              projMeta != null
+                  ? loc.projectLabel(projMeta.name)
+                  : loc.projectLabel(pkg.projectId),
               style: Theme.of(context).textTheme.titleSmall,
             ),
             if (groupSubject && subjectLabel != 'no-id') ...[
               const SizedBox(height: 8),
-              Text('${loc.objectLabel}: $subjectLabel', style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                '${loc.objectLabel}: $subjectLabel',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
             ],
             const SizedBox(height: 8),
             Text(
               deliveryStateShort(context, pkg.serverDeliveryState),
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: historyPackageBorderColor(pkg.serverDeliveryState),
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: historyPackageBorderColor(pkg.serverDeliveryState),
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: 6),
-            Text('${loc.identifier}: ${pkg.projectId}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted)),
-            Text('${loc.createdAt}: ${pkg.createdAt.toString().split('.').first}', style: Theme.of(context).textTheme.bodyMedium),
-            Text('${loc.photos}: ${photos.length}', style: Theme.of(context).textTheme.bodyMedium),
+            Text(
+              '${loc.identifier}: ${pkg.projectId}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+            ),
+            Text(
+              '${loc.createdAt}: ${pkg.createdAt.toString().split('.').first}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            Text(
+              '${loc.photos}: ${photos.length}',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ],
         ),
       ),
@@ -891,7 +1028,9 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
           children: [
             Text(
               loc.formDataTitle,
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             ..._packageFormSummaryRows(context, ref, pkg, raw),
@@ -920,19 +1059,29 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                       onTap: () => showLocalDiskPhotoDialog(context, path),
                       child: Stack(
                         children: [
-                          localCaptureImageBox(path, height: 180, width: double.infinity),
+                          localCaptureImageBox(
+                            path,
+                            height: 180,
+                            width: double.infinity,
+                          ),
                           Positioned(
                             right: 8,
                             bottom: 8,
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.black.withValues(alpha: 0.55),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 loc.openPhoto,
-                                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ),
@@ -941,16 +1090,23 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(path.split(RegExp(r'[\\/]')).last, style: Theme.of(context).textTheme.titleSmall),
+                  Text(
+                    path.split(RegExp(r'[\\/]')).last,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
                   const SizedBox(height: 6),
                   Text(
                     '${loc.pathLabel}: $path',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Epoch8Theme.textMuted,
+                    ),
                   ),
                   if (meta != null) ...[
                     const SizedBox(height: 8),
                     Theme(
-                      data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                      data: Theme.of(
+                        context,
+                      ).copyWith(dividerColor: Colors.transparent),
                       child: ExpansionTile(
                         tilePadding: EdgeInsets.zero,
                         childrenPadding: EdgeInsets.zero,
@@ -958,12 +1114,15 @@ Widget _packageHistoryDetailBody(BuildContext context, WidgetRef ref, Package pk
                         collapsedIconColor: Epoch8Theme.textMuted,
                         title: Text(
                           loc.frameCameraParams,
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(fontWeight: FontWeight.w600),
                         ),
                         children: [
                           SelectableText(
                             const JsonEncoder.withIndent('  ').convert(meta),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(height: 1.35),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodySmall?.copyWith(height: 1.35),
                           ),
                         ],
                       ),
@@ -1018,21 +1177,43 @@ Widget _historyTabBody(
           }
           for (final entry in byProject.entries) {
             if (knownIds.contains(entry.key)) continue;
-            sections.add(_historyOrphanProjectSection(context, ref, entry.key, entry.value));
+            sections.add(
+              _historyOrphanProjectSection(
+                context,
+                ref,
+                entry.key,
+                entry.value,
+              ),
+            );
           }
-          final completedCount = visible.where((p) => p.serverDeliveryState == 'completed').length;
+          final completedCount = visible
+              .where((p) => p.serverDeliveryState == 'completed')
+              .length;
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (completedCount > 0)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(Epoch8Layout.pagePadding, 4, Epoch8Layout.pagePadding, 0),
+                  padding: const EdgeInsets.fromLTRB(
+                    Epoch8Layout.pagePadding,
+                    4,
+                    Epoch8Layout.pagePadding,
+                    0,
+                  ),
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: TextButton.icon(
-                      onPressed: () => confirmAndClearUploadedPackagesCache(context, ref),
-                      icon: const Icon(Icons.cleaning_services_outlined, size: 18),
-                      label: Text(AppLocalizations.of(context).clearUploadedCacheWithCount(completedCount)),
+                      onPressed: () =>
+                          confirmAndClearUploadedPackagesCache(context, ref),
+                      icon: const Icon(
+                        Icons.cleaning_services_outlined,
+                        size: 18,
+                      ),
+                      label: Text(
+                        AppLocalizations.of(
+                          context,
+                        ).clearUploadedCacheWithCount(completedCount),
+                      ),
                     ),
                   ),
                 ),
@@ -1051,15 +1232,23 @@ Widget _historyTabBody(
           );
         },
         loading: () => Epoch8Loader.center(),
-        error: (e, _) => Center(child: Text('${AppLocalizations.of(context).errorPrefix}: $e')),
+        error: (e, _) => Center(
+          child: Text('${AppLocalizations.of(context).errorPrefix}: $e'),
+        ),
       );
     },
     loading: () => Epoch8Loader.center(),
-    error: (e, _) => Center(child: Text('${AppLocalizations.of(context).configError}: $e')),
+    error: (e, _) =>
+        Center(child: Text('${AppLocalizations.of(context).configError}: $e')),
   );
 }
 
-Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj, List<Package> packages) {
+Widget _historyProjectSection(
+  BuildContext context,
+  WidgetRef ref,
+  Project proj,
+  List<Package> packages,
+) {
   final flow = resolveCollectionFlow(proj);
   final bySubject = flow.shouldGroupHistoryBySubject;
   return Column(
@@ -1069,20 +1258,26 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
         padding: const EdgeInsets.only(bottom: 8, top: 4),
         child: Row(
           children: [
-            Icon(bySubject ? Icons.pets_outlined : Icons.folder_outlined, size: 20, color: Epoch8Theme.accent),
+            Icon(
+              bySubject ? Icons.pets_outlined : Icons.folder_outlined,
+              size: 20,
+              color: Epoch8Theme.accent,
+            ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 proj.name,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: Epoch8Theme.accent,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: Epoch8Theme.accent,
+                ),
               ),
             ),
             Text(
               AppLocalizations.of(context).packageCountShort(packages.length),
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: Epoch8Theme.textMuted),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: Epoch8Theme.textMuted),
             ),
           ],
         ),
@@ -1092,18 +1287,30 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
           Epoch8Card(
             highlightBorderColor: historyGroupBorderColor(g.packages),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 4,
+              ),
               leading: Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Epoch8Theme.accent.withValues(alpha: 0.12),
-                  border: Border.all(color: Epoch8Theme.accent.withValues(alpha: 0.25)),
+                  border: Border.all(
+                    color: Epoch8Theme.accent.withValues(alpha: 0.25),
+                  ),
                 ),
-                child: Icon(Icons.badge_outlined, color: Epoch8Theme.accent, size: 24),
+                child: Icon(
+                  Icons.badge_outlined,
+                  color: Epoch8Theme.accent,
+                  size: 24,
+                ),
               ),
-              title: Text('${AppLocalizations.of(context).objectLabel} ${g.subjectId}', style: const TextStyle(fontWeight: FontWeight.w600)),
+              title: Text(
+                '${AppLocalizations.of(context).objectLabel} ${g.subjectId}',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
               subtitle: Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
@@ -1112,31 +1319,55 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 ),
               ),
               isThreeLine: true,
-              trailing: Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
-              onTap: () => context.push('/history/project/${proj.id}/subject/${Uri.encodeComponent(g.subjectId)}'),
+              trailing: Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: Epoch8Theme.textMuted,
+              ),
+              onTap: () => context.push(
+                '/history/project/${proj.id}/subject/${Uri.encodeComponent(g.subjectId)}',
+              ),
             ),
           ),
           const SizedBox(height: 12),
         ],
       ] else ...[
-        for (final pkg in (packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)))) ...[
+        for (final pkg
+            in (packages.toList()
+              ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))) ...[
           Epoch8Card(
-            highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
+            highlightBorderColor: historyPackageBorderColor(
+              pkg.serverDeliveryState,
+            ),
             child: ListTile(
-              contentPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 4,
+                vertical: 4,
+              ),
               leading: Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
                   color: Epoch8Theme.card,
-                  border: Border.all(color: historyPackageBorderColor(pkg.serverDeliveryState).withValues(alpha: 0.35)),
+                  border: Border.all(
+                    color: historyPackageBorderColor(
+                      pkg.serverDeliveryState,
+                    ).withValues(alpha: 0.35),
+                  ),
                 ),
-                child: Icon(Icons.photo_library_outlined, color: historyPackageBorderColor(pkg.serverDeliveryState), size: 24),
+                child: Icon(
+                  Icons.photo_library_outlined,
+                  color: historyPackageBorderColor(pkg.serverDeliveryState),
+                  size: 24,
+                ),
               ),
               title: Text(
                 pkg.id,
-                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1153,17 +1384,30 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
                 children: [
                   IconButton(
                     tooltip: AppLocalizations.of(context).downloadManifest,
-                    icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
-                    onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                    icon: Icon(
+                      Icons.download_outlined,
+                      size: 22,
+                      color: Epoch8Theme.accent,
+                    ),
+                    onPressed: () =>
+                        sharePackageServerManifestWithSnackBar(context, pkg),
                   ),
                   IconButton(
                     tooltip: AppLocalizations.of(context).deleteFromDevice,
-                    icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                    icon: Icon(
+                      Icons.delete_outline,
+                      size: 22,
+                      color: Epoch8Theme.danger,
+                    ),
                     onPressed: () async {
                       await confirmAndDeleteLocalPackage(context, ref, pkg);
                     },
                   ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                  Icon(
+                    Icons.arrow_forward_ios_rounded,
+                    size: 16,
+                    color: Epoch8Theme.textMuted,
+                  ),
                 ],
               ),
               onTap: () => context.push('/history/package/${pkg.id}'),
@@ -1177,12 +1421,22 @@ Widget _historyProjectSection(BuildContext context, WidgetRef ref, Project proj,
   );
 }
 
-String _historySubjectGroupSubtitle(BuildContext context, List<Package> packages) {
+String _historySubjectGroupSubtitle(
+  BuildContext context,
+  List<Package> packages,
+) {
   final loc = AppLocalizations.of(context);
   final n = packages.length;
-  final photos = packages.fold<int>(0, (a, p) => a + _extractImagePaths(p).length);
-  final pending = packages.where((p) => p.serverDeliveryState != 'completed').length;
-  final failed = packages.where((p) => p.serverDeliveryState == 'failed').length;
+  final photos = packages.fold<int>(
+    0,
+    (a, p) => a + _extractImagePaths(p).length,
+  );
+  final pending = packages
+      .where((p) => p.serverDeliveryState != 'completed')
+      .length;
+  final failed = packages
+      .where((p) => p.serverDeliveryState == 'failed')
+      .length;
   final buf = StringBuffer('${loc.packageWord}: $n • ${loc.photos}: $photos');
   if (failed > 0) {
     buf.write('\n${loc.uploadFailed}: $failed');
@@ -1203,8 +1457,14 @@ String _historyPackageSubtitle(BuildContext context, Package pkg) {
   return '$note\n$delivery';
 }
 
-Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String projectId, List<Package> packages) {
-  final sorted = packages.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+Widget _historyOrphanProjectSection(
+  BuildContext context,
+  WidgetRef ref,
+  String projectId,
+  List<Package> packages,
+) {
+  final sorted = packages.toList()
+    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -1212,14 +1472,22 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
         padding: const EdgeInsets.only(bottom: 8, top: 4),
         child: Text(
           '${AppLocalizations.of(context).project} $projectId (${AppLocalizations.of(context).projectMissingInConfig})',
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(color: Epoch8Theme.textMuted, fontWeight: FontWeight.w600),
+          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+            color: Epoch8Theme.textMuted,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
       for (final pkg in sorted) ...[
         Epoch8Card(
-          highlightBorderColor: historyPackageBorderColor(pkg.serverDeliveryState),
+          highlightBorderColor: historyPackageBorderColor(
+            pkg.serverDeliveryState,
+          ),
           child: ListTile(
-            title: Text(pkg.id, style: const TextStyle(fontWeight: FontWeight.w600)),
+            title: Text(
+              pkg.id,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
             subtitle: Text(
               '${pkg.createdAt.toString().split('.').first}\n${deliveryStateShort(context, pkg.serverDeliveryState)}',
             ),
@@ -1229,17 +1497,30 @@ Widget _historyOrphanProjectSection(BuildContext context, WidgetRef ref, String 
               children: [
                 IconButton(
                   tooltip: AppLocalizations.of(context).downloadManifest,
-                  icon: Icon(Icons.download_outlined, size: 22, color: Epoch8Theme.accent),
-                  onPressed: () => sharePackageServerManifestWithSnackBar(context, pkg),
+                  icon: Icon(
+                    Icons.download_outlined,
+                    size: 22,
+                    color: Epoch8Theme.accent,
+                  ),
+                  onPressed: () =>
+                      sharePackageServerManifestWithSnackBar(context, pkg),
                 ),
                 IconButton(
                   tooltip: AppLocalizations.of(context).deleteFromDevice,
-                  icon: Icon(Icons.delete_outline, size: 22, color: Epoch8Theme.danger),
+                  icon: Icon(
+                    Icons.delete_outline,
+                    size: 22,
+                    color: Epoch8Theme.danger,
+                  ),
                   onPressed: () async {
                     await confirmAndDeleteLocalPackage(context, ref, pkg);
                   },
                 ),
-                Icon(Icons.arrow_forward_ios_rounded, size: 16, color: Epoch8Theme.textMuted),
+                Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 16,
+                  color: Epoch8Theme.textMuted,
+                ),
               ],
             ),
             onTap: () => context.push('/history/package/${pkg.id}'),
@@ -1259,11 +1540,15 @@ Project? _projectById(List<Project>? projects, String id) {
   return null;
 }
 
-List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Package pkg, Map<String, dynamic> raw) {
-  final projects = ref.watch(projectsProvider).maybeWhen(
-        data: (v) => v,
-        orElse: () => null,
-      );
+List<Widget> _packageFormSummaryRows(
+  BuildContext context,
+  WidgetRef ref,
+  Package pkg,
+  Map<String, dynamic> raw,
+) {
+  final projects = ref
+      .watch(projectsProvider)
+      .maybeWhen(data: (v) => v, orElse: () => null);
   final proj = _projectById(projects, pkg.projectId);
   if (proj == null) return _genericPayloadFieldRows(context, raw);
   final rows = <Widget>[];
@@ -1279,17 +1564,28 @@ List<Widget> _packageFormSummaryRows(BuildContext context, WidgetRef ref, Packag
       } else {
         n = (v != null && v.toString().trim().isNotEmpty ? 1 : 0);
       }
-      rows.add(_packageHistoryFieldRow(context, f.title, n == 0 ? null : '$n ${AppLocalizations.of(context).fileWord}'));
+      rows.add(
+        _packageHistoryFieldRow(
+          context,
+          f.title,
+          n == 0 ? null : '$n ${AppLocalizations.of(context).fileWord}',
+        ),
+      );
       continue;
     }
     final val = raw[f.fieldId];
-    final display = f.type == 'datetime' ? _formatPackageScanTime(val) : val?.toString();
+    final display = f.type == 'datetime'
+        ? _formatPackageScanTime(val)
+        : val?.toString();
     rows.add(_packageHistoryFieldRow(context, f.title, display));
   }
   return rows;
 }
 
-List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic> raw) {
+List<Widget> _genericPayloadFieldRows(
+  BuildContext context,
+  Map<String, dynamic> raw,
+) {
   const skip = {
     'camera_capture_context',
     'korovas_camera_context',
@@ -1306,7 +1602,11 @@ List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic>
     } else if (v is List) {
       if (v.isEmpty) {
         display = '—';
-      } else if (v.every((x) => x is String && (x.contains('/') || x.contains('\\') || x.startsWith('blobs/')))) {
+      } else if (v.every(
+        (x) =>
+            x is String &&
+            (x.contains('/') || x.contains('\\') || x.startsWith('blobs/')),
+      )) {
         display = '${v.length} ${AppLocalizations.of(context).fileWord}';
       } else {
         display = v.map((x) => x.toString()).join(', ');
@@ -1322,7 +1622,11 @@ List<Widget> _genericPayloadFieldRows(BuildContext context, Map<String, dynamic>
 }
 
 class _SubjectGroup {
-  const _SubjectGroup({required this.subjectId, required this.packages, required this.totalPhotos});
+  const _SubjectGroup({
+    required this.subjectId,
+    required this.packages,
+    required this.totalPhotos,
+  });
 
   final String subjectId;
   final List<Package> packages;
@@ -1336,20 +1640,29 @@ List<_SubjectGroup> _groupPackagesBySubject(List<Package> packages) {
     bySubject.putIfAbsent(subjectId, () => <Package>[]).add(pkg);
   }
 
-  final groups = bySubject.entries
-      .map(
-        (entry) => _SubjectGroup(
-          subjectId: entry.key,
-          packages: entry.value..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
-          totalPhotos: entry.value.fold<int>(0, (sum, pkg) => sum + _extractImagePaths(pkg).length),
-        ),
-      )
-      .toList()
-    ..sort((a, b) {
-      final aDate = a.packages.isNotEmpty ? a.packages.first.createdAt : DateTime.fromMillisecondsSinceEpoch(0);
-      final bDate = b.packages.isNotEmpty ? b.packages.first.createdAt : DateTime.fromMillisecondsSinceEpoch(0);
-      return bDate.compareTo(aDate);
-    });
+  final groups =
+      bySubject.entries
+          .map(
+            (entry) => _SubjectGroup(
+              subjectId: entry.key,
+              packages: entry.value
+                ..sort((a, b) => b.createdAt.compareTo(a.createdAt)),
+              totalPhotos: entry.value.fold<int>(
+                0,
+                (sum, pkg) => sum + _extractImagePaths(pkg).length,
+              ),
+            ),
+          )
+          .toList()
+        ..sort((a, b) {
+          final aDate = a.packages.isNotEmpty
+              ? a.packages.first.createdAt
+              : DateTime.fromMillisecondsSinceEpoch(0);
+          final bDate = b.packages.isNotEmpty
+              ? b.packages.first.createdAt
+              : DateTime.fromMillisecondsSinceEpoch(0);
+          return bDate.compareTo(aDate);
+        });
   return groups;
 }
 
@@ -1363,7 +1676,11 @@ String _formatPackageScanTime(dynamic v) {
   return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
 }
 
-Widget _packageHistoryFieldRow(BuildContext context, String label, String? value) {
+Widget _packageHistoryFieldRow(
+  BuildContext context,
+  String label,
+  String? value,
+) {
   final v = (value == null || value.trim().isEmpty) ? '—' : value.trim();
   return Padding(
     padding: const EdgeInsets.only(bottom: 8),
@@ -1372,7 +1689,10 @@ Widget _packageHistoryFieldRow(BuildContext context, String label, String? value
       children: [
         SizedBox(
           width: 120,
-          child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13)),
+          child: Text(
+            label,
+            style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
+          ),
         ),
         Expanded(child: Text(v, style: Theme.of(context).textTheme.bodyMedium)),
       ],
@@ -1380,12 +1700,22 @@ Widget _packageHistoryFieldRow(BuildContext context, String label, String? value
   );
 }
 
-String _extractSubjectIdFromPackage(Package pkg) => _extractSubjectId(_decodePackageData(pkg));
+String _extractSubjectIdFromPackage(Package pkg) =>
+    _extractSubjectId(_decodePackageData(pkg));
 
-Map<String, dynamic> _decodePackageData(Package pkg) => unpackPackageFormData(pkg.dataJson);
+Map<String, dynamic> _decodePackageData(Package pkg) =>
+    unpackPackageFormData(pkg.dataJson);
 
 String _extractSubjectId(Map<String, dynamic> data) {
-  const keys = ['cow_identifier', 'cow_id', 'cowId', 'animal_id', 'animalId', 'cow_tag', 'tag_id'];
+  const keys = [
+    'cow_identifier',
+    'cow_id',
+    'cowId',
+    'animal_id',
+    'animalId',
+    'cow_tag',
+    'tag_id',
+  ];
   for (final k in keys) {
     final value = data[k]?.toString().trim();
     if (value != null && value.isNotEmpty) return value;
@@ -1399,7 +1729,11 @@ List<String> _extractImagePaths(Package pkg) {
   for (final entry in data.entries) {
     final key = entry.key.toLowerCase();
     final value = entry.value;
-    if (value is String && value.isNotEmpty && (key.contains('photo') || key.contains('image') || key.contains('pose_'))) {
+    if (value is String &&
+        value.isNotEmpty &&
+        (key.contains('photo') ||
+            key.contains('image') ||
+            key.contains('pose_'))) {
       out.add(PackagePaths.resolveMediaReference(value, pkg.id));
     }
     if (value is List) {
@@ -1410,7 +1744,10 @@ List<String> _extractImagePaths(Package pkg) {
         }
       }
     }
-    if (value is Map && (key.contains('photo') || key.contains('image') || key.contains('pose_'))) {
+    if (value is Map &&
+        (key.contains('photo') ||
+            key.contains('image') ||
+            key.contains('pose_'))) {
       for (final k in value.keys) {
         final path = k.toString();
         if (path.isEmpty) continue;
@@ -1421,7 +1758,10 @@ List<String> _extractImagePaths(Package pkg) {
   return out.toList();
 }
 
-Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic> data, String packageId) {
+Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(
+  Map<String, dynamic> data,
+  String packageId,
+) {
   final out = <String, Map<String, dynamic>>{};
   final ctx = data['camera_capture_context'] ?? data['korovas_camera_context'];
   if (ctx is Map) {
@@ -1436,7 +1776,10 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
           if (shot is! Map) continue;
           final imagePath = shot['image_path']?.toString();
           if (imagePath == null || imagePath.isEmpty) continue;
-          final resolved = PackagePaths.resolveMediaReference(imagePath, packageId);
+          final resolved = PackagePaths.resolveMediaReference(
+            imagePath,
+            packageId,
+          );
           final payload = <String, dynamic>{'pose': poseEntry.key.toString()};
           for (final key in [
             'collected_at',
@@ -1466,7 +1809,9 @@ Map<String, Map<String, dynamic>> _extractPoseMetadataByPath(Map<String, dynamic
     for (final pe in vid.entries) {
       final imagePath = pe.key.toString();
       if (imagePath.isEmpty) continue;
-      if (!imagePath.contains('/') && !imagePath.contains(r'\') && !imagePath.startsWith('blobs/')) {
+      if (!imagePath.contains('/') &&
+          !imagePath.contains(r'\') &&
+          !imagePath.startsWith('blobs/')) {
         continue;
       }
       final shotBody = pe.value;
