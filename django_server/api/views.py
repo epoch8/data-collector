@@ -252,6 +252,11 @@ class PackageCommitView(View):
                 },
                 status=200,
             )
+        # Первый успешный commit — дёргаем настроенную в config.on_commit ручку.
+        # Best-effort: ошибки логируются внутри и не влияют на ответ клиенту.
+        from .package_callback_service import dispatch_on_commit
+
+        dispatch_on_commit(project_id, package_id)
         return JsonResponse({"status": "completed", "package_id": package_id})
 
 
