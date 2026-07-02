@@ -48,6 +48,22 @@ services:
       timeout: 3s
       retries: 10
 
+  # Приёмочный сервис: принимает on_commit-webhook из django_server и логирует его.
+  # См. django_server/api/package_callback_service.py и секцию config.on_commit в конфиге проекта.
+  acceptance:
+    build: ./acceptance
+    container_name: dc-testdev-acceptance
+    restart: unless-stopped
+    environment:
+      ACCEPTANCE_PORT: 8080
+    ports:
+      - "${ACCEPTANCE_PORT:-18080}:8080"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/health')"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   # Одноразовый init: создаёт стартовый бакет(ы) в MinIO.
   minio-init:
     image: minio/mc:latest

@@ -19,6 +19,7 @@ What comes up:
 | PostgreSQL | `localhost:55432` | `collector` / `collector` |
 | MinIO API (S3) | `http://localhost:9000` | `minioadmin` / `minioadmin` |
 | MinIO Console | `http://localhost:9001` | `minioadmin` / `minioadmin` |
+| Acceptance webhook | `http://localhost:18080` | — |
 
 On startup, bucket `dc-packages` is created (`INIT_BUCKET` variable).
 
@@ -68,7 +69,50 @@ python manage.py migrate_project_storage --project-id=krs-label
 The command reads current data (local SQLite + folder) and migrates to the target
 specified in the project's `database_uri` / `storage_uri` fields.
 
-## 5. Shutdown
+## 5. Acceptance webhook (on_commit)
+
+The `acceptance` service receives the outbound webhook that `django_server` fires when a
+package is **committed** (first successful `POST …/commit`). Use it to verify that something
+actually reaches an external endpoint on package arrival.
+
+The webhook is configured **per project in Git** in a **separate** file `collector/pipeline.json`
+(not the form config `collector/config.json`), under `on_commit`. The file is optional — with no
+file, `enabled: false`, or no project Git remote, nothing is called.
+
+```json
+{
+  "version": 1,
+  "on_commit": {
+    "enabled": true,
+    "url": "http://localhost:18080/api/run-with-labels",
+    "method": "POST",
+    "headers": { "Content-Type": "application/json" },
+    "body": { "labels": [["stage", "packages"]] },
+    "timeout_seconds": 10
+  }
+}
+```
+
+- `body` is sent **verbatim**. If omitted, a default `{ "event": "package.committed", "project_id", "package_id" }` is sent.
+- `project_id` / `package_id` are always passed as headers `X-Data-Collector-Project-Id` / `X-Data-Collector-Package-Id`.
+
+Verify received calls:
+
+```bash
+curl http://localhost:18080/health       # {"status":"ok"}
+curl http://localhost:18080/requests     # last received webhooks (newest first)
+docker compose -f test_dev/docker-compose.yml logs -f acceptance
+```
+
+Quick manual test (mimics the webhook):
+
+```bash
+curl -X POST http://localhost:18080/api/run-with-labels \
+  -H 'Content-Type: application/json' \
+  -d '{"labels":[["stage","packages"]]}'
+```
+
+## 6. Shutdown
 
 ```bash
 docker compose -f test_dev/docker-compose.yml down       # keep data
