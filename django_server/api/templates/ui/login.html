@@ -5,13 +5,14 @@
 {% block topnav %}{% endblock topnav %}
 {% block footer %}{% endblock %}
 {% block content %}
-<div class="ui-lang-toggle-wrap">
+<div class="ui-lang-toggle-wrap d-flex justify-content-end align-items-center gap-2">
+  {% include "ui/_theme_toggle.html" %}
   {% include "ui/_lang_toggle.html" %}
 </div>
 <div class="row justify-content-center">
   <div class="col-11 col-sm-8 col-md-5 col-lg-4">
     <div class="card p-4 login-form-card">
-      <h1 class="h5 mb-1 text-white">{% trans "Вход" %}</h1>
+      <h1 class="h5 mb-1 ui-text">{% trans "Вход" %}</h1>
       <p class="small ui-muted mb-3" id="login-hint">
         {% if firebase_auth_enabled %}
         {% trans "Email и пароль Firebase. Доступ к пакетам — по назначению в «Пользователи»." %}

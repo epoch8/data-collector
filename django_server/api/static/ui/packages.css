@@ -1,4 +1,5 @@
-/* Packages UI — Django templates + Bootstrap, dark theme. */
+/* Packages UI — Django templates + Bootstrap. Цвета берутся из токенов
+   темы (admin.css), поэтому список/воркспейс адаптируются к светлой/тёмной. */
 
 /* ── List filters ─────────────────────────────────────────────────────────── */
 .pkg-filter__label {
@@ -29,7 +30,7 @@
   font-weight: 600;
   border-radius: 999px;
   border: 1px solid var(--ui-border);
-  background: rgba(26, 29, 38, 0.6);
+  background: var(--ui-surface-2);
   color: var(--ui-text-muted);
   transition: background 0.14s, border-color 0.14s, color 0.14s;
 }
@@ -92,7 +93,7 @@ body.ui-body--pkg-ws .pkg-ws {
   align-self: stretch;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: linear-gradient(180deg, rgba(17, 26, 36, 0.95), rgba(12, 18, 24, 0.95));
+  background: var(--ui-surface);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -246,7 +247,7 @@ body.ui-body--pkg-ws .pkg-ws {
   margin: 1rem 0 1.25rem;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: rgba(10, 13, 20, 0.6);
+  background: var(--ui-inset);
 }
 .pkg-tab {
   padding: 0.5rem 1rem;
@@ -261,7 +262,7 @@ body.ui-body--pkg-ws .pkg-ws {
 }
 .pkg-tab:hover {
   color: var(--ui-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--ui-hover);
 }
 .pkg-tab.active {
   color: var(--ui-text);
@@ -293,7 +294,7 @@ body.ui-body--pkg-ws .pkg-ws {
   top: 1rem;
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: rgba(19, 22, 30, 0.6);
+  background: var(--ui-surface-2);
   padding: 0.85rem;
 }
 @media (max-width: 1199.98px) {
@@ -322,7 +323,7 @@ body.ui-body--pkg-ws .pkg-ws {
 }
 .pkg-data__nav-link:hover {
   color: var(--ui-text);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--ui-hover);
 }
 .pkg-data__body {
   flex: 1;
@@ -360,7 +361,7 @@ body.ui-body--pkg-ws .pkg-ws {
 .pkg-field {
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: rgba(19, 22, 30, 0.55);
+  background: var(--ui-surface-2);
   padding: 0.85rem 1rem;
 }
 .pkg-field--wide {
@@ -475,7 +476,7 @@ body.ui-body--pkg-ws .pkg-ws {
 .pkg-shot__frame {
   position: relative;
   aspect-ratio: 3 / 4;
-  background: #06080c;
+  background: var(--ui-canvas-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -603,7 +604,7 @@ body.ui-body--pkg-ws .pkg-ws {
 .pkg-media-card {
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: rgba(19, 22, 30, 0.6);
+  background: var(--ui-surface-2);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -611,7 +612,7 @@ body.ui-body--pkg-ws .pkg-ws {
 .pkg-media-card__thumb {
   position: relative;
   aspect-ratio: 4 / 3;
-  background: #06080c;
+  background: var(--ui-canvas-bg);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -689,7 +690,7 @@ body.ui-body--pkg-ws .pkg-ws {
   font-size: 0.78rem;
   line-height: 1.45;
   color: var(--ui-text);
-  background: rgba(6, 8, 12, 0.85);
+  background: var(--ui-inset);
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
   white-space: pre-wrap;
@@ -747,7 +748,7 @@ body.ui-body--pkg-ws .pkg-ws {
 .pkg-history__entry {
   border: 1px solid var(--ui-border);
   border-radius: var(--ui-radius);
-  background: rgba(19, 22, 30, 0.55);
+  background: var(--ui-surface-2);
   padding: 0.9rem 1.1rem;
   margin-bottom: 0.85rem;
 }

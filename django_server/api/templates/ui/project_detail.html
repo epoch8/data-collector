@@ -51,7 +51,7 @@
       {% if is_staff and git_public_key %}
       <p class="small ui-muted mb-1">{% trans "Deploy key (public) — GitHub → Settings → Deploy keys:" %}</p>
       <div class="d-flex gap-2 align-items-start mb-2">
-        <pre id="deploy-public-key" class="small bg-dark border border-secondary rounded p-2 mb-0 text-break flex-grow-1" style="font-size: 0.7rem; max-height: 120px; overflow: auto;">{{ git_public_key }}</pre>
+        <pre id="deploy-public-key" class="small ui-code-block rounded p-2 mb-0 text-break flex-grow-1" style="font-size: 0.7rem; max-height: 120px; overflow: auto;">{{ git_public_key }}</pre>
         <button type="button" class="btn btn-sm btn-outline-light flex-shrink-0 ui-copy-btn" data-copy-target="deploy-public-key" title="{% trans 'Копировать' %}">
           <i class="bi bi-clipboard"></i>
         </button>
@@ -69,7 +69,7 @@
       {% if project_db_error %}
       <div class="alert alert-warning py-2 small mb-2">{{ project_db_error }}</div>
       {% endif %}
-      <p class="mb-2">{% trans "Сессий загрузки:" %} <strong class="text-white">{{ package_count }}</strong></p>
+      <p class="mb-2">{% trans "Сессий загрузки:" %} <strong class="ui-text">{{ package_count }}</strong></p>
       <a class="btn btn-sm btn-outline-light" href="{% url 'ui_package_list' %}?project={{ project.project_id }}">{% trans "Открыть пакеты" %}<i class="bi bi-arrow-right ms-1"></i></a>
     </div>
   </div>
