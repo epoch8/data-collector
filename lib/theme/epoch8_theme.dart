@@ -33,7 +33,7 @@ class _Palette {
   final Color gradientBottom;
 }
 
-/// Тема EPOCH8: одинаковая структура, разные цвета между светлой/тёмной.
+/// Тема E8 team: одинаковая структура, разные цвета между светлой/тёмной.
 abstract final class Epoch8Theme {
   static const _Palette _dark = _Palette(
     bgDeep: Color(0xFF060A0E),
