@@ -18,7 +18,7 @@ class AppLocalizations {
   bool get _isRu => locale.languageCode.toLowerCase().startsWith('ru');
 
   String get appTitle =>
-      _isRu ? 'EPOCH8 Сборщик данных' : 'EPOCH8 Data Collector';
+      _isRu ? 'E8 team Сборщик данных' : 'E8 team Data Collector';
   String get languageCodeLabel => _isRu ? 'RU' : 'EN';
   String get languageToggleTooltip =>
       _isRu ? 'Switch to English' : 'Переключить на русский';

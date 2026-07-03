@@ -37,7 +37,7 @@ class Epoch8Loader extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(size / 4),
               child: Image.asset(
-                'e8_logo.png',
+                'e8-team-logo-1024.png',
                 width: size,
                 height: size,
                 fit: BoxFit.cover,

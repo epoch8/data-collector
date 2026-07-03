@@ -141,7 +141,7 @@ Widget _epoch8AppBarTitle(String title) {
       ClipRRect(
         borderRadius: BorderRadius.circular(7),
         child: Image.asset(
-          'e8_logo.png',
+          'e8-team-logo-1024.png',
           width: 26,
           height: 26,
           fit: BoxFit.cover,
@@ -360,13 +360,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             clipBehavior: Clip.antiAlias,
                             padding: const EdgeInsets.all(16),
                             child: Image.asset(
-                              'e8_logo.png',
+                              'e8-team-logo-1024.png',
                               fit: BoxFit.contain,
                             ),
                           ),
                           const SizedBox(height: 28),
                           Text(
-                            'EPOCH8',
+                            'E8 team',
                             style: t.labelLarge?.copyWith(
                               color: Epoch8Theme.accent,
                               letterSpacing: 5,

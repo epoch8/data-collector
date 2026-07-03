@@ -241,7 +241,7 @@ def build() -> Path:
     _decor_orbs(slide)
     _rect(slide, Inches(0), Inches(0), SLIDE_W, Inches(0.08), ACCENT)
     panel = _round(slide, Inches(0.55), Inches(0.75), Inches(7.2), Inches(6.0), BG_CARD, BORDER)
-    _text(slide, Inches(0.95), Inches(1.05), Inches(2), Inches(0.3), "EPOCH8", 10, bold=True, color=ACCENT_GOLD)
+    _text(slide, Inches(0.95), Inches(1.05), Inches(2), Inches(0.3), "E8 team", 10, bold=True, color=ACCENT_GOLD)
     _text(slide, Inches(0.95), Inches(1.55), Inches(6.5), Inches(1.1), "Data Collector", 44, bold=True)
     _rect(slide, Inches(0.95), Inches(2.75), Inches(2.4), Inches(0.06), ACCENT)
     _text(slide, Inches(0.95), Inches(3.0), Inches(6.4), Inches(1.4),
@@ -388,7 +388,7 @@ def build_v4() -> Path:
     _decor_orbs(slide)
     _rect(slide, Inches(0), Inches(0), SLIDE_W, Inches(0.08), ACCENT)
     panel = _round(slide, Inches(0.55), Inches(0.75), Inches(7.2), Inches(6.0), BG_CARD, BORDER)
-    _text(slide, Inches(0.95), Inches(1.05), Inches(2), Inches(0.3), "EPOCH8", 10, bold=True, color=ACCENT_GOLD)
+    _text(slide, Inches(0.95), Inches(1.05), Inches(2), Inches(0.3), "E8 team", 10, bold=True, color=ACCENT_GOLD)
     _text(slide, Inches(0.95), Inches(1.55), Inches(6.5), Inches(1.1), "Data Collector", 44, bold=True)
     _rect(slide, Inches(0.95), Inches(2.75), Inches(2.4), Inches(0.06), ACCENT)
     _text(
