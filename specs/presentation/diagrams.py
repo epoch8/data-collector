@@ -355,3 +355,160 @@ def draw_client_server_flow(slide, l, t, w, h):
 
 def draw_admin_workspace(slide, l, t, w, h):
     draw_package_viewing_flow(slide, l, t, w, h)
+
+
+ACCENT_CORAL = RGBColor(0xE8, 0x7A, 0x7E)
+
+
+# ── Training program diagrams ─────────────────────────────────────────────────
+
+def draw_training_journey(slide, l, t, w, h):
+    """E2E learning path from domain to assessment."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.16)
+    ix, iy = l + pad, t + Inches(0.28)
+    iw = w - pad * 2
+    _caption(slide, ix, iy - Inches(0.06), iw, "Сквозной путь обучения", ACCENT_CYAN, 9)
+
+    nodes = [
+        ("Предметка", "бонитировка", RGBColor(0x3D, 0x34, 0x20), ACCENT_GOLD),
+        ("data-collector", "съемка · upload", RGBColor(0x2A, 0x24, 0x38), ACCENT_PURPLE),
+        ("datapipe", "CVAT · inference", BG_CARD, ACCENT),
+        ("Админка", "визуализация", RGBColor(0x1A, 0x2E, 0x28), ACCENT_GREEN),
+        ("Эксплуатация", "инциденты", RGBColor(0x2A, 0x20, 0x28), ACCENT_CORAL),
+        ("Аттестация", "ролевые задачи", RGBColor(0x1E, 0x28, 0x38), ACCENT_CYAN),
+    ]
+    n = len(nodes)
+    gap = Inches(0.08)
+    bw = (iw - gap * (n - 1)) / n
+    bh = Inches(0.82)
+    y = iy + Inches(0.22)
+    for i, (title, sub, fill, line) in enumerate(nodes):
+        x = ix + i * (bw + gap)
+        _box(slide, x, y, bw, bh, fill, line, title, sub, 8, 6)
+        if i < n - 1:
+            _arrow_h(slide, x + bw, y + bh / 2, x + bw + gap, line)
+
+    y2 = y + bh + Inches(0.55)
+    _box(slide, ix, y2, iw, Inches(0.62), RGBColor(0x14, 0x20, 0x18), ACCENT_GREEN,
+         "Reusable Core + Korovas Layer", "универсальные материалы + домен заказчика", 10, 7)
+
+
+def draw_eight_blocks_timeline(slide, l, t, w, h):
+    """Eight program blocks on a timeline."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.14)
+    ix, iy = l + pad, t + Inches(0.22)
+    iw = w - pad * 2
+    _caption(slide, ix, iy - Inches(0.04), iw, "8 блоков · 15 недель", TEXT, 9)
+
+    blocks = [
+        ("1", "Предметка", "нед. 1-2", ACCENT_GOLD),
+        ("2", "Инженерия", "нед. 1-2", ACCENT),
+        ("3", "Архитектура", "нед. 3-4", ACCENT_CYAN),
+        ("4", "Full-stack", "нед. 5-7", ACCENT_PURPLE),
+        ("5", "ML + datapipe", "нед. 5-7", ACCENT_GREEN),
+        ("6", "Эксплуатация", "нед. 8-11", ACCENT_CORAL),
+        ("7", "Прод", "нед. 14-15", ACCENT_GOLD),
+        ("8", "Углубление", "нед. 12-13", ACCENT),
+    ]
+    cols = 4
+    rows = 2
+    gap_x = Inches(0.1)
+    gap_y = Inches(0.14)
+    bw = (iw - gap_x * (cols - 1)) / cols
+    bh = Inches(0.92)
+    for i, (num, title, when, color) in enumerate(blocks):
+        col = i % cols
+        row = i // cols
+        x = ix + col * (bw + gap_x)
+        y = iy + Inches(0.18) + row * (bh + gap_y)
+        badge = slide.shapes.add_shape(MSO_SHAPE.OVAL, x + Inches(0.08), y + Inches(0.08), Inches(0.32), Inches(0.32))
+        badge.fill.solid()
+        badge.fill.fore_color.rgb = color
+        badge.line.fill.background()
+        badge.text_frame.paragraphs[0].text = num
+        badge.text_frame.paragraphs[0].font.size = Pt(10)
+        badge.text_frame.paragraphs[0].font.bold = True
+        badge.text_frame.paragraphs[0].font.color.rgb = BG_DEEP
+        badge.text_frame.paragraphs[0].alignment = PP_ALIGN.CENTER
+        badge.text_frame.vertical_anchor = MSO_ANCHOR.MIDDLE
+        _box(slide, x, y, bw, bh, BG_CARD, color, title, when, 10, 7)
+
+    _caption(slide, ix, t + h - Inches(0.28), iw,
+             "Блоки 4 и 5 идут параллельно на одних учебных данных", ACCENT_PURPLE, 8)
+
+
+def draw_parallel_tracks(slide, l, t, w, h):
+    """Full-stack and ML tracks converging on E2E."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.14)
+    ix, iy = l + pad, t + Inches(0.24)
+    iw = w - pad * 2
+    lane_h = Inches(1.05)
+    gap = Inches(0.5)
+    bw = iw
+
+    _caption(slide, ix, iy - Inches(0.06), iw, "Параллельные треки · недели 5-7", TEXT, 9)
+
+    _box(slide, ix, iy, bw, lane_h, RGBColor(0x2A, 0x24, 0x38), ACCENT_PURPLE,
+         "Full-stack", "Flutter · Django · upload · viz · datapipe overview", 11, 8)
+    y2 = iy + lane_h + gap
+    _box(slide, ix, y2, bw, lane_h, RGBColor(0x1A, 0x2E, 0x28), ACCENT_GREEN,
+         "ML Engineer", "pipeline · CVAT · inference · metrics · retraining", 11, 8)
+
+    cy = iy + lane_h + gap / 2
+    _arrow_v(slide, ix + bw * 0.25, iy + lane_h, cy, ACCENT_PURPLE)
+    _arrow_v(slide, ix + bw * 0.75, y2, cy + Inches(0.02), ACCENT_GREEN)
+
+    merge_y = y2 + lane_h + Inches(0.28)
+    _box(slide, ix + iw * 0.1, merge_y, iw * 0.8, Inches(0.68), BG_CARD, ACCENT_CYAN,
+         "Общий E2E", "пакет → datapipe → визуализация в админке", 11, 8)
+    _arrow_v(slide, ix + bw / 2, y2 + lane_h, merge_y, ACCENT_CYAN)
+
+
+def draw_stand_projects(slide, l, t, w, h):
+    """Training stand project cards."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.14)
+    ix, iy = l + pad, t + Inches(0.22)
+    iw = w - pad * 2
+    gap = Inches(0.1)
+    bh = Inches(0.78)
+    projects = [
+        ("demo-basic", "универсальный сбор", "5-10 пакетов", ACCENT),
+        ("demo-cv", "CV без КРС", "YOLO · depth · keypoints", ACCENT_PURPLE),
+        ("korovas-training", "основной проект", "30-50 пакетов · GT", ACCENT_GREEN),
+        ("korovas-broken", "инциденты", "сломанные кейсы", ACCENT_CORAL),
+    ]
+    for i, (name, role, data, color) in enumerate(projects):
+        y = iy + Inches(0.16) + i * (bh + gap)
+        _box(slide, ix, y, iw, bh, BG_CARD, color, name, role, 10, 7)
+        _caption(slide, ix + Inches(0.1), y + bh - Inches(0.22), iw - Inches(0.2), data, color, 7)
+
+
+def draw_learning_formats(slide, l, t, w, h):
+    """Six learning format tiles."""
+    _canvas(slide, l, t, w, h)
+    pad = Inches(0.12)
+    ix, iy = l + pad, t + Inches(0.2)
+    iw = w - pad * 2
+    cols = 3
+    rows = 2
+    gap = Inches(0.1)
+    bw = (iw - gap * (cols - 1)) / cols
+    bh = (h - Inches(0.45) - gap) / rows
+    items = [
+        ("Микровидео", "35-45", ACCENT),
+        ("Живой семинар", "20-24", ACCENT_GOLD),
+        ("Практикум", "18-24", ACCENT_GREEN),
+        ("Разбор инцидента", "8-12", ACCENT_CORAL),
+        ("Ролевое задание", "8-10", ACCENT_PURPLE),
+        ("Ревью", "3-5", ACCENT_CYAN),
+    ]
+    for i, (title, count, color) in enumerate(items):
+        col = i % cols
+        row = i // cols
+        x = ix + col * (bw + gap)
+        y = iy + row * (bh + gap)
+        _box(slide, x, y, bw, bh, BG_CARD, color, title, f"~{count} на программу", 10, 8)
