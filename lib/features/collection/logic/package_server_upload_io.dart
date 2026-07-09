@@ -5,6 +5,7 @@ import 'package:data_collector/core/package/package_paths.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/features/collection/logic/local_package_materializer_payload_utils.dart';
 import 'package:data_collector/features/collection/logic/package_server_manifest.dart';
+import 'package:data_collector/features/collection/logic/package_server_upload_retry.dart';
 import 'package:dio/dio.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/foundation.dart';
@@ -61,6 +62,8 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
+    final uploadedBlobs = await fetchUploadedBlobPaths(dio, projectId, packageId);
+
     final manifestMap = await loadPackagePayloadMap(pkg);
     final requiredBlobs = <String>{};
     collectBlobLogicalPathsFromPayload(manifestMap, requiredBlobs);
@@ -75,18 +78,32 @@ Future<void> uploadDriftPackageToServer({
         if (!requiredBlobs.contains(logical)) {
           continue;
         }
+        if (uploadedBlobs.contains(logical)) {
+          debugPrint('uploadDriftPackageToServer: skip already uploaded $logical');
+          continue;
+        }
         final bytes = await entity.readAsBytes();
         final pathSuffix = logical
             .split('/')
             .map(Uri.encodeComponent)
             .join('/');
-        await dio.put(
-          '/v1/projects/$projectId/packages/$packageId/blobs/$pathSuffix',
-          data: bytes,
-          options: Options(
-            headers: {Headers.contentTypeHeader: 'application/octet-stream'},
-            responseType: ResponseType.json,
+        final blobUrl =
+            '/v1/projects/$projectId/packages/$packageId/blobs/$pathSuffix';
+        await sendWithRetry(
+          () => dio.put<dynamic>(
+            blobUrl,
+            data: bytes,
+            options: Options(
+              headers: {Headers.contentTypeHeader: 'application/octet-stream'},
+              responseType: ResponseType.json,
+              sendTimeout: const Duration(minutes: 15),
+              // Каждый blob — на свежем соединении: избегаем ECONNABORTED (errno 103)
+              // при переиспользовании «протухшего» keep-alive сокета после серии загрузок.
+              persistentConnection: false,
+            ),
           ),
+          label: logical,
+          maxAttempts: 6,
         );
       }
     }
@@ -97,16 +114,24 @@ Future<void> uploadDriftPackageToServer({
       '  ',
     ).convert(manifestMap);
 
-    await dio.put<dynamic>(
-      '/v1/projects/$projectId/packages/$packageId/manifest',
-      data: manifestBody,
-      options: Options(
-        headers: {Headers.contentTypeHeader: 'application/json; charset=utf-8'},
+    await sendWithRetry(
+      () => dio.put<dynamic>(
+        '/v1/projects/$projectId/packages/$packageId/manifest',
+        data: manifestBody,
+        options: Options(
+          headers: {
+            Headers.contentTypeHeader: 'application/json; charset=utf-8',
+          },
+        ),
       ),
+      label: 'manifest',
     );
 
-    await dio.post<dynamic>(
-      '/v1/projects/$projectId/packages/$packageId/commit',
+    await sendWithRetry(
+      () => dio.post<dynamic>(
+        '/v1/projects/$projectId/packages/$packageId/commit',
+      ),
+      label: 'commit',
     );
 
     await setState('completed', null);

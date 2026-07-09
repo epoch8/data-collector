@@ -14,7 +14,8 @@ final dioProvider = Provider<Dio?>((ref) {
       baseUrl: base,
       // Короткое подключение — быстрее уходим на локальный кэш при недоступном API.
       connectTimeout: const Duration(seconds: 12),
-      sendTimeout: const Duration(seconds: 30),
+      // Пакеты содержат blobs (фото/видео); на мобильной сети отправка может занимать минуты.
+      sendTimeout: const Duration(minutes: 10),
       receiveTimeout: const Duration(minutes: 2),
       headers: {Headers.acceptHeader: 'application/json'},
     ),
