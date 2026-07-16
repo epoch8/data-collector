@@ -18,6 +18,8 @@ REPO = ROOT.parent.parent
 BUSINESS = ROOT.parent / "business"
 E2E_IMG = ROOT / "img"
 DATAPIPE_IMG = E2E_IMG / "datapipe"
+VIDEO = ROOT / "video"
+POSTERS = VIDEO / "posters"
 LOGO = REPO / "e8-team-logo-1024.png"
 OUT = ROOT / "Korovas-E2E.pptx"
 
@@ -28,7 +30,7 @@ spec.loader.exec_module(gen)
 
 C = gen.C
 W = gen.W
-TOTAL = 16
+TOTAL = 18
 
 bg = gen.bg
 title = gen.title
@@ -102,12 +104,204 @@ def add_media(slide, path: Path | None, l, t, max_w, max_h, *, caption: str | No
     return pic
 
 
+def add_video(slide, movie: Path, poster: Path | None, l, t, w, h):
+    """Embed mp4; falls back to poster/placeholder if file missing."""
+    from pptx.dml.color import RGBColor
+
+    border = RGBColor(0x35, 0x3D, 0x4C)
+    if not movie.exists():
+        rect(slide, l, t, w, h, C.night_2, border, radius=True)
+        text(slide, l, t + h / 2 - Inches(0.2), w, Inches(0.4), "▶  Видео — добавить файл", size=14, bold=True, color=C.white, align=PP_ALIGN.CENTER)
+        return None
+    poster_path = str(poster) if poster and poster.exists() else None
+    return slide.shapes.add_movie(str(movie), l, t, w, h, poster_frame_image=poster_path, mime_type="video/mp4")
+
+
+def _fit_box(iw: int, ih: int, max_w, max_h) -> tuple:
+    """Return (w, h) fitting inside max box, preserving aspect ratio."""
+    scale = min(float(max_w) / iw, float(max_h) / ih)
+    return int(iw * scale), int(ih * scale)
+
+
 def slide_video_placeholder(prs, n: int, headline: str, subtitle: str = "Видео-каст — вставить запись"):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     bg(s, C.night)
     title(s, headline, subtitle, dark=True)
-    rect(s, Inches(1.5), Inches(2.2), Inches(10.3), Inches(4.2), C.night_2, __import__("pptx.dml.color", fromlist=["RGBColor"]).RGBColor(0x35, 0x3D, 0x4C), radius=True)
+    from pptx.dml.color import RGBColor
+    rect(s, Inches(1.5), Inches(2.2), Inches(10.3), Inches(4.2), C.night_2, RGBColor(0x35, 0x3D, 0x4C), radius=True)
     text(s, Inches(1.5), Inches(3.85), Inches(10.3), Inches(0.5), "▶  Место для видео", size=22, bold=True, color=C.white, align=PP_ALIGN.CENTER)
+    footer_e2e(s, n, dark=True)
+
+
+def title_e2e(slide, title_text: str, subtitle: str | None = None, *, dark: bool = False, subtitle_top=None):
+    """Same as shared title, but allows a tighter subtitle offset (manual pptx tweaks)."""
+    from pptx.dml.color import RGBColor
+    color = C.white if dark else C.ink
+    muted = RGBColor(0xB0, 0xB7, 0xC5) if dark else C.muted
+    text(slide, Inches(0.65), Inches(0.55), Inches(10.2), Inches(0.9), title_text, size=30, bold=True, color=color)
+    rect(slide, Inches(0.65), Inches(1.48), Inches(1.8), Pt(5), C.lime if dark else C.cobalt)
+    if subtitle:
+        st = subtitle_top if subtitle_top is not None else Inches(1.65)
+        text(slide, Inches(0.65), st, Inches(10.2), Inches(0.45), subtitle, size=12, color=muted)
+
+
+def slide_video_desktop(
+    prs,
+    n: int,
+    headline: str,
+    subtitle: str,
+    movie: Path,
+    poster: Path | None,
+    *,
+    vw: int = 1920,
+    vh: int = 1080,
+    layout: dict | None = None,
+):
+    """Landscape video-cast with optional locked layout from manual pptx edits."""
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    bg(s, C.night)
+
+    from pptx.dml.color import RGBColor
+    muted = RGBColor(0xAE, 0xB7, 0xC7)
+    border = RGBColor(0x2D, 0x36, 0x48)
+
+    # Locked layouts captured from manual PowerPoint tweaks (do not auto-refit).
+    if layout:
+        title_e2e(s, headline, subtitle, dark=True, subtitle_top=Inches(layout.get("subtitle_top", 1.59)))
+        frame = layout["frame"]  # left, top, width, height
+        video = layout["video"]
+        rect(s, Inches(frame[0]), Inches(frame[1]), Inches(frame[2]), Inches(frame[3]), C.night_2, border, radius=True)
+        add_video(s, movie, poster, Inches(video[0]), Inches(video[1]), Inches(video[2]), Inches(video[3]))
+    else:
+        title_e2e(s, headline, subtitle, dark=True)
+        area_l, area_t = Inches(0.75), Inches(1.95)
+        area_w, area_h = Inches(11.85), Inches(4.85)
+        vid_w, vid_h = _fit_box(vw, vh, area_w, area_h)
+        vid_l = area_l + int((area_w - vid_w) / 2)
+        vid_t = area_t + int((area_h - vid_h) / 2)
+        pad = Inches(0.08)
+        rect(s, vid_l - pad, vid_t - pad, vid_w + pad * 2, vid_h + pad * 2, C.night_2, border, radius=True)
+        add_video(s, movie, poster, vid_l, vid_t, vid_w, vid_h)
+
+    text(s, Inches(0.85), Inches(6.86), Inches(11.65), Inches(0.2), "Кликните по видео для воспроизведения", size=8, color=muted, align=PP_ALIGN.CENTER)
+    footer_e2e(s, n, dark=True)
+
+
+# Manual layouts from user-edited Korovas-E2E.pptx (captured 2026-07-16).
+LAYOUT_VIDEO_FORM = {
+    "subtitle_top": 1.591,
+    "frame": (2.284, 1.870, 8.782, 5.010),
+    "video": (2.669, 2.109, 8.069, 4.539),
+}
+LAYOUT_VIDEO_VIZ = {
+    "subtitle_top": 1.589,
+    "frame": (1.678, 1.870, 9.993, 5.010),
+    "video": (2.218, 2.161, 8.897, 4.388),
+}
+
+
+def slide_video_phone(prs, n: int, headline: str, subtitle: str, movie: Path, poster: Path | None):
+    """Portrait phone video with steps on the left — fills landscape slide without looking empty."""
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    bg(s, C.night)
+    title_e2e(s, headline, subtitle, dark=True)
+
+    from pptx.dml.color import RGBColor
+    muted = RGBColor(0xAE, 0xB7, 0xC7)
+    border = RGBColor(0x2D, 0x36, 0x48)
+
+    steps = [
+        ("1", "Открыть форму", "Выбрать сценарий сбора в приложении", C.cobalt),
+        ("2", "Пройти шаги", "Поля, ракурсы, проверка качества кадра", C.coral),
+        ("3", "Сохранить пакет", "Пакет готов к загрузке на сервер", C.mint),
+    ]
+    y = Inches(2.0)
+    for num, head, body, color in steps:
+        rect(s, Inches(0.75), y, Inches(5.35), Inches(1.05), C.night_2, border, radius=True)
+        rect(s, Inches(0.75), y, Inches(0.08), Inches(1.05), color)
+        pill(s, Inches(0.95), y + Inches(0.18), Inches(0.5), num, color, C.white)
+        text(s, Inches(1.6), y + Inches(0.16), Inches(4.2), Inches(0.3), head, size=14, bold=True, color=C.white)
+        text(s, Inches(1.6), y + Inches(0.5), Inches(4.2), Inches(0.4), body, size=10, color=muted)
+        y += Inches(1.2)
+
+    text(s, Inches(0.75), Inches(5.75), Inches(5.35), Inches(0.5), "Видео снято с экрана телефона — сценарий целиком", size=10, color=muted)
+
+    # phone bezel sized to 574×1280 (~9:20)
+    phone_w, phone_h = Inches(2.55), Inches(5.25)
+    phone_l = Inches(8.85)
+    phone_t = Inches(1.7)
+    rect(s, phone_l, phone_t, phone_w, phone_h, RGBColor(0x0A, 0x0E, 0x16), border, radius=True)
+    oval(s, phone_l + Inches(0.75), phone_t + Inches(0.12), Inches(1.05), Inches(0.16), RGBColor(0x1A, 0x22, 0x32))
+    pad = Inches(0.14)
+    inner_w = phone_w - pad * 2
+    inner_h = phone_h - Inches(0.52)
+    vid_w, vid_h = _fit_box(574, 1280, inner_w, inner_h)
+    vid_l = phone_l + pad + int((inner_w - vid_w) / 2)
+    vid_t = phone_t + Inches(0.36) + int((inner_h - vid_h) / 2)
+    add_video(s, movie, poster, vid_l, vid_t, vid_w, vid_h)
+    footer_e2e(s, n, dark=True)
+
+
+def slide_users(prs, n: int):
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    bg(s, C.night)
+    # subtitle_top locked from manual pptx edit
+    title_e2e(s, "Пользователи и права доступа", "Создание пользователя и выдача доступа к проектам", dark=True, subtitle_top=Inches(1.538))
+
+    from pptx.dml.color import RGBColor
+    from PIL import Image
+
+    muted = RGBColor(0xAE, 0xB7, 0xC7)
+    border = RGBColor(0x2D, 0x36, 0x48)
+
+    user_list = E2E_IMG / "user" / "user-list-crop.png"
+    if not user_list.exists():
+        user_list = E2E_IMG / "user" / "user list.png"
+    access = E2E_IMG / "user" / "access-list-crop.png"
+    if not access.exists():
+        access = E2E_IMG / "user" / "accses_list.png"
+
+    # Layout locked from manual pptx edit (2026-07-16):
+    # two equal panels, screenshots width-filled, callouts pinned at bottom.
+    panels = [
+        (
+            Inches(0.75), "1", "Выбрать пользователя",
+            "Синхронизировать список с Firebase и открыть «Настроить»",
+            user_list, C.cobalt, "Список пользователей", "Настроить →",
+        ),
+        (
+            Inches(6.75), "2", "Выдать права",
+            "Отметить проекты для мобилки и client-admin, затем сохранить",
+            access, C.mint, "Права доступа", "Мобилка · Client-admin → Сохранить",
+        ),
+    ]
+    panel_t, panel_w, panel_h = Inches(1.85), Inches(5.8), Inches(4.9)
+    for left, num, head, body, path, accent, caption, callout in panels:
+        rect(s, left, panel_t, panel_w, panel_h, C.night_2, border, radius=True)
+        rect(s, left, panel_t, Inches(0.08), panel_h, accent)
+        oval(s, left + Inches(0.25), panel_t + Inches(0.25), Inches(0.46), Inches(0.46), accent)
+        text(s, left + Inches(0.25), panel_t + Inches(0.34), Inches(0.46), Inches(0.22), num, size=11, bold=True, color=C.white, align=PP_ALIGN.CENTER)
+        text(s, left + Inches(0.9), panel_t + Inches(0.22), Inches(4.55), Inches(0.32), head, size=15, bold=True, color=C.white)
+        text(s, left + Inches(0.9), panel_t + Inches(0.62), Inches(4.55), Inches(0.45), body, size=9, color=muted)
+
+        with Image.open(path) as im:
+            iw, ih = im.size
+        box_l = left + Inches(0.25)
+        box_t = panel_t + Inches(1.25)
+        box_w = panel_w - Inches(0.5)  # 5.3"
+        # Width-fill (manual tweak): keep aspect, pin to content width.
+        fw = box_w
+        fh = int(float(box_w) * ih / iw)
+        max_h = panel_h - Inches(2.05)
+        if fh > max_h:
+            fh = max_h
+            fw = int(float(max_h) * iw / ih)
+        add_media(s, path, box_l, box_t, fw, fh, caption=caption, accent=accent, theme="dark")
+
+        callout_t = Inches(5.90)
+        rect(s, box_l, callout_t, box_w, Inches(0.55), C.night, border, radius=True)
+        text(s, box_l + Inches(0.15), callout_t + Inches(0.15), box_w - Inches(0.3), Inches(0.25), callout, size=9, bold=True, color=accent, align=PP_ALIGN.CENTER)
+
     footer_e2e(s, n, dark=True)
 
 
@@ -297,8 +491,16 @@ def slide_datapipe_flow(prs, n: int):
 def slide_datapipe_stage(prs, n: int, *, stage_num: str, headline: str, subtitle: str, bullets: list[str], folder: str, accent, dark: bool = False):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     bg(s, C.night if dark else C.paper)
-    pill(s, Inches(0.65), Inches(0.52), Inches(0.55), stage_num, accent, C.white)
     title(s, headline, subtitle, dark=dark)
+    pill(
+        s,
+        Inches(11.25),
+        Inches(0.55),
+        Inches(1.25),
+        f"ЭТАП {stage_num}",
+        accent,
+        C.ink if accent == C.lime else C.white,
+    )
 
     from pptx.dml.color import RGBColor
     bullet_color = C.muted if not dark else RGBColor(0xAE, 0xB7, 0xC7)
@@ -308,7 +510,18 @@ def slide_datapipe_stage(prs, n: int, *, stage_num: str, headline: str, subtitle
         text(s, Inches(1.0), y, Inches(5.2), Inches(0.55), item, size=10, color=bullet_color)
         y += Inches(0.54)
 
-    add_media(s, _resolve_media(DATAPIPE_IMG / folder), Inches(6.35), Inches(1.9), Inches(6.35), Inches(4.75), caption=f"Стадия {stage_num}", accent=accent, theme="dark" if dark else "light", placeholder=f"img/datapipe/{folder}/screenshot.png")
+    add_media(
+        s,
+        _resolve_media(DATAPIPE_IMG / folder),
+        Inches(6.35),
+        Inches(1.9),
+        Inches(6.35),
+        Inches(4.75),
+        caption=f"Стадия {stage_num}",
+        accent=accent,
+        theme="dark" if dark else "light",
+        placeholder=f"Скриншот стадии {stage_num} — добавить",
+    )
     footer_e2e(s, n, dark=dark)
 
 
@@ -417,34 +630,49 @@ def build() -> Path:
     slide_cover(prs, n); n += 1
     slide_overview(prs, n); n += 1
     slide_form_create(prs, n); n += 1
-    slide_video_placeholder(prs, n, "Видео-каст: создание формы"); n += 1
+    slide_video_desktop(
+        prs, n,
+        "Видео-каст: создание формы",
+        "Заполнение полей сценария в админке",
+        VIDEO / "form_create_fill_field.mp4",
+        POSTERS / "form_create_fill_field.jpg",
+        vw=1920, vh=1080,
+        layout=LAYOUT_VIDEO_FORM,
+    ); n += 1
+    slide_users(prs, n); n += 1
     slide_shooting(prs, n); n += 1
     slide_upload(prs, n); n += 1
-    slide_video_placeholder(prs, n, "Видео-каст: создание пакета"); n += 1
+    slide_video_phone(
+        prs, n,
+        "Видео-каст: создание пакета",
+        "Съёмка пакета в мобильном приложении",
+        VIDEO / "pkg_mobile.mp4",
+        POSTERS / "pkg_mobile.jpg",
+    ); n += 1
     slide_datapipe_flow(prs, n); n += 1
 
     stages = [
-        ("1", "3.1 Стадия 0: пакеты", "Пакет из админ-БД → разметка и первичный инференс", [
+        ("0", "3.1 Стадия 0: пакеты", "Пакет из админ-БД → разметка и первичный инференс", [
             "Синхронизация пакетов и файлов из БД проекта",
             "Скачивание фото из хранилища S3",
             "Первичный инференс через Gradio — результат в БД",
             "Создание задач в CVAT, привязка фото пакета",
             "Запись ссылок на CVAT и аннотаций обратно в БД",
         ], "stage-0-packages", C.cobalt),
-        ("2", "3.2 Стадия 1: аннотация", "Выгрузка разметки из CVAT → подготовка обучающей выборки", [
+        ("1", "3.2 Стадия 1: аннотация", "Выгрузка разметки из CVAT → подготовка обучающей выборки", [
             "Сбор аннотаций из всех CVAT-проектов",
             "Скачивание изображений из S3 или CVAT",
             "Детектор рамки животного + резервный SAM по точкам",
             "Связка keypoints с рамкой → эталонная разметка",
             "Разбиение на train/val/test",
         ], "stage-1-annotation", C.mint),
-        ("3", "3.3 Стадия 2: обучение", "Обучение модели keypoints", [
+        ("2", "3.3 Стадия 2: обучение", "Обучение модели keypoints", [
             "Заморозка датасета для воспроизводимого обучения",
             "Обучение модели с аугментациями",
             "Проверка на отложенной выборке, подсчёт метрик",
             "Выбор лучшей модели по val-метрикам",
         ], "stage-2-train", C.lime, True),
-        ("4", "3.4 Стадия 3: боевая модель", "Инференс prod-модели и публикация результатов", [
+        ("3", "3.4 Стадия 3: боевая модель", "Инференс prod-модели и публикация результатов", [
             "Загрузка весов боевой модели",
             "Инференс на пакетах — результат в БД проекта",
             "Анализ ошибок по предсказаниям",
@@ -458,6 +686,15 @@ def build() -> Path:
 
     slide_video_placeholder(prs, n, "Видео-каст: пайплайн datapipe", "Полный проход пакета через трубу"); n += 1
     slide_visualization(prs, n); n += 1
+    slide_video_desktop(
+        prs, n,
+        "Видео-каст: просмотр пакета",
+        "Визуализация пакета в админке — слои разметки и метрики",
+        VIDEO / "visualization_pkg.mp4",
+        POSTERS / "visualization_pkg.jpg",
+        vw=1918, vh=946,
+        layout=LAYOUT_VIDEO_VIZ,
+    ); n += 1
     slide_protocol(prs, n); n += 1
     slide_flow_recap(prs, n)
 
