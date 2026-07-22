@@ -46,7 +46,11 @@ def searchable_field_ids(project: Project, cfg_root: dict | None = None) -> set[
             continue
         fid = f.get("field_id")
         ftype = f.get("type")
-        if isinstance(fid, str) and ftype in ("text_input", "datetime"):
+        if isinstance(fid, str) and ftype in (
+            "text_input",
+            "datetime",
+            "single_choice",
+        ):
             ids.add(fid)
     return ids
 

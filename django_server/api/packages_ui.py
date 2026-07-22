@@ -34,7 +34,7 @@ def phase_options(items: list[dict[str, Any]]) -> list[str]:
 
 # ── Config / fields ───────────────────────────────────────────────────────────
 
-DATA_TAB_TYPES = ("text_input", "datetime")
+DATA_TAB_TYPES = ("text_input", "datetime", "single_choice")
 
 
 def config_root(project: Project) -> dict[str, Any]:

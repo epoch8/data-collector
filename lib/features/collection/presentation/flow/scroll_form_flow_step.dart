@@ -23,7 +23,7 @@ String _formatDateTime(DateTime d) {
   return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
 }
 
-/// Один шаг сценария: только поля из `scroll_form` (текст, дата, markdown-инструкция, камера).
+/// Один шаг сценария: поля из `scroll_form` (текст, выбор, дата, markdown-инструкция, камера).
 class ScrollFormFlowStep extends ConsumerStatefulWidget {
   const ScrollFormFlowStep({
     super.key,
@@ -124,6 +124,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
       if (f.type == 'text_input') {
         final t = _textCtrls[f.fieldId]?.text.trim() ?? '';
         if (t.isEmpty) return false;
+      } else if (f.type == 'single_choice') {
+        final v = answers[f.fieldId]?.toString().trim() ?? '';
+        if (v.isEmpty) return false;
       } else if (f.type == 'datetime') {
         /* ok */
       } else if (f.type == 'instruction') {
@@ -194,6 +197,11 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
             if (c != null && data[f.fieldId] != null) {
               c.text = data[f.fieldId].toString();
             }
+          } else if (f.type == 'single_choice' && data[f.fieldId] != null) {
+            _wizardNotifier.updateField(
+              f.fieldId,
+              data[f.fieldId].toString(),
+            );
           }
         }
       });
@@ -370,6 +378,53 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                 _syncTextFieldToWizard(f.fieldId, c.text);
                 setState(() {});
               },
+            ),
+          ],
+        );
+      case 'single_choice':
+        final opts = f.options ?? const <ConfigFieldOption>[];
+        final current = answers[f.fieldId]?.toString();
+        final selected = opts.any((o) => o.value == current) ? current : null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              f.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            if (f.instructions.trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                f.instructions,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: Epoch8Theme.textMuted,
+                ),
+              ),
+            ],
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
+              value: selected,
+              isExpanded: true,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: Text(loc.flowFormChoiceHint),
+              items: [
+                for (final o in opts)
+                  DropdownMenuItem<String>(
+                    value: o.value,
+                    child: Text(o.label),
+                  ),
+              ],
+              onChanged: opts.isEmpty
+                  ? null
+                  : (val) {
+                      ref
+                          .read(wizardStateProvider(widget.projectId).notifier)
+                          .updateField(f.fieldId, val);
+                      setState(() {});
+                    },
             ),
           ],
         );

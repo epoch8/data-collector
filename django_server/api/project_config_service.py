@@ -55,6 +55,32 @@ def seed_project_json(project_id: str, name: str) -> dict[str, Any]:
     }
 
 
+def _options_for_builder(raw: Any) -> list[dict[str, str]]:
+    """Варианты single_choice для SSR-редактора (список {value, label})."""
+    if not isinstance(raw, list) or not raw:
+        return [{"value": "", "label": ""}]
+    out: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in raw:
+        if isinstance(item, str):
+            value = item.strip()
+            label = value
+        elif isinstance(item, dict):
+            value = str(item.get("value") or "").strip()
+            label = str(item.get("label") or "").strip()
+            if not value:
+                value = label
+            if not label:
+                label = value
+        else:
+            continue
+        if not value or value in seen:
+            continue
+        seen.add(value)
+        out.append({"value": value, "label": label})
+    return out or [{"value": "", "label": ""}]
+
+
 def prepare_builder_ssr_steps(initial_data: dict[str, Any]) -> list[dict[str, Any]]:
     """Шаги сценария для SSR в визуальном редакторе (логика совпадает с loadModel в project_builder.js)."""
     cfg = (initial_data or {}).get("config") or {}
@@ -97,6 +123,7 @@ def prepare_builder_ssr_steps(initial_data: dict[str, Any]) -> list[dict[str, An
                     "title": f.get("title") or "",
                     "instructions": f.get("instructions") or "",
                     "required": validation.get("required") is True,
+                    "options": _options_for_builder(f.get("options")),
                 },
             )
         steps.append(
@@ -131,6 +158,7 @@ def prepare_builder_ssr_steps(initial_data: dict[str, Any]) -> list[dict[str, An
                 "title": f.get("title") or "",
                 "instructions": f.get("instructions") or "",
                 "required": validation.get("required") is True,
+                "options": _options_for_builder(f.get("options")),
             },
         )
 

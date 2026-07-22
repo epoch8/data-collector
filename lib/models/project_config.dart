@@ -2,8 +2,22 @@ import 'package:json_annotation/json_annotation.dart';
 
 part 'project_config.g.dart';
 
-/// Matches [specs/02-data-models-schema.md](specs/02-data-models-schema.md).\
-/// `type` values used by the app: `text_input`, `datetime`, `instruction`, `camera_photo`.
+/// Matches [specs/02-data-models-schema.md](specs/02-data-models-schema.md).
+/// `type` values used by the app: `text_input`, `datetime`, `instruction`,
+/// `camera_photo`, `single_choice`.
+@JsonSerializable(explicitToJson: true)
+class ConfigFieldOption {
+  final String value;
+  final String label;
+
+  ConfigFieldOption({required this.value, required this.label});
+
+  factory ConfigFieldOption.fromJson(Map<String, dynamic> json) =>
+      _$ConfigFieldOptionFromJson(json);
+  Map<String, dynamic> toJson() => _$ConfigFieldOptionToJson(this);
+}
+
+/// Matches [specs/02-data-models-schema.md](specs/02-data-models-schema.md).
 @JsonSerializable(explicitToJson: true)
 class ConfigField {
   @JsonKey(name: 'field_id')
@@ -18,6 +32,10 @@ class ConfigField {
   final Map<String, dynamic>? validation;
   final bool? multiple;
 
+  /// Варианты для `single_choice`. В JSON: список `{value, label}` или строк.
+  @JsonKey(fromJson: _optionsFromJson, toJson: _optionsToJson)
+  final List<ConfigFieldOption>? options;
+
   ConfigField({
     required this.fieldId,
     this.priority = 0,
@@ -26,11 +44,50 @@ class ConfigField {
     required this.instructions,
     this.validation,
     this.multiple,
+    this.options,
   });
 
   factory ConfigField.fromJson(Map<String, dynamic> json) =>
       _$ConfigFieldFromJson(json);
   Map<String, dynamic> toJson() => _$ConfigFieldToJson(this);
+
+  /// Подпись выбранного значения `single_choice` (или само value, если не найдено).
+  String? labelForChoice(String? value) {
+    if (value == null || value.isEmpty) return value;
+    for (final o in options ?? const <ConfigFieldOption>[]) {
+      if (o.value == value) return o.label;
+    }
+    return value;
+  }
+}
+
+List<ConfigFieldOption>? _optionsFromJson(dynamic raw) {
+  if (raw == null) return null;
+  if (raw is! List) return null;
+  final out = <ConfigFieldOption>[];
+  for (final item in raw) {
+    if (item is String) {
+      final s = item.trim();
+      if (s.isEmpty) continue;
+      out.add(ConfigFieldOption(value: s, label: s));
+    } else if (item is Map) {
+      final value = (item['value'] ?? item['label'] ?? '').toString().trim();
+      final label = (item['label'] ?? item['value'] ?? '').toString().trim();
+      if (value.isEmpty) continue;
+      out.add(ConfigFieldOption(
+        value: value,
+        label: label.isEmpty ? value : label,
+      ));
+    }
+  }
+  return out.isEmpty ? null : out;
+}
+
+List<Map<String, String>>? _optionsToJson(List<ConfigFieldOption>? options) {
+  if (options == null || options.isEmpty) return null;
+  return [
+    for (final o in options) {'value': o.value, 'label': o.label},
+  ];
 }
 
 /// One screen in `config.flow.steps` — drives routing and widgets, not field definitions.

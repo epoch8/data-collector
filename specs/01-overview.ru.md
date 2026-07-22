@@ -39,7 +39,7 @@
 ### 3.3 Сбор данных
 
 - UI строится из `config.flow.steps`: шаги **`scroll_form`** (все поля шага на одном экране) и опционально **`review`**.
-- Типы полей: `text_input`, `datetime`, `instruction`, `camera_photo`.
+- Типы полей: `text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`.
 - Локальный черновик и materialization в каталог пакета при submit.
 - Метаданные камеры: `camera_session`, `camera_debug`, `frame_camera`, `camera_supplement` (см. [07-package-payload-structure.ru.md](07-package-payload-structure.ru.md)).
 

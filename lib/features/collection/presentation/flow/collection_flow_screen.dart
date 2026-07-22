@@ -643,8 +643,8 @@ class _FlowReviewStep extends ConsumerWidget {
       final v = a[f.fieldId];
       if (f.type == 'datetime') {
         if (v == null || v.toString().trim().isEmpty) return false;
-      } else if (f.type == 'text_input') {
-        if (v.toString().trim().isEmpty) return false;
+      } else if (f.type == 'text_input' || f.type == 'single_choice') {
+        if (v == null || v.toString().trim().isEmpty) return false;
       }
     }
     for (final f in flow.allCameraFields) {
@@ -714,7 +714,9 @@ class _FlowReviewStep extends ConsumerWidget {
                 ),
               if (!s.isInstructionOnlyScroll)
                 for (final f in s.fields) ...[
-                  if (f.type == 'text_input' || f.type == 'datetime')
+                  if (f.type == 'text_input' ||
+                      f.type == 'datetime' ||
+                      f.type == 'single_choice')
                     _reviewLine(
                       f.title,
                       _formatReviewValue(loc, f, a[f.fieldId]),
@@ -823,6 +825,11 @@ class _FlowReviewStep extends ConsumerWidget {
     if (f.type == 'datetime') {
       final st = DateTime.tryParse(v.toString())?.toLocal();
       return st != null ? _formatDateTime(st) : v.toString();
+    }
+    if (f.type == 'single_choice') {
+      final s = v.toString().trim();
+      if (s.isEmpty) return dash;
+      return f.labelForChoice(s) ?? s;
     }
     final s = v.toString().trim();
     return s.isEmpty ? dash : s;

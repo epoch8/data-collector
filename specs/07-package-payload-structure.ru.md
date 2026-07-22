@@ -37,6 +37,7 @@ packages/<package_id>/
 | Тип поля | Формат в `data` |
 |----------|-----------------|
 | `text_input` | строка |
+| `single_choice` | строка (`value` выбранного варианта) |
 | `datetime` | ISO строка |
 | `camera_photo` | `Map<relativePath, shotMetadata>` |
 

@@ -14,10 +14,79 @@
 
   const FIELD_TYPES = [
     { v: "text_input", label: "Текст", icon: "bi-input-cursor-text", hint: "однострочный ввод" },
+    { v: "single_choice", label: "Выбор", icon: "bi-ui-radios", hint: "один вариант из списка" },
     { v: "datetime", label: "Дата и время", icon: "bi-calendar-event", hint: "выбор даты/времени" },
     { v: "camera_photo", label: "Фото", icon: "bi-camera", hint: "снимок с камеры" },
     { v: "instruction", label: "Инструкция", icon: "bi-journal-text", hint: "Markdown-текст" },
   ];
+
+  /** Нормализация options из JSON / DOM. */
+  function normalizeOptions(raw) {
+    if (!Array.isArray(raw) || !raw.length) return [];
+    const out = [];
+    const seen = new Set();
+    raw.forEach((item) => {
+      let value = "";
+      let label = "";
+      if (typeof item === "string") {
+        value = item.trim();
+        label = value;
+      } else if (item && typeof item === "object") {
+        value = String(item.value || "").trim();
+        label = String(item.label || "").trim();
+        if (!value) value = label;
+        if (!label) label = value;
+      }
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      out.push({ value, label });
+    });
+    return out;
+  }
+
+  function readOptionsFromBlock(blk) {
+    const out = [];
+    const seen = new Set();
+    blk.querySelectorAll("[data-opt-row]").forEach((row) => {
+      let label = row.querySelector('[data-opt="label"]')?.value?.trim() || "";
+      let value = row.querySelector('[data-opt="value"]')?.value?.trim() || "";
+      if (!label && !value) return;
+      if (!value) value = label;
+      if (!label) label = value;
+      if (seen.has(value)) return;
+      seen.add(value);
+      out.push({ value, label });
+    });
+    return out;
+  }
+
+  function buildOptionRow(opt) {
+    const row = document.createElement("div");
+    row.className = "builder-opt-row";
+    row.setAttribute("data-opt-row", "1");
+    const label = opt && opt.label != null ? String(opt.label) : "";
+    const value = opt && opt.value != null ? String(opt.value) : "";
+    const valueShown = value && value !== label ? value : "";
+    row.innerHTML = `
+      <input type="text" class="form-control form-control-sm" data-opt="label"
+             value="${escapeAttr(label)}" placeholder="Подпись" autocomplete="off">
+      <input type="text" class="form-control form-control-sm builder-opt-value" data-opt="value"
+             value="${escapeAttr(valueShown)}" placeholder="код (необяз.)" autocomplete="off" title="Латинский код в данных; пусто = как подпись">
+      <button type="button" class="btn btn-sm btn-icon-danger" data-del-opt title="Удалить вариант"><i class="bi bi-x-lg"></i></button>`;
+    return row;
+  }
+
+  function fillOptionsEditor(wrap, options) {
+    const list = wrap.querySelector("[data-opt-list]");
+    if (!list) return;
+    list.innerHTML = "";
+    const opts = normalizeOptions(options);
+    if (opts.length) {
+      opts.forEach((o) => list.appendChild(buildOptionRow(o)));
+    } else {
+      list.appendChild(buildOptionRow({ value: "", label: "" }));
+    }
+  }
 
   function typeMeta(v) {
     return FIELD_TYPES.find((t) => t.v === v) || { v, label: v, icon: "bi-question-circle", hint: "" };
@@ -150,6 +219,7 @@
       title: typeof f.title === "string" ? f.title : "",
       instructions: typeof f.instructions === "string" ? f.instructions : "",
       required,
+      options: normalizeOptions(f.options),
       validationExtra: validation,
     };
   }
@@ -179,6 +249,7 @@
           title: type === "instruction" ? "" : get("title")?.value || "",
           instructions: get("instructions")?.value || "",
           required: type !== "instruction" && get("required")?.checked === true,
+          options: type === "single_choice" ? readOptionsFromBlock(blk) : [],
           validationExtra: blockExtra(blk),
         });
       });
@@ -229,6 +300,12 @@
           title: f.type === "instruction" ? "" : f.title || "",
           instructions: f.instructions || "",
         };
+        if (f.type === "single_choice") {
+          out.options = normalizeOptions(f.options).map((o) => ({
+            value: o.value,
+            label: o.label || o.value,
+          }));
+        }
         const validation = { ...(f.validationExtra || {}) };
         if (f.type !== "instruction" && f.required) validation.required = true;
         if (Object.keys(validation).length) out.validation = validation;
@@ -263,6 +340,7 @@
     blk.className = "builder-field-block";
     blk.dataset.uid = f.uid;
     const isIx = f.type === "instruction";
+    const isChoice = f.type === "single_choice";
     const tm = typeMeta(f.type);
     const typeOpts = FIELD_TYPES.map(
       (t) => `<option value="${t.v}" ${f.type === t.v ? "selected" : ""}>${escapeHtml(t.label)}</option>`,
@@ -289,8 +367,19 @@
         <textarea class="form-control form-control-sm builder-field-instr" data-fk="instructions"
                   rows="${isIx ? 6 : 2}" autocomplete="off"
                   placeholder="${isIx ? "Markdown-текст инструкции (абзацы — с новой строки, картинки ![](collector/media/…))" : "Подсказка под полем (необязательно)"}"></textarea>
+        <div class="builder-field-options ${isChoice ? "" : "d-none"} mt-2">
+          <div class="builder-opt-head">
+            <span class="form-label small ui-muted mb-0">Варианты выбора</span>
+            <button type="button" class="btn btn-sm builder-opt-add" data-add-opt title="Добавить вариант">
+              <i class="bi bi-plus-lg me-1"></i>Добавить
+            </button>
+          </div>
+          <div class="builder-opt-list" data-opt-list></div>
+        </div>
       </div>`;
     blk.querySelector('[data-fk="instructions"]').value = f.instructions || "";
+    const optWrap = blk.querySelector(".builder-field-options");
+    if (optWrap) fillOptionsEditor(optWrap, f.options);
     if (f.validationExtra && Object.keys(f.validationExtra).length) {
       _extraStore.set(blk, { ...f.validationExtra });
     }
@@ -650,6 +739,7 @@
             title: t === "instruction" ? "" : "Новое поле",
             instructions: "",
             required: false,
+            options: t === "single_choice" ? [{ value: "", label: "" }] : [],
             validationExtra: {},
           });
           refreshFromModel();
@@ -657,6 +747,35 @@
           const last = newCard?.querySelector(".builder-field-block:last-child [data-fk='field_id'], .builder-field-block:last-child [data-fk='instructions']");
           last?.focus();
         }
+        return;
+      }
+      const addOpt = e.target.closest("[data-add-opt]");
+      if (addOpt) {
+        e.preventDefault();
+        const list = addOpt.closest(".builder-field-options")?.querySelector("[data-opt-list]");
+        if (!list) return;
+        const row = buildOptionRow({ value: "", label: "" });
+        list.appendChild(row);
+        row.querySelector('[data-opt="label"]')?.focus();
+        readModelFromDom(model);
+        renderPreview(model, pid);
+        syncTextarea(model, pid);
+        return;
+      }
+      const delOpt = e.target.closest("[data-del-opt]");
+      if (delOpt) {
+        e.preventDefault();
+        const list = delOpt.closest("[data-opt-list]");
+        const row = delOpt.closest("[data-opt-row]");
+        if (list && row) {
+          row.remove();
+          if (!list.querySelector("[data-opt-row]")) {
+            list.appendChild(buildOptionRow({ value: "", label: "" }));
+          }
+        }
+        readModelFromDom(model);
+        renderPreview(model, pid);
+        syncTextarea(model, pid);
         return;
       }
       const delF = e.target.closest("[data-del-field]");

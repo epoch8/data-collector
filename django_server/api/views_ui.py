@@ -805,7 +805,8 @@ def _build_data_sections(sections, data, editable):
                     "hint": pui.field_hint(f),
                     "required": pui.field_required(f),
                     "value": "" if value is None else value,
-                    "editable": editable and f.get("type") == "text_input",
+                    "editable": editable
+                    and f.get("type") in ("text_input", "single_choice"),
                 },
             )
         out.append({"id": sec["id"], "title": sec["title"], "fields": sfields})
@@ -930,7 +931,7 @@ def package_manifest_save(request, project_id: str, package_id: str):
     editable_ids = [
         f["field_id"]
         for f in pui.config_fields(config)
-        if f.get("type") == "text_input"
+        if f.get("type") in ("text_input", "single_choice")
     ]
 
     changes = []

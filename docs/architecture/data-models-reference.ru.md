@@ -30,6 +30,7 @@ packages/<package_id>/
 | Тип поля конфига | Формат |
 | --- | --- |
 | `text_input` | строка |
+| `single_choice` | строка (`value` варианта) |
 | `datetime` | ISO строка |
 | `camera_photo` | map `blobs/...` → metadata |
 | `instruction` | не пишется в payload |

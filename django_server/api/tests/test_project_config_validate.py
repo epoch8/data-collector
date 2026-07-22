@@ -124,6 +124,51 @@ class FieldsTests(SimpleTestCase):
         errs = validate_project_payload(payload, PROJECT_ID)
         self.assertTrue(any("неизвестный type" in e for e in errs))
 
+    def test_single_choice_requires_options(self):
+        payload = valid_payload()
+        payload["config"]["fields"].append(
+            {
+                "field_id": "f_choice",
+                "type": "single_choice",
+                "title": "Sex",
+                "instructions": "",
+            },
+        )
+        payload["config"]["flow"]["steps"][0]["field_ids"].append("f_choice")
+        errs = validate_project_payload(payload, PROJECT_ID)
+        self.assertTrue(any("single_choice" in e and "options" in e for e in errs))
+
+    def test_single_choice_with_options_ok(self):
+        payload = valid_payload()
+        payload["config"]["fields"].append(
+            {
+                "field_id": "f_choice",
+                "type": "single_choice",
+                "title": "Sex",
+                "instructions": "",
+                "options": [
+                    {"value": "bull", "label": "Bull"},
+                    {"value": "cow", "label": "Cow"},
+                ],
+            },
+        )
+        payload["config"]["flow"]["steps"][0]["field_ids"].append("f_choice")
+        self.assertEqual(validate_project_payload(payload, PROJECT_ID), [])
+
+    def test_single_choice_string_options_ok(self):
+        payload = valid_payload()
+        payload["config"]["fields"].append(
+            {
+                "field_id": "f_choice",
+                "type": "single_choice",
+                "title": "Breed",
+                "instructions": "",
+                "options": ["Hereford", "Angus"],
+            },
+        )
+        payload["config"]["flow"]["steps"][0]["field_ids"].append("f_choice")
+        self.assertEqual(validate_project_payload(payload, PROJECT_ID), [])
+
     def test_missing_required_field_keys(self):
         payload = valid_payload()
         del payload["config"]["fields"][0]["instructions"]

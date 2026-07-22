@@ -224,6 +224,34 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                   .updateField(field.fieldId, val),
               decoration: const InputDecoration(border: OutlineInputBorder()),
             )
+          else if (field.type == 'single_choice')
+            Focus(
+              focusNode: _focusNodes[index],
+              child: DropdownButtonFormField<String>(
+                // ignore: deprecated_member_use
+                value: () {
+                  final cur = answers[field.fieldId]?.toString();
+                  final opts = field.options ?? const <ConfigFieldOption>[];
+                  return opts.any((o) => o.value == cur) ? cur : null;
+                }(),
+                isExpanded: true,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                hint: Text(loc.flowFormChoiceHint),
+                items: [
+                  for (final o in field.options ?? const <ConfigFieldOption>[])
+                    DropdownMenuItem<String>(
+                      value: o.value,
+                      child: Text(o.label),
+                    ),
+                ],
+                onChanged: (val) {
+                  ref
+                      .read(wizardStateProvider(widget.projectId).notifier)
+                      .updateField(field.fieldId, val);
+                  _focusNodes[index].requestFocus();
+                },
+              ),
+            )
           else if (field.type == 'camera_photo')
             Focus(
               focusNode: _focusNodes[index],

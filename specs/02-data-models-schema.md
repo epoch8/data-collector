@@ -28,13 +28,14 @@ File `collector/config.json` in the project Git repo (or bundled `assets/config/
 
 ## 2. Fields (`config.fields`)
 
-Registry of all collection fields. JSON keys: **`field_id`**, **`type`**, **`title`**, **`instructions`**, optionally **`validation`**, **`multiple`** (for `camera_photo`).
+Registry of all collection fields. JSON keys: **`field_id`**, **`type`**, **`title`**, **`instructions`**, optionally **`validation`**, **`multiple`** (for `camera_photo`), **`options`** (for `single_choice`).
 
 Supported types:
 
 | `type` | Value in payload | Notes |
 |--------|-------------------|------------|
 | `text_input` | string | `validation.required` |
+| `single_choice` | string (`value` of selected option) | Required non-empty `options`: `[{ "value", "label" }]` or strings |
 | `datetime` | ISO 8601 string | |
 | `instruction` | not written to payload | Markdown in `instructions`; images from `collector/media/` |
 | `camera_photo` | map path → metadata | `multiple` + `min_items`; see §5 |
@@ -45,6 +46,20 @@ Supported types:
   "type": "text_input",
   "title": "Identifier",
   "instructions": "Unique cow code.",
+  "validation": { "required": true }
+}
+```
+
+```json
+{
+  "field_id": "cow_sex",
+  "type": "single_choice",
+  "title": "Sex",
+  "instructions": "",
+  "options": [
+    { "value": "bull", "label": "Bull" },
+    { "value": "cow", "label": "Cow" }
+  ],
   "validation": { "required": true }
 }
 ```

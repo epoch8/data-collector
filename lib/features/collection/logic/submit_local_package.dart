@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/collection_draft_store.dart';
@@ -82,14 +83,17 @@ Future<void> submitLocalPackage({
 
   if (!context.mounted) return;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(AppLocalizations.of(context).packageSavedLocal),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-
+  // Текст берём до go(); SnackBar — через корневой messenger, иначе после
+  // ухода с review бывает "Looking up a deactivated widget's ancestor".
+  final savedMsg = AppLocalizations.of(context).packageSavedLocal;
   context.go('/dashboard');
   // Сброс после ухода с экрана — иначе review перерисовывается с пустым wizard state.
   ref.read(wizardStateProvider(projectId).notifier).reset();
+
+  rootScaffoldMessengerKey.currentState?.showSnackBar(
+    SnackBar(
+      content: Text(savedMsg),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
 }

@@ -243,6 +243,7 @@ class _DataCollectorAppState extends State<DataCollectorApp>
           valueListenable: appLocaleNotifier,
           builder: (context, locale, _) => MaterialApp.router(
             locale: locale,
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             theme: Epoch8Theme.light,
             darkTheme: Epoch8Theme.dark,

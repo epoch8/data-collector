@@ -37,6 +37,7 @@ On the server the root is `storage_uri`; relative path in DB: `packages/{package
 | Field type | Format in `data` |
 |----------|-----------------|
 | `text_input` | string |
+| `single_choice` | string (selected option `value`) |
 | `datetime` | ISO string |
 | `camera_photo` | `Map<relativePath, shotMetadata>` |
 

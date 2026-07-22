@@ -8,7 +8,33 @@ from __future__ import annotations
 
 from typing import Any
 
-ALLOWED_FIELD_TYPES = frozenset({"text_input", "datetime", "instruction", "camera_photo"})
+ALLOWED_FIELD_TYPES = frozenset(
+    {"text_input", "datetime", "instruction", "camera_photo", "single_choice"},
+)
+
+
+def _normalize_choice_options(raw: Any) -> list[dict[str, str]] | None:
+    """options: список строк или {value, label}. None если формат битый."""
+    if not isinstance(raw, list) or not raw:
+        return None
+    out: list[dict[str, str]] = []
+    seen: set[str] = set()
+    for item in raw:
+        if isinstance(item, str):
+            value = item.strip()
+            label = value
+        elif isinstance(item, dict):
+            value = str(item.get("value") or item.get("label") or "").strip()
+            label = str(item.get("label") or item.get("value") or "").strip() or value
+        else:
+            return None
+        if not value:
+            return None
+        if value in seen:
+            continue
+        seen.add(value)
+        out.append({"value": value, "label": label})
+    return out or None
 
 
 def _norm_screen(raw: str) -> str:
@@ -77,6 +103,13 @@ def validate_project_payload(data: dict[str, Any], project_id: str) -> list[str]
                 f'config.fields[{i}] ({fid}): неизвестный type "{ft}". '
                 f"Допустимо: {sorted(ALLOWED_FIELD_TYPES)}.",
             )
+        if ft == "single_choice":
+            opts = _normalize_choice_options(f.get("options"))
+            if opts is None:
+                errs.append(
+                    f'config.fields[{i}] ({fid}): для single_choice нужен непустой '
+                    f'массив options (строки или {{"value","label"}}).',
+                )
         by_id[fid] = f
 
     flow = cfg.get("flow")
