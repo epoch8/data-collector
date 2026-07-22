@@ -199,29 +199,18 @@ FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lo
 FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
 
 # Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web.
-# TEMP: data-collector-dev-e8 (совпадает с firebase-service-account.json).
-# TODO: вернуть e8-gke, когда будет SA для e8-gke (см. docs/mobile-revisions-2026-07-17/README.md).
 FIREBASE_WEB_CONFIG = {
-    "apiKey": os.environ.get(
-        "FIREBASE_WEB_API_KEY",
-        "AIzaSyDDp9CMDUL-1S7Y-3IcCzb6nx06AF1zY8Q",
-    ),
-    "authDomain": os.environ.get(
-        "FIREBASE_WEB_AUTH_DOMAIN",
-        "data-collector-dev-e8.firebaseapp.com",
-    ),
-    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "data-collector-dev-e8"),
+    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ"),
+    "authDomain": os.environ.get("FIREBASE_WEB_AUTH_DOMAIN", "e8-gke.firebaseapp.com"),
+    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "e8-gke"),
     "storageBucket": os.environ.get(
         "FIREBASE_WEB_STORAGE_BUCKET",
-        "data-collector-dev-e8.firebasestorage.app",
+        "e8-gke.firebasestorage.app",
     ),
-    "messagingSenderId": os.environ.get(
-        "FIREBASE_WEB_MESSAGING_SENDER_ID",
-        "181572319604",
-    ),
+    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "59903871663"),
     "appId": os.environ.get(
         "FIREBASE_WEB_APP_ID",
-        "1:181572319604:web:8ddfbe6ee6462e36c09421",
+        "1:59903871663:android:83c40cfe504ef60952225a",
     ),
 }
 

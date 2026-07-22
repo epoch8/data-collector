@@ -4,15 +4,20 @@
 
 ---
 
-## Firebase (временный переключатель)
+## Firebase
 
-Сейчас клиент и Django web-login смотрят на **`data-collector-dev-e8`**, чтобы совпадать с `django_server/firebase-service-account.json` (иначе Android даёт 401 на `/v1/projects`).
+Клиент (Android/Web) и Django `FIREBASE_WEB_CONFIG` снова на **`e8-gke`**.
 
-**TODO: вернуть всё на `e8-gke`**, когда будет service account для `e8-gke`:
+**Важно:** локальный `django_server/firebase-service-account.json` сейчас от **`data-collector-dev-e8`**. Пока SA не заменён на ключ проекта `e8-gke`, Android будет получать **401** на `/v1/projects`.
 
-1. Положить SA в `django_server/firebase-service-account.json`
-2. Восстановить `android/app/google-services.json` и `lib/firebase_options.dart` (android/web) из комментария `PREVIOUS (e8-gke)` в `firebase_options.dart`
-3. Вернуть defaults в `django_server/collector_site/settings.py` → `FIREBASE_WEB_CONFIG` на `e8-gke`
+Чтобы auth работал:
+
+1. Firebase Console → `e8-gke` → Service accounts → Generate new private key  
+2. Заменить `django_server/firebase-service-account.json`  
+3. Перезапустить `runserver`  
+4. Полный перезапуск Flutter (не hot reload) + повторный логин
+
+Временный обход без SA: `$env:FIREBASE_AUTH_ENABLED="false"` перед `runserver`.
 
 ---
 
