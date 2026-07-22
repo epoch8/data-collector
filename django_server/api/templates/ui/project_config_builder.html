@@ -17,9 +17,11 @@
     <p class="ui-page-sub mb-0">{% blocktrans trimmed %}Поля задаются <strong>внутри каждого экрана</strong> (карточки «Экран 1», «Экран 2»…), а не отдельной таблицей. Финальный экран «Проверка и отправка» обязателен и всегда в конце.{% endblocktrans %}</p>
   </div>
   <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_project_config' project.project_id %}"><i class="bi bi-braces me-1"></i>{% trans "Только JSON" %}</a>
+    <a class="btn btn-outline-secondary btn-sm" href="{% url 'ui_project_config' project.project_id form_id %}"><i class="bi bi-braces me-1"></i>{% trans "Только JSON" %}</a>
   </div>
 </div>
+
+{% include "ui/_project_forms_bar.html" %}
 
 {% if validation_errors %}
 <div class="alert alert-danger mb-3">
@@ -31,6 +33,7 @@
 <div id="builder-app"
      class="builder-app"
      data-project-id="{{ project.project_id }}"
+     data-form-id="{{ form_id }}"
      data-media-url="{% url 'ui_project_media' project.project_id %}"
      data-validate-url="{% url 'ui_project_config_validate_api' project.project_id %}">
   {{ initial_data|json_script:"builder-initial" }}
@@ -42,8 +45,9 @@
         <div class="card p-3 p-md-4 mb-3">
           <div class="row g-3 align-items-end">
             <div class="col-md-7">
-              <label class="form-label mb-1" for="b-name">{% trans "Название проекта" %}</label>
+              <label class="form-label mb-1" for="b-name">{% trans "Название формы" %}</label>
               <input type="text" class="form-control" id="b-name" name="name_meta" autocomplete="off">
+              <div class="form-text">{% trans "Так форма называется в приложении при выборе." %} · <code class="font-monospace">{{ form_id }}</code></div>
             </div>
             <div class="col-md-3">
               <label class="form-label mb-1" for="b-version">{% trans "Версия" %}</label>

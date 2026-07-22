@@ -2,7 +2,7 @@
 
 # 10 — Multiple forms per project
 
-Status: **planned** (July 2026). Not implemented yet. Product context: [docs/mobile-revisions-2026-07-17/README.md](../docs/mobile-revisions-2026-07-17/README.md) §2–5.
+Status: **in progress** (July 2026). MVP: form discovery, `/forms` API, mobile picker, `form_id` in manifest, admin package filter. Product context: [docs/mobile-revisions-2026-07-17/README.md](../docs/mobile-revisions-2026-07-17/README.md) §2–5.
 
 **Related:** [git-backed-projects.md](git-backed-projects.md), [09-server-project-config-delivery.md](09-server-project-config-delivery.md), [02-data-models-schema.md](02-data-models-schema.md), [07-package-payload-structure.md](07-package-payload-structure.md), [collector-vis-config.md](collector-vis-config.md), [03-user-journey-screens.md](03-user-journey-screens.md).
 

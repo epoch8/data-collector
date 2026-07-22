@@ -21,6 +21,9 @@ Future<void> submitLocalPackage({
   required BuildContext context,
   required String projectId,
   required Map<String, dynamic> answers,
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
   String? existingDraftPackageId,
   DateTime? draftCreatedAt,
 }) async {
@@ -37,6 +40,9 @@ Future<void> submitLocalPackage({
     projectId: projectId,
     createdAt: createdAt,
     answers: answersForSave,
+    formId: formId,
+    formName: formName,
+    formVersion: formVersion,
   );
 
   final payloadJson = jsonEncode(materialized.payload);
@@ -79,7 +85,7 @@ Future<void> submitLocalPackage({
         );
   }
 
-  await deleteAllDraftPackagesForProject(db, projectId);
+  await deleteAllDraftPackagesForProject(db, projectId, formId: formId);
 
   if (!context.mounted) return;
 
@@ -88,7 +94,7 @@ Future<void> submitLocalPackage({
   final savedMsg = AppLocalizations.of(context).packageSavedLocal;
   context.go('/dashboard');
   // Сброс после ухода с экрана — иначе review перерисовывается с пустым wizard state.
-  ref.read(wizardStateProvider(projectId).notifier).reset();
+  ref.read(wizardStateProvider('$projectId|$formId').notifier).reset();
 
   rootScaffoldMessengerKey.currentState?.showSnackBar(
     SnackBar(

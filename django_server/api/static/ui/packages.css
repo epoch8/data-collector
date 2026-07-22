@@ -32,11 +32,15 @@
   border: 1px solid var(--ui-border);
   background: var(--ui-surface-2);
   color: var(--ui-text-muted);
+  text-decoration: none;
+  cursor: pointer;
   transition: background 0.14s, border-color 0.14s, color 0.14s;
 }
-.pkg-chip:hover {
+.pkg-chip:hover,
+a.pkg-chip:hover {
   color: var(--ui-text);
   border-color: rgba(45, 212, 191, 0.4);
+  text-decoration: none;
 }
 .pkg-chip--active {
   background: rgba(45, 212, 191, 0.16);

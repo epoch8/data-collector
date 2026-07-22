@@ -1,6 +1,7 @@
 import 'package:data_collector/core/presentation/local_capture_thumb.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
+import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
@@ -27,7 +28,10 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
       data: (projects) {
         late Project project;
         try {
-          project = projects.firstWhere((p) => p.id == projectId);
+          final catalog = projects.byId(projectId);
+          final form = catalog?.primaryForm;
+          if (form == null) throw StateError('missing');
+          project = form.project;
         } catch (_) {
           final loc = AppLocalizations.of(context);
           return Scaffold(

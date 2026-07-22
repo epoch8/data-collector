@@ -9,6 +9,14 @@ urlpatterns = [
         "v1/projects/<str:project_id>/config",
         views.ProjectConfigView.as_view(),
     ),
+    path(
+        "v1/projects/<str:project_id>/forms",
+        views.ProjectFormsView.as_view(),
+    ),
+    path(
+        "v1/projects/<str:project_id>/forms/<str:form_id>/config",
+        views.ProjectFormConfigView.as_view(),
+    ),
     re_path(
         r"^v1/projects/(?P<project_id>[^/]+)/assets/(?P<asset_path>.*)$",
         views.ProjectAssetGetView.as_view(),

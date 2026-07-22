@@ -8,28 +8,49 @@ import 'package:drift/drift.dart' show OrderingTerm, Value;
 /// Локальный незавершённый пакет (спека: Draft).
 const String kPackageStatusDraft = 'draft';
 
-/// Последний черновик по проекту (если несколько — по дате создания).
+String envelopeFormId(Map<String, dynamic> env) {
+  final raw = env['form_id'];
+  if (raw is String && raw.trim().isNotEmpty) return raw.trim();
+  return 'default';
+}
+
+bool _draftMatchesForm(Package row, String formId) {
+  try {
+    final env = jsonDecode(row.dataJson);
+    if (env is Map<String, dynamic>) {
+      return envelopeFormId(env) == formId;
+    }
+    if (env is Map) {
+      return envelopeFormId(Map<String, dynamic>.from(env)) == formId;
+    }
+  } catch (_) {}
+  return formId == 'default';
+}
+
+/// Последний черновик по проекту и форме (если несколько — по дате создания).
 Future<Package?> selectLatestDraftForProject(
   AppDatabase db,
-  String projectId,
-) async {
+  String projectId, {
+  String formId = 'default',
+}) async {
   final rows =
       await (db.select(db.packages)
             ..where((t) => t.projectId.equals(projectId))
             ..where((t) => t.status.equals(kPackageStatusDraft))
-            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)])
-            ..limit(1))
+            ..orderBy([(t) => OrderingTerm.desc(t.createdAt)]))
           .get();
-  return rows.isEmpty ? null : rows.first;
+  for (final row in rows) {
+    if (_draftMatchesForm(row, formId)) return row;
+  }
+  return null;
 }
 
-/// Удаляет все локальные черновики по [projectId] (запись + каталог на диске при наличии).
-/// После завершённого пакета не должны оставаться «висячие» сессии, из‑за которых снова
-/// показывается диалог продолжения или подтягиваются старые данные.
+/// Удаляет локальные черновики project+form (запись + каталог на диске при наличии).
 Future<int> deleteAllDraftPackagesForProject(
   AppDatabase db,
-  String projectId,
-) async {
+  String projectId, {
+  String formId = 'default',
+}) async {
   final drafts =
       await (db.select(db.packages)
             ..where((t) => t.projectId.equals(projectId))
@@ -37,6 +58,7 @@ Future<int> deleteAllDraftPackagesForProject(
           .get();
   var n = 0;
   for (final d in drafts) {
+    if (!_draftMatchesForm(d, formId)) continue;
     await deleteLocalPackageStorage(db, d.id);
     n++;
   }
@@ -58,12 +80,19 @@ Future<void> upsertCollectionDraft({
   required Map<String, dynamic> answers,
   required int flowStep,
   required DateTime createdAt,
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
 }) async {
   final data = Map<String, dynamic>.from(answers);
   data[PackagePayloadKeys.collectionDraftFlowStep] = flowStep;
   final env = <String, dynamic>{
     'package_id': packageId,
     'project_id': projectId,
+    'form_id': formId,
+    if (formName != null && formName.isNotEmpty) 'form_name': formName,
+    if (formVersion != null && formVersion.isNotEmpty)
+      'form_version': formVersion,
     'created_at': createdAt.toUtc().toIso8601String(),
     'data': data,
   };

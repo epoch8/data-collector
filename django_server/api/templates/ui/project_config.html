@@ -1,12 +1,12 @@
 {% extends "ui/base.html" %}
 {% load i18n %}
-{% block title %}{% trans "Конфиг" %} — {{ project.project_id }}{% endblock %}
+{% block title %}{% trans "Конфиг" %} — {{ project.project_id }} / {{ form_id }}{% endblock %}
 {% block breadcrumb %}
 <nav class="ui-breadcrumb" aria-label="{% trans 'Навигация' %}">
   <ol class="breadcrumb mb-0">
     <li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>
     <li class="breadcrumb-item"><a href="{% url 'ui_project_detail' project.project_id %}">{{ project.name }}</a></li>
-    <li class="breadcrumb-item active" aria-current="page">{% trans "JSON" %}</li>
+    <li class="breadcrumb-item active" aria-current="page">{% trans "JSON" %} · {{ form_id }}</li>
   </ol>
 </nav>
 {% endblock %}
@@ -14,12 +14,15 @@
 <div class="ui-page-head">
   <div>
     <h1 class="ui-page-title">{% trans "Конфигурация (JSON)" %}</h1>
-    <p class="ui-page-sub mb-0">{% blocktrans trimmed with pid=project.project_id %}Источник: Git <code>collector/config.json</code> · сохранение = commit + push. Поле <code>id</code> = <code>{{ pid }}</code>.{% endblocktrans %}</p>
+    <p class="ui-page-sub mb-0">{% blocktrans trimmed with pid=project.project_id form=form_id %}Источник: Git <code>collector/forms/{{ form }}/config.json</code> · сохранение = commit + push. Поле <code>id</code> = <code>{{ pid }}</code>.{% endblocktrans %}</p>
   </div>
   {% if not read_only %}
-  <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config_builder' project.project_id %}"><i class="bi bi-sliders me-1"></i>{% trans "Визуальный редактор" %}</a>
+  <a class="btn btn-outline-light btn-sm" href="{% url 'ui_project_config_builder' project.project_id form_id %}"><i class="bi bi-sliders me-1"></i>{% trans "Визуальный редактор" %}</a>
   {% endif %}
 </div>
+
+{% include "ui/_project_forms_bar.html" %}
+
 {% if validation_errors %}
 <div class="alert alert-danger mb-3">
   <strong>{% trans "Исправьте ошибки и сохраните снова:" %}</strong>
@@ -31,7 +34,7 @@
   {% csrf_token %}
   <div class="card p-0 overflow-hidden mb-3">
     <div class="px-4 py-2 border-bottom border-secondary ui-inset-bar">
-      <span class="ui-card-title mb-0 d-inline"><i class="bi bi-filetype-json me-1"></i>{% trans "Тело JSON" %}</span>
+      <span class="ui-card-title mb-0 d-inline"><i class="bi bi-filetype-json me-1"></i>{% trans "Тело JSON" %} · <code>{{ form_id }}</code></span>
     </div>
     <div class="p-3">
       <textarea class="form-control json-block border-0" name="raw_json" rows="26" {% if not read_only %}required{% else %}readonly disabled{% endif %}>{{ pretty_json }}</textarea>

@@ -125,11 +125,18 @@ Map<String, dynamic> envelopePayload(
   String packageId,
   String projectId,
   DateTime createdUtc,
-  Map<String, dynamic> data,
-) {
+  Map<String, dynamic> data, {
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
+}) {
   return {
     'package_id': packageId,
     'project_id': projectId,
+    'form_id': formId,
+    if (formName != null && formName.isNotEmpty) 'form_name': formName,
+    if (formVersion != null && formVersion.isNotEmpty)
+      'form_version': formVersion,
     'created_at': createdUtc.toIso8601String(),
     'data': data,
   };

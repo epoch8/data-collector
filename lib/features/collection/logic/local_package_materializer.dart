@@ -14,13 +14,24 @@ Future<MaterializedLocalPackage> materializeLocalPackage({
   required String projectId,
   required DateTime createdAt,
   required Map<String, dynamic> answers,
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
 }) async {
   final createdUtc = createdAt.toUtc();
   final data = deepPayloadCopy(answers);
   stripCollectionDraftKeys(data);
   sanitizePackageCameraPayload(data);
   if (kIsWeb) {
-    final payload = envelopePayload(packageId, projectId, createdUtc, data);
+    final payload = envelopePayload(
+      packageId,
+      projectId,
+      createdUtc,
+      data,
+      formId: formId,
+      formName: formName,
+      formVersion: formVersion,
+    );
     return MaterializedLocalPackage(
       packageId: packageId,
       packageDirectoryPath: '',
@@ -32,5 +43,8 @@ Future<MaterializedLocalPackage> materializeLocalPackage({
     projectId: projectId,
     createdUtc: createdUtc,
     data: data,
+    formId: formId,
+    formName: formName,
+    formVersion: formVersion,
   );
 }

@@ -41,16 +41,25 @@ class ProjectsCatalogView(View):
         allowed = project_ids_for_request(request, scope="mobile")
         if allowed is not None:
             qs = qs.filter(project_id__in=allowed)
-        rows = list(qs)
-        items = [
-            {
+        rows = list(qs.select_related("git_credential"))
+        from .project_forms import forms_summary
+        from .project_git import GitProjectError
+
+        items = []
+        for p in rows:
+            entry = {
                 "project_id": p.project_id,
                 "name": p.name,
                 "config_version": p.config_version_label,
                 "updated_at": p.updated_at.isoformat(),
+                "forms": [],
             }
-            for p in rows
-        ]
+            if p.git_remote:
+                try:
+                    entry["forms"] = forms_summary(p, fetch_remote=True)
+                except GitProjectError:
+                    entry["forms"] = []
+            items.append(entry)
         body = json.dumps({"projects": items}, separators=(",", ":"))
         etag = weak_etag(body)
         if request.headers.get("If-None-Match") == etag:
@@ -64,6 +73,8 @@ class ProjectsCatalogView(View):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class ProjectConfigView(View):
+    """Legacy: конфиг формы default (или единственной). Предпочтительно GET …/forms."""
+
     def get(self, request, project_id: str):
         denied = _require_project(request, project_id)
         if denied:
@@ -74,6 +85,79 @@ class ProjectConfigView(View):
         if err is not None:
             return err
         etag = sha or weak_etag(body or "")
+        if request.headers.get("If-None-Match") == etag:
+            return HttpResponse(status=304, headers={"ETag": etag})
+        return HttpResponse(
+            body,
+            content_type="application/json; charset=utf-8",
+            headers={"ETag": etag},
+        )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ProjectFormsView(View):
+    """GET /v1/projects/{id}/forms — бандл всех форм проекта (offline sync)."""
+
+    def get(self, request, project_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
+        project = Project.objects.filter(project_id=project_id).select_related("git_credential").first()
+        if not project:
+            return JsonResponse(_err("not_found", "Unknown project"), status=404)
+        if not project.git_remote:
+            return JsonResponse(_err("git_not_configured", "Project has no Git remote"), status=503)
+        from .project_forms import load_project_forms
+        from .project_config_service import git_error_response
+        from .project_git import GitProjectError
+
+        try:
+            forms = load_project_forms(project, fetch_remote=True)
+            project.refresh_from_db(fields=["last_synced_sha"])
+        except GitProjectError as e:
+            return git_error_response(e)
+        payload = {
+            "project_id": project_id,
+            "config_version": project.last_synced_sha or project.config_version_label,
+            "forms": [
+                {"form_id": f["form_id"], "config": f["config"]}
+                for f in forms
+            ],
+        }
+        body = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        etag = project.last_synced_sha or weak_etag(body)
+        if request.headers.get("If-None-Match") == etag:
+            return HttpResponse(status=304, headers={"ETag": etag})
+        return HttpResponse(
+            body,
+            content_type="application/json; charset=utf-8",
+            headers={"ETag": etag},
+        )
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class ProjectFormConfigView(View):
+    """GET /v1/projects/{id}/forms/{form_id}/config — одна форма."""
+
+    def get(self, request, project_id: str, form_id: str):
+        denied = _require_project(request, project_id)
+        if denied:
+            return denied
+        project = Project.objects.filter(project_id=project_id).select_related("git_credential").first()
+        if not project:
+            return JsonResponse(_err("not_found", "Unknown project"), status=404)
+        from .project_forms import get_form_config
+        from .project_config_service import git_error_response
+        from .project_git import GitProjectError
+
+        try:
+            config = get_form_config(project, form_id, fetch_remote=True)
+            project.refresh_from_db(fields=["last_synced_sha"])
+        except GitProjectError as e:
+            status = 404 if e.code in ("unknown_form_id", "config_missing") else 502
+            return git_error_response(e, status=status)
+        body = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
+        etag = project.last_synced_sha or weak_etag(body)
         if request.headers.get("If-None-Match") == etag:
             return HttpResponse(status=304, headers={"ETag": etag})
         return HttpResponse(
@@ -202,6 +286,20 @@ class PackageManifestPutView(View):
                 ),
                 status=422,
             )
+        project = Project.objects.filter(project_id=project_id).select_related("git_credential").first()
+        if project and project.git_remote:
+            from .project_forms import normalize_manifest_form_id, validate_form_exists
+            from .project_git import GitProjectError
+
+            try:
+                form_id = normalize_manifest_form_id(manifest)
+                validate_form_exists(project, form_id)
+                manifest["form_id"] = form_id
+            except GitProjectError as e:
+                return JsonResponse(
+                    _err(e.code, e.message, {"field": "form_id"}),
+                    status=422,
+                )
         refs: set[str] = set()
         collect_blob_refs(manifest, refs)
         uploaded = set(ppkg.list_blob_paths(project_id, package_id))

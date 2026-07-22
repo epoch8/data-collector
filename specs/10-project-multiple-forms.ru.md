@@ -2,7 +2,7 @@
 
 # 10 — Несколько форм в одном проекте
 
-Статус: **planned** (июль 2026). Пока не реализовано. Контекст: [docs/mobile-revisions-2026-07-17/README.md](../docs/mobile-revisions-2026-07-17/README.md) §2–5.
+Статус: **in progress** (июль 2026). MVP: discovery форм, API `/forms`, picker в мобилке, `form_id` в манифесте, фильтр в админке пакетов. Контекст: [docs/mobile-revisions-2026-07-17/README.md](../docs/mobile-revisions-2026-07-17/README.md) §2–5.
 
 **Связанные документы:** [git-backed-projects.ru.md](git-backed-projects.ru.md), [09-server-project-config-delivery.ru.md](09-server-project-config-delivery.ru.md), [02-data-models-schema.ru.md](02-data-models-schema.ru.md), [07-package-payload-structure.ru.md](07-package-payload-structure.ru.md), [collector-vis-config.ru.md](collector-vis-config.ru.md), [03-user-journey-screens.ru.md](03-user-journey-screens.ru.md).
 

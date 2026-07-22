@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from .models import GitCredential, Project
 from .project_config_validate import validate_project_payload
 from .project_git import (
+    DEFAULT_FORM_ID,
     GitProjectError,
     generate_ssh_key_pair,
     normalize_git_remote,
@@ -254,18 +255,129 @@ def save_config_to_git(
     project_id: str,
     data: dict[str, Any],
     *,
-    commit_message: str = "config: update from data-collector admin",
+    form_id: str = DEFAULT_FORM_ID,
+    commit_message: str | None = None,
+    update_project_name: bool = False,
 ) -> list[str]:
+    """Сохранить config формы в Git. Root name — имя формы, не имя проекта в каталоге."""
+    from .project_forms import is_valid_form_id, write_form_config_dict
+
     data["id"] = project_id
+    fid = (form_id or DEFAULT_FORM_ID).strip() or DEFAULT_FORM_ID
+    if not is_valid_form_id(fid):
+        return [f'Некорректный form_id "{fid}". Допустимо: [a-z0-9_]+.']
     errs = validate_project_payload(data, project_id)
     if errs:
         return errs
     try:
-        write_config_dict(project, data, commit_message=commit_message)
-        name = (data.get("name") or project.name)[:512]
-        if name != project.name:
-            project.name = name
-            project.save(update_fields=["name", "updated_at"])
+        msg = commit_message or f"config: update form {fid} from data-collector admin"
+        write_form_config_dict(project, fid, data, commit_message=msg)
+        if update_project_name and fid == DEFAULT_FORM_ID:
+            name = (data.get("name") or project.name)[:512]
+            if name != project.name:
+                project.name = name
+                project.save(update_fields=["name", "updated_at"])
+    except GitProjectError as e:
+        return [e.message]
+    return []
+
+
+def load_form_config_dict(
+    project_id: str,
+    form_id: str = DEFAULT_FORM_ID,
+) -> tuple[dict[str, Any] | None, JsonResponse | None]:
+    project = Project.objects.filter(project_id=project_id).select_related("git_credential").first()
+    if not project:
+        return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
+    if not project.git_remote:
+        return None, JsonResponse(_err("git_not_configured", "Project has no Git remote"), status=503)
+    from .project_forms import get_form_config
+
+    try:
+        return get_form_config(project, form_id, fetch_remote=True), None
+    except GitProjectError as e:
+        return None, git_error_response(e, status=404 if e.code in ("unknown_form_id", "config_missing") else 502)
+
+
+def list_forms_for_admin(project: Project) -> list[dict[str, str]]:
+    from .project_forms import forms_summary
+
+    try:
+        return forms_summary(project, fetch_remote=True)
+    except GitProjectError:
+        return []
+
+
+def create_project_form(
+    project: Project,
+    form_id: str,
+    name: str,
+    *,
+    copy_from: str = DEFAULT_FORM_ID,
+) -> list[str]:
+    """Создать forms/{form_id}/config.json (копия другой формы или пустой seed)."""
+    import copy
+
+    from .project_forms import (
+        is_valid_form_id,
+        list_form_ids_on_disk,
+        load_project_forms,
+        write_form_config_dict,
+    )
+
+    fid = (form_id or "").strip()
+    if not is_valid_form_id(fid):
+        return ['Некорректный form_id. Допустимо: латиница, цифры и «_».']
+    display = (name or "").strip() or fid
+    try:
+        existing_forms = load_project_forms(project, fetch_remote=True)
+    except GitProjectError:
+        existing_forms = []
+    existing = {f["form_id"] for f in existing_forms}
+    if fid in existing:
+        return [f'Форма «{fid}» уже существует.']
+
+    # Только legacy config.json: перенести в forms/default, иначе после
+    # появления forms/{new} discovery перестанет отдавать default.
+    if not list_form_ids_on_disk(project) and existing_forms:
+        legacy_default = next(
+            (f for f in existing_forms if f["form_id"] == DEFAULT_FORM_ID),
+            existing_forms[0],
+        )
+        try:
+            write_form_config_dict(
+                project,
+                DEFAULT_FORM_ID,
+                copy.deepcopy(legacy_default["config"]),
+                commit_message="config: migrate legacy config to forms/default",
+            )
+        except GitProjectError as e:
+            return [f"Не удалось перенести default в forms/: {e.message}"]
+
+    seed: dict[str, Any] | None = None
+    src = (copy_from or "").strip()
+    if src and src != "_empty":
+        try:
+            forms = load_project_forms(project, fetch_remote=False)
+            for f in forms:
+                if f["form_id"] == src:
+                    seed = copy.deepcopy(f["config"])
+                    break
+        except GitProjectError:
+            seed = None
+    if seed is None:
+        seed = seed_project_json(project.project_id, display)
+    seed["id"] = project.project_id
+    seed["name"] = display
+    if not isinstance(seed.get("version"), str) or not str(seed.get("version")).strip():
+        seed["version"] = "1"
+    try:
+        write_form_config_dict(
+            project,
+            fid,
+            seed,
+            commit_message=f"config: create form {fid} from data-collector admin",
+        )
     except GitProjectError as e:
         return [e.message]
     return []
