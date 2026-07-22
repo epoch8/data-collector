@@ -100,7 +100,7 @@
       <tbody>
         {% for r in rows %}
         <tr>
-          <td><a href="{{ r.url }}" class="pkg-table__id font-monospace">{{ r.short_id }}</a></td>
+          <td><a href="{{ r.url }}" class="pkg-table__id font-monospace">{{ r.package_id }}</a></td>
           {% if show_form_column %}<td class="ui-muted font-monospace small">{{ r.form_id }}</td>{% endif %}
           {% if show_field_column %}<td class="ui-muted">{{ r.field_value|default:"—" }}</td>{% endif %}
           <td>{% include 'ui/_phase_badge.html' with phase=r.phase label=r.phase_label %}</td>

@@ -134,8 +134,24 @@
   var active = document.querySelector(".pkg-sidebar__item--active");
   if (active && active.scrollIntoView) active.scrollIntoView({ block: "center" });
 
-  // ── Lightbox ──────────────────────────────────────────────────────────────
+  // ── Lightbox + display-only downscale (оригиналы в storage не трогаем) ─────
   var thumbs = Array.prototype.slice.call(document.querySelectorAll("[data-lightbox]"));
+  var displayImage = window.PkgDisplayImage;
+
+  // Превью в галерее Media: даунскейл только для <img>, download остаётся оригиналом.
+  if (displayImage) {
+    Array.prototype.forEach.call(
+      document.querySelectorAll(".pkg-shot__frame--img img"),
+      function (img) {
+        var orig = img.getAttribute("src");
+        if (!orig) return;
+        displayImage.forUrl(orig, { maxEdge: 720 }).then(function (u) {
+          if (u && img.getAttribute("src") === orig) img.src = u;
+        });
+      },
+    );
+  }
+
   if (thumbs.length) {
     var lb = document.createElement("div");
     lb.className = "pkg-lightbox";
@@ -150,11 +166,21 @@
     var lbImg = lb.querySelector("img");
     var lbName = lb.querySelector(".pkg-lightbox__name");
     var idx = 0;
+    var lbGen = 0;
     function show(i) {
       idx = (i + thumbs.length) % thumbs.length;
       var t = thumbs[idx];
-      lbImg.src = t.getAttribute("data-lightbox");
+      var url = t.getAttribute("data-lightbox");
       lbName.textContent = t.getAttribute("data-name") || "";
+      var gen = ++lbGen;
+      if (!displayImage) {
+        lbImg.src = url;
+        return;
+      }
+      displayImage.forUrl(url, { maxEdge: 1920 }).then(function (u) {
+        if (gen !== lbGen) return;
+        lbImg.src = u || url;
+      });
     }
     function open(i) { show(i); lb.classList.add("open"); }
     function close() { lb.classList.remove("open"); lbImg.src = ""; }
