@@ -59,17 +59,43 @@ def _fit_size(iw: int, ih: int, max_w, max_h) -> tuple[int, int]:
 
 
 def _resolve_media(folder: Path) -> Path | None:
+    paths = _list_media(folder)
+    return paths[0] if paths else None
+
+
+def _list_media(folder: Path) -> list[Path]:
+    """Screenshots in folder. Prefer composed screenshot.gif over source PNGs."""
     if not folder.is_dir():
-        return None
-    for name in ("screenshot.png", "screenshot.gif", "screenshot.jpg", "screenshot.webp"):
+        return []
+    for name in ("screenshot.gif", "stage-steps.gif", "screenshot.png", "screenshot.jpg", "screenshot.webp"):
         p = folder / name
         if p.exists():
-            return p
+            # Composed GIF replaces the multi-PNG grid
+            if p.suffix.lower() == ".gif":
+                return [p]
+            return [p]
+    rest: list[Path] = []
     for ext in (".png", ".gif", ".jpg", ".jpeg", ".webp"):
         for p in sorted(folder.glob(f"*{ext}")):
             if p.name != ".gitkeep":
-                return p
-    return None
+                rest.append(p)
+    return rest
+
+
+def _media_caption(path: Path) -> str:
+    """Human caption from filename."""
+    stem = path.stem.replace("_", " ").replace("-", " ").strip()
+    mapping = {
+        "ui pipeline": "Граф пайплайна",
+        "pipeline inference ui": "Прогон аннотации",
+        "annotation image preview": "Превью разметки",
+        "metrix": "Метрики модели",
+        "run train": "Обучение модели",
+        "screenshot": "Datapipe Ops",
+        "stage steps": "Шаги стадии",
+    }
+    key = " ".join(stem.lower().split())
+    return mapping.get(key, stem[:40])
 
 
 def add_media(slide, path: Path | None, l, t, max_w, max_h, *, caption: str | None = None, accent=C.cobalt, frame: bool = True, theme: str = "light", placeholder: str | None = None):
@@ -85,11 +111,9 @@ def add_media(slide, path: Path | None, l, t, max_w, max_h, *, caption: str | No
             gen.add_caption(slide, l, t + max_h - Inches(0.18), max_w, caption, accent, theme=theme)
         return None
 
-    iw, ih = 1, 1
-    if path.suffix.lower() != ".gif":
-        from PIL import Image
-        with Image.open(path) as img:
-            iw, ih = img.size
+    from PIL import Image
+    with Image.open(path) as img:
+        iw, ih = img.size
 
     final_w, final_h = _fit_size(iw, ih, max_w, max_h)
     final_l = l + int((max_w - final_w) / 2)
@@ -465,10 +489,10 @@ def slide_datapipe_flow(prs, n: int):
     text(s, Inches(1.0), Inches(2.1), Inches(11.35), Inches(0.35), "Commit пакета  →  webhook  →  стадия 0 запускается автоматически", size=13, bold=True, color=C.white, align=PP_ALIGN.CENTER)
 
     stages = [
-        ("0", "Пакеты", "На каждый новый пакет:\nфото из S3 → CVAT →\nпервичный инференс в БД", C.cobalt),
-        ("1", "Аннотация", "Периодически:\nразметка из CVAT →\ndataset train/val/test", C.mint),
-        ("2", "Обучение", "По накопленным данным:\ntrain keypoints-модели,\nвыбор лучшей по метрикам", C.lime),
-        ("3", "Prod", "Боевая модель на пакетах:\nинференс → БД →\nслой в визуализации", C.coral),
+        ("0", "Пакеты", "S3 → CVAT →\nинференс в БД", C.cobalt),
+        ("1", "Аннотация", "CVAT → датасет\ntrain / val / test", C.mint),
+        ("2", "Обучение", "train модели\nвыбор по метрикам", C.lime),
+        ("3", "Prod", "боевой инференс\n→ слой в viz", C.coral),
     ]
     x = Inches(0.75)
     y = Inches(2.95)
@@ -488,41 +512,57 @@ def slide_datapipe_flow(prs, n: int):
     footer_e2e(s, n, dark=True)
 
 
-def slide_datapipe_stage(prs, n: int, *, stage_num: str, headline: str, subtitle: str, bullets: list[str], folder: str, accent, dark: bool = False):
+def slide_datapipe_stage(
+    prs,
+    n: int,
+    *,
+    stage_num: str,
+    headline: str,
+    subtitle: str,
+    points: list[tuple[str, str]],
+    folder: str,
+    accent,
+):
+    """Dark stage slide: 3 short cards left + large screenshot/GIF right."""
     s = prs.slides.add_slide(prs.slide_layouts[6])
-    bg(s, C.night if dark else C.paper)
-    title(s, headline, subtitle, dark=dark)
-    pill(
-        s,
-        Inches(11.25),
-        Inches(0.55),
-        Inches(1.25),
-        f"ЭТАП {stage_num}",
-        accent,
-        C.ink if accent == C.lime else C.white,
-    )
+    bg(s, C.night)
+    title(s, headline, subtitle, dark=True)
+    pill(s, Inches(11.25), Inches(0.55), Inches(1.25), f"ЭТАП {stage_num}", accent, C.ink if accent == C.lime else C.white)
 
     from pptx.dml.color import RGBColor
-    bullet_color = C.muted if not dark else RGBColor(0xAE, 0xB7, 0xC7)
-    y = Inches(2.0)
-    for item in bullets:
-        rect(s, Inches(0.75), y + Inches(0.08), Inches(0.1), Inches(0.1), accent)
-        text(s, Inches(1.0), y, Inches(5.2), Inches(0.55), item, size=10, color=bullet_color)
-        y += Inches(0.54)
+    muted = RGBColor(0xAE, 0xB7, 0xC7)
+    border = RGBColor(0x2D, 0x36, 0x48)
 
+    y = Inches(1.95)
+    for i, (head, body) in enumerate(points[:3]):
+        color = [accent, C.mint, C.coral, C.lime][i % 4]
+        if i == 0:
+            color = accent
+        rect(s, Inches(0.65), y, Inches(5.0), Inches(1.2), C.night_2, border, radius=True)
+        rect(s, Inches(0.65), y, Inches(0.08), Inches(1.2), color)
+        oval(s, Inches(0.85), y + Inches(0.35), Inches(0.45), Inches(0.45), color)
+        text(s, Inches(0.85), y + Inches(0.44), Inches(0.45), Inches(0.28), str(i + 1), size=13, bold=True, color=C.white, align=PP_ALIGN.CENTER)
+        text(s, Inches(1.5), y + Inches(0.22), Inches(3.9), Inches(0.35), head, size=15, bold=True, color=C.white)
+        text(s, Inches(1.5), y + Inches(0.62), Inches(3.9), Inches(0.45), body, size=12, color=muted)
+        y += Inches(1.35)
+
+    media = _list_media(DATAPIPE_IMG / folder)
+    path = media[0] if media else None
+    is_gif = path is not None and path.suffix.lower() == ".gif"
     add_media(
         s,
-        _resolve_media(DATAPIPE_IMG / folder),
-        Inches(6.35),
-        Inches(1.9),
-        Inches(6.35),
-        Inches(4.75),
-        caption=f"Стадия {stage_num}",
+        path,
+        Inches(5.9),
+        Inches(1.85),
+        Inches(6.75),
+        Inches(4.9),
+        caption=_media_caption(path) if path else None,
         accent=accent,
-        theme="dark" if dark else "light",
+        theme="dark",
+        frame=not is_gif,
         placeholder=f"Скриншот стадии {stage_num} — добавить",
     )
-    footer_e2e(s, n, dark=dark)
+    footer_e2e(s, n, dark=True)
 
 
 def slide_visualization(prs, n: int):
@@ -652,36 +692,38 @@ def build() -> Path:
     slide_datapipe_flow(prs, n); n += 1
 
     stages = [
-        ("0", "3.1 Стадия 0: пакеты", "Пакет из админ-БД → разметка и первичный инференс", [
-            "Синхронизация пакетов и файлов из БД проекта",
-            "Скачивание фото из хранилища S3",
-            "Первичный инференс через Gradio — результат в БД",
-            "Создание задач в CVAT, привязка фото пакета",
-            "Запись ссылок на CVAT и аннотаций обратно в БД",
+        ("0", "3.1 Стадия 0: пакеты", "Новый пакет → инференс и задача в CVAT", [
+            ("Берём пакет", "из БД проекта и S3"),
+            ("Инференс", "Gradio → результат в БД"),
+            ("CVAT", "задача разметки + ссылка"),
         ], "stage-0-packages", C.cobalt),
-        ("1", "3.2 Стадия 1: аннотация", "Выгрузка разметки из CVAT → подготовка обучающей выборки", [
-            "Сбор аннотаций из всех CVAT-проектов",
-            "Скачивание изображений из S3 или CVAT",
-            "Детектор рамки животного + резервный SAM по точкам",
-            "Связка keypoints с рамкой → эталонная разметка",
-            "Разбиение на train/val/test",
+        ("1", "3.2 Стадия 1: аннотация", "Разметка CVAT → обучающая выборка", [
+            ("Выгрузка", "аннотации из CVAT"),
+            ("Рамка + точки", "детектор и SAM"),
+            ("Датасет", "train / val / test"),
         ], "stage-1-annotation", C.mint),
-        ("2", "3.3 Стадия 2: обучение", "Обучение модели keypoints", [
-            "Заморозка датасета для воспроизводимого обучения",
-            "Обучение модели с аугментациями",
-            "Проверка на отложенной выборке, подсчёт метрик",
-            "Выбор лучшей модели по val-метрикам",
-        ], "stage-2-train", C.lime, True),
-        ("3", "3.4 Стадия 3: боевая модель", "Инференс prod-модели и публикация результатов", [
-            "Загрузка весов боевой модели",
-            "Инференс на пакетах — результат в БД проекта",
-            "Анализ ошибок по предсказаниям",
-            "Слой «Инференс» виден в визуализации админки",
-        ], "stage-4-prod", C.coral, True),
+        ("2", "3.3 Стадия 2: обучение", "Train keypoints → выбор лучшей модели", [
+            ("Обучение", "модель на датасете"),
+            ("Метрики", "проверка на val"),
+            ("Лучшая", "выбор по mAP"),
+        ], "stage-2-train", C.lime),
+        ("3", "3.4 Стадия 3: боевая модель", "Prod-инференс → слой в админке", [
+            ("Веса prod", "боевая модель"),
+            ("Инференс", "на пакетах → БД"),
+            ("В админке", "слой «Инференс»"),
+        ], "stage-4-prod", C.coral),
     ]
 
-    for stage_num, headline, subtitle, bullets, folder, accent, *rest in stages:
-        slide_datapipe_stage(prs, n, stage_num=stage_num, headline=headline, subtitle=subtitle, bullets=bullets, folder=folder, accent=accent, dark=bool(rest and rest[0]))
+    for stage_num, headline, subtitle, points, folder, accent in stages:
+        slide_datapipe_stage(
+            prs, n,
+            stage_num=stage_num,
+            headline=headline,
+            subtitle=subtitle,
+            points=points,
+            folder=folder,
+            accent=accent,
+        )
         n += 1
 
     slide_video_placeholder(prs, n, "Видео-каст: пайплайн datapipe", "Полный проход пакета через трубу"); n += 1

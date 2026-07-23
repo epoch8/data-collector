@@ -1,14 +1,18 @@
 # Скриншоты для слайдов datapipe
 
-Положите файл `screenshot.png` (или `.gif`) в нужную папку — генератор подхватит автоматически.
+Положите `.png` / `.gif` в папку стадии. Имя `screenshot.gif` / `screenshot.png` имеет приоритет.
 
-| Папка | Слайд | Что снять |
+| Папка | Слайд | Сейчас |
 | --- | --- | --- |
-| `stage-0-packages/` | Стадия 0: пакеты | ingest пакетов, Gradio inference, задачи CVAT, cvat_link в БД |
-| `stage-1-annotation/` | Стадия 1: аннотация | выгрузка CVAT, детектор bbox, merge keypoints → GT |
-| `stage-2-train/` | Стадия 2: обучение | train YOLOv8-pose, метрики, best model |
-| `stage-3-fiftyone/` | Стадия 3: FiftyOne | публикация GT и предсказаний в FiftyOne |
-| `stage-4-prod/` | Стадия 4: prod-модель | инференс prod-модели, fiftyone_predictions_prod |
-| `vlm/` | VLM (будущее) | когда появится контур — скрин анализа |
+| `stage-0-packages/` | Стадия 0 | `UI_pipeline.png` |
+| `stage-1-annotation/` | Стадия 1 | `pipeline inference UI.png` |
+| `stage-2-train/` | Стадия 2 | `screenshot.gif` (сборка из 3 скринов) |
+| `stage-4-prod/` | Стадия 3 prod | *(пусто)* |
 
-Можно несколько файлов — приоритет: `screenshot.png`, `screenshot.gif`, любой первый `.png`/`.gif` в папке.
+Собрать GIF обучения:
+
+```bash
+python docs/e2e-korovas/make_datapipe_train_gif.py
+```
+
+Исходники GIF: `run train.png` → `metrix.png` → `annotation image preview.png`.
