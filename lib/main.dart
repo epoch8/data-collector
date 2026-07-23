@@ -1282,9 +1282,7 @@ Widget _historyProjectSection(
   List<Package> packages,
 ) {
   final formProject = proj.primaryForm?.project;
-  final flow = formProject != null
-      ? resolveCollectionFlow(formProject)
-      : null;
+  final flow = formProject != null ? resolveCollectionFlow(formProject) : null;
   final bySubject = flow?.shouldGroupHistoryBySubject ?? false;
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1567,10 +1565,7 @@ Widget _historyOrphanProjectSection(
   );
 }
 
-Project? _formConfigForPackage(
-  List<CatalogProject>? projects,
-  Package pkg,
-) {
+Project? _formConfigForPackage(List<CatalogProject>? projects, Package pkg) {
   if (projects == null) return null;
   final catalog = projects.byId(pkg.projectId);
   if (catalog == null) return null;

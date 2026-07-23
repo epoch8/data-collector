@@ -74,10 +74,9 @@ List<ConfigFieldOption>? _optionsFromJson(dynamic raw) {
       final value = (item['value'] ?? item['label'] ?? '').toString().trim();
       final label = (item['label'] ?? item['value'] ?? '').toString().trim();
       if (value.isEmpty) continue;
-      out.add(ConfigFieldOption(
-        value: value,
-        label: label.isEmpty ? value : label,
-      ));
+      out.add(
+        ConfigFieldOption(value: value, label: label.isEmpty ? value : label),
+      );
     }
   }
   return out.isEmpty ? null : out;

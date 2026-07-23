@@ -79,9 +79,7 @@ final class ServerProjectCatalog {
         final formId = item['form_id'] as String? ?? 'default';
         final configRaw = item['config'];
         if (configRaw is! Map) continue;
-        final project = Project.fromJson(
-          Map<String, dynamic>.from(configRaw),
-        );
+        final project = Project.fromJson(Map<String, dynamic>.from(configRaw));
         out.add(ProjectFormEntry(formId: formId, project: project));
       }
       if (out.isNotEmpty) return out;

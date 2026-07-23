@@ -97,9 +97,6 @@ Future<void> submitLocalPackage({
   ref.read(wizardStateProvider('$projectId|$formId').notifier).reset();
 
   rootScaffoldMessengerKey.currentState?.showSnackBar(
-    SnackBar(
-      content: Text(savedMsg),
-      behavior: SnackBarBehavior.floating,
-    ),
+    SnackBar(content: Text(savedMsg), behavior: SnackBarBehavior.floating),
   );
 }

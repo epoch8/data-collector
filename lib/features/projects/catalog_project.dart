@@ -2,10 +2,7 @@ import 'package:data_collector/models/project_config.dart';
 
 /// Форма внутри проекта (один config.json).
 class ProjectFormEntry {
-  const ProjectFormEntry({
-    required this.formId,
-    required this.project,
-  });
+  const ProjectFormEntry({required this.formId, required this.project});
 
   final String formId;
 

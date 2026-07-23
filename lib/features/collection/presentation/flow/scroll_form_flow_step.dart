@@ -146,7 +146,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
-                  color: filled ? Epoch8Theme.textPrimary : Epoch8Theme.textMuted,
+                  color: filled
+                      ? Epoch8Theme.textPrimary
+                      : Epoch8Theme.textMuted,
                 ),
               ),
               onPressed: () => _jumpToField(f.fieldId),
@@ -270,10 +272,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               c.text = data[f.fieldId].toString();
             }
           } else if (f.type == 'single_choice' && data[f.fieldId] != null) {
-            _wizardNotifier.updateField(
-              f.fieldId,
-              data[f.fieldId].toString(),
-            );
+            _wizardNotifier.updateField(f.fieldId, data[f.fieldId].toString());
           }
         }
       });
@@ -482,9 +481,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               const SizedBox(height: 4),
               Text(
                 f.instructions,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Epoch8Theme.textMuted,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
               ),
             ],
             const SizedBox(height: 8),
@@ -743,9 +742,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
       ref: ref,
       projectId: _wizardKey,
     );
-    ref
-        .read(wizardStateProvider(_wizardKey).notifier)
-        .updateField(_key, null);
+    ref.read(wizardStateProvider(_wizardKey).notifier).updateField(_key, null);
     setState(() {});
     widget.onPhotoChanged?.call();
   }

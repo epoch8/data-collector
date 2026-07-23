@@ -13,10 +13,7 @@ ConfigFieldOption _$ConfigFieldOptionFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$ConfigFieldOptionToJson(ConfigFieldOption instance) =>
-    <String, dynamic>{
-      'value': instance.value,
-      'label': instance.label,
-    };
+    <String, dynamic>{'value': instance.value, 'label': instance.label};
 
 ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
   fieldId: json['field_id'] as String,
