@@ -23,12 +23,13 @@ String _formatDateTime(DateTime d) {
   return '${d.year}-${two(d.month)}-${two(d.day)} ${two(d.hour)}:${two(d.minute)}';
 }
 
-/// Один шаг сценария: только поля из `scroll_form` (текст, дата, markdown-инструкция, камера).
+/// Один шаг сценария: поля из `scroll_form` (текст, выбор, дата, markdown-инструкция, камера).
 class ScrollFormFlowStep extends ConsumerStatefulWidget {
   const ScrollFormFlowStep({
     super.key,
     required this.project,
     required this.projectId,
+    this.formId = 'default',
     required this.flow,
     required this.step,
     required this.continueLabel,
@@ -38,6 +39,7 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
 
   final Project project;
   final String projectId;
+  final String formId;
   final ResolvedCollectionFlow flow;
   final ResolvedCollectionStep step;
   final String continueLabel;
@@ -51,18 +53,26 @@ class ScrollFormFlowStep extends ConsumerStatefulWidget {
 }
 
 class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
+  String get _wizardKey => '${widget.projectId}|${widget.formId}';
+
   final Map<String, TextEditingController> _textCtrls = {};
   final Map<String, DateTime> _dateTimes = {};
+  final ScrollController _scrollController = ScrollController();
+  final Map<String, GlobalKey> _fieldKeys = {};
 
   /// Нельзя вызывать `ref` из [dispose] — элемент уже «мертвый»; нотификатор держим с initState.
   late final WizardState _wizardNotifier;
 
+  List<ConfigField> get _cameraFields =>
+      widget.step.fields.where((f) => f.type == 'camera_photo').toList();
+
   @override
   void initState() {
     super.initState();
-    _wizardNotifier = ref.read(wizardStateProvider(widget.projectId).notifier);
-    final s = ref.read(wizardStateProvider(widget.projectId));
+    _wizardNotifier = ref.read(wizardStateProvider(_wizardKey).notifier);
+    final s = ref.read(wizardStateProvider(_wizardKey));
     for (final f in widget.step.fields) {
+      _fieldKeys[f.fieldId] = GlobalKey();
       if (f.type == 'text_input') {
         _textCtrls[f.fieldId] = TextEditingController(
           text: s[f.fieldId]?.toString() ?? '',
@@ -85,6 +95,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   void dispose() {
     appBrightnessNotifier.removeListener(_onBrightnessChanged);
     _persistToWizard();
+    _scrollController.dispose();
     for (final c in _textCtrls.values) {
       c.dispose();
     }
@@ -93,6 +104,69 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
 
   void _onBrightnessChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _jumpToField(String fieldId) async {
+    final key = _fieldKeys[fieldId];
+    final ctx = key?.currentContext;
+    if (ctx == null) return;
+    await Scrollable.ensureVisible(
+      ctx,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      alignment: 0.08,
+    );
+  }
+
+  Widget _poseNavBar(Map<String, dynamic> answers) {
+    final cameras = _cameraFields;
+    if (cameras.length < 2) return const SizedBox.shrink();
+    return Material(
+      color: Epoch8Theme.bgElevated,
+      elevation: 0.5,
+      child: SizedBox(
+        height: 52,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          itemCount: cameras.length,
+          separatorBuilder: (context, index) => const SizedBox(width: 8),
+          itemBuilder: (context, i) {
+            final f = cameras[i];
+            final n = CapturedPhotoPaths.list(answers[f.fieldId]).length;
+            final filled = n > 0;
+            return ActionChip(
+              avatar: Icon(
+                filled ? Icons.check_circle : Icons.photo_camera_outlined,
+                size: 16,
+                color: filled ? Epoch8Theme.success : Epoch8Theme.textMuted,
+              ),
+              label: Text(
+                n > 0 ? '${f.title} ($n)' : f.title,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: filled
+                      ? Epoch8Theme.textPrimary
+                      : Epoch8Theme.textMuted,
+                ),
+              ),
+              onPressed: () => _jumpToField(f.fieldId),
+              backgroundColor: filled
+                  ? Epoch8Theme.success.withValues(alpha: 0.12)
+                  : Epoch8Theme.card,
+              side: BorderSide(
+                color: filled
+                    ? Epoch8Theme.success.withValues(alpha: 0.35)
+                    : Epoch8Theme.border,
+              ),
+              visualDensity: VisualDensity.compact,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   void _persistToWizard() {
@@ -108,13 +182,13 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
   /// (слушатель в [CollectionFlowScreen]) не видит их до нажатия «Далее».
   void _syncTextFieldToWizard(String fieldId, String text) {
     ref
-        .read(wizardStateProvider(widget.projectId).notifier)
+        .read(wizardStateProvider(_wizardKey).notifier)
         .updateField(fieldId, text);
   }
 
   void _syncDatetimeToWizard(String fieldId, DateTime dt) {
     ref
-        .read(wizardStateProvider(widget.projectId).notifier)
+        .read(wizardStateProvider(_wizardKey).notifier)
         .updateField(fieldId, dt.toIso8601String());
   }
 
@@ -124,6 +198,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
       if (f.type == 'text_input') {
         final t = _textCtrls[f.fieldId]?.text.trim() ?? '';
         if (t.isEmpty) return false;
+      } else if (f.type == 'single_choice') {
+        final v = answers[f.fieldId]?.toString().trim() ?? '';
+        if (v.isEmpty) return false;
       } else if (f.type == 'datetime') {
         /* ok */
       } else if (f.type == 'instruction') {
@@ -150,7 +227,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
 
   @override
   Widget build(BuildContext context) {
-    final answers = ref.watch(wizardStateProvider(widget.projectId));
+    final answers = ref.watch(wizardStateProvider(_wizardKey));
     final useCow = widget.step.cowIdHints;
     final cowMatch = _cowMatchFieldId();
     final cowCtrl = cowMatch != null ? _textCtrls[cowMatch] : null;
@@ -194,53 +271,67 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
             if (c != null && data[f.fieldId] != null) {
               c.text = data[f.fieldId].toString();
             }
+          } else if (f.type == 'single_choice' && data[f.fieldId] != null) {
+            _wizardNotifier.updateField(f.fieldId, data[f.fieldId].toString());
           }
         }
       });
       _persistToWizard();
     }
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(
-        Epoch8Layout.pagePadding,
-        8,
-        Epoch8Layout.pagePadding,
-        28,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final f in widget.step.fields) ...[
-            _FieldCard(
-              child: _buildField(
-                context,
-                f,
-                answers,
-                useCow: useCow,
-                cowMatch: cowMatch,
-                typedCowId: typedCowId,
-                typedLower: typedLower,
-                hasExactMatch: hasExactMatch,
-                hasAnyMatches: hasAnyMatches,
-                matchedIds: matchedIds,
-                cowCtrl: cowCtrl,
-                exactData: exactData,
-                prefillFrom: prefillFrom,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (_cameraFields.length >= 2) _poseNavBar(answers),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            padding: const EdgeInsets.fromLTRB(
+              Epoch8Layout.pagePadding,
+              8,
+              Epoch8Layout.pagePadding,
+              28,
             ),
-            const SizedBox(height: 16),
-          ],
-          FilledButton(
-            onPressed: _stepValid(answers)
-                ? () {
-                    _persistToWizard();
-                    widget.onContinue();
-                  }
-                : null,
-            child: Text(widget.continueLabel),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final f in widget.step.fields) ...[
+                  KeyedSubtree(
+                    key: _fieldKeys[f.fieldId],
+                    child: _FieldCard(
+                      child: _buildField(
+                        context,
+                        f,
+                        answers,
+                        useCow: useCow,
+                        cowMatch: cowMatch,
+                        typedCowId: typedCowId,
+                        typedLower: typedLower,
+                        hasExactMatch: hasExactMatch,
+                        hasAnyMatches: hasAnyMatches,
+                        matchedIds: matchedIds,
+                        cowCtrl: cowCtrl,
+                        exactData: exactData,
+                        prefillFrom: prefillFrom,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                FilledButton(
+                  onPressed: _stepValid(answers)
+                      ? () {
+                          _persistToWizard();
+                          widget.onContinue();
+                        }
+                      : null,
+                  child: Text(widget.continueLabel),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -373,6 +464,53 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
             ),
           ],
         );
+      case 'single_choice':
+        final opts = f.options ?? const <ConfigFieldOption>[];
+        final current = answers[f.fieldId]?.toString();
+        final selected = opts.any((o) => o.value == current) ? current : null;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              f.title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            if (f.instructions.trim().isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                f.instructions,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+              ),
+            ],
+            const SizedBox(height: 8),
+            DropdownButtonFormField<String>(
+              // ignore: deprecated_member_use
+              value: selected,
+              isExpanded: true,
+              decoration: const InputDecoration(border: OutlineInputBorder()),
+              hint: Text(loc.flowFormChoiceHint),
+              items: [
+                for (final o in opts)
+                  DropdownMenuItem<String>(
+                    value: o.value,
+                    child: Text(o.label),
+                  ),
+              ],
+              onChanged: opts.isEmpty
+                  ? null
+                  : (val) {
+                      ref
+                          .read(wizardStateProvider(_wizardKey).notifier)
+                          .updateField(f.fieldId, val);
+                      setState(() {});
+                    },
+            ),
+          ],
+        );
       case 'datetime':
         final dt = _dateTimes[f.fieldId] ?? DateTime.now();
         return Column(
@@ -480,6 +618,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
         return _ScrollCameraBlock(
           project: widget.project,
           projectId: widget.projectId,
+          formId: widget.formId,
           field: f,
           poseIndex1Based: poseIdx,
           totalPoses: total,
@@ -518,6 +657,7 @@ class _ScrollCameraBlock extends ConsumerStatefulWidget {
   const _ScrollCameraBlock({
     required this.project,
     required this.projectId,
+    this.formId = 'default',
     required this.field,
     required this.poseIndex1Based,
     required this.totalPoses,
@@ -526,6 +666,7 @@ class _ScrollCameraBlock extends ConsumerStatefulWidget {
 
   final Project project;
   final String projectId;
+  final String formId;
   final ConfigField field;
   final int poseIndex1Based;
   final int totalPoses;
@@ -541,6 +682,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
   final _picker = ImagePicker();
 
   String get _key => widget.field.fieldId;
+  String get _wizardKey => '${widget.projectId}|${widget.formId}';
 
   Future<void> _pick(ImageSource source) async {
     final x = await _picker.pickImage(source: source);
@@ -575,7 +717,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
 
     await CameraMetadataCollector.attachPoseMetadata(
       ref: ref,
-      projectId: widget.projectId,
+      projectId: _wizardKey,
       poseFieldId: _key,
       imagePath: x.path,
     );
@@ -587,7 +729,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
   void _remove(String path) {
     CameraMetadataCollector.removePoseShotByPath(
       ref: ref,
-      projectId: widget.projectId,
+      projectId: _wizardKey,
       poseFieldId: _key,
       imagePath: path,
     );
@@ -598,11 +740,9 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
   void _clear() {
     CameraMetadataCollector.stripLegacyContextPoses(
       ref: ref,
-      projectId: widget.projectId,
+      projectId: _wizardKey,
     );
-    ref
-        .read(wizardStateProvider(widget.projectId).notifier)
-        .updateField(_key, null);
+    ref.read(wizardStateProvider(_wizardKey).notifier).updateField(_key, null);
     setState(() {});
     widget.onPhotoChanged?.call();
   }
@@ -610,7 +750,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
   @override
   Widget build(BuildContext context) {
     final loc = AppLocalizations.of(context);
-    final answers = ref.watch(wizardStateProvider(widget.projectId));
+    final answers = ref.watch(wizardStateProvider(_wizardKey));
     final paths = CapturedPhotoPaths.list(answers[_key]);
     const sep = '·';
 

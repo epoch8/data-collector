@@ -67,6 +67,17 @@
     {% endfor %}
     <input type="hidden" name="phase" id="fPhase" value="{{ f_phase }}">
   </div>
+
+  <input type="hidden" name="form" id="fForm" value="{{ f_form|default:'all' }}">
+  {% if show_form_filter %}
+  <div class="d-flex flex-wrap align-items-center gap-2 mt-3">
+    <span class="pkg-filter__label mb-0 me-1">{% trans "Форма" %}</span>
+    {% for chip in form_chips %}
+    <a class="pkg-chip {% if chip.active %}pkg-chip--active{% endif %}"
+       href="?project={{ project_id }}&mode={{ f_mode }}&field={{ f_field }}&phase={{ f_phase }}&form={{ chip.id }}{% if f_q %}&q={{ f_q|urlencode }}{% endif %}{% if f_date %}&date={{ f_date }}{% endif %}">{{ chip.label }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
 </form>
 
 <div class="pkg-list-meta">{% blocktrans with shown=rows|length %}Показано <strong>{{ shown }}</strong> из {{ total }}{% endblocktrans %}</div>
@@ -78,6 +89,7 @@
       <thead>
         <tr>
           <th>{% trans "Пакет" %}</th>
+          {% if show_form_column %}<th>{% trans "Форма" %}</th>{% endif %}
           {% if show_field_column %}<th>{{ selected_field.title }}</th>{% endif %}
           <th>{% trans "Статус" %}</th>
           <th>{% trans "Дата" %}</th>
@@ -88,7 +100,8 @@
       <tbody>
         {% for r in rows %}
         <tr>
-          <td><a href="{{ r.url }}" class="pkg-table__id font-monospace">{{ r.short_id }}</a></td>
+          <td><a href="{{ r.url }}" class="pkg-table__id font-monospace">{{ r.package_id }}</a></td>
+          {% if show_form_column %}<td class="ui-muted font-monospace small">{{ r.form_id }}</td>{% endif %}
           {% if show_field_column %}<td class="ui-muted">{{ r.field_value|default:"—" }}</td>{% endif %}
           <td>{% include 'ui/_phase_badge.html' with phase=r.phase label=r.phase_label %}</td>
           <td class="ui-muted small" title="{{ r.created_at }}">{{ r.created_at|slice:":16" }}</td>

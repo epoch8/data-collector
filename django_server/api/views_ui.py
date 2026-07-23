@@ -68,13 +68,17 @@ from .project_config_service import (
     bootstrap_new_project,
     create_credential,
     create_credential_generated,
+    create_project_form,
+    list_forms_for_admin,
     load_config_dict,
+    load_form_config_dict,
     prepare_builder_ssr_steps,
     save_config_to_git,
     seed_project_json,
     update_credential_private_key,
 )
 from .project_config_validate import validate_project_payload
+from .project_forms import DEFAULT_FORM_ID, is_valid_form_id
 from .project_git import (
     GitProjectError,
     delete_media_file,
@@ -425,16 +429,22 @@ def project_storage_check(request, project_id: str):
 
 @staff_only
 @require_http_methods(["GET", "POST"])
-def project_config(request, project_id: str):
+def project_config(request, project_id: str, form_id: str = DEFAULT_FORM_ID):
     project = get_object_or_404(Project, project_id=project_id)
+    form_id = (form_id or DEFAULT_FORM_ID).strip() or DEFAULT_FORM_ID
+    if not is_valid_form_id(form_id):
+        messages.error(request, _("Некорректный form_id."))
+        return redirect("ui_project_config_builder", project_id=project_id, form_id=DEFAULT_FORM_ID)
+
+    forms = list_forms_for_admin(project)
     if request.method == "POST":
         raw = request.POST.get("raw_json", "")
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
             messages.error(request, _("Невалидный JSON: {error}").format(error=e))
-            return redirect("ui_project_config", project_id=project_id)
-        errs = save_config_to_git(project, project_id, data)
+            return redirect("ui_project_config", project_id=project_id, form_id=form_id)
+        errs = save_config_to_git(project, project_id, data, form_id=form_id)
         if errs:
             for e in errs:
                 messages.error(request, e)
@@ -447,14 +457,18 @@ def project_config(request, project_id: str):
                 "ui/project_config.html",
                 {
                     "project": project,
+                    "form_id": form_id,
+                    "forms": forms,
+                    "forms_nav_url_name": "ui_project_config",
                     "pretty_json": pretty,
                     "validation_errors": errs,
                     "read_only": False,
                 },
             )
-        messages.success(request, _("Конфиг закоммичен и отправлен в Git."))
-        return redirect("ui_project_detail", project_id=project_id)
-    data, err = load_config_dict(project_id)
+        messages.success(request, _("Форма «{form}» сохранена в Git.").format(form=form_id))
+        return redirect("ui_project_config_builder", project_id=project_id, form_id=form_id)
+
+    data, err = load_form_config_dict(project_id, form_id)
     if err is not None:
         try:
             body = json.loads(err.content.decode())
@@ -470,6 +484,9 @@ def project_config(request, project_id: str):
         "ui/project_config.html",
         {
             "project": project,
+            "form_id": form_id,
+            "forms": forms,
+            "forms_nav_url_name": "ui_project_config",
             "pretty_json": pretty,
             "validation_errors": None,
             "read_only": False,
@@ -480,12 +497,14 @@ def project_config(request, project_id: str):
 @ensure_csrf_cookie
 @staff_only
 @require_http_methods(["GET", "POST"])
-def project_config_builder(request, project_id: str):
-    """Визуальный редактор + превью; сохраняет тот же JSON, что и raw-редактор."""
+def project_config_builder(request, project_id: str, form_id: str = DEFAULT_FORM_ID):
+    """Визуальный редактор одной формы проекта."""
 
-    def _builder_context(project: Project, initial_data: dict, **extra):
+    def _builder_context(project: Project, initial_data: dict, form_id: str, forms: list, **extra):
         return {
             "project": project,
+            "form_id": form_id,
+            "forms": forms,
             "initial_data": initial_data,
             "pretty_json": json.dumps(initial_data, ensure_ascii=False, indent=2),
             "builder_ssr_steps": prepare_builder_ssr_steps(initial_data),
@@ -493,14 +512,20 @@ def project_config_builder(request, project_id: str):
         }
 
     project = get_object_or_404(Project, project_id=project_id)
+    form_id = (form_id or DEFAULT_FORM_ID).strip() or DEFAULT_FORM_ID
+    if not is_valid_form_id(form_id):
+        messages.error(request, _("Некорректный form_id."))
+        return redirect("ui_project_config_builder", project_id=project_id, form_id=DEFAULT_FORM_ID)
+
+    forms = list_forms_for_admin(project)
     if request.method == "POST":
         raw = request.POST.get("raw_json", "")
         try:
             data = json.loads(raw)
         except json.JSONDecodeError as e:
             messages.error(request, _("Невалидный JSON: {error}").format(error=e))
-            return redirect("ui_project_config_builder", project_id=project_id)
-        errs = save_config_to_git(project, project_id, data)
+            return redirect("ui_project_config_builder", project_id=project_id, form_id=form_id)
+        errs = save_config_to_git(project, project_id, data, form_id=form_id)
         if errs:
             for e in errs:
                 messages.error(request, e)
@@ -511,20 +536,56 @@ def project_config_builder(request, project_id: str):
             return render(
                 request,
                 "ui/project_config_builder.html",
-                _builder_context(project, initial_data, validation_errors=errs),
+                _builder_context(
+                    project, initial_data, form_id, forms, validation_errors=errs,
+                ),
             )
-        messages.success(request, _("Конфиг закоммичен и отправлен в Git."))
-        return redirect("ui_project_detail", project_id=project_id)
-    data, err = load_config_dict(project_id)
+        messages.success(request, _("Форма «{form}» сохранена в Git.").format(form=form_id))
+        return redirect("ui_project_config_builder", project_id=project_id, form_id=form_id)
+
+    data, err = load_form_config_dict(project_id, form_id)
     if err is not None or not data:
+        # Нет такой формы — fallback на seed только для default; иначе редирект на default.
+        if form_id != DEFAULT_FORM_ID and forms:
+            messages.warning(request, _("Форма «{form}» не найдена.").format(form=form_id))
+            return redirect(
+                "ui_project_config_builder",
+                project_id=project_id,
+                form_id=forms[0]["form_id"],
+            )
         initial_data = seed_project_json(project.project_id, project.name)
     else:
         initial_data = data
+    if not any(f["form_id"] == form_id for f in forms):
+        forms = list(forms) + [
+            {
+                "form_id": form_id,
+                "name": str(initial_data.get("name") or form_id),
+                "version": str(initial_data.get("version") or "1"),
+            },
+        ]
     return render(
         request,
         "ui/project_config_builder.html",
-        _builder_context(project, initial_data),
+        _builder_context(project, initial_data, form_id, forms),
     )
+
+
+@staff_only
+@require_POST
+def project_form_create(request, project_id: str):
+    """Создать новую форму (копия существующей или пустой шаблон)."""
+    project = get_object_or_404(Project, project_id=project_id)
+    form_id = (request.POST.get("form_id") or "").strip()
+    name = (request.POST.get("name") or "").strip()
+    copy_from = (request.POST.get("copy_from") or DEFAULT_FORM_ID).strip() or DEFAULT_FORM_ID
+    errs = create_project_form(project, form_id, name, copy_from=copy_from)
+    if errs:
+        for e in errs:
+            messages.error(request, e)
+        return redirect("ui_project_config_builder", project_id=project_id, form_id=DEFAULT_FORM_ID)
+    messages.success(request, _("Форма «{form}» создана.").format(form=form_id))
+    return redirect("ui_project_config_builder", project_id=project_id, form_id=form_id)
 
 
 @staff_only
@@ -675,6 +736,7 @@ def package_list(request):
         return denied
 
     phase = (request.GET.get("phase") or "completed").strip()
+    form_id = (request.GET.get("form") or "all").strip() or "all"
     mode = (request.GET.get("mode") or "field").strip()
     field_id = (request.GET.get("field") or "").strip()
     text = (request.GET.get("q") or "").strip()
@@ -684,6 +746,7 @@ def package_list(request):
     search_fields: list = []
     rows: list = []
     phase_chips: list = []
+    form_chips: list = []
     selected_field = None
     total = 0
 
@@ -701,12 +764,49 @@ def package_list(request):
             phase="",
             preview_prefix="/ui/api/v1",
             search_field_ids=search_ids,
+            form_id="" if form_id == "all" else form_id,
         )
         items = items or []
+
+        # Чипы форм: формы из Git + form_id из пакетов (чтобы фильтр был до появления пакетов).
+        form_ids_seen: set[str] = set()
+        form_labels: dict[str, str] = {}
+        for fsum in list_forms_for_admin(selected):
+            fid = fsum.get("form_id") or ""
+            if not fid:
+                continue
+            form_ids_seen.add(fid)
+            form_labels[fid] = fsum.get("name") or fid
+        all_items, _all_err = pas.list_packages(
+            project_id,
+            phase="",
+            preview_prefix="/ui/api/v1",
+            search_field_ids=search_ids,
+        )
+        for it in (all_items or []):
+            fid = it.get("form_id") or "default"
+            form_ids_seen.add(fid)
+            form_labels.setdefault(fid, fid)
+        form_ids_ordered = sorted(form_ids_seen)
+        if "default" in form_ids_ordered:
+            form_ids_ordered.remove("default")
+            form_ids_ordered.insert(0, "default")
+        form_chips = [
+            {"id": "all", "label": _("Все формы"), "active": form_id == "all"},
+            *[
+                {
+                    "id": fid,
+                    "label": form_labels.get(fid) or fid,
+                    "active": form_id == fid,
+                }
+                for fid in form_ids_ordered
+            ],
+        ]
         total = len(items)
+        phase_source = all_items if all_items is not None else items
         phase_chips = [
             {"id": p, "label": (_("Все") if p == "all" else pui.phase_label(p)), "active": p == phase}
-            for p in pui.phase_options(items)
+            for p in pui.phase_options(phase_source or [])
         ]
         filtered = pui.filter_packages(
             items, fields, phase=phase, mode=mode, field_id=field_id, text=text, date=date,
@@ -717,6 +817,7 @@ def package_list(request):
                 {
                     "package_id": it["package_id"],
                     "short_id": pui.short_package_id(it["package_id"]),
+                    "form_id": it.get("form_id") or "default",
                     "phase": it["phase"],
                     "phase_label": pui.phase_label(it["phase"]),
                     "created_at": it["created_at"],
@@ -728,6 +829,9 @@ def package_list(request):
 
     show_field_column = bool(mode == "field" and selected_field)
     is_datetime = bool(selected_field and selected_field.get("type") == "datetime")
+    # «all» + хотя бы одна форма → всегда показываем ряд, если форм > 1.
+    show_form_filter = len(form_chips) > 2
+    show_form_column = show_form_filter
 
     return render(
         request,
@@ -740,11 +844,15 @@ def package_list(request):
             "search_fields": search_fields,
             "selected_field": selected_field,
             "show_field_column": show_field_column,
+            "show_form_column": show_form_column,
+            "show_form_filter": show_form_filter,
             "is_datetime_field": is_datetime,
             "phase_chips": phase_chips,
+            "form_chips": form_chips,
             "rows": rows,
             "total": total,
             "f_phase": phase,
+            "f_form": form_id,
             "f_mode": mode,
             "f_field": field_id,
             "f_q": text,
@@ -805,7 +913,8 @@ def _build_data_sections(sections, data, editable):
                     "hint": pui.field_hint(f),
                     "required": pui.field_required(f),
                     "value": "" if value is None else value,
-                    "editable": editable and f.get("type") == "text_input",
+                    "editable": editable
+                    and f.get("type") in ("text_input", "single_choice"),
                 },
             )
         out.append({"id": sec["id"], "title": sec["title"], "fields": sfields})
@@ -930,7 +1039,7 @@ def package_manifest_save(request, project_id: str, package_id: str):
     editable_ids = [
         f["field_id"]
         for f in pui.config_fields(config)
-        if f.get("type") == "text_input"
+        if f.get("type") in ("text_input", "single_choice")
     ]
 
     changes = []

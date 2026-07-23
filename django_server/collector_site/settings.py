@@ -198,7 +198,7 @@ FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lo
 )
 FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
 
-# Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web (e8-gke).
+# Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web.
 FIREBASE_WEB_CONFIG = {
     "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ"),
     "authDomain": os.environ.get("FIREBASE_WEB_AUTH_DOMAIN", "e8-gke.firebaseapp.com"),

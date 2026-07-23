@@ -22,6 +22,9 @@ from .git_credential_crypto import decrypt_private_key
 from .models import GitCredential, Project
 
 CONFIG_REL_PATH = "collector/config.json"
+FORMS_REL_DIR = "collector/forms"
+DEFAULT_FORM_ID = "default"
+DEFAULT_FORM_CONFIG_REL_PATH = f"{FORMS_REL_DIR}/{DEFAULT_FORM_ID}/config.json"
 MEDIA_REL_DIR = "collector/media"
 
 
@@ -273,7 +276,17 @@ def _local_head_sha(dest: Path) -> str:
 
 def _cache_has_config(project: Project) -> bool:
     dest = repo_dir(project.project_id)
-    return (dest / ".git").is_dir() and config_path(project).is_file()
+    if not (dest / ".git").is_dir():
+        return False
+    if config_path(project).is_file():
+        return True
+    forms_root = dest / FORMS_REL_DIR
+    if not forms_root.is_dir():
+        return False
+    for child in forms_root.iterdir():
+        if child.is_dir() and (child / "config.json").is_file():
+            return True
+    return False
 
 
 def _should_fetch_remote(project: Project, *, force: bool) -> bool:
@@ -358,13 +371,16 @@ def read_config_file(project: Project, *, fetch_remote: bool = True, force_pull:
         pull(project, force=force_pull)
     elif not _cache_has_config(project):
         pull(project, force=True)
-    path = config_path(project)
-    if not path.is_file():
-        raise GitProjectError(
-            f"В репозитории нет {CONFIG_REL_PATH}.",
-            "config_missing",
-        )
-    return path.read_text(encoding="utf-8")
+    dest = repo_dir(project.project_id)
+    # Multi-form: forms/default, затем legacy collector/config.json.
+    for rel in (DEFAULT_FORM_CONFIG_REL_PATH, CONFIG_REL_PATH):
+        path = dest / rel
+        if path.is_file():
+            return path.read_text(encoding="utf-8")
+    raise GitProjectError(
+        f"В репозитории нет {DEFAULT_FORM_CONFIG_REL_PATH} и нет {CONFIG_REL_PATH}.",
+        "config_missing",
+    )
 
 
 def read_config_dict(
@@ -393,21 +409,22 @@ def read_config_dict(
     return data
 
 
-def write_config_dict(
+def commit_text_files(
     project: Project,
-    data: dict[str, Any],
+    files: dict[str, str],
     *,
-    commit_message: str = "config: update from data-collector admin",
+    commit_message: str,
 ) -> str:
+    """Записать относительные пути → UTF-8 текст, commit + push. keys: repo-relative."""
+    if not files:
+        return project.last_synced_sha or ""
     pull(project, force=True)
     dest = repo_dir(project.project_id)
-    path = config_path(project)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(data, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    _run_git(["add", CONFIG_REL_PATH], credential=project.git_credential, cwd=dest)
+    for rel, text in files.items():
+        path = dest / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8")
+        _run_git(["add", rel], credential=project.git_credential, cwd=dest)
     status = _run_git(["status", "--porcelain"], credential=project.git_credential, cwd=dest)
     if not status.stdout.strip():
         return project.last_synced_sha or ""
@@ -425,6 +442,24 @@ def write_config_dict(
     return pull(project, force=True)
 
 
+def write_config_dict(
+    project: Project,
+    data: dict[str, Any],
+    *,
+    commit_message: str = "config: update from data-collector admin",
+) -> str:
+    """Пишет форму default: forms/default/config.json + legacy collector/config.json."""
+    text = json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+    return commit_text_files(
+        project,
+        {
+            DEFAULT_FORM_CONFIG_REL_PATH: text,
+            CONFIG_REL_PATH: text,
+        },
+        commit_message=commit_message,
+    )
+
+
 def seed_config_if_missing(project: Project, seed: dict[str, Any]) -> str:
     dest = repo_dir(project.project_id)
     try:
@@ -434,8 +469,7 @@ def seed_config_if_missing(project: Project, seed: dict[str, Any]) -> str:
             _ensure_origin(project, dest)
         else:
             raise
-    path = config_path(project)
-    if path.is_file():
+    if _cache_has_config(project):
         return project.last_synced_sha or ""
     return write_config_dict(project, seed, commit_message="config: initial seed from data-collector")
 

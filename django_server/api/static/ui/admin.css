@@ -1126,6 +1126,52 @@ html[data-ui-theme="light"] .ui-theme-toggle__moon {
   font-size: 0.82rem;
 }
 
+.builder-field-options {
+  border: 1px solid var(--ui-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.65rem 0.65rem;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.builder-opt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.45rem;
+}
+
+.builder-opt-add {
+  font-size: 0.78rem;
+  color: var(--ui-accent);
+  border: 1px dashed var(--ui-accent-dim);
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+}
+
+.builder-opt-add:hover {
+  background: rgba(45, 212, 191, 0.1);
+}
+
+.builder-opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.builder-opt-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  gap: 0.35rem;
+  align-items: center;
+}
+
+.builder-opt-row .builder-opt-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.78rem;
+}
+
 .builder-empty-hint {
   font-size: 0.8rem;
   color: var(--ui-text-muted);

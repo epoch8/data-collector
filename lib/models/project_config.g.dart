@@ -6,6 +6,15 @@ part of 'project_config.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+ConfigFieldOption _$ConfigFieldOptionFromJson(Map<String, dynamic> json) =>
+    ConfigFieldOption(
+      value: json['value'] as String,
+      label: json['label'] as String,
+    );
+
+Map<String, dynamic> _$ConfigFieldOptionToJson(ConfigFieldOption instance) =>
+    <String, dynamic>{'value': instance.value, 'label': instance.label};
+
 ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
   fieldId: json['field_id'] as String,
   priority: (json['priority'] as num?)?.toInt() ?? 0,
@@ -14,6 +23,7 @@ ConfigField _$ConfigFieldFromJson(Map<String, dynamic> json) => ConfigField(
   instructions: json['instructions'] as String,
   validation: json['validation'] as Map<String, dynamic>?,
   multiple: json['multiple'] as bool?,
+  options: _optionsFromJson(json['options']),
 );
 
 Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
@@ -25,6 +35,7 @@ Map<String, dynamic> _$ConfigFieldToJson(ConfigField instance) =>
       'instructions': instance.instructions,
       'validation': instance.validation,
       'multiple': instance.multiple,
+      'options': _optionsToJson(instance.options),
     };
 
 CollectionFlowStepDecl _$CollectionFlowStepDeclFromJson(

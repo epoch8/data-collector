@@ -28,13 +28,14 @@
 
 ## 2. Поля (`config.fields`)
 
-Справочник всех полей сбора. Ключи в JSON: **`field_id`**, **`type`**, **`title`**, **`instructions`**, опционально **`validation`**, **`multiple`** (для `camera_photo`).
+Справочник всех полей сбора. Ключи в JSON: **`field_id`**, **`type`**, **`title`**, **`instructions`**, опционально **`validation`**, **`multiple`** (для `camera_photo`), **`options`** (для `single_choice`).
 
 Поддерживаемые типы:
 
 | `type` | Значение в payload | Примечание |
 |--------|-------------------|------------|
 | `text_input` | строка | `validation.required` |
+| `single_choice` | строка (`value` выбранного варианта) | Обязателен непустой `options`: `[{ "value", "label" }]` или строки |
 | `datetime` | ISO 8601 строка | |
 | `instruction` | не пишется в payload | Markdown в `instructions`; картинки из `collector/media/` |
 | `camera_photo` | map path → metadata | `multiple` + `min_items`; см. §5 |
@@ -45,6 +46,20 @@
   "type": "text_input",
   "title": "Идентификатор",
   "instructions": "Уникальный код коровы.",
+  "validation": { "required": true }
+}
+```
+
+```json
+{
+  "field_id": "cow_sex",
+  "type": "single_choice",
+  "title": "Пол",
+  "instructions": "",
+  "options": [
+    { "value": "bull", "label": "Бык" },
+    { "value": "cow", "label": "Корова" }
+  ],
   "validation": { "required": true }
 }
 ```

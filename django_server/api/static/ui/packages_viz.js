@@ -180,10 +180,15 @@
     for (var i = 0; i < label.length; i++) h = (h * 31 + label.charCodeAt(i)) >>> 0;
     return "hsl(" + (h % 360) + " 70% 52%)";
   }
-  // GT и Inference красят кейпоинты одинаково — по имени точки, чтобы
-  // совпадающие кейпоинты на обоих слоях имели один и тот же цвет.
+  // Внутренний цвет точки — по имени метки (совпадающие GT/inference одного цвета).
+  // Обводка слоя: GT зелёная, Inference синяя — чтобы слои не сливались.
   function keypointColor(palette, label, pal) {
     if (palette === "gt" || palette === "inference") return gtLabelColor(label);
+    return pal ? pal.point : "#3b82f6";
+  }
+  function keypointLayerRing(palette, pal) {
+    if (palette === "gt") return "#22c55e";
+    if (palette === "inference") return "#3b82f6";
     return pal ? pal.point : "#3b82f6";
   }
 
@@ -526,13 +531,24 @@
         var isActive = active && active.layerId === layer.id && active.index === idx;
         var dimmed = state.selected && !(state.selected.layerId === layer.id && state.selected.index === idx);
         var color = keypointColor(layer.palette, pt.label, p);
+        var ring = keypointLayerRing(layer.palette, p);
         var pg = svgEl("g", { class: "annotation-keypoint", opacity: dimmed && !isActive ? 0.35 : 1 });
         pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: 14, fill: "transparent" }));
-        pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: isActive ? 8 : 6, fill: "rgba(15,17,23,0.8)", stroke: color, "stroke-width": isActive ? 2.5 : 2, "vector-effect": "non-scaling-stroke" }));
-        pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: isActive ? 3 : 2.5, fill: color }));
+        // Внешнее кольцо слоя (GT / Inference), внутри — цвет метки.
+        pg.appendChild(svgEl("circle", {
+          cx: pt.x, cy: pt.y, r: isActive ? 11 : 9,
+          fill: "transparent", stroke: ring, "stroke-width": isActive ? 2.75 : 2.25,
+          "vector-effect": "non-scaling-stroke",
+        }));
+        pg.appendChild(svgEl("circle", {
+          cx: pt.x, cy: pt.y, r: isActive ? 7 : 5.5,
+          fill: "rgba(15,17,23,0.85)", stroke: color, "stroke-width": isActive ? 2 : 1.75,
+          "vector-effect": "non-scaling-stroke",
+        }));
+        pg.appendChild(svgEl("circle", { cx: pt.x, cy: pt.y, r: isActive ? 2.75 : 2.25, fill: color }));
         if (state.showLabels || isActive) {
           var an = pointAnchor(pt.x, pt.y, idx, sz.w, sz.h);
-          yoloLabel(pg, pt.x + an.dx, pt.y + an.dy, pt.label, color, an.anchor, "on");
+          yoloLabel(pg, pt.x + an.dx, pt.y + an.dy, pt.label, ring, an.anchor, "on");
         }
         pg.addEventListener("click", function (e) {
           e.stopPropagation();
@@ -1091,8 +1107,18 @@
 
     refs.title.innerHTML = "Кадр <strong>" + escapeHtml(slide.key.split("/").pop()) + "</strong> · " + (state.index + 1) + " / " + slides.length;
 
-    // Stage image
-    refs.img.src = slide.url;
+    // Stage image — display-only downscale (оригинал для export/download).
+    var imgGen = (state._imgGen = (state._imgGen || 0) + 1);
+    var displayImage = window.PkgDisplayImage;
+    if (displayImage) {
+      displayImage.forUrl(slide.url, { maxEdge: 2048 }).then(function (u) {
+        if (state._imgGen !== imgGen) return;
+        refs.img.onload = function () { relayoutStage(); };
+        refs.img.src = u || slide.url;
+      });
+    } else {
+      refs.img.src = slide.url;
+    }
     refs.svg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
     if (refs.probeSvg) refs.probeSvg.setAttribute("viewBox", "0 0 " + sz.w + " " + sz.h);
     resetZoom();
@@ -1158,11 +1184,24 @@
     if (slides.length <= 1) { strip.style.display = "none"; return; }
     strip.style.display = "";
     strip.innerHTML = "";
+    var displayImage = window.PkgDisplayImage;
     slides.forEach(function (s, i) {
       var b = document.createElement("button");
       b.type = "button";
       b.className = "pkg-filmstrip__item" + (i === state.index ? " active" : "");
-      b.innerHTML = '<img src="' + s.url + '" alt=""><span class="pkg-filmstrip__num">' + (i + 1) + "</span>";
+      var img = document.createElement("img");
+      img.alt = "";
+      img.src = s.url;
+      if (displayImage) {
+        displayImage.forUrl(s.url, { maxEdge: 480 }).then(function (u) {
+          if (u) img.src = u;
+        });
+      }
+      b.appendChild(img);
+      var num = document.createElement("span");
+      num.className = "pkg-filmstrip__num";
+      num.textContent = String(i + 1);
+      b.appendChild(num);
       b.addEventListener("click", function () { goTo(i); });
       strip.appendChild(b);
     });

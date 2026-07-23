@@ -156,8 +156,10 @@ class AppLocalizations {
       ? 'Тип поля не поддерживается на этом экране.'
       : 'Field type is not supported on this screen.';
   String get supportedFieldTypes => _isRu
-      ? 'Допустимо: text_input, camera_photo.'
-      : 'Supported: text_input, camera_photo.';
+      ? 'Допустимо: text_input, single_choice, datetime, instruction, camera_photo.'
+      : 'Supported: text_input, single_choice, datetime, instruction, camera_photo.';
+  String get flowFormChoiceHint =>
+      _isRu ? 'Выберите значение' : 'Select a value';
   String get submitPackage => _isRu ? 'Отправить пакет' : 'Submit package';
   String get capturePhoto => _isRu ? 'Сделать фото' : 'Capture photo';
   String get takeAnotherPhoto =>

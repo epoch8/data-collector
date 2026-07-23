@@ -73,7 +73,7 @@ flowchart LR
 | `form_title` | Подпись блока на review |
 | `cow_id_hints`, `cow_id_field_id` | Подсказки идентификатора субъекта |
 
-Поля на шаге могут быть любых поддерживаемых типов (`text_input`, `datetime`, `instruction`, `camera_photo`) в одном скролле.
+Поля на шаге могут быть любых поддерживаемых типов (`text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`) в одном скролле.
 
 ### 3.2. `review`
 

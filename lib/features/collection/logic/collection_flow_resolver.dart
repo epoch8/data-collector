@@ -52,12 +52,15 @@ class ResolvedCollectionFlow {
     return i >= 0 ? i : null;
   }
 
-  /// Текстовые/дата поля со всех шагов scroll_form (для review).
+  /// Текстовые/дата/выбор поля со всех шагов scroll_form (для review).
   List<ConfigField> get allFormFields => [
     for (final s in steps)
       if (s.kind == CollectionScreenKind.scrollForm)
         for (final f in s.fields)
-          if (f.type == 'text_input' || f.type == 'datetime') f,
+          if (f.type == 'text_input' ||
+              f.type == 'datetime' ||
+              f.type == 'single_choice')
+            f,
   ];
 
   List<ConfigField> get allCameraFields => [

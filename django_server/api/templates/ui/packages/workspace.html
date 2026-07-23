@@ -1,7 +1,7 @@
 {% extends "ui/base.html" %}
 {% load static i18n %}
 {% block body_class %}ui-body--pkg-ws{% endblock %}
-{% block title %}{{ short_package_id }} — {% trans "пакет" %}{% endblock %}
+{% block title %}{{ package_id }} — {% trans "пакет" %}{% endblock %}
 {% block extra_head %}
 <link href="{% static 'ui/packages.css' %}" rel="stylesheet">
 <link href="{% static 'ui/packages_viz.css' %}" rel="stylesheet">
@@ -11,7 +11,7 @@
   <ol class="breadcrumb mb-0">
     {% if is_staff %}<li class="breadcrumb-item"><a href="{% url 'ui_project_list' %}">{% trans "Проекты" %}</a></li>{% endif %}
     <li class="breadcrumb-item"><a href="{{ list_url }}">{% trans "Пакеты" %}</a></li>
-    <li class="breadcrumb-item active" aria-current="page"><code class="small">{{ short_package_id }}</code></li>
+    <li class="breadcrumb-item active" aria-current="page"><code class="small pkg-id-full">{{ package_id }}</code></li>
   </ol>
 </nav>
 {% endblock %}
@@ -35,7 +35,7 @@
       {% for s in sidebar %}
       <a class="pkg-sidebar__item {% if s.active %}pkg-sidebar__item--active{% endif %}"
          href="{{ s.url }}" data-search="{{ s.package_id|lower }} {{ s.uploader_email|lower }}">
-        <span class="pkg-sidebar__item-id">{{ s.short_id }}</span>
+        <span class="pkg-sidebar__item-id">{{ s.package_id }}</span>
         <span class="pkg-sidebar__item-meta">{{ s.phase_label }} · {{ s.uploader_email|default:"—" }}</span>
       </a>
       {% endfor %}
@@ -47,7 +47,7 @@
     <header class="pkg-head">
       <div class="min-w-0">
         <div class="d-flex align-items-center gap-2 flex-wrap">
-          <h1 class="pkg-head__title" title="{{ package_id }}">{{ short_package_id }}</h1>
+          <h1 class="pkg-head__title">{{ package_id }}</h1>
           {% include 'ui/_phase_badge.html' with phase=session.phase label=phase_label %}
           <span class="pkg-head__dirty" id="pkgDirtyBadge">{% trans "не сохранено" %}</span>
         </div>
@@ -273,6 +273,7 @@
 </div>
 {% endblock %}
 {% block extra_js %}
+<script src="{% static 'ui/packages_display_image.js' %}"></script>
 <script src="{% static 'ui/packages_workspace.js' %}"></script>
 {% if has_viz %}<script src="{% static 'ui/packages_viz.js' %}"></script>{% endif %}
 {% endblock %}

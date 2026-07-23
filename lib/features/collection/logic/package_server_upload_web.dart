@@ -62,7 +62,11 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
-    final uploadedBlobs = await fetchUploadedBlobPaths(dio, projectId, packageId);
+    final uploadedBlobs = await fetchUploadedBlobPaths(
+      dio,
+      projectId,
+      packageId,
+    );
 
     final manifestMap = Map<String, dynamic>.from(
       jsonDecode(jsonEncode(await loadPackagePayloadMap(pkg))) as Map,
@@ -102,7 +106,9 @@ Future<void> uploadDriftPackageToServer({
       const relPath = 'blobs/';
       final logical = '$relPath$name';
       if (uploadedBlobs.contains(logical)) {
-        debugPrint('uploadDriftPackageToServer: skip already uploaded $logical');
+        debugPrint(
+          'uploadDriftPackageToServer: skip already uploaded $logical',
+        );
         absToRel[src] = logical;
         continue;
       }

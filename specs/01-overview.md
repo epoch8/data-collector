@@ -39,7 +39,7 @@ Example deployed instance (korovas project): `https://data-collector-app.korovas
 ### 3.3 Data collection
 
 - UI built from `config.flow.steps`: **`scroll_form`** steps (all step fields on one screen) and optional **`review`**.
-- Field types: `text_input`, `datetime`, `instruction`, `camera_photo`.
+- Field types: `text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`.
 - Local draft and materialization into the package directory on submit.
 - Camera metadata: `camera_session`, `camera_debug`, `frame_camera`, `camera_supplement` (see [07-package-payload-structure.md](07-package-payload-structure.md)).
 

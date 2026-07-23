@@ -12,6 +12,9 @@ Future<MaterializedLocalPackage> materializeOnDisk({
   required String projectId,
   required DateTime createdUtc,
   required Map<String, dynamic> data,
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
 }) async {
   final docs = await getApplicationDocumentsDirectory();
   final root = p.join(docs.path, 'packages', packageId);
@@ -66,7 +69,15 @@ Future<MaterializedLocalPackage> materializeOnDisk({
 
   replacePathsInPayload(data, absToRel);
 
-  final payload = envelopePayload(packageId, projectId, createdUtc, data);
+  final payload = envelopePayload(
+    packageId,
+    projectId,
+    createdUtc,
+    data,
+    formId: formId,
+    formName: formName,
+    formVersion: formVersion,
+  );
   final payloadFile = File(p.join(root, 'payload.json'));
   await payloadFile.writeAsString(
     const JsonEncoder.withIndent('  ').convert(payload),

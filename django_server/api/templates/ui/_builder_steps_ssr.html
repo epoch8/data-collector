@@ -42,10 +42,12 @@
               {% if f.type == 'datetime' %}<i class="bi bi-calendar-event"></i>
               {% elif f.type == 'camera_photo' %}<i class="bi bi-camera"></i>
               {% elif f.type == 'instruction' %}<i class="bi bi-journal-text"></i>
+              {% elif f.type == 'single_choice' %}<i class="bi bi-ui-radios"></i>
               {% else %}<i class="bi bi-input-cursor-text"></i>{% endif %}
             </span>
             <select class="form-select form-select-sm builder-field-type" data-fk="type" title="{% trans 'Тип поля' %}">
               <option value="text_input" {% if f.type == 'text_input' %}selected{% endif %}>{% trans "Текст" %}</option>
+              <option value="single_choice" {% if f.type == 'single_choice' %}selected{% endif %}>{% trans "Выбор" %}</option>
               <option value="datetime" {% if f.type == 'datetime' %}selected{% endif %}>{% trans "Дата и время" %}</option>
               <option value="camera_photo" {% if f.type == 'camera_photo' %}selected{% endif %}>{% trans "Фото" %}</option>
               <option value="instruction" {% if f.type == 'instruction' %}selected{% endif %}>{% trans "Инструкция" %}</option>
@@ -67,6 +69,35 @@
             <textarea class="form-control form-control-sm builder-field-instr" data-fk="instructions"
                       rows="{% if f.type == 'instruction' %}6{% else %}2{% endif %}" autocomplete="off"
                       placeholder="{% if f.type == 'instruction' %}{% trans 'Markdown-текст инструкции' %}{% else %}{% trans 'Подсказка под полем (необязательно)' %}{% endif %}">{{ f.instructions }}</textarea>
+            <div class="builder-field-options {% if f.type != 'single_choice' %}d-none{% endif %} mt-2">
+              <div class="builder-opt-head">
+                <span class="form-label small ui-muted mb-0">{% trans "Варианты выбора" %}</span>
+                <button type="button" class="btn btn-sm builder-opt-add" data-add-opt title="{% trans 'Добавить вариант' %}">
+                  <i class="bi bi-plus-lg me-1"></i>{% trans "Добавить" %}
+                </button>
+              </div>
+              <div class="builder-opt-list" data-opt-list>
+                {% for opt in f.options %}
+                <div class="builder-opt-row" data-opt-row="1">
+                  <input type="text" class="form-control form-control-sm" data-opt="label"
+                         value="{{ opt.label }}" placeholder="{% trans 'Подпись' %}" autocomplete="off">
+                  <input type="text" class="form-control form-control-sm builder-opt-value" data-opt="value"
+                         value="{% if opt.value and opt.value != opt.label %}{{ opt.value }}{% endif %}"
+                         placeholder="{% trans 'код (необяз.)' %}" autocomplete="off"
+                         title="{% trans 'Латинский код в данных; пусто = как подпись' %}">
+                  <button type="button" class="btn btn-sm btn-icon-danger" data-del-opt title="{% trans 'Удалить вариант' %}"><i class="bi bi-x-lg"></i></button>
+                </div>
+                {% empty %}
+                <div class="builder-opt-row" data-opt-row="1">
+                  <input type="text" class="form-control form-control-sm" data-opt="label"
+                         value="" placeholder="{% trans 'Подпись' %}" autocomplete="off">
+                  <input type="text" class="form-control form-control-sm builder-opt-value" data-opt="value"
+                         value="" placeholder="{% trans 'код (необяз.)' %}" autocomplete="off">
+                  <button type="button" class="btn btn-sm btn-icon-danger" data-del-opt title="{% trans 'Удалить вариант' %}"><i class="bi bi-x-lg"></i></button>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
           </div>
         </div>
         {% endfor %}
@@ -77,6 +108,7 @@
       <div class="builder-palette-label small ui-muted mt-2 mb-1">{% trans "Добавить поле:" %}</div>
       <div class="builder-palette">
         <button type="button" class="builder-palette-btn" data-add-type="text_input" title="{% trans 'однострочный ввод' %}"><i class="bi bi-input-cursor-text me-1"></i>{% trans "Текст" %}</button>
+        <button type="button" class="builder-palette-btn" data-add-type="single_choice" title="{% trans 'один вариант из списка' %}"><i class="bi bi-ui-radios me-1"></i>{% trans "Выбор" %}</button>
         <button type="button" class="builder-palette-btn" data-add-type="datetime" title="{% trans 'выбор даты/времени' %}"><i class="bi bi-calendar-event me-1"></i>{% trans "Дата и время" %}</button>
         <button type="button" class="builder-palette-btn" data-add-type="camera_photo" title="{% trans 'снимок с камеры' %}"><i class="bi bi-camera me-1"></i>{% trans "Фото" %}</button>
         <button type="button" class="builder-palette-btn" data-add-type="instruction" title="{% trans 'Markdown-текст' %}"><i class="bi bi-journal-text me-1"></i>{% trans "Инструкция" %}</button>

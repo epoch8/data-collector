@@ -46,7 +46,11 @@ def searchable_field_ids(project: Project, cfg_root: dict | None = None) -> set[
             continue
         fid = f.get("field_id")
         ftype = f.get("type")
-        if isinstance(fid, str) and ftype in ("text_input", "datetime"):
+        if isinstance(fid, str) and ftype in (
+            "text_input",
+            "datetime",
+            "single_choice",
+        ):
             ids.add(fid)
     return ids
 
@@ -91,6 +95,35 @@ def get_project_config(project_id: str) -> tuple[dict | None, JsonResponse | Non
     return load_config_dict(project_id)
 
 
+def manifest_form_id(manifest: dict | None) -> str:
+    from .project_git import DEFAULT_FORM_ID
+
+    if not manifest:
+        return DEFAULT_FORM_ID
+    raw = manifest.get("form_id")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return DEFAULT_FORM_ID
+
+
+def get_form_config_for_package(
+    project: Project,
+    form_id: str,
+) -> tuple[dict | None, JsonResponse | None]:
+    from .project_forms import get_form_config
+    from .project_git import GitProjectError
+
+    try:
+        return get_form_config(project, form_id, fetch_remote=True), None
+    except GitProjectError as e:
+        if e.code == "unknown_form_id":
+            # Legacy / missing form file — fallback to default project config.
+            return get_project_config(project.project_id)
+        from .project_config_service import git_error_response
+
+        return None, git_error_response(e)
+
+
 def list_package_summaries(
     project_id: str,
     *,
@@ -120,6 +153,7 @@ def list_packages(
     phase: str,
     preview_prefix: str,
     search_field_ids: set[str] | None = None,
+    form_id: str = "",
 ) -> tuple[list[dict[str, Any]] | None, JsonResponse | None]:
     project = Project.objects.filter(project_id=project_id).first()
     if not project:
@@ -131,14 +165,19 @@ def list_packages(
         else searchable_field_ids(project)
     )
     sessions = ppkg.list_sessions(project_id, phase=phase, limit=500)
+    form_filter = (form_id or "").strip()
 
     items = []
     for s in sessions:
         manifest = parse_manifest(s)
+        fid = manifest_form_id(manifest)
+        if form_filter and form_filter != "all" and fid != form_filter:
+            continue
         items.append(
             {
                 "package_id": s.package_id,
                 "project_id": project_id,
+                "form_id": fid,
                 "phase": s.phase,
                 "created_at": s.created_at,
                 "uploader_email": s.uploader_email or "",
@@ -156,7 +195,7 @@ def get_workspace(
     *,
     preview_prefix: str,
 ) -> tuple[dict[str, Any] | None, JsonResponse | None]:
-    project = Project.objects.filter(project_id=project_id).first()
+    project = Project.objects.filter(project_id=project_id).select_related("git_credential").first()
     if not project:
         return None, JsonResponse(_err("not_found", "Unknown project"), status=404)
 
@@ -168,7 +207,8 @@ def get_workspace(
     if manifest is None:
         return None, JsonResponse(_err("not_found", "Manifest not loaded"), status=404)
 
-    project_config, cfg_err = get_project_config(project_id)
+    form_id = manifest_form_id(manifest)
+    project_config, cfg_err = get_form_config_for_package(project, form_id)
     if cfg_err is not None:
         return None, cfg_err
     if project_config is None:
@@ -190,6 +230,7 @@ def get_workspace(
         "session": {
             "package_id": session.package_id,
             "project_id": project_id,
+            "form_id": form_id,
             "phase": session.phase,
             "created_at": session.created_at,
             "uploader_email": session.uploader_email or "",
@@ -199,6 +240,7 @@ def get_workspace(
         "manifest": manifest,
         "blobs": blobs,
         "project_config": project_config,
+        "form_id": form_id,
     }, None
 
 

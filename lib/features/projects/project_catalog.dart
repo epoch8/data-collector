@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:flutter/services.dart';
 
@@ -16,15 +17,22 @@ abstract final class ProjectCatalog {
     return Project.fromJson(jsonDecode(raw) as Map<String, dynamic>);
   }
 
-  static Future<List<Project>> loadAll() async {
+  static Future<List<CatalogProject>> loadAll() async {
     final manifestRaw = await rootBundle.loadString(_manifestAsset);
     final manifest = jsonDecode(manifestRaw) as Map<String, dynamic>;
     final paths = (manifest['projects'] as List<dynamic>)
         .map((e) => e.toString())
         .toList();
-    final out = <Project>[];
+    final out = <CatalogProject>[];
     for (final path in paths) {
-      out.add(await loadOne(path));
+      final project = await loadOne(path);
+      out.add(
+        CatalogProject(
+          id: project.id,
+          name: project.name,
+          forms: [ProjectFormEntry(formId: 'default', project: project)],
+        ),
+      );
     }
     return out;
   }

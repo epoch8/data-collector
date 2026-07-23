@@ -13,10 +13,12 @@ import 'bootstrap.dart';
 import 'firebase_options.dart';
 import 'core/api/api_environment.dart';
 import 'core/preferences/app_preferences.dart';
+import 'features/projects/catalog_project.dart';
 import 'features/projects/providers/project_providers.dart';
 import 'models/project_config.dart';
 import 'features/collection/logic/collection_flow_resolver.dart';
 import 'features/collection/presentation/flow/collection_flow_screen.dart';
+import 'features/collection/presentation/flow/form_picker_screen.dart';
 import 'core/storage/database.dart';
 import 'core/storage/database_provider.dart';
 import 'core/package/package_paths.dart';
@@ -84,9 +86,17 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
         builder: (context, state) => const DashboardScreen(),
       ),
       GoRoute(
-        path: '/project/:id/wizard',
+        path: '/project/:id/forms',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
+          return FormPickerScreen(projectId: id);
+        },
+      ),
+      GoRoute(
+        path: '/project/:id/form/:formId/wizard',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          final formId = state.pathParameters['formId'] ?? 'default';
           return Consumer(
             builder: (context, ref, _) {
               final async = ref.watch(projectsProvider);
@@ -94,15 +104,14 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                 skipLoadingOnReload: true,
                 data: (projects) {
                   final loc = AppLocalizations.of(context);
-                  try {
-                    projects.firstWhere((p) => p.id == id);
-                  } catch (_) {
+                  final catalog = projects.byId(id);
+                  if (catalog == null || catalog.formById(formId) == null) {
                     return Scaffold(
                       appBar: AppBar(title: _epoch8AppBarTitle(loc.project)),
                       body: Center(child: Text(loc.projectNotFound)),
                     );
                   }
-                  return CollectionFlowScreen(projectId: id);
+                  return CollectionFlowScreen(projectId: id, formId: formId);
                 },
                 loading: () => Scaffold(body: Epoch8Loader.center()),
                 error: (e, _) => Scaffold(
@@ -115,6 +124,14 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
               );
             },
           );
+        },
+      ),
+      // Legacy deep-link → form picker (или единственная форма).
+      GoRoute(
+        path: '/project/:id/wizard',
+        redirect: (context, state) {
+          final id = state.pathParameters['id']!;
+          return '/project/$id/forms';
         },
       ),
       GoRoute(
@@ -243,6 +260,7 @@ class _DataCollectorAppState extends State<DataCollectorApp>
           valueListenable: appLocaleNotifier,
           builder: (context, locale, _) => MaterialApp.router(
             locale: locale,
+            scaffoldMessengerKey: rootScaffoldMessengerKey,
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
             theme: Epoch8Theme.light,
             darkTheme: Epoch8Theme.dark,
@@ -633,10 +651,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final project = projects[index];
+                      final primary = project.primaryForm?.project;
+                      final flow = primary != null
+                          ? resolveCollectionFlow(primary)
+                          : null;
                       return Epoch8Card(
-                        accentBorder: resolveCollectionFlow(
-                          project,
-                        ).shouldGroupHistoryBySubject,
+                        accentBorder:
+                            flow?.shouldGroupHistoryBySubject ?? false,
                         child: ListTile(
                           contentPadding: const EdgeInsets.symmetric(
                             horizontal: 4,
@@ -671,9 +692,17 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             padding: const EdgeInsets.only(top: 6),
                             child: Text(
                               () {
-                                final flow = resolveCollectionFlow(project);
+                                final formCount = project.forms.length;
+                                if (formCount > 1) {
+                                  return loc.formLabel.isNotEmpty
+                                      ? '$formCount ${loc.formLabel}'
+                                      : '$formCount forms';
+                                }
+                                if (primary == null || flow == null) {
+                                  return project.id;
+                                }
                                 if (flow.isSingleScrollOnly) {
-                                  return '${loc.version} ${project.version} • ${project.config.fields.length}';
+                                  return '${loc.version} ${primary.version} • ${primary.config.fields.length}';
                                 }
                                 final nCam = flow.cameraPoseCount;
                                 final hasInstr = flow.steps.any(
@@ -685,14 +714,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                                   (s) => s.kind == CollectionScreenKind.form,
                                 );
                                 final bits = <String>[
-                                  '${loc.version} ${project.version}',
+                                  '${loc.version} ${primary.version}',
                                 ];
                                 if (hasForm) bits.add(loc.formLabel);
                                 if (hasInstr) bits.add(loc.guideLabel);
-                                if (nCam > 0)
+                                if (nCam > 0) {
                                   bits.add(loc.cameraPosesCount(nCam));
-                                if (flow.reviewStepIndex != null)
+                                }
+                                if (flow.reviewStepIndex != null) {
                                   bits.add(loc.reviewLabel);
+                                }
                                 return bits.join(' • ');
                               }(),
                               style: Theme.of(
@@ -713,7 +744,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             ),
                           ),
                           onTap: () =>
-                              context.go('/project/${project.id}/wizard'),
+                              context.go('/project/${project.id}/forms'),
                         ),
                       );
                     },
@@ -962,10 +993,11 @@ Widget _packageHistoryDetailBody(
   final projectsList = ref
       .watch(projectsProvider)
       .maybeWhen(data: (v) => v, orElse: () => null);
-  final projMeta = _projectById(projectsList, pkg.projectId);
+  final catalog = projectsList?.byId(pkg.projectId);
+  final formConfig = _formConfigForPackage(projectsList, pkg);
   final groupSubject =
-      projMeta != null &&
-      resolveCollectionFlow(projMeta).shouldGroupHistoryBySubject;
+      formConfig != null &&
+      resolveCollectionFlow(formConfig).shouldGroupHistoryBySubject;
   final subjectLabel = _extractSubjectId(raw);
   return ListView(
     padding: const EdgeInsets.fromLTRB(
@@ -983,8 +1015,8 @@ Widget _packageHistoryDetailBody(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              projMeta != null
-                  ? loc.projectLabel(projMeta.name)
+              catalog != null
+                  ? loc.projectLabel(catalog.name)
                   : loc.projectLabel(pkg.projectId),
               style: Theme.of(context).textTheme.titleSmall,
             ),
@@ -1149,7 +1181,7 @@ Widget _packageHistoryDetailBody(
 Widget _historyTabBody(
   BuildContext context,
   WidgetRef ref,
-  AsyncValue<List<Project>> projectsAsync,
+  AsyncValue<List<CatalogProject>> projectsAsync,
   AsyncValue<List<Package>> packagesAsync,
 ) {
   return projectsAsync.when(
@@ -1168,7 +1200,7 @@ Widget _historyTabBody(
           for (final p in visible) {
             byProject.putIfAbsent(p.projectId, () => []).add(p);
           }
-          final knownIds = projects.map((p) => p.id).toSet();
+          final knownIds = projects.projectIds;
           final sections = <Widget>[];
           for (final proj in projects) {
             final pkgs = byProject[proj.id];
@@ -1246,11 +1278,12 @@ Widget _historyTabBody(
 Widget _historyProjectSection(
   BuildContext context,
   WidgetRef ref,
-  Project proj,
+  CatalogProject proj,
   List<Package> packages,
 ) {
-  final flow = resolveCollectionFlow(proj);
-  final bySubject = flow.shouldGroupHistoryBySubject;
+  final formProject = proj.primaryForm?.project;
+  final flow = formProject != null ? resolveCollectionFlow(formProject) : null;
+  final bySubject = flow?.shouldGroupHistoryBySubject ?? false;
   return Column(
     crossAxisAlignment: CrossAxisAlignment.stretch,
     children: [
@@ -1532,12 +1565,19 @@ Widget _historyOrphanProjectSection(
   );
 }
 
-Project? _projectById(List<Project>? projects, String id) {
+Project? _formConfigForPackage(List<CatalogProject>? projects, Package pkg) {
   if (projects == null) return null;
-  for (final p in projects) {
-    if (p.id == id) return p;
-  }
-  return null;
+  final catalog = projects.byId(pkg.projectId);
+  if (catalog == null) return null;
+  var formId = 'default';
+  try {
+    final env = jsonDecode(pkg.dataJson);
+    if (env is Map) {
+      final raw = env['form_id'];
+      if (raw is String && raw.trim().isNotEmpty) formId = raw.trim();
+    }
+  } catch (_) {}
+  return catalog.formById(formId)?.project ?? catalog.primaryForm?.project;
 }
 
 List<Widget> _packageFormSummaryRows(
@@ -1549,7 +1589,7 @@ List<Widget> _packageFormSummaryRows(
   final projects = ref
       .watch(projectsProvider)
       .maybeWhen(data: (v) => v, orElse: () => null);
-  final proj = _projectById(projects, pkg.projectId);
+  final proj = _formConfigForPackage(projects, pkg);
   if (proj == null) return _genericPayloadFieldRows(context, raw);
   final rows = <Widget>[];
   for (final f in proj.config.fields) {

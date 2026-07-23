@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:data_collector/bootstrap.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/collection_draft_store.dart';
@@ -20,6 +21,9 @@ Future<void> submitLocalPackage({
   required BuildContext context,
   required String projectId,
   required Map<String, dynamic> answers,
+  String formId = 'default',
+  String? formName,
+  String? formVersion,
   String? existingDraftPackageId,
   DateTime? draftCreatedAt,
 }) async {
@@ -36,6 +40,9 @@ Future<void> submitLocalPackage({
     projectId: projectId,
     createdAt: createdAt,
     answers: answersForSave,
+    formId: formId,
+    formName: formName,
+    formVersion: formVersion,
   );
 
   final payloadJson = jsonEncode(materialized.payload);
@@ -78,18 +85,18 @@ Future<void> submitLocalPackage({
         );
   }
 
-  await deleteAllDraftPackagesForProject(db, projectId);
+  await deleteAllDraftPackagesForProject(db, projectId, formId: formId);
 
   if (!context.mounted) return;
 
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(AppLocalizations.of(context).packageSavedLocal),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-
+  // Текст берём до go(); SnackBar — через корневой messenger, иначе после
+  // ухода с review бывает "Looking up a deactivated widget's ancestor".
+  final savedMsg = AppLocalizations.of(context).packageSavedLocal;
   context.go('/dashboard');
   // Сброс после ухода с экрана — иначе review перерисовывается с пустым wizard state.
-  ref.read(wizardStateProvider(projectId).notifier).reset();
+  ref.read(wizardStateProvider('$projectId|$formId').notifier).reset();
+
+  rootScaffoldMessengerKey.currentState?.showSnackBar(
+    SnackBar(content: Text(savedMsg), behavior: SnackBarBehavior.floating),
+  );
 }

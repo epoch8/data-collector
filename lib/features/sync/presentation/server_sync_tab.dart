@@ -3,6 +3,7 @@ import 'package:data_collector/core/api/dio_provider.dart';
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/package_server_upload.dart';
+import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/features/projects/server_project_catalog.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
@@ -73,7 +74,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
     setState(() => _busyPackageId = pkg.id);
     try {
       final projects = await ref.read(projectsProvider.future);
-      final allowed = projects.map((p) => p.id).toSet();
+      final allowed = projects.projectIds;
       final db = ref.read(databaseProvider);
       await uploadDriftPackageToServer(
         dio: dio,

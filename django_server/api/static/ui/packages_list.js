@@ -29,11 +29,12 @@
       });
     }
 
-    // Чипы статуса.
+    // Чипы статуса (формы — обычные ссылки в шаблоне).
     var phaseInput = document.getElementById("fPhase");
-    form.querySelectorAll(".pkg-chip").forEach(function (chip) {
+    form.querySelectorAll(".pkg-chip[data-phase]").forEach(function (chip) {
       chip.addEventListener("click", function () {
-        if (phaseInput) phaseInput.value = chip.getAttribute("data-phase");
+        var phase = chip.getAttribute("data-phase");
+        if (phaseInput && phase != null) phaseInput.value = phase;
         form.submit();
       });
     });

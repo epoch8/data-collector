@@ -1,6 +1,7 @@
 import 'package:data_collector/core/presentation/local_capture_thumb.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/features/collection/logic/submit_local_package.dart';
+import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
@@ -27,7 +28,10 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
       data: (projects) {
         late Project project;
         try {
-          project = projects.firstWhere((p) => p.id == projectId);
+          final catalog = projects.byId(projectId);
+          final form = catalog?.primaryForm;
+          if (form == null) throw StateError('missing');
+          project = form.project;
         } catch (_) {
           final loc = AppLocalizations.of(context);
           return Scaffold(
@@ -223,6 +227,34 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                   .read(wizardStateProvider(widget.projectId).notifier)
                   .updateField(field.fieldId, val),
               decoration: const InputDecoration(border: OutlineInputBorder()),
+            )
+          else if (field.type == 'single_choice')
+            Focus(
+              focusNode: _focusNodes[index],
+              child: DropdownButtonFormField<String>(
+                // ignore: deprecated_member_use
+                value: () {
+                  final cur = answers[field.fieldId]?.toString();
+                  final opts = field.options ?? const <ConfigFieldOption>[];
+                  return opts.any((o) => o.value == cur) ? cur : null;
+                }(),
+                isExpanded: true,
+                decoration: const InputDecoration(border: OutlineInputBorder()),
+                hint: Text(loc.flowFormChoiceHint),
+                items: [
+                  for (final o in field.options ?? const <ConfigFieldOption>[])
+                    DropdownMenuItem<String>(
+                      value: o.value,
+                      child: Text(o.label),
+                    ),
+                ],
+                onChanged: (val) {
+                  ref
+                      .read(wizardStateProvider(widget.projectId).notifier)
+                      .updateField(field.fieldId, val);
+                  _focusNodes[index].requestFocus();
+                },
+              ),
             )
           else if (field.type == 'camera_photo')
             Focus(

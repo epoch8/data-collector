@@ -73,7 +73,7 @@ Model: `lib/models/project_config.dart` → `Project`.
 | `form_title` | Block label on review |
 | `cow_id_hints`, `cow_id_field_id` | Subject identifier hints |
 
-Fields on a step may be any supported type (`text_input`, `datetime`, `instruction`, `camera_photo`) in one scroll.
+Fields on a step may be any supported type (`text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`) in one scroll.
 
 ### 3.2. `review`
 

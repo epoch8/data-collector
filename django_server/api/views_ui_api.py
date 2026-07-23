@@ -69,10 +69,12 @@ class UiPackageListView(View):
         if denied is not None:
             return denied
         phase = (request.GET.get("phase") or "").strip()
+        form_id = (request.GET.get("form") or "").strip()
         items, err = pas.list_packages(
             project_id,
             phase=phase,
             preview_prefix=PREVIEW_PREFIX,
+            form_id=form_id,
         )
         if err is not None:
             return err

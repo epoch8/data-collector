@@ -8,7 +8,7 @@
 
 ## Принцип сборки
 
-1. **`config.fields`** — справочник всех полей: `field_id`, `type`, `title`, `instructions`, при необходимости `validation` и `multiple` (камера). Типы: `text_input`, `datetime`, `instruction`, `camera_photo`.
+1. **`config.fields`** — справочник всех полей: `field_id`, `type`, `title`, `instructions`, при необходимости `validation`, `multiple` (камера), `options` (`single_choice`). Типы: `text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`.
 2. **`config.flow.steps`** — сценарий по порядку. Поддерживаются только **`scroll_form`** и **`review`**. Шаг **`scroll_form`** — один экран со скроллом; список **`field_ids`** задаёт, какие поля на нём и в каком порядке. **Каждое поле из `fields` должно встретиться ровно в одном шаге `scroll_form`.**
 3. **`review`** — по желанию, финальный экран проверки перед отправкой. Подписи блоков на нём задаёт **`form_title`** у шага `scroll_form` (человекочитаемое имя формы).
 4. **`config.ui`** — по желанию: вложенные строки для подписей в приложении (`ProjectUi`). Блок **`ui.shooting_guide`** клиентом не используется.

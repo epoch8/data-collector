@@ -1,5 +1,7 @@
 # Дорожная карта реализации обучения
 
+Внутренний план подготовки (сроки, материалы): [training-implementation-plan.md](training-implementation-plan.md).
+
 ## Формат
 
 

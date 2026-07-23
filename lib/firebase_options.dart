@@ -1,4 +1,4 @@
-// Конфиг Firebase для Firebase.initializeApp.
+﻿// Конфиг Firebase для Firebase.initializeApp.
 // Обновить можно: (1) dart run flutterfire_cli:flutterfire configure
 // (2) Firebase MCP в Cursor: firebase_login → firebase_get_sdk_config (android/ios/web).
 
@@ -62,10 +62,3 @@ class DefaultFirebaseOptions {
     iosBundleId: 'com.example.dataCollector',
   );
 }
-
-// apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-// appId: '1:59903871663:android:83c40cfe504ef60952225a',
-// messagingSenderId: '59903871663',
-// projectId: 'e8-gke',
-// authDomain: 'e8-gke.firebaseapp.com',
-// storageBucket: 'e8-gke.firebasestorage.app',

@@ -1,0 +1,55 @@
+{# Переключатель форм + создание новой. Контекст: project, form_id, forms; опционально forms_nav_url_name #}
+{% load i18n %}
+{% with nav_url=forms_nav_url_name|default:"ui_project_config_builder" %}
+<div class="card p-3 mb-3">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <span class="small ui-muted mb-0 me-1">{% trans "Формы" %}</span>
+    {% for f in forms %}
+    <a class="btn btn-sm {% if f.form_id == form_id %}btn-primary{% else %}btn-outline-light{% endif %}"
+       href="{% url nav_url project.project_id f.form_id %}">
+      {{ f.name }} <span class="opacity-75 font-monospace small">({{ f.form_id }})</span>
+    </a>
+    {% empty %}
+    <a class="btn btn-sm btn-primary"
+       href="{% url nav_url project.project_id 'default' %}">
+      default
+    </a>
+    {% endfor %}
+  </div>
+  <details class="mt-1">
+    <summary class="small ui-muted" style="cursor:pointer">
+      <i class="bi bi-plus-circle me-1"></i>{% trans "Новая форма" %}
+    </summary>
+    <form method="post" action="{% url 'ui_project_form_create' project.project_id %}" class="row g-2 align-items-end mt-2">
+      {% csrf_token %}
+      <div class="col-md-3">
+        <label class="form-label mb-1 small" for="new-form-id">{% trans "ID формы" %}</label>
+        <input type="text" class="form-control form-control-sm font-monospace" id="new-form-id"
+               name="form_id" required pattern="[a-z0-9_]+" placeholder="bull"
+               title="{% trans 'Только a-z, 0-9 и _' %}">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label mb-1 small" for="new-form-name">{% trans "Название" %}</label>
+        <input type="text" class="form-control form-control-sm" id="new-form-name"
+               name="name" required placeholder="{% trans 'Бык-производитель' %}">
+      </div>
+      <div class="col-md-3">
+        <label class="form-label mb-1 small" for="new-form-copy">{% trans "Скопировать из" %}</label>
+        <select class="form-select form-select-sm" id="new-form-copy" name="copy_from">
+          {% for f in forms %}
+          <option value="{{ f.form_id }}" {% if f.form_id == form_id %}selected{% endif %}>{{ f.name }} ({{ f.form_id }})</option>
+          {% empty %}
+          <option value="default">default</option>
+          {% endfor %}
+          <option value="_empty">{% trans "Пустой шаблон" %}</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+          <i class="bi bi-plus-lg me-1"></i>{% trans "Создать" %}
+        </button>
+      </div>
+    </form>
+  </details>
+</div>
+{% endwith %}

@@ -62,7 +62,11 @@ Future<void> uploadDriftPackageToServer({
       }
     }
 
-    final uploadedBlobs = await fetchUploadedBlobPaths(dio, projectId, packageId);
+    final uploadedBlobs = await fetchUploadedBlobPaths(
+      dio,
+      projectId,
+      packageId,
+    );
 
     final manifestMap = await loadPackagePayloadMap(pkg);
     final requiredBlobs = <String>{};
@@ -79,7 +83,9 @@ Future<void> uploadDriftPackageToServer({
           continue;
         }
         if (uploadedBlobs.contains(logical)) {
-          debugPrint('uploadDriftPackageToServer: skip already uploaded $logical');
+          debugPrint(
+            'uploadDriftPackageToServer: skip already uploaded $logical',
+          );
           continue;
         }
         final bytes = await entity.readAsBytes();

@@ -11,6 +11,7 @@ import 'package:data_collector/features/collection/logic/submit_local_package.da
 import 'package:data_collector/features/collection/presentation/flow/package_payload_keys.dart';
 import 'package:data_collector/features/collection/presentation/flow/scroll_form_flow_step.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
+import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
 import 'package:data_collector/theme/epoch8_theme.dart';
@@ -107,9 +108,14 @@ Map<String, dynamic>? _mergedReviewCameraContext(
 
 /// Единая точка входа: `config.flow` из JSON — либо один шаг `scroll_form`, либо пошаговый сценарий.
 class CollectionFlowScreen extends ConsumerStatefulWidget {
-  const CollectionFlowScreen({super.key, required this.projectId});
+  const CollectionFlowScreen({
+    super.key,
+    required this.projectId,
+    this.formId = 'default',
+  });
 
   final String projectId;
+  final String formId;
 
   @override
   ConsumerState<CollectionFlowScreen> createState() =>
@@ -117,16 +123,22 @@ class CollectionFlowScreen extends ConsumerStatefulWidget {
 }
 
 class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
+  String get _wizardKey => '${widget.projectId}|${widget.formId}';
+
   @override
   Widget build(BuildContext context) {
-    ref.watch(wizardStateProvider(widget.projectId));
+    ref.watch(wizardStateProvider(_wizardKey));
     final async = ref.watch(projectsProvider);
     return async.when(
       skipLoadingOnReload: true,
       data: (projects) {
         late Project project;
         try {
-          project = projects.firstWhere((p) => p.id == widget.projectId);
+          final catalog = projects.byId(widget.projectId);
+          if (catalog == null) throw StateError('missing project');
+          final form = catalog.formById(widget.formId) ?? catalog.primaryForm;
+          if (form == null) throw StateError('missing form');
+          project = form.project;
         } catch (_) {
           final loc = AppLocalizations.of(context);
           return Scaffold(
@@ -151,6 +163,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
         final flow = resolveCollectionFlow(project);
         return _CollectionDraftGate(
           projectId: widget.projectId,
+          formId: widget.formId,
           project: project,
           resolvedFlow: flow,
         );
@@ -171,11 +184,13 @@ enum _DraftResumeChoice { continueSession, startOver }
 class _CollectionDraftGate extends ConsumerStatefulWidget {
   const _CollectionDraftGate({
     required this.projectId,
+    required this.formId,
     required this.project,
     required this.resolvedFlow,
   });
 
   final String projectId;
+  final String formId;
   final Project project;
   final ResolvedCollectionFlow resolvedFlow;
 
@@ -185,6 +200,8 @@ class _CollectionDraftGate extends ConsumerStatefulWidget {
 }
 
 class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
+  String get _wizardKey => '${widget.projectId}|${widget.formId}';
+
   bool _ready = false;
   int _initialStep = 0;
   String? _draftPackageId;
@@ -200,17 +217,21 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
     // На web восстановление сессии отключено: нет надёжной ФС, blob-ссылки живут
     // лишь в текущем документе, а гонки автосохранения раньше теряли «Отправленные» пакеты.
     if (kIsWeb) {
-      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
+      ref.read(wizardStateProvider(_wizardKey).notifier).reset();
       if (mounted) setState(() => _ready = true);
       return;
     }
 
     final db = ref.read(databaseProvider);
-    final draft = await selectLatestDraftForProject(db, widget.projectId);
+    final draft = await selectLatestDraftForProject(
+      db,
+      widget.projectId,
+      formId: widget.formId,
+    );
     if (!mounted) return;
 
     if (draft == null) {
-      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
+      ref.read(wizardStateProvider(_wizardKey).notifier).reset();
       setState(() => _ready = true);
       return;
     }
@@ -248,7 +269,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
 
     if (choice == _DraftResumeChoice.startOver) {
       await deleteLocalPackageStorage(db, draft.id);
-      ref.read(wizardStateProvider(widget.projectId).notifier).reset();
+      ref.read(wizardStateProvider(_wizardKey).notifier).reset();
       setState(() {
         _ready = true;
         _initialStep = 0;
@@ -261,7 +282,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
     final data = unpackPackageFormData(draft.dataJson);
     var step = draftFlowStepFromUnpackedData(data);
     data.remove(PackagePayloadKeys.collectionDraftFlowStep);
-    ref.read(wizardStateProvider(widget.projectId).notifier).replaceAll(data);
+    ref.read(wizardStateProvider(_wizardKey).notifier).replaceAll(data);
 
     final maxStep = widget.resolvedFlow.steps.length - 1;
     if (step < 0) step = 0;
@@ -303,6 +324,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
     }
     return _FlowStepShell(
       projectId: widget.projectId,
+      formId: widget.formId,
       project: widget.project,
       resolvedFlow: widget.resolvedFlow,
       initialFlowStepIndex: _initialStep,
@@ -315,6 +337,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
 class _FlowStepShell extends ConsumerStatefulWidget {
   const _FlowStepShell({
     required this.projectId,
+    required this.formId,
     required this.project,
     required this.resolvedFlow,
     this.initialFlowStepIndex = 0,
@@ -323,6 +346,7 @@ class _FlowStepShell extends ConsumerStatefulWidget {
   });
 
   final String projectId;
+  final String formId;
   final Project project;
   final ResolvedCollectionFlow resolvedFlow;
   final int initialFlowStepIndex;
@@ -335,6 +359,8 @@ class _FlowStepShell extends ConsumerStatefulWidget {
 
 class _FlowStepShellState extends ConsumerState<_FlowStepShell>
     with WidgetsBindingObserver {
+  String get _wizardKey => '${widget.projectId}|${widget.formId}';
+
   late int _step;
   String? _packageId;
   DateTime? _createdAtForRow;
@@ -378,7 +404,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
   Future<void> _persistDraftNow() async {
     if (kIsWeb) return;
     if (!mounted || _draftSaveSuspended) return;
-    final answers = ref.read(wizardStateProvider(widget.projectId));
+    final answers = ref.read(wizardStateProvider(_wizardKey));
     if (answers.isEmpty) return;
 
     _packageId ??= 'pkg_${DateTime.now().millisecondsSinceEpoch}';
@@ -391,6 +417,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
       answers: answers,
       flowStep: _step,
       createdAt: _createdAtForRow!,
+      formId: widget.formId,
+      formName: widget.project.name,
+      formVersion: widget.project.version,
     );
     if (!mounted) return;
   }
@@ -437,7 +466,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
 
   @override
   Widget build(BuildContext context) {
-    ref.watch(wizardStateProvider(widget.projectId));
+    ref.watch(wizardStateProvider(_wizardKey));
     final project = widget.project;
 
     return PopScope(
@@ -570,6 +599,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
           key: ValueKey('scroll_${cur.id}'),
           project: p,
           projectId: widget.projectId,
+          formId: widget.formId,
           flow: _flow,
           step: cur,
           continueLabel: _scrollContinueLabel(context),
@@ -584,6 +614,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
           project: p,
           flow: _flow,
           projectId: widget.projectId,
+          formId: widget.formId,
           submitting: _submitting,
           onEditScrollStep: (int stepIndex) {
             if (_submitting) return;
@@ -597,7 +628,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
             _draftSaveSuspended = true;
             setState(() => _submitting = true);
             final answers = Map<String, dynamic>.from(
-              ref.read(wizardStateProvider(widget.projectId)),
+              ref.read(wizardStateProvider(_wizardKey)),
             );
             await submitLocalPackage(
               ref: ref,
@@ -606,6 +637,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
               answers: answers,
               existingDraftPackageId: _packageId,
               draftCreatedAt: _createdAtForRow,
+              formId: widget.formId,
+              formName: widget.project.name,
+              formVersion: widget.project.version,
             );
           },
         );
@@ -625,6 +659,7 @@ class _FlowReviewStep extends ConsumerWidget {
     required this.project,
     required this.flow,
     required this.projectId,
+    required this.formId,
     required this.onEditScrollStep,
     required this.onSubmit,
     this.submitting = false,
@@ -633,6 +668,7 @@ class _FlowReviewStep extends ConsumerWidget {
   final Project project;
   final ResolvedCollectionFlow flow;
   final String projectId;
+  final String formId;
   final void Function(int flowStepIndex) onEditScrollStep;
   final Future<void> Function() onSubmit;
   final bool submitting;
@@ -643,8 +679,8 @@ class _FlowReviewStep extends ConsumerWidget {
       final v = a[f.fieldId];
       if (f.type == 'datetime') {
         if (v == null || v.toString().trim().isEmpty) return false;
-      } else if (f.type == 'text_input') {
-        if (v.toString().trim().isEmpty) return false;
+      } else if (f.type == 'text_input' || f.type == 'single_choice') {
+        if (v == null || v.toString().trim().isEmpty) return false;
       }
     }
     for (final f in flow.allCameraFields) {
@@ -670,7 +706,7 @@ class _FlowReviewStep extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final loc = AppLocalizations.of(context);
-    final a = ref.watch(wizardStateProvider(projectId));
+    final a = ref.watch(wizardStateProvider('$projectId|$formId'));
     final complete = _isComplete(a);
     final cameraCtx = _mergedReviewCameraContext(a, flow.allCameraFields);
 
@@ -714,7 +750,9 @@ class _FlowReviewStep extends ConsumerWidget {
                 ),
               if (!s.isInstructionOnlyScroll)
                 for (final f in s.fields) ...[
-                  if (f.type == 'text_input' || f.type == 'datetime')
+                  if (f.type == 'text_input' ||
+                      f.type == 'datetime' ||
+                      f.type == 'single_choice')
                     _reviewLine(
                       f.title,
                       _formatReviewValue(loc, f, a[f.fieldId]),
@@ -823,6 +861,11 @@ class _FlowReviewStep extends ConsumerWidget {
     if (f.type == 'datetime') {
       final st = DateTime.tryParse(v.toString())?.toLocal();
       return st != null ? _formatDateTime(st) : v.toString();
+    }
+    if (f.type == 'single_choice') {
+      final s = v.toString().trim();
+      if (s.isEmpty) return dash;
+      return f.labelForChoice(s) ?? s;
     }
     final s = v.toString().trim();
     return s.isEmpty ? dash : s;

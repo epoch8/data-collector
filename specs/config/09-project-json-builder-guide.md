@@ -8,7 +8,7 @@ How to build config for the current app. Implementation details: `collection_flo
 
 ## Assembly principles
 
-1. **`config.fields`** — catalog of all fields: `field_id`, `type`, `title`, `instructions`, optionally `validation` and `multiple` (camera). Types: `text_input`, `datetime`, `instruction`, `camera_photo`.
+1. **`config.fields`** — catalog of all fields: `field_id`, `type`, `title`, `instructions`, optionally `validation`, `multiple` (camera), `options` (`single_choice`). Types: `text_input`, `single_choice`, `datetime`, `instruction`, `camera_photo`.
 2. **`config.flow.steps`** — scenario in order. Only **`scroll_form`** and **`review`** are supported. A **`scroll_form`** step is one scrollable screen; **`field_ids`** list defines which fields appear and in what order. **Every field from `fields` must appear in exactly one `scroll_form` step.**
 3. **`review`** — optional, final review screen before submit. Block labels on it come from **`form_title`** on the `scroll_form` step (human-readable form name).
 4. **`config.ui`** — optional: nested strings for app labels (`ProjectUi`). Block **`ui.shooting_guide`** is not used by the client.
