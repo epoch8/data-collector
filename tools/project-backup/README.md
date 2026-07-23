@@ -116,7 +116,55 @@ python backup_project.py verify $env:USERPROFILE\Desktop\backup\korovas
 
 ---
 
-## Восстановление (кратко)
+## Восстановление в локальный test_dev
+
+Скрипт `restore_project.py` заливает бэкап в **локальные** Postgres + MinIO
+(`test_dev/docker-compose.yml`). По умолчанию **отказывается** писать в облако /
+non-localhost (нужен явный `--allow-remote`).
+
+```powershell
+# 1. Поднять локальные хранилища
+cd c:\Users\admin\Desktop\epoch8\data_collector\data-collector
+docker compose -f test_dev/docker-compose.yml up -d
+
+# 2. Залить бэкап
+cd tools\project-backup
+pip install -r requirements.txt
+
+python restore_project.py restore `
+  --backup $env:USERPROFILE\Desktop\backup\korovas `
+  --database-url "postgresql://collector:collector@localhost:55432/proj_korovas" `
+  --bucket dc-packages `
+  --endpoint-url http://localhost:9000 `
+  --access-key minioadmin `
+  --secret-key minioadmin `
+  --wipe --yes
+```
+
+Сначала можно `--dry-run` (без `--yes`).
+
+После заливки скрипт печатает URI для админки. Для проекта **korovas**:
+
+- **database_uri:** `postgresql+psycopg2://collector:collector@localhost:55432/proj_korovas`
+- **storage_uri:** `s3://dc-packages/`
+- **endpoint / keys:** `http://localhost:9000` / `minioadmin` / `minioadmin`
+
+Затем «Проверить хранилище».
+
+| Флаг | Назначение |
+|------|------------|
+| `--wipe --yes` | Очистить таблицы цели перед заливкой |
+| `--skip-existing` | S3: не перезаливать уже существующие ключи |
+| `--skip-postgres` / `--skip-s3` | Только одна секция |
+| `--key-prefix korovas/` | Класть объекты под префикс (тогда storage_uri = `s3://dc-packages/korovas/`) |
+| `--allow-remote` | Разрешить non-localhost (опасно) |
+
+**Не восстанавливается:** Git-репозиторий проекта (в бэкапе мог быть `--skip-git`) —
+конфиг форм по-прежнему из `git_remote` проекта в Django.
+
+---
+
+## Восстановление (кратко, вручную)
 
 | Что | Как |
 |-----|-----|
