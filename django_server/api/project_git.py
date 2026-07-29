@@ -307,9 +307,29 @@ def test_remote(project: Project) -> None:
     )
 
 
+def _remote_urls_match(cached_url: str, expected: str) -> bool:
+    """Сравнивает URL кэша и настройки проекта (https ↔ ssh нормализуются)."""
+    try:
+        a = normalize_git_remote(cached_url)
+    except GitProjectError:
+        a = (cached_url or "").strip().rstrip("/")
+    try:
+        b = normalize_git_remote(expected)
+    except GitProjectError:
+        b = (expected or "").strip().rstrip("/")
+    return bool(a) and a == b
+
+
 def _ensure_origin(project: Project, dest: Path) -> None:
-    if dest.exists():
-        return
+    """Clone при отсутствии кэша; если origin указывает на другой remote — пересоздать кэш."""
+    if (dest / ".git").is_dir():
+        try:
+            current = _local_git(dest, "remote", "get-url", "origin").stdout.strip()
+        except GitProjectError:
+            current = ""
+        if _remote_urls_match(current, project.git_remote):
+            return
+        remove_cache(project.project_id)
     dest.parent.mkdir(parents=True, exist_ok=True)
     _run_git(
         [
@@ -332,8 +352,7 @@ def pull(project: Project, *, force: bool = False) -> str:
         if not _should_fetch_remote(project, force=force):
             return _local_head_sha(dest) or project.last_synced_sha or ""
 
-        if not (dest / ".git").is_dir():
-            _ensure_origin(project, dest)
+        _ensure_origin(project, dest)
         remote_ref = f"origin/{project.git_default_ref}"
         _run_git(["fetch", "origin", project.git_default_ref], credential=project.git_credential, cwd=dest)
         # Локальный install_vis_config_example кладёт untracked collector/viz.json — мешает checkout.

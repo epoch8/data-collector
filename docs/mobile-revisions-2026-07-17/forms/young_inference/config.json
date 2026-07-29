@@ -1,0 +1,393 @@
+{
+  "id": "krs-label",
+  "name": "Молодняк — съёмка (инференс)",
+  "version": "2.2-inference",
+  "config": {
+    "flow": {
+      "steps": [
+        {
+          "id": "animal_id",
+          "screen": "scroll_form",
+          "form_title": "Идентификация и возраст",
+          "cow_id_hints": true,
+          "cow_id_field_id": "cow_identifier",
+          "field_ids": [
+            "scan_time",
+            "cow_name",
+            "form_scenario_hint",
+            "young_sex",
+            "cow_breed",
+            "cow_identifier",
+            "months"
+          ]
+        },
+        {
+          "id": "photos",
+          "screen": "scroll_form",
+          "form_title": "Фото ракурсы",
+          "field_ids": [
+            "photo_profile_guide",
+            "photo_profile_left",
+            "photo_profile_right",
+            "photo_top_guide",
+            "photo_top",
+            "photo_rear_23_guide",
+            "photo_rear_23_left",
+            "photo_rear_23_right",
+            "photo_front_23_guide",
+            "photo_front_23_left",
+            "photo_front_23_right",
+            "photo_front_legs_guide",
+            "photo_front_legs",
+            "photo_head_guide",
+            "photo_head_side",
+            "photo_head_top"
+          ]
+        },
+        {
+          "id": "review",
+          "screen": "review"
+        }
+      ]
+    },
+    "ui": {
+      "flow": {
+        "continue": {
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "ribbon": {
+          "pose_counter_sep": "·",
+          "review": "Проверка и отправка",
+          "scroll_form": "Шаг сбора",
+          "scroll_counter": "{cur} из {total}"
+        },
+        "camera_pose": {
+          "quality_dialog": {
+            "title": "Проверка качества кадра",
+            "use_anyway": "Всё равно использовать",
+            "retake": "Переснять"
+          },
+          "example_heading": "Пример ракурса",
+          "help_button": "Справка",
+          "example_asset_missing": "Изображение-пример не найдено в сборке",
+          "your_shots_heading": "Ваши кадры ({count})",
+          "empty_hint": "Добавьте кадры камерой или из галереи",
+          "add_more": "Добавить ещё",
+          "camera": "Камера",
+          "gallery": "Галерея",
+          "clear_all_poses": "Удалить все кадры этого ракурса",
+          "next": "Далее",
+          "to_review": "К проверке"
+        },
+        "review": {
+          "header_overline": "Финиш",
+          "header_title": "Проверка и отправка",
+          "header_subtitle": "Проверьте данные. Можно вернуться к любому шагу — введённые значения и снимки сохраняются.",
+          "scroll_block_title": "Шаг {n}: {id}",
+          "instruction_fallback": "Инструкция",
+          "edit": "Изменить",
+          "no_frames": "Нет кадров",
+          "submit": "Отправить данные",
+          "empty_value": "—"
+        },
+        "camera_meta": {
+          "fx_estimate": "fₓ≈{value} px",
+          "expand_hint": "Нажмите, чтобы развернуть",
+          "empty_notice": "Мета-параметры камеры появятся после съёмки поз.",
+          "tile_title": "Мета-параметры камеры",
+          "section_device": "Устройство",
+          "section_native": "Нативная камера (задняя)",
+          "json_section": "Полный JSON (копирование)",
+          "dash": "—",
+          "native_empty": "Нет данных с нативного API",
+          "pose_shot_title": "Ракурс {idx} — кадр {shot}",
+          "pose_derived_title": "Ракурс {idx} — оценки",
+          "label_fx_exif": "fx_px (EXIF focal × сенсор)",
+          "label_fx_35mm": "fx_px (35mm equiv)",
+          "label_fx_native": "fx_px (натив)",
+          "exif_heading": "Фрагмент EXIF",
+          "exif_more": "… ещё {n} полей"
+        }
+      }
+    },
+    "fields": [
+      {
+        "field_id": "scan_time",
+        "type": "datetime",
+        "title": "Время сбора",
+        "instructions": "Подставляется с устройства.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "cow_name",
+        "type": "text_input",
+        "title": "Кличка",
+        "instructions": "Имя животного на площадке.",
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "form_scenario_hint",
+        "type": "instruction",
+        "title": "",
+        "instructions": "## Молодняк (до 24 мес.) — съёмка под инференс\n\nФорма для сбора **фото ракурсов** (без промеров и бальности).\nЗаполните идентификацию и возраст, затем снимите ракурсы по примерам."
+      },
+      {
+        "field_id": "young_sex",
+        "type": "single_choice",
+        "title": "Пол молодняка",
+        "instructions": "Бычок или тёлка.",
+        "options": [
+          {
+            "value": "bull_calf",
+            "label": "Бычок"
+          },
+          {
+            "value": "heifer",
+            "label": "Тёлка"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "cow_breed",
+        "type": "single_choice",
+        "title": "Порода",
+        "instructions": "Порода КРС мясного направления.",
+        "options": [
+          {
+            "value": "Абердин-ангусская",
+            "label": "Абердин-ангусская"
+          },
+          {
+            "value": "Русская комолая",
+            "label": "Русская комолая"
+          },
+          {
+            "value": "Галловейская",
+            "label": "Галловейская"
+          },
+          {
+            "value": "Герефордская",
+            "label": "Герефордская"
+          },
+          {
+            "value": "Лимузинская",
+            "label": "Лимузинская"
+          },
+          {
+            "value": "Санта-гертруда",
+            "label": "Санта-гертруда"
+          },
+          {
+            "value": "Салерская",
+            "label": "Салерская"
+          },
+          {
+            "value": "Обрак",
+            "label": "Обрак"
+          },
+          {
+            "value": "Аулиекольская",
+            "label": "Аулиекольская"
+          },
+          {
+            "value": "Калмыцкая",
+            "label": "Калмыцкая"
+          },
+          {
+            "value": "Казахская белоголовая",
+            "label": "Казахская белоголовая"
+          },
+          {
+            "value": "Шортгорнская мясного типа",
+            "label": "Шортгорнская мясного типа"
+          },
+          {
+            "value": "Симментальская мясного типа",
+            "label": "Симментальская мясного типа"
+          },
+          {
+            "value": "Шароле",
+            "label": "Шароле"
+          },
+          {
+            "value": "Кианская",
+            "label": "Кианская"
+          },
+          {
+            "value": "Белая (светлая) аквитанская",
+            "label": "Белая (светлая) аквитанская"
+          },
+          {
+            "value": "Мен-анжу",
+            "label": "Мен-анжу"
+          }
+        ],
+        "validation": {
+          "required": true
+        }
+      },
+      {
+        "field_id": "cow_identifier",
+        "type": "text_input",
+        "title": "ID животного",
+        "instructions": "Если известен на момент сбора; можно оставить пустым.",
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "months",
+        "type": "text_input",
+        "title": "Возраст (месяцев)",
+        "instructions": "Возраст в месяцах. Для молодняка ожидается **до 24 месяцев**.",
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_profile_guide",
+        "type": "instruction",
+        "title": "Инструкция: профиль",
+        "instructions": "## Профиль (левый и правый бок)\n\nСнимок, когда **голова животного примерно на уровне спины**.\nНужны **два кадра**: левый и правый профиль.\nЖивотное в полный рост, без обрезки конечностей.\n\n### Пример\n\n![profile left](collector/media/examples/poses/photo_profile_left.jpg)\n\n![profile right](collector/media/examples/poses/photo_profile_right.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_profile_left",
+        "type": "camera_photo",
+        "title": "Профиль — левый бок",
+        "instructions": "Один кадр левого профиля.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_profile_right",
+        "type": "camera_photo",
+        "title": "Профиль — правый бок",
+        "instructions": "Один кадр правого профиля.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_top_guide",
+        "type": "instruction",
+        "title": "Инструкция: сверху",
+        "instructions": "## Вид сверху\n\nДолжны быть видны **вся спина**, **маклоки** и **седалищные бугры**.\n\n### Пример\n\n![top](collector/media/examples/poses/photo_top.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_top",
+        "type": "camera_photo",
+        "title": "Вид сверху",
+        "instructions": "Минимум один кадр.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_rear_23_guide",
+        "type": "instruction",
+        "title": "Инструкция: 2/3 сзади",
+        "instructions": "## 2/3 сзади (левый и правый)\n\nДля оценки **окороков**, **задних ног** и задних точек замера.\n\n### Пример\n\n![rear 23 left](collector/media/examples/poses/photo_rear_23_left.jpg)\n\n![rear 23 right](collector/media/examples/poses/photo_rear_23_right.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_rear_23_left",
+        "type": "camera_photo",
+        "title": "2/3 сзади — слева",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_rear_23_right",
+        "type": "camera_photo",
+        "title": "2/3 сзади — справа",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_front_23_guide",
+        "type": "instruction",
+        "title": "Инструкция: 2/3 спереди",
+        "instructions": "## 2/3 спереди (левый и правый)\n\nДля оценки **передних ног**, **груди** и передних точек замера.\n\n### Пример\n\n![front 23 left](collector/media/examples/poses/photo_front_23_left.jpg)\n\n![front 23 right](collector/media/examples/poses/photo_front_23_right.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_front_23_left",
+        "type": "camera_photo",
+        "title": "2/3 спереди — слева",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_front_23_right",
+        "type": "camera_photo",
+        "title": "2/3 спереди — справа",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_front_legs_guide",
+        "type": "instruction",
+        "title": "Инструкция: передние ноги",
+        "instructions": "## Передние ноги\n\nОтдельный кадр на **передние конечности**.\n\n### Пример\n\n![front legs](collector/media/examples/poses/photo_front_legs.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_front_legs",
+        "type": "camera_photo",
+        "title": "Передние ноги",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_head_guide",
+        "type": "instruction",
+        "title": "Инструкция: голова",
+        "instructions": "## Голова\n\nКадры **сбоку** и **сверху**.\n\n### Пример\n\n![head side](collector/media/examples/poses/photo_head_side.jpg)\n\n![head top](collector/media/examples/poses/photo_head_top.jpg)\n\n_Ориентируйтесь на ракурс, кадрирование и видимость ключевых точек._"
+      },
+      {
+        "field_id": "photo_head_side",
+        "type": "camera_photo",
+        "title": "Голова — сбоку",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      },
+      {
+        "field_id": "photo_head_top",
+        "type": "camera_photo",
+        "title": "Голова — сверху",
+        "instructions": "Можно пропустить и добавить снимки позже.",
+        "multiple": true,
+        "validation": {
+          "required": false
+        }
+      }
+    ]
+  }
+}

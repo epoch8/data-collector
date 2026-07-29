@@ -96,6 +96,11 @@ node_modules/
 .env.local
 *.orig
 
+# --- Large local architecture demo assets (GitHub 100MB limit) ---
+# Generate pptx via docs/architecture/generate_presentation.py; keep videos locally.
+docs/architecture/Architecture.pptx
+docs/architecture/video/**/*.mp4
+
 # --- legacy/: вложенные внешние репозитории (своя git-история, локально) ---
 legacy/cowmetric/
 legacy/korovas/

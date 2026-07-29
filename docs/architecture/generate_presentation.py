@@ -7,6 +7,7 @@ Run: python docs/architecture/generate_presentation.py
 from __future__ import annotations
 
 import importlib.util
+import os
 import sys
 from pathlib import Path
 
@@ -20,6 +21,8 @@ REPO = ROOT.parent.parent
 BUSINESS = ROOT.parent / "business"
 LOGO = REPO / "e8-team-logo-1024.png"
 OUT = ROOT / "Architecture.pptx"
+VIDEO = ROOT / "video"
+POSTERS = VIDEO / "posters"
 
 spec = importlib.util.spec_from_file_location("gen_training", BUSINESS / "generate_training_presentation.py")
 gen = importlib.util.module_from_spec(spec)
@@ -28,7 +31,7 @@ spec.loader.exec_module(gen)
 
 C = gen.C
 W = gen.W
-TOTAL = 11
+TOTAL = 14
 
 bg = gen.bg
 text = gen.text
@@ -122,6 +125,214 @@ def v_arrow(slide, x, y1, y2, color):
 
 def label(slide, l, t, w, value, *, size=9, color=MUTED, align=PP_ALIGN.CENTER):
     text(slide, l, t, w, Inches(0.25), value, size=size, color=color, align=align)
+
+
+def ensure_video_poster(movie: Path, poster: Path, *, at_sec: float = 2.0) -> Path | None:
+    """Кадр для превью в PowerPoint (без этого python-pptx ставит иконку «колонки»)."""
+    if poster.exists() and poster.stat().st_size > 10_000:
+        return poster
+    if not movie.exists():
+        return None
+    try:
+        import io
+        import subprocess
+
+        import imageio_ffmpeg
+        from PIL import Image
+
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        cmd = [
+            ffmpeg,
+            "-y",
+            "-ss",
+            str(at_sec),
+            "-i",
+            str(movie),
+            "-frames:v",
+            "1",
+            "-f",
+            "image2pipe",
+            "-vcodec",
+            "png",
+            "-",
+        ]
+        proc = subprocess.run(cmd, capture_output=True, check=False)
+        if proc.returncode != 0 or not proc.stdout:
+            return None
+        poster.parent.mkdir(parents=True, exist_ok=True)
+        img = Image.open(io.BytesIO(proc.stdout))
+        # чуть уменьшаем превью для pptx, исходный mp4 не трогаем
+        max_w = 1920
+        if img.width > max_w:
+            ratio = max_w / img.width
+            img = img.resize((max_w, int(img.height * ratio)), Image.Resampling.LANCZOS)
+        img.save(poster, format="PNG", optimize=True)
+        return poster
+    except Exception as e:  # noqa: BLE001
+        print(f"Warning: poster for {movie.name}: {e}")
+        return None
+
+
+def store_videos_uncompressed(pptx_path: Path) -> None:
+    """python-pptx кладёт mp4 с ZIP_DEFLATED — перепаковываем media без сжатия."""
+    import shutil
+    import tempfile
+    import zipfile
+
+    fd, tmp_name = tempfile.mkstemp(suffix=".pptx")
+    os.close(fd)
+    tmp = Path(tmp_name)
+    try:
+        with zipfile.ZipFile(pptx_path, "r") as zin, zipfile.ZipFile(tmp, "w") as zout:
+            for info in zin.infolist():
+                data = zin.read(info.filename)
+                out = zipfile.ZipInfo(filename=info.filename, date_time=info.date_time)
+                out.external_attr = info.external_attr
+                out.create_system = info.create_system
+                lower = info.filename.lower()
+                if lower.endswith((".mp4", ".mov", ".webm", ".avi", ".m4v")):
+                    out.compress_type = zipfile.ZIP_STORED
+                else:
+                    out.compress_type = zipfile.ZIP_DEFLATED
+                zout.writestr(out, data)
+        shutil.move(str(tmp), str(pptx_path))
+    finally:
+        if tmp.exists():
+            tmp.unlink(missing_ok=True)
+
+
+def probe_video_size(movie: Path) -> tuple[int, int]:
+    """Return (width, height) of video; fallback 16:9."""
+    import re
+    import subprocess
+
+    try:
+        import imageio_ffmpeg
+
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        proc = subprocess.run(
+            [ffmpeg, "-i", str(movie), "-f", "null", "-"],
+            capture_output=True,
+            check=False,
+        )
+        err = (proc.stderr or b"").decode("utf-8", "replace")
+        m = re.search(r"Video:.*?,\s*(\d{2,5})x(\d{2,5})", err)
+        if m:
+            return int(m.group(1)), int(m.group(2))
+    except Exception:  # noqa: BLE001
+        pass
+    try:
+        from PIL import Image
+
+        poster = POSTERS / f"{movie.stem}.png"
+        if poster.exists():
+            with Image.open(poster) as im:
+                return im.size
+    except Exception:  # noqa: BLE001
+        pass
+    return 1920, 1080
+
+
+def fit_box(src_w: int, src_h: int, max_w, max_h) -> tuple:
+    """Fit inside max box, keep aspect ratio. Returns (w, h) in same units as max_*."""
+    scale = min(float(max_w) / src_w, float(max_h) / src_h)
+    return int(src_w * scale), int(src_h * scale)
+
+
+def enable_video_fullscreen(slide) -> None:
+    """В слайд-шоу Play открывает видео на весь экран (OOXML p:video/@fullScrn)."""
+    for video in slide._element.xpath(".//p:video"):
+        video.set("fullScrn", "1")
+
+
+def slide_video_scenario(
+    prs,
+    n: int,
+    title_text: str,
+    subtitle: str,
+    steps: list[str],
+    *,
+    note: str | None = None,
+    video_hint: str = "▶  Вставить видео",
+    movie: Path | None = None,
+    poster: Path | None = None,
+) -> None:
+    """Слайд-сценарий: шаги слева, видео справа (или плейсхолдер, если файла нет)."""
+    s = prs.slides.add_slide(prs.slide_layouts[6])
+    bg(s, BG)
+    headline(s, title_text, subtitle)
+
+    # left: scenario steps
+    left_w = Inches(5.6)
+    rect(s, Inches(0.45), Inches(1.15), left_w, Inches(5.7), CARD2, BORDER, radius=True)
+    text(s, Inches(0.65), Inches(1.3), Inches(5.2), Inches(0.32), "Сценарий", size=12, bold=True, color=TEAL)
+    y = Inches(1.7)
+    for i, step in enumerate(steps, 1):
+        pill(s, Inches(0.7), y, Inches(0.38), str(i), BLUE, WHITE)
+        text(s, Inches(1.2), y + Inches(0.02), Inches(4.55), Inches(0.42), step, size=11, color=TEXT)
+        y += Inches(0.42)
+        if y > Inches(6.4):
+            break
+    if note:
+        text(s, Inches(0.65), Inches(6.35), Inches(5.2), Inches(0.4), note, size=9, color=MUTED)
+
+    # right: video area — fit without stretch
+    area_l, area_t = Inches(6.3), Inches(1.15)
+    area_w, area_h = Inches(6.55), Inches(5.7)
+    if movie is not None and movie.exists():
+        poster_path = poster if poster is not None else POSTERS / f"{movie.stem}.png"
+        frame = ensure_video_poster(movie, poster_path)
+        vw_px, vh_px = probe_video_size(movie)
+        vid_w, vid_h = fit_box(vw_px, vh_px, area_w, area_h)
+        vid_l = area_l + (area_w - vid_w) // 2
+        vid_t = area_t + (area_h - vid_h) // 2
+        s.shapes.add_movie(
+            str(movie),
+            vid_l,
+            vid_t,
+            vid_w,
+            vid_h,
+            poster_frame_image=str(frame) if frame else None,
+            mime_type="video/mp4",
+        )
+        enable_video_fullscreen(s)
+        text(
+            s,
+            area_l,
+            area_t + area_h - Inches(0.28),
+            area_w,
+            Inches(0.25),
+            "Слайд-шоу → ▶  ·  полный экран",
+            size=9,
+            color=MUTED,
+            align=PP_ALIGN.CENTER,
+        )
+    else:
+        rect(s, area_l, area_t, area_w, area_h, CARD, BORDER, radius=True)
+        text(
+            s,
+            area_l,
+            area_t + area_h / 2 - Inches(0.35),
+            area_w,
+            Inches(0.4),
+            video_hint,
+            size=18,
+            bold=True,
+            color=TEXT,
+            align=PP_ALIGN.CENTER,
+        )
+        text(
+            s,
+            area_l + Inches(0.4),
+            area_t + area_h / 2 + Inches(0.15),
+            area_w - Inches(0.8),
+            Inches(0.5),
+            "В PowerPoint: Вставка → Видео → Этот компьютер",
+            size=10,
+            color=MUTED,
+            align=PP_ALIGN.CENTER,
+        )
+    footer(s, n)
 
 
 # ─── slides ───────────────────────────────────────────────────────────────────
@@ -403,6 +614,31 @@ def slide_auth_roles(prs, n):
     footer(s, n)
 
 
+def slide_local_run_video(prs, n):
+    movie = VIDEO / "local run" / "create_project.mp4"
+    slide_video_scenario(
+        prs,
+        n,
+        "Видео: от сценария до пакета",
+        "локальный стенд · простой пример",
+        [
+            "Создаём репозиторий проекта в Git",
+            "Создаём проект в админке и привязываем Git",
+            "Поднимаем Postgres + MinIO, привязываем к проекту",
+            "Делаем форму проекта",
+            "Выдаём доступ к проекту",
+            "Смотрим проект в мобилке",
+            "Заполняем форму и отправляем пакет",
+            "Смотрим пакет в админке",
+            "Привязываем визуализацию",
+            "Имитация инференса (запись в БД)",
+            "Смотрим результат в админке",
+        ],
+        movie=movie,
+        poster=POSTERS / "create_project.png",
+    )
+
+
 def slide_datapipe(prs, n):
     """Based on Downloads/readme.md — stages 0..4, two data entries."""
     s = prs.slides.add_slide(prs.slide_layouts[6])
@@ -470,6 +706,23 @@ def slide_datapipe_stage0(prs, n):
     footer(s, n)
 
 
+def slide_datapipe_video(prs, n):
+    slide_video_scenario(
+        prs,
+        n,
+        "Видео: пайплайны в Datapipe",
+        "инференс + CVAT · связь с Data Collector",
+        [
+            "Создаём пайплайн в Datapipe",
+            "Смотрим граф (инференс + CVAT)",
+            "Связь с collector: pipeline.json → webhook",
+            "Прогон пакета через трубу",
+        ],
+        note="Обучение / FiftyOne / prod — в CV-презентации Datapipe как инструмента",
+        video_hint="▶  Вставить видео · datapipe",
+    )
+
+
 def slide_failure_map(prs, n):
     s = prs.slides.add_slide(prs.slide_layouts[6])
     bg(s, BG)
@@ -510,6 +763,23 @@ def slide_failure_map(prs, n):
     footer(s, n)
 
 
+def slide_errors_video(prs, n):
+    slide_video_scenario(
+        prs,
+        n,
+        "Видео: типичные ошибки",
+        "как выглядят в UI и как чинить",
+        [
+            "Разбор кейсов со слайда «Где искать сбой»",
+            "Симптом в интерфейсе / логах",
+            "Диагностика по слою",
+            "Исправление и проверка",
+        ],
+        note="Можно совместить с docs/architecture/diagnostics-checklist.ru.md",
+        video_hint="▶  Вставить видео · ошибки",
+    )
+
+
 def build() -> Path:
     prs = new_deck()
     n = 1
@@ -521,20 +791,23 @@ def build() -> Path:
     slide_storage(prs, n); n += 1
     slide_package_model(prs, n); n += 1
     slide_auth_roles(prs, n); n += 1
+    slide_local_run_video(prs, n); n += 1
     slide_datapipe(prs, n); n += 1
     slide_datapipe_stage0(prs, n); n += 1
-    slide_failure_map(prs, n)
+    slide_datapipe_video(prs, n); n += 1
+    slide_failure_map(prs, n); n += 1
+    slide_errors_video(prs, n)
 
     assert n == TOTAL, f"Expected {TOTAL} slides, got {n}"
 
-    target = OUT
     try:
-        prs.save(target)
+        prs.save(OUT)
     except PermissionError:
-        target = OUT.with_name(f"{OUT.stem}-generated{OUT.suffix}")
-        prs.save(target)
-        print(f"Note: {OUT.name} is open — saved as {target.name}")
-    return target
+        raise SystemExit(
+            f"{OUT.name} is open in PowerPoint — close it and re-run the generator."
+        ) from None
+    store_videos_uncompressed(OUT)
+    return OUT
 
 
 if __name__ == "__main__":
