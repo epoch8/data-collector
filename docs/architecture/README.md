@@ -24,14 +24,14 @@ python docs/architecture/generate_presentation.py
 | 6 | Где что лежит (4 слоя) |
 | 7 | БД проекта: таблицы |
 | 8 | Кто куда заходит (роли) |
-| 9 | Видео-сценарий: local run → пакет (`create_project.mp4`) |
+| 9 | Видео-сценарий: local run → пакет (`create_simple_project.mp4`) |
 | 10 | Datapipe: стадии 0–4 |
 | 11 | Стадия 0: пакет → CVAT → БД |
 | 12 | Видео-сценарий: пайплайны Datapipe (плейсхолдер) |
 | 13 | Где искать сбой |
 | 14 | Видео-сценарий: типичные ошибки (плейсхолдер) |
 
-Видео (локально): `video/local run/create_project.mp4`
+Видео (локально): `video/local run/create_simple_project.mp4`
 
 ## Справочники
 

@@ -615,7 +615,7 @@ def slide_auth_roles(prs, n):
 
 
 def slide_local_run_video(prs, n):
-    movie = VIDEO / "local run" / "create_project.mp4"
+    movie = VIDEO / "local run" / "create_simple_project.mp4"
     slide_video_scenario(
         prs,
         n,
@@ -635,7 +635,7 @@ def slide_local_run_video(prs, n):
             "Смотрим результат в админке",
         ],
         movie=movie,
-        poster=POSTERS / "create_project.png",
+        poster=POSTERS / "create_simple_project.png",
     )
 
 
