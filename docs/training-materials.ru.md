@@ -17,7 +17,7 @@
 | Артефакт | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
 | Локальный запуск data-collector | Git → Django → Postgres/MinIO → проект в админке → мобилка / API | 🟡 Черновик готов | `docs/architecture/local-run-demo.ru.md` |  |
-| Firebase | Проект, SDK-конфиги, SA, Django auth, пользователи, чек-лист, типовые сбои | 🟡 Черновик готов (плейсхолдеры под свои значения + слоты под скрины) | `docs/architecture/firebase-setup.ru.md` |  |
+| Firebase | Простая инструкция + скилл агента (MCP): проект, SDK, SA, Django, пользователи | 🟢 Готово | `docs/architecture/firebase-setup.ru.md`, `.cursor/skills/firebase-data-collector/` |  |
 | Локальный запуск datapipe | Env, триггеры / `on_commit`, стадии, логи, прогон учебного пакета | 🔴 Нет |  |  |
 | Продакшен-развёртывание | Runbook: Flutter Web, Django, datapipe, хранилища, env, мониторинг, чек-лист staging/prod | 🟡 Частично (есть куски по Flutter Web; полный runbook нет) | `docs/deploy-flutter-web.ru.md` |  |
 | Типичные ошибки и как их решать | Симптом → слой → диагностика → фикс (связка со слайдом/кейсами) | 🟡 Частично: чек-лист + кейсы; цельный runbook нет | `docs/architecture/diagnostics-checklist.ru.md`, `docs/architecture/korovas-broken/cases.md` |  |
@@ -29,7 +29,7 @@
 
 | Артефакт | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
-| Скилы, гайды, лайфхаки AI | Работа с агентом в Cursor/Claude: скиллы, чтение доков, разбор кода на примере Korovas | 🔴 Нет |  |  |
+| Скилы, гайды, лайфхаки AI | Работа с агентом в Cursor: скилл Firebase для collector; остальное (Korovas и т.д.) — позже | 🟡 Частично | `.cursor/skills/firebase-data-collector/`, раздел «Быстрый путь» в `firebase-setup.ru.md` |  |
 | Задания на стендах | Практикумы: карточки задач (формы, пакеты, деплой / метрики, разметка, триггеры) + кейсы `korovas-broken` | 🟡 Кейсы есть; карточки практикумов — нет | `docs/architecture/korovas-broken/cases.md` |  |
 | Ноутбуки для CV-задач | Jupyter: данные, train/eval/export, метрики и bad cases | 🔴 Нет |  |  |
 | Справочник: модели данных | Payload, таблицы БД проекта, роли | 🟢 Готово | `docs/architecture/data-models-reference.ru.md` |  |

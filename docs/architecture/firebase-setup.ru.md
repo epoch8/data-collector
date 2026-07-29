@@ -1,321 +1,174 @@
-# Firebase: настройка для Data Collector
+# Firebase для Data Collector
 
-Пошаговый гайд: один Firebase-проект → клиент (Flutter) → Django (проверка ID token) → пользователи в админке.
+Нужен, чтобы мобилка и админка логинились, а Django проверял токен на `/v1/*`.
 
-Подставьте **свои** значения вместо плейсхолдеров в `<угловых скобках>`.  
-Места под скриншоты отмечены блоками `> 📷 …`.
+**Одно правило:** везде один и тот же Firebase-проект (клиент, Web-конфиг Django, service account). Иначе логин ок, а API → **401**.
 
-Связанные документы: [`local-run-demo.ru.md`](local-run-demo.ru.md), [`../admin-panel/README.ru.md`](../admin-panel/README.ru.md).
-
----
-
-## Зачем это нужно
-
-| Компонент | Роль Firebase |
-| --- | --- |
-| Мобилка / Web | Email/Password → ID token |
-| Django `/v1/*` | Проверяет token через Admin SDK (service account) |
-| Админка `/ui/` | Web SDK (логин staff) + список пользователей из Firebase |
-
-**Правило:** `project_id` у клиента, у Web-конфига Django и у service account JSON — **один и тот же** Firebase-проект. Иначе логин проходит, а API отвечает **401**.
+Связано: [`local-run-demo.ru.md`](local-run-demo.ru.md), [`../admin-panel/README.ru.md`](../admin-panel/README.ru.md).
 
 ---
 
-## Плейсхолдеры
+## Быстрый путь: попросить агента
 
-Заполните один раз и используйте ниже:
+В Cursor откройте этот репозиторий и напишите:
 
-| Плейсхолдер | Откуда взять | Пример формата |
-| --- | --- | --- |
-| `<FIREBASE_PROJECT_ID>` | Firebase Console → Project settings → Project ID | `my-collector-dev` |
-| `<ANDROID_PACKAGE>` | `applicationId` в `android/app/build.gradle(.kts)` | `com.example.data_collector` |
-| `<IOS_BUNDLE_ID>` | Bundle ID в Xcode / `ios/…` | `com.example.dataCollector` |
-| `<ANDROID_APP_ID>` | Console → Project settings → Your apps → Android | `1:123…:android:abc…` |
-| `<WEB_APP_ID>` | Your apps → Web | `1:123…:web:def…` |
-| `<IOS_APP_ID>` | Your apps → iOS (если есть) | `1:123…:ios:…` |
-| `<API_KEY_ANDROID>` | `google-services.json` → `api_key.current_key` | `AIza…` |
-| `<API_KEY_WEB>` | Web SDK config → `apiKey` | `AIza…` |
-| `<MESSAGING_SENDER_ID>` | Project number / `messagingSenderId` | `123456789012` |
-| `<STORAGE_BUCKET>` | обычно `<FIREBASE_PROJECT_ID>.firebasestorage.app` | `…firebasestorage.app` |
-| `<AUTH_DOMAIN>` | обычно `<FIREBASE_PROJECT_ID>.firebaseapp.com` | `….firebaseapp.com` |
-| `<DEMO_USER_EMAIL>` / `<DEMO_USER_PASSWORD>` | создаёте в Authentication → Users | — |
-| `<PATH_TO_SA_JSON>` | скачанный private key | см. §4 |
+```text
+Настрой Firebase для Data Collector по скиллу firebase-data-collector.
+Проект: <ваш-project-id> (или создай новый).
+Package Android: com.example.data_collector
+```
+
+Агент сам пройдёт шаги ниже (MCP + правки файлов). Вам останется:
+
+1. Войти в Google, если попросит (`firebase_login`).
+2. Скачать **service account** JSON в Console (ключ нельзя выдать через MCP) и положить в `django_server/firebase-service-account.json`.
+3. Создать тестового пользователя в Authentication → Users (или попросить агента подсказать куда кликать).
+
+Скилл лежит в `.cursor/skills/firebase-data-collector/`.  
+Firebase MCP уже есть в Cursor (плагин Firebase) — отдельно ставить не обязательно.
 
 ---
 
-## 1. Firebase-проект и приложения
+## Руками: 7 шагов
 
-1. Откройте [Firebase Console](https://console.firebase.google.com/).
-2. Создайте проект или выберите существующий → запомните `<FIREBASE_PROJECT_ID>`.
+### 1. Проект в Firebase
 
-> 📷 Project overview / Project settings — Project ID и Project number
+1. Откройте [console.firebase.google.com](https://console.firebase.google.com/).
+2. Создайте проект или выберите свой → скопируйте **Project ID**.
 
-3. Зарегистрируйте приложения (если ещё нет):
+### 2. Приложения
+
+В Project settings → Your apps добавьте (если ещё нет):
 
 | Платформа | Что указать |
 | --- | --- |
-| **Android** | Package name = `<ANDROID_PACKAGE>` |
-| **Web** | любое display name (нужен для админки `/ui/login/`) |
-| **iOS** (опционально) | Bundle ID = `<IOS_BUNDLE_ID>` |
+| Android | package = `com.example.data_collector` (см. `android/app/build.gradle.kts`) |
+| Web | любое имя — нужно для логина в админке `/ui/` |
+| iOS | только если реально собираете iOS |
 
-> 📷 Add app → Android / Web — форма регистрации
+Скачайте:
 
-4. Скачайте или выгрузите SDK-конфиги:
+- Android → `google-services.json` → положите в `android/app/google-services.json`
+- Web → скопируйте поля config (apiKey, appId, …)
 
-```bash
-npx -y firebase-tools@latest login
-npx -y firebase-tools@latest use <FIREBASE_PROJECT_ID>
+### 3. Клиент Flutter
 
-# Android → файл в репозитории
-npx -y firebase-tools@latest apps:sdkconfig ANDROID <ANDROID_APP_ID> \
-  > android/app/google-services.json
+Обновите `lib/firebase_options.dart`: блоки **android** и **web** должны указывать на **ваш** Project ID и правильные appId (`:android:…` и `:web:…` — разные!).
 
-# Web → скопировать поля в firebase_options + Django (ниже)
-npx -y firebase-tools@latest apps:sdkconfig WEB <WEB_APP_ID>
-
-# iOS (если нужно)
-npx -y firebase-tools@latest apps:sdkconfig IOS <IOS_APP_ID> \
-  > ios/Runner/GoogleService-Info.plist
-```
-
-> 📷 Project settings → Your apps — список App ID
-
-В корне репозитория можно зафиксировать активный проект:
-
-```json
-// .firebaserc
-{
-  "projects": {
-    "default": "<FIREBASE_PROJECT_ID>"
-  }
-}
-```
-
----
-
-## 2. Клиент Flutter
-
-### 2.1. Android
-
-Файл: `android/app/google-services.json`  
-Проверьте:
-
-- `project_info.project_id` = `<FIREBASE_PROJECT_ID>`
-- `client[].android_client_info.package_name` = `<ANDROID_PACKAGE>`
-
-> 📷 (опц.) фрагмент `google-services.json` с `project_id` и `package_name`
-
-### 2.2. `lib/firebase_options.dart`
-
-Платформы **android** и **web** должны указывать на тот же `<FIREBASE_PROJECT_ID>`:
-
-```dart
-static const FirebaseOptions android = FirebaseOptions(
-  apiKey: '<API_KEY_ANDROID>',
-  appId: '<ANDROID_APP_ID>',
-  messagingSenderId: '<MESSAGING_SENDER_ID>',
-  projectId: '<FIREBASE_PROJECT_ID>',
-  authDomain: '<AUTH_DOMAIN>',
-  storageBucket: '<STORAGE_BUCKET>',
-);
-
-static const FirebaseOptions web = FirebaseOptions(
-  apiKey: '<API_KEY_WEB>',
-  appId: '<WEB_APP_ID>',
-  messagingSenderId: '<MESSAGING_SENDER_ID>',
-  projectId: '<FIREBASE_PROJECT_ID>',
-  authDomain: '<AUTH_DOMAIN>',
-  storageBucket: '<STORAGE_BUCKET>',
-);
-```
-
-iOS/macOS — по необходимости, после регистрации iOS-приложения.
-
-Альтернатива: `dart run flutterfire_cli:flutterfire configure` и выбор того же проекта.
+Альтернатива: `dart run flutterfire_cli:flutterfire configure` и выбрать тот же проект.
 
 После смены конфигов — **полный restart** приложения (не hot reload).
 
----
+### 4. Включить Email/Password
 
-## 3. Authentication в Console
+1. Build → Authentication → Sign-in method → **Email/Password** → Enable.
+2. Users → Add user → email и пароль для теста.
+3. Settings → Authorized domains → должны быть `localhost` и `127.0.0.1`.
 
-1. **Build → Authentication → Sign-in method** → включить **Email/Password**.
+### 5. Ключ для Django (service account)
 
-> 📷 Sign-in method — Email/Password Enabled
+Без этого файла Django не проверяет токены → **401**.
 
-2. **Users → Add user** → `<DEMO_USER_EMAIL>` / `<DEMO_USER_PASSWORD>`  
-   Этот же логин используете в мобилке.
-
-> 📷 Users — созданный пользователь
-
-3. **Authentication → Settings → Authorized domains**  
-   Для локальной админки должны быть `localhost` и `127.0.0.1` (и ваш прод-домен, если есть).
-
-> 📷 Authorized domains
-
----
-
-## 4. Service account для Django
-
-Без ключа Admin SDK Django не проверяет ID token → **401** на `/v1/*`.
-
-1. ⚙️ **Project settings → Service accounts**.
-2. **Generate new private key** → скачать JSON.
-
-> 📷 Service accounts — Generate new private key
-
-3. Положить файл (путь по умолчанию в коде; файл в `.gitignore` — **не коммитить**):
+1. Project settings → Service accounts → **Generate new private key**.
+2. Сохраните как:
 
 ```text
 django_server/firebase-service-account.json
 ```
 
-или указать путь:
+Файл в `.gitignore` — **не коммитить**. В JSON поле `project_id` = ваш Project ID.
 
-```powershell
-# PowerShell
-$env:FIREBASE_SERVICE_ACCOUNT_PATH = "<PATH_TO_SA_JSON>"
-```
+Другой путь: `$env:FIREBASE_SERVICE_ACCOUNT_PATH = "C:\path\to\key.json"` (PowerShell).
 
-```bash
-# macOS / Linux
-export FIREBASE_SERVICE_ACCOUNT_PATH="<PATH_TO_SA_JSON>"
-```
+### 6. Web-конфиг Django + запуск
 
-В JSON поле `"project_id"` должно быть **`<FIREBASE_PROJECT_ID>`** — тот же, что у клиента.
+В `django_server/collector_site/settings.py` (или через env) те же Web-поля, что в `firebase_options.dart`:
 
-Другие варианты: `FIREBASE_SERVICE_ACCOUNT_JSON` (весь JSON строкой) или `GOOGLE_APPLICATION_CREDENTIALS`.
-
----
-
-## 5. Django: Web SDK и запуск с auth
-
-### 5.1. `FIREBASE_WEB_CONFIG`
-
-В `django_server/collector_site/settings.py` (или через env) — те же значения, что Web в `firebase_options.dart`:
-
-| Ключ | Значение |
+| Env | Поле |
 | --- | --- |
-| `apiKey` | `<API_KEY_WEB>` |
-| `authDomain` | `<AUTH_DOMAIN>` |
-| `projectId` | `<FIREBASE_PROJECT_ID>` |
-| `storageBucket` | `<STORAGE_BUCKET>` |
-| `messagingSenderId` | `<MESSAGING_SENDER_ID>` |
-| `appId` | `<WEB_APP_ID>` |
+| `FIREBASE_WEB_API_KEY` | apiKey |
+| `FIREBASE_WEB_AUTH_DOMAIN` | authDomain |
+| `FIREBASE_WEB_PROJECT_ID` | projectId |
+| `FIREBASE_WEB_STORAGE_BUCKET` | storageBucket |
+| `FIREBASE_WEB_MESSAGING_SENDER_ID` | messagingSenderId |
+| `FIREBASE_WEB_APP_ID` | appId |
 
-Переменные окружения (если не хотите править defaults в коде):  
-`FIREBASE_WEB_API_KEY`, `FIREBASE_WEB_AUTH_DOMAIN`, `FIREBASE_WEB_PROJECT_ID`, `FIREBASE_WEB_STORAGE_BUCKET`, `FIREBASE_WEB_MESSAGING_SENDER_ID`, `FIREBASE_WEB_APP_ID`.
-
-### 5.2. Запуск с проверкой токенов
-
-При наличии `firebase-service-account.json` auth обычно включается сам.  
-Не задавайте `FIREBASE_AUTH_ENABLED=false` и не ставьте `API_BEARER_TOKEN` для этого сценария.
+Запуск (не ставьте `FIREBASE_AUTH_ENABLED=false`):
 
 ```powershell
-Remove-Item Env:FIREBASE_AUTH_ENABLED -ErrorAction SilentlyContinue
-Remove-Item Env:API_BEARER_TOKEN -ErrorAction SilentlyContinue
 cd django_server
 python manage.py runserver 0.0.0.0:8000
 ```
 
+Проверка: `GET /v1/projects` без заголовка → **401**; с Bearer (Firebase ID token) → **200**.
+
+### 7. Права в админке + мобилка
+
+1. `http://127.0.0.1:8000/ui/` → войти staff.
+2. **Пользователи** → **Синхронизировать с Firebase**.
+3. У тестового пользователя включить нужные **mobile_projects**.
+4. Перелогин в приложении.
+
+Мобилка:
+
 ```bash
-unset FIREBASE_AUTH_ENABLED
-unset API_BEARER_TOKEN
-cd django_server
-python manage.py runserver 0.0.0.0:8000
+flutter run -d <device> --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
-Ожидание: `GET /v1/projects` **без** `Authorization` → **401**; с валидным Bearer (ID token) → **200**.
-
-Переменные читаются при старте процесса — после смены SA/флагов нужен перезапуск `runserver`.
-
----
-
-## 6. Пользователи и доступ к проектам
-
-1. Откройте админку: `http://127.0.0.1:8000/ui/` (staff).
-2. Раздел **Пользователи** → **Синхронизировать с Firebase**.
-3. У нужного пользователя выдайте **mobile_projects** (проекты, которые видит мобилка).
-4. После смены прав — **перелогин** в приложении.
-
-> 📷 Пользователи → Sync → галочки mobile_projects
-
-Подробнее про роли: [`../admin-panel/README.ru.md`](../admin-panel/README.ru.md).
-
----
-
-## 7. Запуск мобилки
-
-| Устройство | `API_BASE_URL` |
+| Устройство | API_BASE_URL |
 | --- | --- |
-| Android-эмулятор | `http://10.0.2.2:<PORT>` |
-| iOS-симулятор | `http://127.0.0.1:<PORT>` |
-| Физический телефон | `http://<IP_ПК>:<PORT>` |
+| Android-эмулятор | `http://10.0.2.2:8000` |
+| iOS-симулятор | `http://127.0.0.1:8000` |
+| Телефон | `http://<IP_ПК>:8000` |
 
-```bash
-flutter pub get
-flutter run -d <device_id> \
-  --dart-define=API_BASE_URL=http://10.0.2.2:8000
-```
-
-Войти: `<DEMO_USER_EMAIL>` / `<DEMO_USER_PASSWORD>`.
-
-> 📷 Экран логина приложения
+Войти тем же email/паролем, что в Firebase Users.
 
 ---
 
-## 8. Обход без Firebase Auth (только для быстрого демо)
-
-Если service account ещё нет и нужно просто проверить API:
+## Обход без Firebase (только быстрое демо API)
 
 ```powershell
 $env:FIREBASE_AUTH_ENABLED = "false"
 python manage.py runserver 0.0.0.0:8000
 ```
 
-```bash
-export FIREBASE_AUTH_ENABLED=false
-python manage.py runserver 0.0.0.0:8000
-```
-
-Тогда `/v1/*` не требует Firebase JWT. Для нормальной связки с логином вернитесь к §4–§5.
-
-Полный локальный пайплайн (Git, Postgres, MinIO): [`local-run-demo.ru.md`](local-run-demo.ru.md).
+Тогда `/v1/*` не требует JWT. Для нормального логина вернитесь к шагам 5–7.
 
 ---
 
 ## Чек-лист
 
-| # | Шаг | Ок |
-| --- | --- | --- |
-| 1 | Один `<FIREBASE_PROJECT_ID>` везде | ☐ |
-| 2 | Android/Web apps зарегистрированы, SDK-конфиги на месте | ☐ |
-| 3 | Email/Password включён, демо-пользователь создан | ☐ |
-| 4 | `firebase-service-account.json` от того же project_id | ☐ |
-| 5 | `FIREBASE_WEB_CONFIG` = Web из `firebase_options` | ☐ |
-| 6 | `runserver` без `FIREBASE_AUTH_ENABLED=false` | ☐ |
-| 7 | Sync пользователей + `mobile_projects` | ☐ |
-| 8 | Flutter с `API_BASE_URL`, логин, каталог проектов виден | ☐ |
+| # | Готово? |
+| --- | --- |
+| 1 | Один Project ID везде |
+| 2 | `google-services.json` + `firebase_options` (android/web) |
+| 3 | Email/Password + тестовый пользователь |
+| 4 | `django_server/firebase-service-account.json` от того же проекта |
+| 5 | `FIREBASE_WEB_*` = Web из `firebase_options` |
+| 6 | Sync пользователей + `mobile_projects` |
+| 7 | Flutter с `API_BASE_URL`, логин, проекты видны |
 
 ---
 
 ## Если не работает
 
-| Симптом | Что проверить |
+| Симптом | Что сделать |
 | --- | --- |
-| **401** на `/v1/*` | SA и клиент — один project_id; перезапуск Django; полный restart Flutter + повторный логин |
-| Firebase не инициализируется | `google-services.json` / `firebase_options` / package name |
-| Логин ок, проектов нет | Админка → **mobile_projects**; Git sync проекта на сервере |
-| Админка не логинится (Web) | `FIREBASE_WEB_CONFIG`, Authorized domains (`localhost`) |
-| Токен «чужого» проекта | Не смешивать два Firebase-проекта в клиенте и SA |
+| **401** на `/v1/*` | Один project_id у клиента и SA; перезапуск Django; полный restart Flutter + новый логин |
+| Firebase не стартует | `google-services.json`, package name, `firebase_options` |
+| Логин ок, проектов нет | Админка → `mobile_projects`; перелогин |
+| Админка не логинится | `FIREBASE_WEB_*`, Authorized domains |
+| iOS/macOS «чужой» проект | В репо часто android/web = один проект, ios/macos = другой. Для демо достаточно android |
 
 ---
 
-## Куда класть скриншоты
+## Агенту: что делает MCP, что нет
 
-Рекомендуемая папка: `docs/architecture/img/firebase/`  
-Вставляйте под блоками `> 📷 …`, например:
+| Можно через Firebase MCP | Только руками / файлы |
+| --- | --- |
+| Логин, список/создание проектов | Скачать private key (service account) |
+| Создать Android/Web app | Положить SA JSON на диск |
+| Выдать SDK-конфиг (`firebase_get_sdk_config`) | Создать пользователя в Auth (или Console) |
+| Включить Email/Password (`firebase_update_environment`) | Выдать `mobile_projects` в Django-админке |
 
-```markdown
-![Project ID](img/firebase/01-project-settings.png)
-```
+Подробный сценарий для агента: `.cursor/skills/firebase-data-collector/SKILL.md`.

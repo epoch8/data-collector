@@ -42,4 +42,4 @@ python docs/architecture/generate_presentation.py
 | [`korovas-broken/cases.md`](korovas-broken/cases.md) | Кейсы инцидентов |
 | [`diagnostics-checklist.ru.md`](diagnostics-checklist.ru.md) | Чек-лист диагностики |
 | [`local-run-demo.ru.md`](local-run-demo.ru.md) | Локальный демо: Git → Django → Postgres/MinIO → привязка |
-| [`firebase-setup.ru.md`](firebase-setup.ru.md) | Firebase: проект, SDK, SA, Django auth, пользователи |
+| [`firebase-setup.ru.md`](firebase-setup.ru.md) | Firebase: простая инструкция + путь через агента (скилл `.cursor/skills/firebase-data-collector/`) |
