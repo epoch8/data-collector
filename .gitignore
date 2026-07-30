@@ -101,6 +101,10 @@ node_modules/
 docs/architecture/Architecture.pptx
 docs/architecture/video/**/*.mp4
 
+# Datapipe intro deck — generate via docs/datapipe/generate_presentation.py
+docs/datapipe/Datapipe.pptx
+docs/datapipe/video/**/*.mp4
+
 # --- legacy/: вложенные внешние репозитории (своя git-история, локально) ---
 legacy/cowmetric/
 legacy/korovas/

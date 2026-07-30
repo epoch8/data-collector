@@ -6,8 +6,12 @@
 
 | Артефакт | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
-| Архитектура + видеокасты | Схемы стека, потока данных, ролей, хранилищ, БД проекта, datapipe; слайды-сценарии под видео (14 слайдов). Рядом справочники: модели, поток пакета, диагностика | 🟡 Основной контент готов. Видеокаст local run встроен; datapipe и «типичные ошибки» — плейсхолдеры | `docs/architecture/Architecture.pptx` | https://github.com/epoch8/data-collector/blob/chore/repo-cleanup/docs/architecture/Architecture.pptx |
-| E2E пайплайн коров | Сквозной сценарий Korovas: форма → съёмка → upload → datapipe → viz → протокол | 🟡 Основной контент и часть видеокастов/скринов готовы. Datapipe-каст и часть стадий — нет | `docs/e2e-korovas/Korovas-E2E.pptx` | https://github.com/epoch8/data-collector/blob/chore/repo-cleanup/docs/e2e-korovas/Korovas-E2E.pptx |
+| Архитектура + видеокасты | Схемы стека, потока данных, ролей, хранилищ, БД проекта, datapipe; слайды-сценарии под видео (14 слайдов). Рядом справочники: модели, поток пакета, диагностика | 🟡 Основной контент готов. Видеокаст local run встроен; datapipe и «типичные ошибки» — плейсхолдеры | `docs/architecture/Architecture.pptx` | 
+
+https://disk.yandex.ru/i/oDWOWD17wSykVg |
+| E2E пайплайн коров | Сквозной сценарий Korovas: форма → съёмка → upload → datapipe → viz → протокол | 🟡 Основной контент и часть видеокастов/скринов готовы. Datapipe-каст и часть стадий — нет | `docs/e2e-korovas/Korovas-E2E.pptx` | 
+https://disk.yandex.ru/i/OAZLm1F3VDninA |
+| Datapipe | Вводная презентация в фреймворк (11 слайдов): проблема, record-level, Python/Skills/UI, Ops, метрики, связь с collector | 🟡 Основной контент готов. Видеокаст «Datapipe суть» — плейсхолдер | `docs/datapipe/Datapipe.pptx` |  |
 | CV / Datapipe | CV-пайплайны: стадии, CVAT, inference, метрики (PCK и др.), bad cases | 🔴 Не начато |  |  |
 
 ---
@@ -16,8 +20,8 @@
 
 | Артефакт | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
-| Локальный запуск data-collector | Git → Django → Postgres/MinIO → проект в админке → мобилка / API | 🟡 Черновик готов | `docs/architecture/local-run-demo.ru.md` |  |
-| Firebase | Простая инструкция + скилл агента (MCP): проект, SDK, SA, Django, пользователи | 🟢 Готово | `docs/architecture/firebase-setup.ru.md`, `.cursor/skills/firebase-data-collector/` |  |
+| Локальный запуск data-collector | Git → Django → Postgres/MinIO → проект в админке → мобилка / API | 🟢 Готово | `docs/architecture/local-run-demo.ru.md` |  |
+| Firebase | Инструкция и скилл для настройки firebase | 🟢 Готово | `docs/architecture/firebase-setup.ru.md` |  |
 | Локальный запуск datapipe | Env, триггеры / `on_commit`, стадии, логи, прогон учебного пакета | 🔴 Нет |  |  |
 | Продакшен-развёртывание | Runbook: Flutter Web, Django, datapipe, хранилища, env, мониторинг, чек-лист staging/prod | 🟡 Частично (есть куски по Flutter Web; полный runbook нет) | `docs/deploy-flutter-web.ru.md` |  |
 | Типичные ошибки и как их решать | Симптом → слой → диагностика → фикс (связка со слайдом/кейсами) | 🟡 Частично: чек-лист + кейсы; цельный runbook нет | `docs/architecture/diagnostics-checklist.ru.md`, `docs/architecture/korovas-broken/cases.md` |  |
@@ -29,7 +33,7 @@
 
 | Артефакт | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
-| Скилы, гайды, лайфхаки AI | Работа с агентом в Cursor: скилл Firebase для collector; остальное (Korovas и т.д.) — позже | 🟡 Частично | `.cursor/skills/firebase-data-collector/`, раздел «Быстрый путь» в `firebase-setup.ru.md` |  |
+| Скилы, гайды, лайфхаки AI | Работа с агентом в Cursor/Claude: скиллы, чтение доков, разбор кода на примере Korovas | 🔴 Нет |  |  |
 | Задания на стендах | Практикумы: карточки задач (формы, пакеты, деплой / метрики, разметка, триггеры) + кейсы `korovas-broken` | 🟡 Кейсы есть; карточки практикумов — нет | `docs/architecture/korovas-broken/cases.md` |  |
 | Ноутбуки для CV-задач | Jupyter: данные, train/eval/export, метрики и bad cases | 🔴 Нет |  |  |
 | Справочник: модели данных | Payload, таблицы БД проекта, роли | 🟢 Готово | `docs/architecture/data-models-reference.ru.md` |  |
@@ -43,12 +47,13 @@
 
 | Название | Краткое описание | Готовность | Путь в репо | Ссылка |
 | --- | --- | --- | --- | --- |
-| Создание формы бонитировки (проект коровы) | Админка / Git: форма и сценарий съёмки | 🟡 Частично (есть материалы в E2E-блоке) | `docs/e2e-korovas/` |  |
-| Сбор и отправка пакета в МП | Мобилка: съёмка → пакет → вкладка «Сервер» | 🟡 Частично (E2E) | `docs/e2e-korovas/` |  |
+| Создание формы бонитировки (проект коровы) | Админка / Git: форма и сценарий съёмки | 🟢 Готово | `docs/e2e-korovas/` | https://disk.yandex.ru/i/yOm4rilGU5fF7w |
+| Сбор и отправка пакета в МП | Мобилка: съёмка → пакет → вкладка «Сервер» | 🟢 Готово | `docs/e2e-korovas/` | https://disk.yandex.ru/i/RYjpXS8Y8ZxhHg |
+| Data Collector на локальном стенде | От Git до пакета в админке (простой пример) | 🟢 Готово | `docs/architecture/video/local run/create_project.mp4` | https://disk.yandex.ru/i/PQyRmdY1-Ah1gA |
+| Data Collector визуализация пакета | Визуализация keypoint и размеров КРС в админке | 🟢 Готово | `docs/e2e-korovas/` | https://disk.yandex.ru/i/xnSm0b0UJFzm9w |
 | Datapipe суть | Что такое datapipe, зачем, как устроен граф | 🔴 Нет |  |  |
 | Datapipe в проекте коров | Инференс + CVAT на Korovas, связь с collector | 🔴 Нет (плейсхолдер на слайде 12 Architecture) |  |  |
 | Datapipe CV обучение моделей | Train / eval / метрики / bad cases | 🔴 Нет |  |  |
-| Data Collector на локальном стенде | От Git до пакета в админке (простой пример) | 🟢 Готово | `docs/architecture/video/local run/create_project.mp4` |  |
-| Разбор типичных ошибок и как их чинить | Нарезка по слоям + UI | 🔴 Нет (плейсхолдер на слайде 14 Architecture) |  |  |
+| Разбор типичных ошибок и как их чинить | Нарезка по слоям + UI | 🔴 Нет  |  |  |
 
 ---
