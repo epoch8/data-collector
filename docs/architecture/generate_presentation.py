@@ -31,7 +31,7 @@ spec.loader.exec_module(gen)
 
 C = gen.C
 W = gen.W
-TOTAL = 14
+TOTAL = 13
 
 bg = gen.bg
 text = gen.text
@@ -707,19 +707,25 @@ def slide_datapipe_stage0(prs, n):
 
 
 def slide_datapipe_video(prs, n):
+    movie = VIDEO / "local run" / "full_datapipe_local.mp4"
     slide_video_scenario(
         prs,
         n,
-        "Видео: пайплайны в Datapipe",
-        "инференс + CVAT · связь с Data Collector",
+        "Видео: collector → Datapipe → CVAT",
+        "локальный стенд · packages + webhook · без Gradio",
         [
-            "Создаём пайплайн в Datapipe",
-            "Смотрим граф (инференс + CVAT)",
-            "Связь с collector: pipeline.json → webhook",
-            "Прогон пакета через трубу",
+            "pipeline.json: on_commit → Datapipe :8010",
+            "Проверить Git в админке",
+            "Commit пакета → авто stage=packages",
+            "Datapipe UI: run / логи / граф",
+            "CVAT: разметка cow + cow_keypoints",
+            "Acceptance → Completed",
+            "Webhook CVAT → снова packages",
+            "Админка: слои CVAT + GT",
         ],
-        note="Обучение / FiftyOne / prod — в CV-презентации Datapipe как инструмента",
-        video_hint="▶  Вставить видео · datapipe",
+        note="Гайд: docs/architecture/local-run-korovas-datapipe.ru.md",
+        movie=movie,
+        poster=POSTERS / "full_datapipe_local.png",
     )
 
 
@@ -763,23 +769,6 @@ def slide_failure_map(prs, n):
     footer(s, n)
 
 
-def slide_errors_video(prs, n):
-    slide_video_scenario(
-        prs,
-        n,
-        "Видео: типичные ошибки",
-        "как выглядят в UI и как чинить",
-        [
-            "Разбор кейсов со слайда «Где искать сбой»",
-            "Симптом в интерфейсе / логах",
-            "Диагностика по слою",
-            "Исправление и проверка",
-        ],
-        note="Можно совместить с docs/architecture/diagnostics-checklist.ru.md",
-        video_hint="▶  Вставить видео · ошибки",
-    )
-
-
 def build() -> Path:
     prs = new_deck()
     n = 1
@@ -795,8 +784,7 @@ def build() -> Path:
     slide_datapipe(prs, n); n += 1
     slide_datapipe_stage0(prs, n); n += 1
     slide_datapipe_video(prs, n); n += 1
-    slide_failure_map(prs, n); n += 1
-    slide_errors_video(prs, n)
+    slide_failure_map(prs, n)
 
     assert n == TOTAL, f"Expected {TOTAL} slides, got {n}"
 

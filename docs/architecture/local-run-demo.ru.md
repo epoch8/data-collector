@@ -399,6 +399,7 @@ flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.10:8000
 
 ## Ссылки
 
+- `[local-run-korovas-datapipe.ru.md](local-run-korovas-datapipe.ru.md)` — следующий шаг: пакеты → Datapipe → CVAT (скилл агента)
 - `[firebase-setup.ru.md](firebase-setup.ru.md)` — Firebase: клиент, SA, Django, пользователи
 - `[test_dev/README.ru.md](../../test_dev/README.ru.md)` — compose и URI
 - `[docs/admin-panel/README.ru.md](../admin-panel/README.ru.md)` — создание проекта в UI
