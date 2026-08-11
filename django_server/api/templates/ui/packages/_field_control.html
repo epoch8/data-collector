@@ -1,0 +1,19 @@
+{% if f.type == "single_choice" %}
+<select class="{{ input_class|default:'form-control' }}"
+        id="{{ id_prefix }}{{ f.field_id }}"
+        name="{{ name_prefix }}{{ f.field_id }}"
+        data-initial="{{ f.value }}"
+        {% if data_field_attr %}{{ data_field_attr }}="{{ f.field_id }}"{% endif %}>
+  <option value=""{% if not f.value %} selected{% endif %}>—</option>
+  {% for opt in f.options %}
+  <option value="{{ opt.value }}"{% if f.value == opt.value %} selected{% endif %}>{{ opt.label }}</option>
+  {% endfor %}
+</select>
+{% else %}
+<input type="text" class="{{ input_class|default:'form-control' }}"
+       id="{{ id_prefix }}{{ f.field_id }}"
+       name="{{ name_prefix }}{{ f.field_id }}"
+       value="{{ f.value }}"
+       data-initial="{{ f.value }}"
+       {% if data_field_attr %}{{ data_field_attr }}="{{ f.field_id }}"{% endif %}>
+{% endif %}

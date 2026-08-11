@@ -76,6 +76,7 @@
         <button type="button" class="pkg-tab active" data-tab="data">{% trans "Данные" %}</button>
         <button type="button" class="pkg-tab" data-tab="media">{% trans "Медиа" %}<span class="pkg-tab__count">{{ blob_count }}</span></button>
         {% if has_viz %}<button type="button" class="pkg-tab" data-tab="viz">{% trans "Визуализация" %}</button>{% endif %}
+        <button type="button" class="pkg-tab" data-tab="protocol">{% trans "Сборка протокола" %}</button>
         <button type="button" class="pkg-tab" data-tab="history">{% trans "История изменений" %}<span class="pkg-tab__count">{{ entries|length }}</span></button>
         <button type="button" class="pkg-tab" data-tab="json">{% trans "JSON" %}</button>
       </div>
@@ -102,12 +103,11 @@
                   </label>
                   {% if f.hint %}<div class="pkg-field__hint">{{ f.hint }}</div>{% endif %}
                   {% if f.editable %}
-                  <input type="text" class="form-control" id="f-{{ f.field_id }}" name="data__{{ f.field_id }}"
-                         value="{{ f.value }}" data-initial="{{ f.value }}" data-field="{{ f.field_id }}">
+                  {% include "ui/packages/_field_control.html" with f=f name_prefix="data__" id_prefix="f-" data_field_attr="data-field" input_class="form-control" %}
                   {% elif f.type == 'datetime' %}
                   <div class="pkg-field__ro" data-datetime="{{ f.value }}">{{ f.value|default:"—" }}</div>
                   {% else %}
-                  <div class="pkg-field__ro">{{ f.value|default:"—" }}</div>
+                  <div class="pkg-field__ro">{{ f.display_value|default:f.value|default:"—" }}</div>
                   {% endif %}
                 </div>
                 {% endfor %}
@@ -174,6 +174,216 @@
         </div>
       </section>
       {% endif %}
+
+      {# ── Protocol assembly panel ── #}
+      <section class="pkg-panel" data-panel="protocol">
+        <div class="pkg-protocol" id="pkgProtocol">
+          <div class="pkg-protocol__toolbar">
+            <div class="pkg-protocol__intro">
+              <div class="pkg-protocol__title">{% trans "Сборка протокола бонитировки" %}</div>
+              <p class="pkg-protocol__hint ui-muted">
+                {% trans "Проверьте значения перед выгрузкой. Если есть ручной промер — он идёт в протокол, рядом показано значение инференса. Если ручного нет — подставляется инференс." %}
+              </p>
+            </div>
+            <div class="pkg-protocol__actions">
+              {% if is_editable %}
+              <button type="button" class="btn btn-outline-light btn-sm" id="pkgProtocolFillInference">
+                <i class="bi bi-magic me-1"></i>{% trans "Заполнить пустые из инференса" %}
+              </button>
+              {% endif %}
+              <label class="pkg-protocol__media-opt" title="{% trans 'Фото всегда попадают в PDF. Галочка добавляет папку media/ с оригиналами в ZIP.' %}">
+                <input type="hidden" name="include_media_files" value="0" form="pkgForm">
+                <input type="checkbox" name="include_media_files" id="pkgProtocolIncludeMedia" value="1" form="pkgForm" checked>
+                <span>{% trans "Оригиналы медиа в ZIP" %}</span>
+              </label>
+              <button type="submit" class="btn btn-primary btn-sm pkg-protocol-export"
+                      formaction="{{ protocol_export_url }}" formmethod="post" form="pkgForm"
+                      id="pkgProtocolExportBtn">
+                <i class="bi bi-file-earmark-zip me-1"></i>{% trans "Скачать ZIP" %}
+              </button>
+            </div>
+          </div>
+
+          <div class="pkg-protocol__layout">
+            <div class="pkg-protocol__form">
+              {% if protocol.identity %}
+              <div class="pkg-protocol__section">
+                <h3 class="pkg-protocol__section-title">{% trans "Идентификация" %}</h3>
+                <div class="pkg-protocol__fields">
+                  {% for f in protocol.identity %}
+                  <div class="pkg-protocol__field">
+                    <label class="pkg-protocol__label" for="p-{{ f.field_id }}">{{ f.label }}</label>
+                    {% if f.editable %}
+                    {% include "ui/packages/_protocol_field_control.html" with f=f %}
+                    {% else %}
+                    <div class="pkg-protocol__ro">{{ f.display_value|default:f.value|default:"—" }}</div>
+                    <input type="hidden" name="protocol__{{ f.field_id }}" value="{{ f.value }}">
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              <div class="pkg-protocol__section">
+                <h3 class="pkg-protocol__section-title">{% trans "Промеры" %}</h3>
+                {% if protocol.measurements %}
+                <div class="table-responsive">
+                  <table class="pkg-protocol__table">
+                    <thead>
+                      <tr>
+                        <th>{% trans "Показатель" %}</th>
+                        <th>{% trans "В протоколе" %}</th>
+                        <th>{% trans "Ручной" %}</th>
+                        <th>{% trans "Инференс" %}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for f in protocol.measurements %}
+                      <tr data-source="{{ f.source }}">
+                        <td>
+                          <div class="pkg-protocol__metric-label">{{ f.label }}</div>
+                          {% if f.inference_key %}<div class="pkg-protocol__metric-key ui-muted">{{ f.inference_key }}</div>{% endif %}
+                        </td>
+                        <td>
+                          {% if f.editable %}
+                          {% include "ui/packages/_protocol_field_control.html" with f=f %}
+                          {% else %}
+                          <span>{{ f.display_value|default:f.value|default:"—" }}</span>
+                          <input type="hidden" name="protocol__{{ f.field_id }}" value="{{ f.value }}">
+                          {% endif %}
+                        </td>
+                        <td class="pkg-protocol__col-manual">{% if f.manual %}{{ f.manual }}{% else %}—{% endif %}</td>
+                        <td class="pkg-protocol__col-inference">{% if f.inference %}{{ f.inference }}{% else %}—{% endif %}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+                {% else %}
+                <div class="ui-muted small">{% trans "Нет полей промеров в форме проекта." %}</div>
+                {% endif %}
+                {% if protocol.extra_inference %}
+                <div class="pkg-protocol__extra">
+                  <div class="pkg-protocol__extra-title">{% trans "Метрики инференса без поля формы" %}</div>
+                  <ul class="pkg-protocol__extra-list">
+                    {% for item in protocol.extra_inference %}
+                    <li><span>{{ item.label }}</span><strong>{{ item.value }}</strong></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+                {% endif %}
+              </div>
+
+              {% if protocol.qualitative %}
+              <div class="pkg-protocol__section">
+                <h3 class="pkg-protocol__section-title">{% trans "Качественные признаки" %}</h3>
+                <div class="pkg-protocol__fields pkg-protocol__fields--qual">
+                  {% for f in protocol.qualitative %}
+                  <div class="pkg-protocol__field {% if '_desc' in f.field_id %}pkg-protocol__field--wide{% endif %}">
+                    <label class="pkg-protocol__label" for="p-{{ f.field_id }}">{{ f.label }}</label>
+                    {% if f.editable %}
+                    {% include "ui/packages/_protocol_field_control.html" with f=f %}
+                    {% else %}
+                    <div class="pkg-protocol__ro">{{ f.display_value|default:f.value|default:"—" }}</div>
+                    <input type="hidden" name="protocol__{{ f.field_id }}" value="{{ f.value }}">
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+
+              {% if protocol.other_fields %}
+              <div class="pkg-protocol__section">
+                <h3 class="pkg-protocol__section-title">{% trans "Прочее" %}</h3>
+                <div class="pkg-protocol__fields">
+                  {% for f in protocol.other_fields %}
+                  <div class="pkg-protocol__field">
+                    <label class="pkg-protocol__label" for="p-{{ f.field_id }}">{{ f.label }}</label>
+                    {% if f.editable %}
+                    {% include "ui/packages/_protocol_field_control.html" with f=f %}
+                    {% else %}
+                    <div class="pkg-protocol__ro">{{ f.display_value|default:f.value|default:"—" }}</div>
+                    <input type="hidden" name="protocol__{{ f.field_id }}" value="{{ f.value }}">
+                    {% endif %}
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <aside class="pkg-protocol__preview">
+              <div class="pkg-protocol__preview-card">
+                <div class="pkg-protocol__preview-head">
+                  <span>{% trans "Превью протокола" %}</span>
+                  <span class="pkg-protocol__preview-meta">PDF + ZIP</span>
+                </div>
+                <div class="pkg-protocol__preview-body" id="pkgProtocolPreview">
+                  <div class="pkg-protocol__preview-title">{% trans "Протокол бонитировки" %}</div>
+                  <div class="pkg-protocol__preview-sub">{{ protocol.project_name }} · {{ package_id }}</div>
+                  <div class="pkg-protocol__preview-block">
+                    <div class="pkg-protocol__preview-h">{% trans "Идентификация" %}</div>
+                    <dl class="pkg-protocol__preview-dl" data-preview-group="identity">
+                      {% for f in protocol.identity %}
+                      <div><dt>{{ f.label }}</dt><dd data-preview-for="{{ f.field_id }}">{{ f.display_value|default:f.value|default:"—" }}</dd></div>
+                      {% empty %}
+                      <div class="ui-muted small">{% trans "Нет данных" %}</div>
+                      {% endfor %}
+                    </dl>
+                  </div>
+                  <div class="pkg-protocol__preview-block">
+                    <div class="pkg-protocol__preview-h">{% trans "Промеры" %}</div>
+                    <dl class="pkg-protocol__preview-dl" data-preview-group="measurements">
+                      {% for f in protocol.measurements %}
+                      <div>
+                        <dt>{{ f.label }}</dt>
+                        <dd>
+                          <span data-preview-for="{{ f.field_id }}">{{ f.display_value|default:f.value|default:"—" }}</span>
+                          {% if f.manual and f.inference %}
+                          <span class="pkg-protocol__preview-side">{% blocktrans with inf=f.inference %}ручн. · инф. {{ inf }}{% endblocktrans %}</span>
+                          {% elif f.inference and f.source == "inference" %}
+                          <span class="pkg-protocol__preview-side">{% trans "из инференса" %}</span>
+                          {% endif %}
+                        </dd>
+                      </div>
+                      {% empty %}
+                      <div class="ui-muted small">{% trans "Нет промеров" %}</div>
+                      {% endfor %}
+                    </dl>
+                  </div>
+                  {% if protocol.qualitative %}
+                  <div class="pkg-protocol__preview-block">
+                    <div class="pkg-protocol__preview-h">{% trans "Качество" %}</div>
+                    <dl class="pkg-protocol__preview-dl">
+                      {% for f in protocol.qualitative %}
+                      <div><dt>{{ f.label }}</dt><dd data-preview-for="{{ f.field_id }}">{{ f.display_value|default:f.value|default:"—" }}</dd></div>
+                      {% endfor %}
+                    </dl>
+                  </div>
+                  {% endif %}
+                  <div class="pkg-protocol__preview-block">
+                    <div class="pkg-protocol__preview-h">{% trans "Медиа" %} <span class="pkg-tab__count">{{ protocol.media|length }}</span></div>
+                    <div class="pkg-protocol__preview-media">
+                      {% for m in protocol.media %}
+                      <figure class="pkg-protocol__thumb">
+                        {% if m.url %}
+                        <img src="{{ m.url }}" alt="{{ m.label }}" loading="lazy" data-display-image="1">
+                        {% endif %}
+                        <figcaption>{{ m.label }}</figcaption>
+                      </figure>
+                      {% empty %}
+                      <div class="ui-muted small">{% trans "Нет медиа" %}</div>
+                      {% endfor %}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
 
       {# ── Change history panel ── #}
       <section class="pkg-panel" data-panel="history">
@@ -275,5 +485,6 @@
 {% block extra_js %}
 <script src="{% static 'ui/packages_display_image.js' %}"></script>
 <script src="{% static 'ui/packages_workspace.js' %}"></script>
+<script src="{% static 'ui/packages_protocol.js' %}"></script>
 {% if has_viz %}<script src="{% static 'ui/packages_viz.js' %}"></script>{% endif %}
 {% endblock %}
