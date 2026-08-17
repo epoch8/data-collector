@@ -42,4 +42,5 @@ python docs/architecture/generate_presentation.py
 | [`diagnostics-checklist.ru.md`](diagnostics-checklist.ru.md) | Чек-лист диагностики |
 | [`local-run-demo.ru.md`](local-run-demo.ru.md) | Локальный демо: Git → Django → Postgres/MinIO → привязка |
 | [`local-run-korovas-datapipe.ru.md`](local-run-korovas-datapipe.ru.md) | Дальше: dc-demo → Datapipe → CVAT — через скилл агента |
+| Datapipe блок (рядом) | Walkthrough keypoints, стадии, UI, диагностика: [`../datapipe/README.md`](../datapipe/README.md) |
 | [`firebase-setup.ru.md`](firebase-setup.ru.md) | Firebase: простая инструкция + путь через агента (скилл `.cursor/skills/firebase-data-collector/`) |

@@ -405,6 +405,23 @@ def draft_to_template_context(draft: ProtocolDraft) -> dict[str, Any]:
     }
 
 
+def _pdf_text(value: Any, *, empty: str = "-") -> str:
+    """Текст для PDF: без длинных тире; пустое → empty."""
+    if _is_blank(value):
+        return empty
+    text = str(value)
+    for ch in ("\u2014", "\u2013", "—", "–"):
+        text = text.replace(ch, ",")
+    # «Профиль , левый» → «Профиль, левый»
+    text = re.sub(r"\s*,\s*", ", ", text).strip(" ,")
+    return text or empty
+
+
+def _media_caption(item: ProtocolMediaItem) -> str:
+    """Подпись фото в PDF: только ракурс, без имени файла."""
+    return _pdf_text(item.label or item.field_id or "Фото", empty="Фото")
+
+
 def _choice_display(value: str, options: list[dict[str, str]]) -> str:
     """Подпись варианта для UI/PDF; value остаётся машинным (bull_calf и т.п.)."""
     if _is_blank(value):
@@ -634,10 +651,10 @@ def build_protocol_pdf(
             ]]
             for r in rows:
                 data.append([
-                    Paragraph(r.label or r.field_id, styles["PCell"]),
-                    Paragraph(row_display(r) or "—", styles["PCell"]),
-                    Paragraph(r.manual or "—", styles["PCell"]),
-                    Paragraph(r.inference or "—", styles["PCell"]),
+                    Paragraph(_pdf_text(r.label or r.field_id), styles["PCell"]),
+                    Paragraph(_pdf_text(row_display(r)), styles["PCell"]),
+                    Paragraph(_pdf_text(r.manual), styles["PCell"]),
+                    Paragraph(_pdf_text(r.inference), styles["PCell"]),
                 ])
             col_widths = [70 * mm, 30 * mm, 30 * mm, 30 * mm]
         else:
@@ -647,8 +664,8 @@ def build_protocol_pdf(
             ]]
             for r in rows:
                 data.append([
-                    Paragraph(r.label or r.field_id, styles["PCell"]),
-                    Paragraph(row_display(r) or "—", styles["PCell"]),
+                    Paragraph(_pdf_text(r.label or r.field_id), styles["PCell"]),
+                    Paragraph(_pdf_text(row_display(r)), styles["PCell"]),
                 ])
             col_widths = [100 * mm, 60 * mm]
         t = Table(data, colWidths=col_widths, repeatRows=1)
@@ -677,8 +694,8 @@ def build_protocol_pdf(
         ]]
         for item in draft.extra_inference:
             data.append([
-                Paragraph(item["label"], styles["PCell"]),
-                Paragraph(item["value"] or "—", styles["PCell"]),
+                Paragraph(_pdf_text(item["label"]), styles["PCell"]),
+                Paragraph(_pdf_text(item["value"]), styles["PCell"]),
             ])
         t = Table(data, colWidths=[120 * mm, 40 * mm], repeatRows=1)
         t.setStyle(
@@ -716,7 +733,7 @@ def build_protocol_pdf(
             raw = image_bytes.get(m.path)
             story.append(
                 Paragraph(
-                    f"<b>{m.label}</b> — {m.filename or m.path}",
+                    f"<b>{_media_caption(m)}</b>",
                     styles["PBody"],
                 ),
             )
