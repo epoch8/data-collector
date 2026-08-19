@@ -43,6 +43,20 @@ android {
         versionName = flutter.versionName
     }
 
+    // Firebase: local = data-collector-dev-e8, prod = e8-gke
+    // google-services.json лежит в src/<flavor>/ — всегда указывайте --flavor.
+    flavorDimensions += "firebase"
+    productFlavors {
+        create("local") {
+            dimension = "firebase"
+            resValue("string", "app_name", "Data Collector (local)")
+        }
+        create("prod") {
+            dimension = "firebase"
+            resValue("string", "app_name", "Data Collector")
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

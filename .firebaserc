@@ -1,5 +1,7 @@
 {
   "projects": {
-    "default": "data-collector-dev-e8"
+    "default": "data-collector-dev-e8",
+    "local": "data-collector-dev-e8",
+    "prod": "e8-gke"
   }
 }

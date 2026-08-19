@@ -233,7 +233,10 @@ def build_protocol_draft(
     data: dict[str, Any],
     blobs: list[dict[str, Any]] | None = None,
     editable: bool = True,
+    form_id: str = "",
 ) -> ProtocolDraft:
+    from . import protocol_profiles as pprof
+
     fields = pui.config_fields(config)
     by_id = {f["field_id"]: f for f in fields}
     distances = collect_inference_distances(project_id, package_id)
@@ -247,8 +250,27 @@ def build_protocol_draft(
         inference_count=len(distances),
     )
 
-    flow = config.get("config", {}).get("flow") if isinstance(config.get("config"), dict) else None
-    steps = (flow or {}).get("steps") or [] if isinstance(flow, dict) else []
+    fid = (form_id or "").strip()
+    profile = (
+        pprof.resolve_protocol_profile_for_form(project_id, fid, fetch_remote=False)
+        if fid
+        else None
+    )
+    catalog = pprof.profile_field_catalog(profile) if profile else {}
+
+    def resolve_field(field_key: str) -> dict[str, Any]:
+        """Дескриптор поля: сначала форма, иначе каталог профиля протокола."""
+        if field_key in by_id:
+            return by_id[field_key]
+        cat = catalog.get(field_key) or {}
+        return {
+            "field_id": field_key,
+            "type": cat.get("type") or "text_input",
+            "title": cat.get("title") or field_key,
+            "options": cat.get("options") or [],
+            "instructions": cat.get("instructions") or "",
+        }
+
     seen: set[str] = set()
 
     def add_row(f: dict[str, Any], kind: str) -> None:
@@ -272,8 +294,13 @@ def build_protocol_draft(
         else:
             value, source = "", "empty"
         options = pui.field_choice_options(f)
+        if not options and isinstance(f.get("options"), list):
+            from .project_config_validate import _normalize_choice_options
+
+            options = _normalize_choice_options(f.get("options")) or []
         if options and value and value not in {o["value"] for o in options}:
             options = [*options, {"value": value, "label": value}]
+        ftype = str(f.get("type") or "text_input")
         row = ProtocolRow(
             field_id=fid,
             label=label,
@@ -283,12 +310,16 @@ def build_protocol_draft(
             value=value,
             source=source,
             kind=kind,
-            editable=editable and f.get("type") in ("text_input", "single_choice"),
+            editable=editable and ftype in ("text_input", "single_choice", "datetime"),
             hint=pui.field_hint(f),
-            field_type=str(f.get("type") or "text_input"),
+            field_type=ftype,
             options=options,
-            display_value=pui.choice_label(f, value) if f.get("type") == "single_choice" else value,
+            display_value=pui.choice_label(f, value) if ftype == "single_choice" else value,
         )
+        # datetime в протоколе оставляем редактируемым только как text (уже value string)
+        if ftype == "datetime":
+            row.editable = False
+            row.field_type = "datetime"
         if kind == "measurements":
             draft.measurements.append(row)
         elif kind == "qualitative":
@@ -298,22 +329,32 @@ def build_protocol_draft(
         else:
             draft.other_fields.append(row)
 
-    for step in steps:
-        if not isinstance(step, dict) or step.get("screen") != "scroll_form":
-            continue
-        sk = _step_kind(step)
-        for fid in step.get("field_ids") or []:
-            f = by_id.get(fid)
-            if not f or not pui.is_data_tab_field(f):
+    if profile:
+        for fid in pprof.profile_section_ids(profile, "identity"):
+            add_row(resolve_field(fid), "identity")
+        for fid in pprof.profile_section_ids(profile, "measurements"):
+            add_row(resolve_field(fid), "measurements")
+        for fid in pprof.profile_section_ids(profile, "qualitative"):
+            add_row(resolve_field(fid), "qualitative")
+    else:
+        # fallback: эвристика по flow формы (старое поведение)
+        flow = config.get("config", {}).get("flow") if isinstance(config.get("config"), dict) else None
+        steps = (flow or {}).get("steps") or [] if isinstance(flow, dict) else []
+        for step in steps:
+            if not isinstance(step, dict) or step.get("screen") != "scroll_form":
                 continue
-            add_row(f, _field_kind(f, sk))
-
-    for f in fields:
-        if not pui.is_data_tab_field(f):
-            continue
-        if f["field_id"] in seen:
-            continue
-        add_row(f, _field_kind(f, "other"))
+            sk = _step_kind(step)
+            for fid in step.get("field_ids") or []:
+                f = by_id.get(fid)
+                if not f or not pui.is_data_tab_field(f):
+                    continue
+                add_row(f, _field_kind(f, sk))
+        for f in fields:
+            if not pui.is_data_tab_field(f):
+                continue
+            if f["field_id"] in seen:
+                continue
+            add_row(f, _field_kind(f, "other"))
 
     for key, val in distances.items():
         if key in used_dist_keys:
@@ -347,7 +388,6 @@ def build_protocol_draft(
             path = b.get("logical_path") or ""
             if not path or path in used_paths:
                 continue
-            # skip non-images for preview gallery? ещё кладём в zip всё — здесь для PDF только картинки
             lower = path.lower()
             if not lower.endswith((".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic")):
                 continue

@@ -998,6 +998,7 @@ def package_workspace(request, project_id: str, package_id: str):
         data=data,
         blobs=blobs,
         editable=is_editable,
+        form_id=pas.manifest_form_id(manifest),
     )
     protocol_ctx = protocol.draft_to_template_context(protocol_draft)
 
@@ -1077,10 +1078,28 @@ def package_manifest_save(request, project_id: str, package_id: str):
         for f in pui.config_fields(config)
         if f.get("type") in ("text_input", "single_choice")
     ]
+    # Поля из профиля протокола (нужны для inference-форм без промеров в config.fields)
+    from . import protocol_profiles as pprof
+
+    profile = pprof.resolve_protocol_profile_for_form(
+        project_id,
+        pas.manifest_form_id(manifest),
+        fetch_remote=False,
+    )
+    if profile:
+        catalog = pprof.profile_field_catalog(profile)
+        for section in ("identity", "measurements", "qualitative"):
+            for fid in pprof.profile_section_ids(profile, section):
+                meta = catalog.get(fid) or {}
+                ftype = meta.get("type") or "text_input"
+                if ftype in ("text_input", "single_choice") and fid not in editable_ids:
+                    editable_ids.append(fid)
 
     changes = []
     for fid in editable_ids:
         posted = request.POST.get(f"data__{fid}")
+        if posted is None:
+            posted = request.POST.get(f"protocol__{fid}")
         if posted is None:
             continue
         before = data.get(fid)
@@ -1202,6 +1221,7 @@ def package_protocol_export(request, project_id: str, package_id: str):
         data=data,
         blobs=blobs,
         editable=False,
+        form_id=pas.manifest_form_id(manifest),
     )
 
     overrides: dict[str, str] = {}

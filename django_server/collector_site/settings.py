@@ -198,20 +198,58 @@ FIREBASE_CHECK_REVOKED = os.environ.get("FIREBASE_CHECK_REVOKED", "").strip().lo
 )
 FIREBASE_CLOCK_SKEW_SECONDS = int(os.environ.get("FIREBASE_CLOCK_SKEW_SECONDS", "60"))
 
+# Firebase-профиль клиента/Web SDK: local (data-collector-dev-e8) | prod (e8-gke).
+# По умолчанию: prod (чтобы случайно не утащить local в прод).
+# Явно для локальной разработки: FIREBASE_PROFILE=local (или dev).
+# Переопределение отдельных полей — через FIREBASE_WEB_* (см. ниже).
+_firebase_profile_raw = os.environ.get("FIREBASE_PROFILE", "").strip().lower()
+if _firebase_profile_raw in ("local", "dev"):
+    FIREBASE_PROFILE = "local"
+elif _firebase_profile_raw in ("prod", "production"):
+    FIREBASE_PROFILE = "prod"
+else:
+    FIREBASE_PROFILE = "prod"
+
+_FIREBASE_WEB_PROFILES = {
+    "local": {
+        "apiKey": "AIzaSyDDp9CMDUL-1S7Y-3IcCzb6nx06AF1zY8Q",
+        "authDomain": "data-collector-dev-e8.firebaseapp.com",
+        "projectId": "data-collector-dev-e8",
+        "storageBucket": "data-collector-dev-e8.firebasestorage.app",
+        "messagingSenderId": "181572319604",
+        "appId": "1:181572319604:web:8ddfbe6ee6462e36c09421",
+    },
+    "prod": {
+        "apiKey": "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ",
+        "authDomain": "e8-gke.firebaseapp.com",
+        "projectId": "e8-gke",
+        "storageBucket": "e8-gke.firebasestorage.app",
+        "messagingSenderId": "59903871663",
+        "appId": "1:59903871663:android:83c40cfe504ef60952225a",
+    },
+}
+_firebase_web_defaults = _FIREBASE_WEB_PROFILES[FIREBASE_PROFILE]
+
 # Firebase Web SDK (/ui/login/) — те же значения, что lib/firebase_options.dart → web.
 FIREBASE_WEB_CONFIG = {
-    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", "AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ"),
-    "authDomain": os.environ.get("FIREBASE_WEB_AUTH_DOMAIN", "e8-gke.firebaseapp.com"),
-    "projectId": os.environ.get("FIREBASE_WEB_PROJECT_ID", "e8-gke"),
+    "apiKey": os.environ.get("FIREBASE_WEB_API_KEY", _firebase_web_defaults["apiKey"]),
+    "authDomain": os.environ.get(
+        "FIREBASE_WEB_AUTH_DOMAIN",
+        _firebase_web_defaults["authDomain"],
+    ),
+    "projectId": os.environ.get(
+        "FIREBASE_WEB_PROJECT_ID",
+        _firebase_web_defaults["projectId"],
+    ),
     "storageBucket": os.environ.get(
         "FIREBASE_WEB_STORAGE_BUCKET",
-        "e8-gke.firebasestorage.app",
+        _firebase_web_defaults["storageBucket"],
     ),
-    "messagingSenderId": os.environ.get("FIREBASE_WEB_MESSAGING_SENDER_ID", "59903871663"),
-    "appId": os.environ.get(
-        "FIREBASE_WEB_APP_ID",
-        "1:59903871663:android:83c40cfe504ef60952225a",
+    "messagingSenderId": os.environ.get(
+        "FIREBASE_WEB_MESSAGING_SENDER_ID",
+        _firebase_web_defaults["messagingSenderId"],
     ),
+    "appId": os.environ.get("FIREBASE_WEB_APP_ID", _firebase_web_defaults["appId"]),
 }
 
 ASSETS_CONFIG_ROOT = Path(

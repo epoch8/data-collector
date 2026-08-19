@@ -94,7 +94,7 @@ python manage.py runserver 0.0.0.0:8000
 
 # 2. Клиент (Android-эмулятор; 10.0.2.2 = хост-ПК)
 flutter pub get
-flutter run --dart-define=API_BASE_URL=http://10.0.2.2:8000
+flutter run --flavor local --dart-define=FIREBASE_PROFILE=local --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
 > **Важно (offline-first):** после заполнения формы пакет сохраняется **локально на устройстве**.

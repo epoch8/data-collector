@@ -116,10 +116,25 @@
     });
   }
 
+  // Протокол-only поля тоже должны включать Save
+  protocolInputs.forEach(function (input) {
+    input.addEventListener("input", function () {
+      var wsEl = document.getElementById("pkgWorkspace");
+      var save = document.getElementById("pkgSaveBtn");
+      if (!wsEl || wsEl.getAttribute("data-editable") !== "1") return;
+      var twin = dataInputFor(input.getAttribute("data-sync-field") || "");
+      if (twin) return; // dirty отслеживает вкладка Данные
+      wsEl.classList.add("is-dirty");
+      if (save && !save.hasAttribute("data-locked")) save.disabled = false;
+    });
+    input.addEventListener("change", function () {
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  });
+
   var exportBtn = document.getElementById("pkgProtocolExportBtn");
   if (exportBtn) {
     exportBtn.addEventListener("click", function () {
-      // Не блокировать уход страницы при скачивании ZIP
       var ws = document.getElementById("pkgWorkspace");
       if (ws) ws.classList.remove("is-dirty");
     });

@@ -45,6 +45,10 @@ Future<void> main() async {
   initAppThemeMode();
   ErrorWidget.builder = (details) => Epoch8ErrorScreen(details: details);
   try {
+    debugPrint(
+      'Firebase profile=${DefaultFirebaseOptions.profile.name} '
+      '(--dart-define=FIREBASE_PROFILE=local|prod)',
+    );
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
