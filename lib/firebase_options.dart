@@ -40,7 +40,9 @@ class DefaultFirebaseOptions {
   static FirebaseProfile get profile => FirebaseProfile.fromName(profileName);
 
   static FirebaseOptions get currentPlatform {
-    final opts = profile == FirebaseProfile.local ? _LocalOptions() : _ProdOptions();
+    final opts = profile == FirebaseProfile.local
+        ? _LocalOptions()
+        : _ProdOptions();
     if (kIsWeb) {
       return opts.web;
     }
@@ -68,85 +70,85 @@ abstract class _ProfileOptions {
 class _LocalOptions implements _ProfileOptions {
   @override
   FirebaseOptions get web => const FirebaseOptions(
-        apiKey: 'AIzaSyDDp9CMDUL-1S7Y-3IcCzb6nx06AF1zY8Q',
-        appId: '1:181572319604:web:8ddfbe6ee6462e36c09421',
-        messagingSenderId: '181572319604',
-        projectId: 'data-collector-dev-e8',
-        authDomain: 'data-collector-dev-e8.firebaseapp.com',
-        storageBucket: 'data-collector-dev-e8.firebasestorage.app',
-        measurementId: 'G-BTV5Z9BXHH',
-      );
+    apiKey: 'AIzaSyDDp9CMDUL-1S7Y-3IcCzb6nx06AF1zY8Q',
+    appId: '1:181572319604:web:8ddfbe6ee6462e36c09421',
+    messagingSenderId: '181572319604',
+    projectId: 'data-collector-dev-e8',
+    authDomain: 'data-collector-dev-e8.firebaseapp.com',
+    storageBucket: 'data-collector-dev-e8.firebasestorage.app',
+    measurementId: 'G-BTV5Z9BXHH',
+  );
 
   @override
   FirebaseOptions get android => const FirebaseOptions(
-        apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
-        appId: '1:181572319604:android:0f8051297f8c019bc09421',
-        messagingSenderId: '181572319604',
-        projectId: 'data-collector-dev-e8',
-        authDomain: 'data-collector-dev-e8.firebaseapp.com',
-        storageBucket: 'data-collector-dev-e8.firebasestorage.app',
-      );
+    apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
+    appId: '1:181572319604:android:0f8051297f8c019bc09421',
+    messagingSenderId: '181572319604',
+    projectId: 'data-collector-dev-e8',
+    authDomain: 'data-collector-dev-e8.firebaseapp.com',
+    storageBucket: 'data-collector-dev-e8.firebasestorage.app',
+  );
 
   @override
   FirebaseOptions get ios => const FirebaseOptions(
-        apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
-        appId: '1:181572319604:ios:0000000000000000000000',
-        messagingSenderId: '181572319604',
-        projectId: 'data-collector-dev-e8',
-        storageBucket: 'data-collector-dev-e8.firebasestorage.app',
-        iosBundleId: 'com.example.dataCollector',
-      );
+    apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
+    appId: '1:181572319604:ios:0000000000000000000000',
+    messagingSenderId: '181572319604',
+    projectId: 'data-collector-dev-e8',
+    storageBucket: 'data-collector-dev-e8.firebasestorage.app',
+    iosBundleId: 'com.example.dataCollector',
+  );
 
   @override
   FirebaseOptions get macos => const FirebaseOptions(
-        apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
-        appId: '1:181572319604:ios:0000000000000000000001',
-        messagingSenderId: '181572319604',
-        projectId: 'data-collector-dev-e8',
-        storageBucket: 'data-collector-dev-e8.firebasestorage.app',
-        iosBundleId: 'com.example.dataCollector',
-      );
+    apiKey: 'AIzaSyCGtNxCn-rs7Gd3LEbG754GimCxz1yOi7c',
+    appId: '1:181572319604:ios:0000000000000000000001',
+    messagingSenderId: '181572319604',
+    projectId: 'data-collector-dev-e8',
+    storageBucket: 'data-collector-dev-e8.firebasestorage.app',
+    iosBundleId: 'com.example.dataCollector',
+  );
 }
 
 /// Firebase project: e8-gke
 class _ProdOptions implements _ProfileOptions {
   @override
   FirebaseOptions get web => const FirebaseOptions(
-        apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-        appId: '1:59903871663:android:83c40cfe504ef60952225a',
-        messagingSenderId: '59903871663',
-        projectId: 'e8-gke',
-        authDomain: 'e8-gke.firebaseapp.com',
-        storageBucket: 'e8-gke.firebasestorage.app',
-      );
+    apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    appId: '1:59903871663:android:83c40cfe504ef60952225a',
+    messagingSenderId: '59903871663',
+    projectId: 'e8-gke',
+    authDomain: 'e8-gke.firebaseapp.com',
+    storageBucket: 'e8-gke.firebasestorage.app',
+  );
 
   @override
   FirebaseOptions get android => const FirebaseOptions(
-        apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-        appId: '1:59903871663:android:83c40cfe504ef60952225a',
-        messagingSenderId: '59903871663',
-        projectId: 'e8-gke',
-        authDomain: 'e8-gke.firebaseapp.com',
-        storageBucket: 'e8-gke.firebasestorage.app',
-      );
+    apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    appId: '1:59903871663:android:83c40cfe504ef60952225a',
+    messagingSenderId: '59903871663',
+    projectId: 'e8-gke',
+    authDomain: 'e8-gke.firebaseapp.com',
+    storageBucket: 'e8-gke.firebasestorage.app',
+  );
 
   @override
   FirebaseOptions get ios => const FirebaseOptions(
-        apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-        appId: '1:59903871663:ios:0000000000000000000000',
-        messagingSenderId: '59903871663',
-        projectId: 'e8-gke',
-        storageBucket: 'e8-gke.firebasestorage.app',
-        iosBundleId: 'com.example.dataCollector',
-      );
+    apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    appId: '1:59903871663:ios:0000000000000000000000',
+    messagingSenderId: '59903871663',
+    projectId: 'e8-gke',
+    storageBucket: 'e8-gke.firebasestorage.app',
+    iosBundleId: 'com.example.dataCollector',
+  );
 
   @override
   FirebaseOptions get macos => const FirebaseOptions(
-        apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
-        appId: '1:59903871663:ios:0000000000000000000001',
-        messagingSenderId: '59903871663',
-        projectId: 'e8-gke',
-        storageBucket: 'e8-gke.firebasestorage.app',
-        iosBundleId: 'com.example.dataCollector',
-      );
+    apiKey: 'AIzaSyA4FEzQHpt0Jces728UrbAIa6EwMGuvvLQ',
+    appId: '1:59903871663:ios:0000000000000000000001',
+    messagingSenderId: '59903871663',
+    projectId: 'e8-gke',
+    storageBucket: 'e8-gke.firebasestorage.app',
+    iosBundleId: 'com.example.dataCollector',
+  );
 }
