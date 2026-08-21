@@ -179,6 +179,7 @@ The package workspace has tabs. At the top — project package switcher and **"R
 | **Data** | Form field values (per `config.fields`), grouped by step. Fields can be edited here. |
 | **Media** | All package blobs (photos) with preview and **"Download"** button; in-form shots are marked with a badge. |
 | **Visualization** | Pipeline overlays on frames (see 5.4). |
+| **Protocol assembly** | Bonitirovka protocol draft, preview, and ZIP export (PDF + JSON ± media). Details (RU) — [protocol-assembly.ru.md](protocol-assembly.ru.md). |
 | **Change history** | Who changed what in the manifest and when (before → after, reason). |
 
 **Details** also opens the **blob** list (files) with **"Download"** and the **manifest** (JSON after upload completes).

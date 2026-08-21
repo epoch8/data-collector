@@ -27,6 +27,7 @@ flowchart LR
 | 4 | **Storage** | Метаданные в project DB; файлы в fsspec по `storage_uri` | `package_session`, `uploaded_blob`, `packages/{id}/blobs/…` |
 | 5 | **Datapipe** | После `completed` — webhook / стадия 0 (CVAT, первичный инференс) | `collector/pipeline.json`, логи datapipe |
 | 6 | **Визуализация** | Слои из project DB + `collector/viz.json` в админке `/ui/packages/` | Workspace → Визуализация |
+| 7 | **Протокол** | Черновик по `collector/protocol/*.json` + distances → PDF/ZIP | Workspace → Сборка протокола ([protocol-assembly.ru.md](../admin-panel/protocol-assembly.ru.md)) |
 
 ## Протокол upload (деталь)
 
