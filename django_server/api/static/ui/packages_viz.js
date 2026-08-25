@@ -624,7 +624,7 @@
       box.appendChild(card);
     });
 
-    // Metrics (distances) — слой inference из конфига.
+    // Metrics (distances) — слой inference из конфига (этот кадр).
     var inf = null;
     (vizConfig && vizConfig.layers || []).forEach(function (lc) {
       if (inf || lc.plugin !== "keypoint_korovas" || lc.palette !== "inference") return;
@@ -633,20 +633,39 @@
       if (rec && rec.inference) inf = rec.inference;
     });
     if (inf && inf.distances && Object.keys(inf.distances).length) {
-      var mcard = document.createElement("div");
-      mcard.className = "pkg-viz__card";
-      var mt = document.createElement("div");
-      mt.className = "pkg-viz__card-title";
-      mt.textContent = "Метрики (см)";
-      mcard.appendChild(mt);
-      Object.keys(inf.distances).forEach(function (k) {
-        var row = document.createElement("div");
-        row.className = "pkg-metric";
-        row.innerHTML = "<span>" + escapeHtml(k) + '</span><span class="pkg-metric__val">' + Number(inf.distances[k]).toFixed(1) + "</span>";
-        mcard.appendChild(row);
-      });
-      box.appendChild(mcard);
+      appendMetricCard(box, "Метрики кадра (см)", inf.distances, null);
     }
+    var aggInf = vizConfig && vizConfig.aggregated_inference && vizConfig.aggregated_inference.inference;
+    if (aggInf) {
+      appendMetricCard(box, "Агрегированные (пакет)", aggInf.distances || {}, aggInf.weight);
+    }
+  }
+
+  function appendMetricCard(box, title, distances, weightKg) {
+    var keys = distances && typeof distances === "object" ? Object.keys(distances) : [];
+    var hasWeight = weightKg != null && weightKg !== "" && isFinite(Number(weightKg));
+    if (!keys.length && !hasWeight) return;
+    var mcard = document.createElement("div");
+    mcard.className = "pkg-viz__card";
+    var mt = document.createElement("div");
+    mt.className = "pkg-viz__card-title";
+    mt.textContent = title;
+    mcard.appendChild(mt);
+    if (hasWeight) {
+      var wrow = document.createElement("div");
+      wrow.className = "pkg-metric";
+      wrow.innerHTML = "<span>Живая масса (кг)</span><span class=\"pkg-metric__val\">" + Number(weightKg).toFixed(1) + "</span>";
+      mcard.appendChild(wrow);
+    }
+    keys.forEach(function (k) {
+      var raw = distances[k];
+      if (raw == null || !isFinite(Number(raw))) return;
+      var row = document.createElement("div");
+      row.className = "pkg-metric";
+      row.innerHTML = "<span>" + escapeHtml(k) + '</span><span class="pkg-metric__val">' + Number(raw).toFixed(1) + "</span>";
+      mcard.appendChild(row);
+    });
+    box.appendChild(mcard);
   }
 
   function escapeHtml(s) {

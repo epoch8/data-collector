@@ -49,12 +49,37 @@ _QUAL_FIELD_IDS = frozenset(
         "udder_real",
         "limbs_real",
         "scrotum_real",
+        "overall_musculature_real",
     }
 )
 
 _QUANT_STEP_HINTS = ("quantitative", "промер", "замер", "measurement")
 _QUAL_STEP_HINTS = ("qualitative", "конституц", "экстерьер", "оценк")
 _ID_STEP_HINTS = ("animal", "ident", "возраст", "age", "real_age")
+
+# trait_id из cow_score_result.traits_json → поля формы (балл) и *_desc.
+_TRAIT_SCORE_FIELDS: dict[str, tuple[str, ...]] = {
+    "overall_type": ("overall_type_real", "overall_musculature_real"),
+    "musculature_bone": ("musculature_real",),
+    "head_neck": ("head_and_neck_real",),
+    "chest": ("chest_quality_real",),
+    "withers_back_loin": ("withers_back_loin_real",),
+    "croup": ("croup_real",),
+    "ham": ("ham_real",),
+    "limbs": ("limbs_real",),
+    "udder": ("udder_real",),
+    "scrotum": ("scrotum_real",),
+}
+
+# Молодняк: overall_musculature_*; корова/бык: overall_type_* / musculature_*.
+_QUAL_FIELD_ALIASES: dict[str, tuple[str, ...]] = {
+    "overall_musculature_real": ("musculature_real", "overall_type_real"),
+    "overall_musculature_real_desc": ("musculature_real_desc", "overall_type_real_desc"),
+    "overall_type_real": ("overall_musculature_real", "musculature_real"),
+    "overall_type_real_desc": ("overall_musculature_real_desc", "musculature_real_desc"),
+    "musculature_real": ("overall_musculature_real",),
+    "musculature_real_desc": ("overall_musculature_real_desc",),
+}
 
 
 def _norm(text: str) -> str:
@@ -83,23 +108,132 @@ def _fmt_value(value: Any) -> str:
     return str(value)
 
 
+def _distances_from_inference_payload(inf: dict[str, Any]) -> dict[str, float]:
+    """Достаёт distances + weight из inference_json (агрегат или кадр)."""
+    out: dict[str, float] = {}
+    distances = inf.get("distances")
+    if isinstance(distances, dict):
+        for key, raw in distances.items():
+            try:
+                out[str(key)] = float(raw)
+            except (TypeError, ValueError):
+                continue
+    weight = inf.get("weight")
+    if weight is None:
+        return out
+    already = any(_norm(k) in {"вес", "weight"} for k in out)
+    if already:
+        return out
+    try:
+        out["Вес"] = float(weight)
+    except (TypeError, ValueError):
+        pass
+    return out
+
+
 def collect_inference_distances(project_id: str, package_id: str) -> dict[str, float]:
-    """Объединяет distances из всех inference-записей пакета (первый ключ побеждает)."""
+    """Промеры для протокола: сначала агрегат пакета, иначе склейка по кадрам."""
+    agg = pdb.get_aggregated_inference(project_id, package_id)
+    if agg:
+        inf = agg.get("inference") or {}
+        if isinstance(inf, dict):
+            out = _distances_from_inference_payload(inf)
+            if out:
+                return out
     out: dict[str, float] = {}
     for row in pdb.list_inference(project_id, package_id):
         inf = row.get("inference") or {}
         if not isinstance(inf, dict):
             continue
-        distances = inf.get("distances")
-        if not isinstance(distances, dict):
+        for key, val in _distances_from_inference_payload(inf).items():
+            if key not in out:
+                out[key] = val
+    return out
+
+
+def _is_junk_model_text(value: Any) -> bool:
+    text = str(value or "")
+    low = text.casefold()
+    return "jsonschemavalidationerror" in low or "litellm." in low
+
+
+def _qual_desc_field_ids(score_field_id: str) -> tuple[str, ...]:
+    if score_field_id.endswith("_real"):
+        return (f"{score_field_id}_desc",)
+    return ()
+
+
+def _trait_reason_text(trait: dict[str, Any]) -> str:
+    parts: list[str] = []
+    for key in ("reason", "observations"):
+        raw = trait.get(key)
+        chunks: list[str] = []
+        if isinstance(raw, str):
+            chunks = [raw]
+        elif isinstance(raw, list):
+            chunks = [str(x) for x in raw if x is not None]
+        texts = []
+        for chunk in chunks:
+            text = chunk.strip()
+            if text and not _is_junk_model_text(text):
+                texts.append(text)
+        if texts:
+            parts.append(" ".join(texts) if key == "observations" else texts[0])
+    return "\n".join(parts)
+
+
+def collect_score_fields(
+    project_id: str,
+    package_id: str,
+    *,
+    row: dict[str, Any] | None = None,
+) -> dict[str, str]:
+    """Баллы и описания модели → field_id формы (cow_score_result)."""
+    if row is None:
+        row = pdb.get_score_result(project_id, package_id)
+    if not row:
+        return {}
+    out: dict[str, str] = {}
+
+    traits = row.get("traits") or []
+    if isinstance(traits, list):
+        for trait in traits:
+            if not isinstance(trait, dict):
+                continue
+            tid = str(trait.get("trait_id") or "").strip()
+            score_ids = _TRAIT_SCORE_FIELDS.get(tid, ())
+            if not score_ids:
+                continue
+            score_txt = _fmt_value(trait.get("score"))
+            reason_txt = _trait_reason_text(trait)
+            for fid in score_ids:
+                if score_txt:
+                    out[fid] = score_txt
+                if reason_txt:
+                    for did in _qual_desc_field_ids(fid):
+                        out[did] = reason_txt
+
+    fields = row.get("collector_fields") or {}
+    if isinstance(fields, dict):
+        for key, raw in fields.items():
+            fid = str(key or "").strip()
+            if not fid:
+                continue
+            is_qual = fid in _QUAL_FIELD_IDS or fid.endswith("_desc")
+            if not is_qual:
+                continue
+            if _is_junk_model_text(raw) or _is_blank(raw):
+                continue
+            txt = _fmt_value(raw)
+            if txt:
+                out[fid] = txt
+    for dest, sources in _QUAL_FIELD_ALIASES.items():
+        if dest in out:
             continue
-        for key, raw in distances.items():
-            if key in out:
-                continue
-            try:
-                out[str(key)] = float(raw)
-            except (TypeError, ValueError):
-                continue
+        for src in sources:
+            if src in out:
+                out[dest] = out[src]
+                break
     return out
 
 
@@ -223,6 +357,8 @@ class ProtocolDraft:
     extra_inference: list[dict[str, str]] = field(default_factory=list)
     media: list[ProtocolMediaItem] = field(default_factory=list)
     inference_count: int = 0
+    score_status: str = "missing"
+    score_error: str = ""
 
 
 def build_protocol_draft(
@@ -241,6 +377,8 @@ def build_protocol_draft(
     by_id = {f["field_id"]: f for f in fields}
     distances = collect_inference_distances(project_id, package_id)
     used_dist_keys: set[str] = set()
+    score_row = pdb.get_score_result(project_id, package_id)
+    score_fields = collect_score_fields(project_id, package_id, row=score_row)
 
     project_name = (config.get("name") if isinstance(config, dict) else None) or project_id
     draft = ProtocolDraft(
@@ -248,6 +386,8 @@ def build_protocol_draft(
         project_id=project_id,
         project_name=str(project_name),
         inference_count=len(distances),
+        score_status=str((score_row or {}).get("status") or "missing"),
+        score_error=str((score_row or {}).get("error") or ""),
     )
 
     fid = (form_id or "").strip()
@@ -280,12 +420,20 @@ def build_protocol_draft(
         seen.add(fid)
         label = pui.field_label(f)
         manual_raw = data.get(fid)
+        if _is_blank(manual_raw):
+            for alt in _QUAL_FIELD_ALIASES.get(fid, ()):
+                if not _is_blank(data.get(alt)):
+                    manual_raw = data.get(alt)
+                    break
         manual = _fmt_value(manual_raw)
         inf_key, inf_val = (None, None)
         if kind == "measurements":
             inf_key, inf_val = _match_distance(fid, label, distances, used_dist_keys)
             if inf_key:
                 used_dist_keys.add(inf_key)
+        elif kind == "qualitative":
+            if fid in score_fields:
+                inf_key, inf_val = None, score_fields[fid]
         inference = _fmt_value(inf_val) if inf_val is not None else ""
         if not _is_blank(manual):
             value, source = manual, "manual"
@@ -404,6 +552,40 @@ def build_protocol_draft(
     return draft
 
 
+def _qual_group_label(score: ProtocolRow | None, desc: ProtocolRow | None) -> str:
+    score_label = (score.label if score else "") or ""
+    cleaned = re.sub(r"\s*\(балл\)\s*$", "", score_label, flags=re.IGNORECASE).strip()
+    if cleaned:
+        return cleaned
+    desc_label = (desc.label if desc else "") or ""
+    if ":" in desc_label:
+        rest = desc_label.split(":", 1)[-1].strip()
+        if rest:
+            return rest[:1].upper() + rest[1:]
+    return desc_label or (score.field_id if score else "") or (desc.field_id if desc else "")
+
+
+def _group_qualitative_rows(items: list[ProtocolRow]) -> list[tuple[ProtocolRow | None, ProtocolRow | None]]:
+    by_id = {r.field_id: r for r in items}
+    used: set[str] = set()
+    groups: list[tuple[ProtocolRow | None, ProtocolRow | None]] = []
+    for row in items:
+        if row.field_id in used:
+            continue
+        if row.field_id.endswith("_desc"):
+            score = by_id.get(row.field_id[: -len("_desc")])
+            desc = row
+        else:
+            score = row
+            desc = by_id.get(f"{row.field_id}_desc")
+        if score:
+            used.add(score.field_id)
+        if desc:
+            used.add(desc.field_id)
+        groups.append((score, desc))
+    return groups
+
+
 def draft_to_template_context(draft: ProtocolDraft) -> dict[str, Any]:
     def rows(items: list[ProtocolRow]) -> list[dict[str, Any]]:
         return [
@@ -424,10 +606,24 @@ def draft_to_template_context(draft: ProtocolDraft) -> dict[str, Any]:
             for r in items
         ]
 
+    def row_one(item: ProtocolRow | None) -> dict[str, Any] | None:
+        return rows([item])[0] if item else None
+
+    qualitative_groups = []
+    for score, desc in _group_qualitative_rows(draft.qualitative):
+        qualitative_groups.append(
+            {
+                "label": _qual_group_label(score, desc),
+                "score": row_one(score),
+                "desc": row_one(desc),
+            }
+        )
+
     return {
         "identity": rows(draft.identity),
         "measurements": rows(draft.measurements),
         "qualitative": rows(draft.qualitative),
+        "qualitative_groups": qualitative_groups,
         "other_fields": rows(draft.other_fields),
         "extra_inference": draft.extra_inference,
         "media": [
@@ -441,6 +637,8 @@ def draft_to_template_context(draft: ProtocolDraft) -> dict[str, Any]:
             for m in draft.media
         ],
         "inference_count": draft.inference_count,
+        "score_status": draft.score_status,
+        "score_error": draft.score_error,
         "project_name": draft.project_name,
     }
 
@@ -678,7 +876,13 @@ def build_protocol_pdf(
         ),
     )
 
-    def section_table(title: str, rows: list[ProtocolRow], *, with_inference: bool) -> None:
+    def section_table(
+        title: str,
+        rows: list[ProtocolRow],
+        *,
+        with_inference: bool,
+        col_widths: list[float] | None = None,
+    ) -> None:
         if not rows:
             return
         story.append(Paragraph(title, styles["PH"]))
@@ -696,7 +900,8 @@ def build_protocol_pdf(
                     Paragraph(_pdf_text(r.manual), styles["PCell"]),
                     Paragraph(_pdf_text(r.inference), styles["PCell"]),
                 ])
-            col_widths = [70 * mm, 30 * mm, 30 * mm, 30 * mm]
+            if col_widths is None:
+                col_widths = [70 * mm, 30 * mm, 30 * mm, 30 * mm]
         else:
             data = [[
                 Paragraph(gettext("Показатель"), styles["PCellBold"]),
@@ -707,7 +912,8 @@ def build_protocol_pdf(
                     Paragraph(_pdf_text(r.label or r.field_id), styles["PCell"]),
                     Paragraph(_pdf_text(row_display(r)), styles["PCell"]),
                 ])
-            col_widths = [100 * mm, 60 * mm]
+            if col_widths is None:
+                col_widths = [100 * mm, 60 * mm]
         t = Table(data, colWidths=col_widths, repeatRows=1)
         t.setStyle(
             TableStyle(
@@ -752,7 +958,12 @@ def build_protocol_pdf(
             ),
         )
         story.append(t)
-    section_table(gettext("Качественные признаки"), draft.qualitative, with_inference=False)
+    section_table(
+        gettext("Качественные признаки"),
+        draft.qualitative,
+        with_inference=True,
+        col_widths=[38 * mm, 46 * mm, 26 * mm, 50 * mm],
+    )
     if draft.other_fields:
         section_table(gettext("Прочее"), draft.other_fields, with_inference=False)
 
@@ -865,6 +1076,9 @@ def build_protocol_zip(
                 "label": r.label,
                 "value": r.value,
                 "display": row_display(r),
+                "manual": r.manual,
+                "inference": r.inference,
+                "source": r.source,
             }
             for r in draft.qualitative
         ],

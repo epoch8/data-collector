@@ -20,6 +20,7 @@ from django.urls import reverse
 from django.utils import timezone
 from sqlalchemy import (
     Column,
+    Float,
     Integer,
     MetaData,
     Table,
@@ -107,6 +108,44 @@ cow_inference_result = Table(
     Column("depth_height", Integer),
     Column("created_at", Text, nullable=False),
     UniqueConstraint("package_id", "manifest_blob_key", name="uq_inf_pkg_key"),
+)
+
+cow_inference_result_aggregated = Table(
+    "cow_inference_result_aggregated",
+    metadata,
+    Column("package_id", Text, primary_key=True),
+    Column("source_export", Text, nullable=False),
+    Column("inference_json", Text, nullable=False),
+    Column("created_at", Text, nullable=False),
+)
+
+cow_score_result = Table(
+    "cow_score_result",
+    metadata,
+    Column("package_id", Text, primary_key=True),
+    Column("scale", Text),
+    Column("model", Text),
+    Column("status", Text, nullable=False),
+    Column("error", Text),
+    Column("trait_total", Integer),
+    Column("trait_scale_score", Integer),
+    Column("live_weight_class", Text),
+    Column("live_weight_required_kg", Integer),
+    Column("complex_points", Integer),
+    Column("complex_class", Text),
+    Column("flags", Text),
+    Column("warnings", Text),
+    Column("traits_json", Text),
+    Column("collector_fields", Text),
+    Column("report", Text),
+    Column("measurements_source", Text),
+    Column("calls", Integer),
+    Column("input_tokens", Integer),
+    Column("output_tokens", Integer),
+    Column("cost_usd", Float),
+    Column("latency_ms", Float),
+    Column("service_version", Text),
+    Column("created_at", Text, nullable=False),
 )
 
 yolo_detection = Table(
@@ -357,7 +396,7 @@ def package_has_pipeline_data(project_id: str, package_id: str) -> bool:
         ).fetchone()
         if inf:
             return True
-        for tbl in ("yolo_detection", "depth_map", "cvat_link"):
+        for tbl in ("yolo_detection", "depth_map", "cvat_link", "cow_inference_result_aggregated", "cow_score_result"):
             hit = conn.execute(
                 f"SELECT 1 FROM {tbl} WHERE package_id = ? LIMIT 1",
                 (package_id,),
@@ -370,6 +409,8 @@ def package_has_pipeline_data(project_id: str, package_id: str) -> bool:
 PIPELINE_TABLES = (
     "cow_keypoint_annotation",
     "cow_inference_result",
+    "cow_inference_result_aggregated",
+    "cow_score_result",
     "yolo_detection",
     "depth_map",
     "cvat_link",
@@ -404,6 +445,14 @@ def delete_package_pipeline_data(project_id: str, package_id: str) -> None:
         )
         conn.execute(
             "DELETE FROM cow_inference_result WHERE package_id = ?",
+            (package_id,),
+        )
+        conn.execute(
+            "DELETE FROM cow_inference_result_aggregated WHERE package_id = ?",
+            (package_id,),
+        )
+        conn.execute(
+            "DELETE FROM cow_score_result WHERE package_id = ?",
             (package_id,),
         )
         conn.execute(
@@ -746,3 +795,90 @@ def list_inference(project_id: str, package_id: str) -> list[dict[str, Any]]:
             (package_id,),
         ).fetchall()
     return [_row_to_inference(row, project_id=project_id, package_id=package_id) for row in rows]
+
+
+def get_aggregated_inference(project_id: str, package_id: str) -> dict[str, Any] | None:
+    """Одна сводка инференса на пакет (cow_inference_result_aggregated)."""
+    try:
+        with connect(project_id) as conn:
+            row = conn.execute(
+                """
+                SELECT package_id, source_export, inference_json, created_at
+                FROM cow_inference_result_aggregated
+                WHERE package_id = ?
+                """,
+                (package_id,),
+            ).fetchone()
+    except Exception:
+        return None
+    if row is None:
+        return None
+    raw = row["inference_json"] or "{}"
+    try:
+        inf = json.loads(raw)
+    except (json.JSONDecodeError, TypeError):
+        inf = {}
+    if not isinstance(inf, dict):
+        inf = {}
+    return {
+        "package_id": row["package_id"],
+        "source_export": row["source_export"],
+        "created_at": row["created_at"],
+        "inference": inf,
+    }
+
+
+def get_score_result(project_id: str, package_id: str) -> dict[str, Any] | None:
+    """Одна строка cow_score_result на пакет (баллы и описания модели)."""
+    try:
+        with connect(project_id) as conn:
+            row = conn.execute(
+                """
+                SELECT package_id, scale, model, status, error,
+                       trait_total, trait_scale_score,
+                       live_weight_class, live_weight_required_kg,
+                       complex_points, complex_class,
+                       flags, warnings, traits_json, collector_fields,
+                       report, measurements_source, created_at
+                FROM cow_score_result
+                WHERE package_id = ?
+                """,
+                (package_id,),
+            ).fetchone()
+    except Exception:
+        return None
+    if row is None:
+        return None
+
+    def _json_field(raw: Any, default: Any) -> Any:
+        if raw is None or raw == "":
+            return default
+        if isinstance(raw, (dict, list)):
+            return raw
+        if isinstance(raw, str):
+            try:
+                return json.loads(raw)
+            except json.JSONDecodeError:
+                return default
+        return default
+
+    return {
+        "package_id": row["package_id"],
+        "scale": row["scale"],
+        "model": row["model"],
+        "status": row["status"],
+        "error": row["error"],
+        "trait_total": row["trait_total"],
+        "trait_scale_score": row["trait_scale_score"],
+        "live_weight_class": row["live_weight_class"],
+        "live_weight_required_kg": row["live_weight_required_kg"],
+        "complex_points": row["complex_points"],
+        "complex_class": row["complex_class"],
+        "flags": _json_field(row["flags"], []),
+        "warnings": _json_field(row["warnings"], []),
+        "traits": _json_field(row["traits_json"], []),
+        "collector_fields": _json_field(row["collector_fields"], {}),
+        "report": row["report"] or "",
+        "measurements_source": row["measurements_source"],
+        "created_at": row["created_at"],
+    }

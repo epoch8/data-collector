@@ -11,6 +11,8 @@ from api.models import Project
 PIPELINE_TABLES = (
     "cow_keypoint_annotation",
     "cow_inference_result",
+    "cow_inference_result_aggregated",
+    "cow_score_result",
     "yolo_detection",
     "depth_map",
     "cvat_link",

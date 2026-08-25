@@ -13,6 +13,16 @@
   <option value="{{ opt.value }}" {% if f.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
   {% endfor %}
 </select>
+{% elif f.field_id|slice:"-5:" == "_desc" %}
+<textarea class="form-control form-control-sm pkg-protocol__input pkg-protocol__input--desc"
+          id="p-{{ f.field_id }}"
+          name="protocol__{{ f.field_id }}"
+          rows="7"
+          data-protocol-field="{{ f.field_id }}"
+          data-sync-field="{{ f.field_id }}"
+          data-manual="{{ f.manual }}"
+          data-inference="{{ f.inference }}"
+          data-initial="{{ f.value }}">{{ f.value }}</textarea>
 {% else %}
 <input type="text" class="form-control form-control-sm pkg-protocol__input"
        id="p-{{ f.field_id }}"

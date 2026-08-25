@@ -59,6 +59,8 @@ TABLE_ORDER = [
     "package_field_change",
     "cow_keypoint_annotation",
     "cow_inference_result",
+    "cow_inference_result_aggregated",
+    "cow_score_result",
     "yolo_detection",
     "depth_map",
     "cvat_link",
@@ -131,6 +133,42 @@ TABLE_DDL: dict[str, str] = {
             depth_height INTEGER,
             created_at TEXT NOT NULL,
             CONSTRAINT uq_inf_pkg_key UNIQUE (package_id, manifest_blob_key)
+        )
+    """,
+    "cow_inference_result_aggregated": """
+        CREATE TABLE IF NOT EXISTS cow_inference_result_aggregated (
+            package_id TEXT PRIMARY KEY,
+            source_export TEXT NOT NULL,
+            inference_json TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )
+    """,
+    "cow_score_result": """
+        CREATE TABLE IF NOT EXISTS cow_score_result (
+            package_id TEXT PRIMARY KEY,
+            scale TEXT,
+            model TEXT,
+            status TEXT NOT NULL,
+            error TEXT,
+            trait_total INTEGER,
+            trait_scale_score INTEGER,
+            live_weight_class TEXT,
+            live_weight_required_kg INTEGER,
+            complex_points INTEGER,
+            complex_class TEXT,
+            flags TEXT,
+            warnings TEXT,
+            traits_json TEXT,
+            collector_fields TEXT,
+            report TEXT,
+            measurements_source TEXT,
+            calls INTEGER,
+            input_tokens INTEGER,
+            output_tokens INTEGER,
+            cost_usd DOUBLE PRECISION,
+            latency_ms DOUBLE PRECISION,
+            service_version TEXT,
+            created_at TEXT NOT NULL
         )
     """,
     "yolo_detection": """
@@ -354,9 +392,21 @@ def ensure_database(database_url: str, *, dry_run: bool) -> None:
         conn.close()
 
 
-def ensure_schema(conn) -> None:
+def _tables_for_restore(only_tables: str) -> list[str]:
+    raw = (only_tables or "").strip()
+    if not raw:
+        return list(TABLE_ORDER)
+    wanted = [t.strip() for t in raw.split(",") if t.strip()]
+    unknown = [t for t in wanted if t not in TABLE_DDL]
+    if unknown:
+        raise ValueError(f"Неизвестные таблицы: {', '.join(unknown)}")
+    return [t for t in TABLE_ORDER if t in set(wanted)]
+
+
+def ensure_schema(conn, tables: list[str] | None = None) -> None:
+    names = tables or list(TABLE_ORDER)
     with conn.cursor() as cur:
-        for name in TABLE_ORDER:
+        for name in names:
             cur.execute(TABLE_DDL[name])
             cur.execute(
                 sql.SQL("CREATE INDEX IF NOT EXISTS {} ON {} ({})").format(
@@ -368,16 +418,16 @@ def ensure_schema(conn) -> None:
     conn.commit()
 
 
-def wipe_tables(conn, *, dry_run: bool) -> None:
-    tables = list(reversed(TABLE_ORDER))
-    print(f"Postgres: TRUNCATE {', '.join(tables)}...")
+def wipe_tables(conn, tables: list[str] | None = None, *, dry_run: bool) -> None:
+    names = list(reversed(tables or list(TABLE_ORDER)))
+    print(f"Postgres: TRUNCATE {', '.join(names)}...")
     if dry_run:
         print("  (dry-run) truncate пропущен")
         return
     with conn.cursor() as cur:
         cur.execute(
             sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(
-                sql.SQL(", ").join(sql.Identifier(t) for t in tables)
+                sql.SQL(", ").join(sql.Identifier(t) for t in names)
             )
         )
     conn.commit()
@@ -438,9 +488,14 @@ def restore_table(conn, table: str, rows: list[dict[str, Any]], *, dry_run: bool
         print(f"  {table}: {len(rows)} (would insert)")
         return len(rows)
 
+    def _sql_value(v: Any) -> Any:
+        if isinstance(v, (dict, list)):
+            return json.dumps(v, ensure_ascii=False)
+        return v
+
     values = []
     for r in rows:
-        values.append(tuple(r.get(c) for c in usable))
+        values.append(tuple(_sql_value(r.get(c)) for c in usable))
 
     insert_sql = sql.SQL("INSERT INTO {} ({}) VALUES %s").format(
         sql.Identifier(table),
@@ -460,6 +515,7 @@ def restore_postgres(
     *,
     wipe: bool,
     dry_run: bool,
+    only_tables: str = "",
 ) -> dict[str, Any]:
     if psycopg2 is None or execute_values is None:
         raise RuntimeError("Установите psycopg2-binary")
@@ -469,10 +525,11 @@ def restore_postgres(
         raise FileNotFoundError(f"Нет папки {pg_dir}")
 
     ensure_database(database_url, dry_run=dry_run)
+    tables = _tables_for_restore(only_tables)
 
     result: dict[str, Any] = {"tables": {}, "row_count_total": 0}
     if dry_run:
-        for table in TABLE_ORDER:
+        for table in tables:
             rows = _load_jsonl(pg_dir / f"{table}.jsonl")
             result["tables"][table] = len(rows)
             result["row_count_total"] += len(rows)
@@ -489,12 +546,12 @@ def restore_postgres(
     kw = _uri_to_connect_kwargs(database_url)
     conn = psycopg2.connect(**kw)
     try:
-        ensure_schema(conn)
+        ensure_schema(conn, tables)
         if wipe:
-            wipe_tables(conn, dry_run=False)
+            wipe_tables(conn, tables, dry_run=False)
 
         known = set(TABLE_ORDER)
-        for table in TABLE_ORDER:
+        for table in tables:
             rows = _load_jsonl(pg_dir / f"{table}.jsonl")
             n = restore_table(conn, table, rows, dry_run=False)
             result["tables"][table] = n
@@ -599,8 +656,23 @@ def _print_ui_hint(database_url: str, bucket: str, endpoint: str, key_prefix: st
         storage = f"s3://{bucket}/{prefix}"
     else:
         storage = f"s3://{bucket}/"
+    masked = database_url
+    try:
+        parts = urlparse(
+            database_url.replace("postgresql+psycopg2://", "postgresql://", 1)
+        )
+        if parts.username:
+            host = parts.hostname or ""
+            if parts.port is not None:
+                host = f"{host}:{parts.port}"
+            netloc = f"{parts.username}:****@{host}"
+            masked = f"{parts.scheme}://{netloc}{parts.path}"
+            if parts.query:
+                masked += f"?{parts.query}"
+    except Exception:
+        masked = "(set in Django project card)"
     print("\n--- Подставьте в UI проекта (Изменить хранилище) ---")
-    print(f"  database_uri = {database_url}")
+    print(f"  database_uri = {masked}")
     print(f"  storage_uri  = {storage}")
     print(f"  endpoint_url = {endpoint or 'http://localhost:9000'}")
     print("  access key   = (как --access-key / minioadmin)")
@@ -660,6 +732,7 @@ def cmd_restore(args: argparse.Namespace) -> int:
             database_url,
             wipe=bool(args.wipe),
             dry_run=bool(args.dry_run),
+            only_tables=getattr(args, "only_tables", "") or "",
         )
         print(
             f"  итого строк: {pg['row_count_total']} "
@@ -735,6 +808,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     r.add_argument("--skip-postgres", action="store_true")
     r.add_argument("--skip-s3", action="store_true")
+    r.add_argument(
+        "--only-tables",
+        default="",
+        help="CSV имён таблиц Postgres (остальные не трогаем)",
+    )
     r.add_argument(
         "--allow-remote",
         action="store_true",

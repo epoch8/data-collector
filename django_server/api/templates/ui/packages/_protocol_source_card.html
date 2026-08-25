@@ -1,0 +1,5 @@
+{# Карточка источника: форма или инференс. #}
+<div class="pkg-protocol__src {% if kind == 'inference' %}pkg-protocol__src--inf{% endif %} {% if compact %}pkg-protocol__src--compact{% endif %}">
+  <div class="pkg-protocol__src-h">{{ title }}</div>
+  <div class="pkg-protocol__src-b">{% if value %}{{ value }}{% else %}—{% endif %}</div>
+</div>

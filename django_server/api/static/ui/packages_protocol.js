@@ -5,12 +5,14 @@
   if (!root) return;
 
   var protocolInputs = Array.prototype.slice.call(
-    root.querySelectorAll("input[data-protocol-field], select[data-protocol-field]"),
+    root.querySelectorAll(
+      "input[data-protocol-field], select[data-protocol-field], textarea[data-protocol-field]",
+    ),
   );
 
   function dataInputFor(fieldId) {
     return document.querySelector(
-      '#pkgForm input[data-field="' + fieldId + '"], #pkgForm select[data-field="' + fieldId + '"]',
+      '#pkgForm input[data-field="' + fieldId + '"], #pkgForm select[data-field="' + fieldId + '"], #pkgForm textarea[data-field="' + fieldId + '"]',
     );
   }
 
@@ -55,8 +57,16 @@
     }
   }
 
+  function autosize(el) {
+    if (!el || el.tagName !== "TEXTAREA") return;
+    if (el.classList.contains("pkg-protocol__input--desc")) return;
+    el.style.height = "auto";
+    el.style.height = Math.max(el.scrollHeight, 38) + "px";
+  }
+
   protocolInputs.forEach(function (input) {
     syncFromData(input);
+    autosize(input);
     setPreview(
       input.getAttribute("data-protocol-field"),
       input.value,
@@ -69,22 +79,24 @@
         displayValue(input),
       );
       syncToData(input);
+      autosize(input);
     }
     input.addEventListener("input", onChange);
     input.addEventListener("change", onChange);
   });
 
   // Обратная синхронизация: правки на вкладке «Данные»
-  document.querySelectorAll("#pkgForm input[data-field], #pkgForm select[data-field]").forEach(function (di) {
+  document.querySelectorAll("#pkgForm input[data-field], #pkgForm select[data-field], #pkgForm textarea[data-field]").forEach(function (di) {
     function onDataChange() {
       var fid = di.getAttribute("data-field");
       var pi = root.querySelector(
-        'input[data-protocol-field="' + fid + '"], select[data-protocol-field="' + fid + '"]',
+        'input[data-protocol-field="' + fid + '"], select[data-protocol-field="' + fid + '"], textarea[data-protocol-field="' + fid + '"]',
       );
       if (!pi) return;
       if (pi.value !== di.value) {
         pi.value = di.value;
         setPreview(fid, di.value, displayValue(pi));
+        autosize(pi);
       }
     }
     di.addEventListener("input", onDataChange);
@@ -102,6 +114,7 @@
         input.value = inf;
         setPreview(input.getAttribute("data-protocol-field"), inf);
         syncToData(input);
+        autosize(input);
         filled++;
       });
       fillBtn.classList.add("btn-outline-success");

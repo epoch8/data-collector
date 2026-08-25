@@ -7,6 +7,7 @@ from typing import Any
 from .models import Project
 from .project_vis_config import load_vis_config
 from .viz_plugins import fetch_table, layer_options_for_api
+from . import project_db as pdb
 
 
 def _fetch_layer_records(
@@ -87,9 +88,13 @@ def build_package_viz_payload(
     if not has_any:
         return None
 
-    return {
+    payload: dict[str, Any] = {
         "version": vis.get("version", 1),
         "join_key": vis.get("join_key", "manifest_blob_key"),
         "layers": layers_meta,
         "data": data,
     }
+    aggregated = pdb.get_aggregated_inference(project_id, package_id)
+    if aggregated:
+        payload["aggregated_inference"] = aggregated
+    return payload
