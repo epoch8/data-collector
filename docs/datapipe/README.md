@@ -1,44 +1,68 @@
-# Datapipe — вводная презентация
+# Datapipe: учебный блок
 
-Презентация по фреймворку: зачем, как устроен граф, UI, связь с Data Collector.
-CV-глубина (train/eval, PCK, bad cases) — отдельный артефакт «CV / Datapipe».
+Презентации + справочники рядом. Стиль как у `docs/architecture/`.
 
-## Сборка
+## Сборка презентаций
 
 ```bash
+# Вводная (фреймворк)
 python docs/datapipe/generate_presentation.py
+
+# Живой стенд: ключевые точки коров
+python docs/datapipe/generate_cow_keypoints_walkthrough.py
 ```
 
-Выход: `Datapipe.pptx` (локально; в git не коммитим — файл большой).  
-Перед сборкой закройте файл в PowerPoint.
+| Файл | Содержание |
+| --- | --- |
+| `Datapipe.pptx` | Зачем Datapipe, граф, UI, связь с Data Collector |
+| `Datapipe-Cow-Keypoints-Walkthrough.pptx` | CVAT → аннотация → заморозка → обучение → метрики |
 
-## Слайды (11)
+Перед сборкой закройте PPTX в PowerPoint. Большие pptx в git обычно не коммитим.
+
+## Слайды walkthrough (15)
 
 | # | Слайд |
 | --- | --- |
-| 1 | Обложка + Ops |
-| 2 | Проблема |
-| 3 | Что такое Datapipe |
-| 4 | Три поверхности: Python · Skills · UI |
-| 5 | Python: Catalog + Pipeline |
-| 6 | Datapipe Ops: граф |
-| 7 | Runs и логи |
-| 8 | Метрики без логов |
-| 9 | Интеграции |
-| 10 | Связь с Data Collector |
-| 11 | Видео-сценарий: Datapipe суть (плейсхолдер) |
+| 1 | Обложка |
+| 2 | Маршрут |
+| 3 | CVAT: проекты |
+| 4 | CVAT: как выглядит разметка |
+| 5 | Разметка попадает в пайплайн |
+| 6 | Откуда берутся картинки |
+| 7 | Ground truth |
+| 8 | Сплит и теги |
+| 9 | Datapipe UI |
+| 10 | Заморозка датасета |
+| 11 | Запуск обучения |
+| 12 | Ход обучения |
+| 13 | Что видит модель |
+| 14 | Метрики |
+| 15 | Закрытие |
+
+## Справочники
+
+| Файл | Содержание |
+| --- | --- |
+| [`overview.ru.md`](overview.ru.md) | Что такое Datapipe в нашем контуре, Datapipe UI, связь с collector |
+| [`pipeline-flow.ru.md`](pipeline-flow.ru.md) | Mermaid: поток ключевых точек |
+| [`stages-reference.ru.md`](stages-reference.ru.md) | Стадии и labels |
+| [`datapipe-ui.ru.md`](datapipe-ui.ru.md) | Разделы Datapipe UI |
+| [`cow-keypoints-walkthrough.ru.md`](cow-keypoints-walkthrough.ru.md) | Сценарий демо по walkthrough |
+| [`local-run-keypoints.ru.md`](local-run-keypoints.ru.md) | Локальный стенд keypoints |
+| [`diagnostics-keypoints.ru.md`](diagnostics-keypoints.ru.md) | Типичные сбои и куда смотреть |
 
 ## Медиа
 
 | Папка | Содержание |
 | --- | --- |
-| `img/pitch/` | Скрины Datapipe Ops из `legacy/datapipe_presentation-2.pptx` |
-| `img/tags-demo/` | Код Catalog/Pipeline и UI из `legacy/Datapipe + tags demo.pptx` |
-| `legacy/` | Старые драфты (не пересобирать — источник скринов) |
-| `video/` | `datapipe-overview.mp4` — ещё нет |
+| [`img/pitch/`](img/pitch/README.md) | Скрины вводной презентации |
+| [`img/cow-keypoints-walkthrough/`](img/cow-keypoints-walkthrough/) | UI, GT, train, CVAT для walkthrough |
+| [`img/cow-keypoints-walkthrough/cvat/`](img/cow-keypoints-walkthrough/cvat/README.md) | Скрины CVAT |
 
 ## Связанные материалы
 
-- Architecture: стадии 0–4 и stage 0 — `docs/architecture/`
-- E2E Korovas: стадии на коровах — `docs/e2e-korovas/`
-- План артефактов — `docs/training-materials.ru.md`
+- Architecture (стадии 0–4, local run collector→CVAT): `docs/architecture/`
+- E2E Korovas: `docs/e2e-korovas/`
+- Скилл агента: `korovas/.claude/skills/setup-key-points-regression-datapipe/SKILL.md`
+- Readme пайплайна: `korovas/experiments/key_points_regression_datapipe/readme.md`
+- План артефактов: `docs/training-materials.ru.md`

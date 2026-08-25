@@ -11,8 +11,9 @@
 https://disk.yandex.ru/i/oDWOWD17wSykVg |
 | E2E пайплайн коров | Сквозной сценарий Korovas: форма → съёмка → upload → datapipe → viz → протокол | 🟡 Основной контент и часть видеокастов/скринов готовы. Datapipe-каст и часть стадий — нет | `docs/e2e-korovas/Korovas-E2E.pptx` | 
 https://disk.yandex.ru/i/OAZLm1F3VDninA |
-| Datapipe | Вводная презентация в фреймворк (11 слайдов): проблема, record-level, Python/Skills/UI, Ops, метрики, связь с collector | 🟡 Основной контент готов. Видеокаст «Datapipe суть» — плейсхолдер | `docs/datapipe/Datapipe.pptx` |  |
-| CV / Datapipe | CV-пайплайны: стадии, CVAT, inference, метрики (PCK и др.), bad cases | 🔴 Не начато |  |  |
+| Datapipe | Вводная презентация в фреймворк: проблема, record-level, Python/Skills/UI, метрики, связь с collector | 🟡 Основной контент готов. Видеокаст «Datapipe суть» — плейсхолдер | `docs/datapipe/Datapipe.pptx` |  |
+| Datapipe: keypoints walkthrough | Живой стенд ключевых точек: CVAT → аннотация → freeze → train → метрики (15 слайдов) + справочники | 🟢 Презентация и md-материалы готовы | `docs/datapipe/Datapipe-Cow-Keypoints-Walkthrough.pptx`, `docs/datapipe/*.ru.md` |  |
+| CV / Datapipe | CV-пайплайны: стадии, CVAT, inference, метрики (PCK и др.), bad cases | 🟡 Частично закрыто walkthrough keypoints; bad cases / ноутбуки ещё нет | `docs/datapipe/` |  |
 
 ---
 
@@ -22,7 +23,7 @@ https://disk.yandex.ru/i/OAZLm1F3VDninA |
 | --- | --- | --- | --- | --- |
 | Локальный запуск data-collector | Git → Django → Postgres/MinIO → проект в админке → мобилка / API | 🟢 Готово | `docs/architecture/local-run-demo.ru.md` |  |
 | Firebase | Инструкция и скилл для настройки firebase | 🟢 Готово | `docs/architecture/firebase-setup.ru.md` |  |
-| Локальный запуск datapipe | Env, триггеры / `on_commit`, стадии, логи, прогон учебного пакета | 🔴 Нет |  |  |
+| Локальный запуск datapipe | Env, стадии keypoints, Datapipe UI, прогон annotation→train; стык collector→CVAT в architecture | 🟢 Готово (keypoints + collector→CVAT) | `docs/datapipe/local-run-keypoints.ru.md`, `docs/architecture/local-run-korovas-datapipe.ru.md` |  |
 | Продакшен-развёртывание | Runbook: Flutter Web, Django, datapipe, хранилища, env, мониторинг, чек-лист staging/prod | 🟡 Частично (есть куски по Flutter Web; полный runbook нет) | `docs/deploy-flutter-web.ru.md` |  |
 | Типичные ошибки и как их решать | Симптом → слой → диагностика → фикс (связка со слайдом/кейсами) | 🟡 Частично: чек-лист + кейсы; цельный runbook нет | `docs/architecture/diagnostics-checklist.ru.md`, `docs/architecture/korovas-broken/cases.md` |  |
 |  |  |  |  |  |
@@ -53,7 +54,7 @@ https://disk.yandex.ru/i/OAZLm1F3VDninA |
 | Data Collector визуализация пакета | Визуализация keypoint и размеров КРС в админке | 🟢 Готово | `docs/e2e-korovas/` | https://disk.yandex.ru/i/xnSm0b0UJFzm9w |
 | Datapipe суть | Что такое datapipe, зачем, как устроен граф | 🔴 Нет |  |  |
 | Datapipe в проекте коров | Инференс + CVAT на Korovas, связь с collector | 🔴 Нет (плейсхолдер на слайде 12 Architecture) |  |  |
-| Datapipe CV обучение моделей | Train / eval / метрики / bad cases | 🔴 Нет |  |  |
+| Datapipe CV обучение моделей | Train / eval / метрики / bad cases | 🟡 Walkthrough + UI-гайд есть; отдельный видеокаст и bad cases нет | `docs/datapipe/cow-keypoints-walkthrough.ru.md` |  |
 | Разбор типичных ошибок и как их чинить | Нарезка по слоям + UI | 🔴 Нет  |  |  |
 
 ---

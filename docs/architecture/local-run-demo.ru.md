@@ -331,7 +331,8 @@ curl http://127.0.0.1:8000/v1/projects
 ```bash
 flutter pub get
 flutter devices
-flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8000
+flutter run --flavor local --dart-define=FIREBASE_PROFILE=local \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
 С Firebase Auth (§8.1 гайд) — войти email/паролем тестового пользователя.  
@@ -350,7 +351,9 @@ flutter run -d emulator-5554 --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ### 8.5. APK (опционально)
 
 ```bash
-flutter build apk --release --dart-define=API_BASE_URL=http://192.168.1.10:8000
+flutter build apk --flavor local --release \
+  --dart-define=FIREBASE_PROFILE=local \
+  --dart-define=API_BASE_URL=http://192.168.1.10:8000
 ```
 
 ---

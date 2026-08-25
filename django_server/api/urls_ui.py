@@ -97,6 +97,11 @@ urlpatterns = [
         name="ui_package_viz_data",
     ),
     path(
+        "projects/<str:project_id>/packages/<str:package_id>/protocol.zip",
+        views_ui.package_protocol_export,
+        name="ui_package_protocol_export",
+    ),
+    path(
         "projects/<str:project_id>/packages/<str:package_id>/blobs/<path:logical_path>/",
         views_ui.package_blob_download,
         name="ui_package_blob_download",

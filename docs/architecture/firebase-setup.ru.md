@@ -4,6 +4,53 @@
 
 **Одно правило:** везде один и тот же Firebase-проект (клиент, Web-конфиг Django, service account). Иначе логин ок, а API → **401**.
 
+## Два профиля
+
+| Профиль | Firebase project | Когда |
+| --- | --- | --- |
+| **local** | `data-collector-dev-e8` | локальная разработка |
+| **prod** | `e8-gke` | прод / сборка «как в бою» |
+
+Клиент и сервер должны быть на **одном** профиле.
+
+### Flutter (Android)
+
+Обязательно `--flavor` + тот же `FIREBASE_PROFILE` (по умолчанию у клиента — **prod**):
+
+```bash
+# локально (эмулятор)
+flutter run --flavor local --dart-define=FIREBASE_PROFILE=local \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8000
+
+# локально (телефон в той же Wi‑Fi)
+flutter run --flavor local --dart-define=FIREBASE_PROFILE=local \
+  --dart-define=API_BASE_URL=http://192.168.0.65:8000
+
+# прод-профиль
+flutter run --flavor prod --dart-define=FIREBASE_PROFILE=prod \
+  --dart-define=API_BASE_URL=https://your-prod-host
+```
+
+`google-services.json` лежит в:
+
+- `android/app/src/local/google-services.json`
+- `android/app/src/prod/google-services.json`
+
+После смены профиля — **полный restart** (не hot reload). В логе: `Firebase profile=local|prod`.
+
+### Django
+
+По умолчанию Firebase-профиль — **prod**. Для локальной разработки задайте явно:
+
+```powershell
+$env:FIREBASE_PROFILE = "local"
+python manage.py runserver 0.0.0.0:8000
+```
+
+Отдельные поля Web SDK по-прежнему можно переопределить через `FIREBASE_WEB_*`.
+
+Service account (`django_server/firebase-service-account.json`) должен быть от **того же** Firebase-проекта, что и профиль.
+
 Связано: [`local-run-demo.ru.md`](local-run-demo.ru.md), [`../admin-panel/README.ru.md`](../admin-panel/README.ru.md).
 
 ---
@@ -48,14 +95,13 @@ Firebase MCP уже есть в Cursor (плагин Firebase) — отдель�
 
 Скачайте:
 
-- Android → `google-services.json` → положите в `android/app/google-services.json`
-- Web → скопируйте поля config (apiKey, appId, …)
+- Android → `google-services.json` → в `android/app/src/local/` или `src/prod/` (по профилю)
+- Web → скопируйте поля config (apiKey, appId, …) в соответствующий блок `lib/firebase_options.dart` и defaults Django
 
 ### 3. Клиент Flutter
 
-Обновите `lib/firebase_options.dart`: блоки **android** и **web** должны указывать на **ваш** Project ID и правильные appId (`:android:…` и `:web:…` — разные!).
-
-Альтернатива: `dart run flutterfire_cli:flutterfire configure` и выбрать тот же проект.
+Профили уже в `lib/firebase_options.dart` (`_LocalOptions` / `_ProdOptions`).  
+Запуск — с `--flavor` и `--dart-define=FIREBASE_PROFILE=…` (см. таблицу выше).
 
 После смены конфигов — **полный restart** приложения (не hot reload).
 
@@ -76,16 +122,17 @@ Firebase MCP уже есть в Cursor (плагин Firebase) — отдель�
 django_server/firebase-service-account.json
 ```
 
-Файл в `.gitignore` — **не коммитить**. В JSON поле `project_id` = ваш Project ID.
+Файл в `.gitignore` — **не коммитить**. В JSON поле `project_id` = Firebase project выбранного профиля.
 
 Другой путь: `$env:FIREBASE_SERVICE_ACCOUNT_PATH = "C:\path\to\key.json"` (PowerShell).
 
 ### 6. Web-конфиг Django + запуск
 
-В `django_server/collector_site/settings.py` (или через env) те же Web-поля, что в `firebase_options.dart`:
+Профиль задаёт defaults; при необходимости переопределите env:
 
 | Env | Поле |
 | --- | --- |
+| `FIREBASE_PROFILE` | `local` \| `prod` |
 | `FIREBASE_WEB_API_KEY` | apiKey |
 | `FIREBASE_WEB_AUTH_DOMAIN` | authDomain |
 | `FIREBASE_WEB_PROJECT_ID` | projectId |
@@ -97,6 +144,7 @@ django_server/firebase-service-account.json
 
 ```powershell
 cd django_server
+$env:FIREBASE_PROFILE = "local"   # обязательно для локального Firebase
 python manage.py runserver 0.0.0.0:8000
 ```
 
@@ -109,10 +157,11 @@ python manage.py runserver 0.0.0.0:8000
 3. У тестового пользователя включить нужные **mobile_projects**.
 4. Перелогин в приложении.
 
-Мобилка:
+Мобилка (local):
 
 ```bash
-flutter run -d <device> --dart-define=API_BASE_URL=http://10.0.2.2:8000
+flutter run --flavor local --dart-define=FIREBASE_PROFILE=local \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8000
 ```
 
 | Устройство | API_BASE_URL |

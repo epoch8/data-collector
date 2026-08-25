@@ -1,0 +1,26 @@
+{# Контрол поля на вкладке «Сборка протокола». #}
+{% if f.type == "single_choice" %}
+<select class="form-control form-control-sm pkg-protocol__input"
+        id="p-{{ f.field_id }}"
+        name="protocol__{{ f.field_id }}"
+        data-protocol-field="{{ f.field_id }}"
+        data-sync-field="{{ f.field_id }}"
+        data-manual="{{ f.manual }}"
+        data-inference="{{ f.inference }}"
+        data-initial="{{ f.value }}">
+  <option value="">{% if not f.value %}selected{% endif %}>—</option>
+  {% for opt in f.options %}
+  <option value="{{ opt.value }}" {% if f.value == opt.value %}selected{% endif %}>{{ opt.label }}</option>
+  {% endfor %}
+</select>
+{% else %}
+<input type="text" class="form-control form-control-sm pkg-protocol__input"
+       id="p-{{ f.field_id }}"
+       name="protocol__{{ f.field_id }}"
+       value="{{ f.value }}"
+       data-protocol-field="{{ f.field_id }}"
+       data-sync-field="{{ f.field_id }}"
+       data-manual="{{ f.manual }}"
+       data-inference="{{ f.inference }}"
+       data-initial="{{ f.value }}">
+{% endif %}

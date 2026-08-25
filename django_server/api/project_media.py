@@ -125,6 +125,20 @@ def read_blob_head(
         return f.read(max_bytes)
 
 
+def read_blob_bytes(
+    project_id: str,
+    storage_path: str,
+    *,
+    media_bucket: str = "",
+) -> bytes | None:
+    """Прочитать blob целиком (для экспорта протокола/ZIP)."""
+    fs, abs_path, _ = _fs_and_path(project_id, storage_path)
+    if not fs.exists(abs_path):
+        return None
+    with fs.open(abs_path, "rb") as f:
+        return f.read()
+
+
 def _fs_stream(fs, abs_path: str) -> Iterator[bytes]:
     with fs.open(abs_path, "rb") as f:
         while True:

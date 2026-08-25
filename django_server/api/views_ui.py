@@ -905,6 +905,20 @@ def _build_data_sections(sections, data, editable):
         for f in sec["fields"]:
             fid = f["field_id"]
             value = data.get(fid)
+            if value is None:
+                value_str = ""
+            elif f.get("type") == "single_choice":
+                value_str = str(value)
+            else:
+                value_str = value
+            options = pui.field_choice_options(f)
+            # если в пакете значение вне списка — покажем его в select
+            if (
+                options
+                and value_str not in {o["value"] for o in options}
+                and str(value_str).strip()
+            ):
+                options = [*options, {"value": str(value_str), "label": str(value_str)}]
             sfields.append(
                 {
                     "field_id": fid,
@@ -912,7 +926,13 @@ def _build_data_sections(sections, data, editable):
                     "type": f.get("type"),
                     "hint": pui.field_hint(f),
                     "required": pui.field_required(f),
-                    "value": "" if value is None else value,
+                    "value": value_str,
+                    "display_value": (
+                        pui.choice_label(f, value_str)
+                        if f.get("type") == "single_choice"
+                        else value_str
+                    ),
+                    "options": options,
                     "editable": editable
                     and f.get("type") in ("text_input", "single_choice"),
                 },
@@ -969,6 +989,19 @@ def package_workspace(request, project_id: str, package_id: str):
 
     project_name = (config.get("name") if isinstance(config, dict) else None) or project_id
 
+    from . import protocol_service as protocol
+
+    protocol_draft = protocol.build_protocol_draft(
+        project_id,
+        package_id,
+        config=config,
+        data=data,
+        blobs=blobs,
+        editable=is_editable,
+        form_id=pas.manifest_form_id(manifest),
+    )
+    protocol_ctx = protocol.draft_to_template_context(protocol_draft)
+
     return render(
         request,
         "ui/packages/workspace.html",
@@ -995,6 +1028,10 @@ def package_workspace(request, project_id: str, package_id: str):
             "save_url": reverse("ui_package_manifest_save", args=[project_id, package_id]),
             "delete_url": reverse("ui_package_delete", args=[project_id, package_id]),
             "viz_data_url": reverse("ui_package_viz_data", args=[project_id, package_id]),
+            "protocol_export_url": reverse(
+                "ui_package_protocol_export", args=[project_id, package_id],
+            ),
+            "protocol": protocol_ctx,
             "verifier_email": _ui_verifier_email(request),
         },
     )
@@ -1041,10 +1078,28 @@ def package_manifest_save(request, project_id: str, package_id: str):
         for f in pui.config_fields(config)
         if f.get("type") in ("text_input", "single_choice")
     ]
+    # Поля из профиля протокола (нужны для inference-форм без промеров в config.fields)
+    from . import protocol_profiles as pprof
+
+    profile = pprof.resolve_protocol_profile_for_form(
+        project_id,
+        pas.manifest_form_id(manifest),
+        fetch_remote=False,
+    )
+    if profile:
+        catalog = pprof.profile_field_catalog(profile)
+        for section in ("identity", "measurements", "qualitative"):
+            for fid in pprof.profile_section_ids(profile, section):
+                meta = catalog.get(fid) or {}
+                ftype = meta.get("type") or "text_input"
+                if ftype in ("text_input", "single_choice") and fid not in editable_ids:
+                    editable_ids.append(fid)
 
     changes = []
     for fid in editable_ids:
         posted = request.POST.get(f"data__{fid}")
+        if posted is None:
+            posted = request.POST.get(f"protocol__{fid}")
         if posted is None:
             continue
         before = data.get(fid)
@@ -1138,6 +1193,74 @@ def package_viz_data(request, project_id: str, package_id: str):
             status=404,
         )
     return JsonResponse(payload)
+
+
+@packages_ui_required
+@require_http_methods(["GET", "POST"])
+def package_protocol_export(request, project_id: str, package_id: str):
+    """ZIP: protocol.pdf + protocol.json; опционально media/ и фото в PDF."""
+    denied = _forbid_package_project(request, project_id)
+    if denied is not None:
+        return denied
+
+    from . import protocol_service as protocol
+
+    body, err = pas.get_workspace(project_id, package_id, preview_prefix="/ui/api/v1")
+    if err is not None:
+        raise Http404("Package not found")
+
+    manifest = body["manifest"]
+    config = body["project_config"]
+    data = manifest.get("data") if isinstance(manifest.get("data"), dict) else {}
+    blobs = body.get("blobs") or []
+
+    draft = protocol.build_protocol_draft(
+        project_id,
+        package_id,
+        config=config,
+        data=data,
+        blobs=blobs,
+        editable=False,
+        form_id=pas.manifest_form_id(manifest),
+    )
+
+    overrides: dict[str, str] = {}
+    include_media_files = True
+    src = request.POST if request.method == "POST" else request.GET
+    if request.method == "POST":
+        for key, val in request.POST.items():
+            if key.startswith("protocol__"):
+                overrides[key[len("protocol__") :]] = val
+    raw_media = (src.get("include_media_files") or src.get("include_media") or "1").strip().lower()
+    include_media_files = raw_media not in ("0", "false", "no", "off")
+    draft = protocol.apply_overrides(draft, overrides)
+
+    try:
+        zip_bytes = protocol.build_protocol_zip(
+            project_id,
+            package_id,
+            draft,
+            include_media_files=include_media_files,
+        )
+    except ImportError:
+        return HttpResponse(
+            _("Для экспорта протокола установите reportlab и Pillow (pip install reportlab pillow)."),
+            status=500,
+            content_type="text/plain; charset=utf-8",
+        )
+    except Exception as exc:
+        return HttpResponse(
+            _("Не удалось собрать протокол: {err}").format(err=exc),
+            status=500,
+            content_type="text/plain; charset=utf-8",
+        )
+
+    suffix = "with_media" if include_media_files else "pdf_only"
+    filename = f"protocol_{package_id}_{suffix}.zip"
+    resp = HttpResponse(zip_bytes, content_type="application/zip")
+    resp["Content-Disposition"] = f'attachment; filename="{filename}"'
+    resp["Content-Length"] = str(len(zip_bytes))
+    return resp
 
 
 @packages_ui_required

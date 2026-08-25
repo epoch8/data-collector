@@ -74,6 +74,26 @@ def field_hint(field: dict[str, Any]) -> str:
     return (field.get("instructions") or "").strip()
 
 
+def field_choice_options(field: dict[str, Any]) -> list[dict[str, str]]:
+    """Нормализованные options для single_choice: [{value, label}, ...]."""
+    from .project_config_validate import _normalize_choice_options
+
+    if field.get("type") != "single_choice":
+        return []
+    return _normalize_choice_options(field.get("options")) or []
+
+
+def choice_label(field: dict[str, Any], value: Any) -> str:
+    """Подпись выбранного варианта; если не найден — само значение."""
+    if value is None:
+        return ""
+    text = str(value)
+    for opt in field_choice_options(field):
+        if opt["value"] == text:
+            return opt["label"]
+    return text
+
+
 def build_flow_sections(
     root: dict[str, Any],
     fields: list[dict[str, Any]],

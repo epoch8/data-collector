@@ -12,7 +12,7 @@ python docs/architecture/generate_presentation.py
 Видео (`video/**/*.mp4`) тоже только локально.  
 Перед сборкой закройте файл в PowerPoint.
 
-## Слайды (14)
+## Слайды (13)
 
 | # | Слайд |
 | --- | --- |
@@ -24,14 +24,13 @@ python docs/architecture/generate_presentation.py
 | 6 | Где что лежит (4 слоя) |
 | 7 | БД проекта: таблицы |
 | 8 | Кто куда заходит (роли) |
-| 9 | Видео-сценарий: local run → пакет (`create_simple_project.mp4`) |
+| 9 | Видео: local run → пакет (`create_simple_project.mp4`) |
 | 10 | Datapipe: стадии 0–4 |
 | 11 | Стадия 0: пакет → CVAT → БД |
-| 12 | Видео-сценарий: пайплайны Datapipe (плейсхолдер) |
+| 12 | Видео: collector → Datapipe → CVAT (`full_datapipe_local.mp4`) |
 | 13 | Где искать сбой |
-| 14 | Видео-сценарий: типичные ошибки (плейсхолдер) |
 
-Видео (локально): `video/local run/create_simple_project.mp4`
+Видео (локально): `video/local run/create_simple_project.mp4`, `video/local run/full_datapipe_local.mp4`
 
 ## Справочники
 
@@ -42,4 +41,6 @@ python docs/architecture/generate_presentation.py
 | [`korovas-broken/cases.md`](korovas-broken/cases.md) | Кейсы инцидентов |
 | [`diagnostics-checklist.ru.md`](diagnostics-checklist.ru.md) | Чек-лист диагностики |
 | [`local-run-demo.ru.md`](local-run-demo.ru.md) | Локальный демо: Git → Django → Postgres/MinIO → привязка |
+| [`local-run-korovas-datapipe.ru.md`](local-run-korovas-datapipe.ru.md) | Дальше: dc-demo → Datapipe → CVAT — через скилл агента |
+| Datapipe блок (рядом) | Walkthrough keypoints, стадии, UI, диагностика: [`../datapipe/README.md`](../datapipe/README.md) |
 | [`firebase-setup.ru.md`](firebase-setup.ru.md) | Firebase: простая инструкция + путь через агента (скилл `.cursor/skills/firebase-data-collector/`) |

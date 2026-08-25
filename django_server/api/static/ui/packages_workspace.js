@@ -34,7 +34,9 @@
   });
 
   // ── Dirty tracking ──────────────────────────────────────────────────────────
-  var inputs = Array.prototype.slice.call(document.querySelectorAll("input[data-field]"));
+  var inputs = Array.prototype.slice.call(
+    document.querySelectorAll("input[data-field], select[data-field]"),
+  );
   function changedFields() {
     return inputs.filter(function (i) { return i.value !== (i.getAttribute("data-initial") || ""); });
   }
@@ -47,6 +49,7 @@
   }
   inputs.forEach(function (i) {
     i.addEventListener("input", refreshDirty);
+    i.addEventListener("change", refreshDirty);
   });
 
   window.addEventListener("beforeunload", function (e) {
