@@ -1,7 +1,7 @@
-VERSION=0.0.17
+VERSION=0.0.28
 IMAGE=cr.yandex/crp9t7k628nhsnjetke5/cow-data-collector
 BRANCH=$(shell git rev-parse --abbrev-ref HEAD)
-
+BRANCH=feature-admin-protocol-assembly
 ifeq ($(BRANCH), master)
     FINAL_VERSION := ${VERSION}
 else
