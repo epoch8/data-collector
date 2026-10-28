@@ -94,20 +94,18 @@ cow_keypoint_annotation = Table(
 cow_inference_result = Table(
     "cow_inference_result",
     metadata,
-    Column("id", Integer, primary_key=True, autoincrement=True),
-    Column("package_id", Text, nullable=False, index=True),
-    Column("manifest_blob_key", Text, nullable=False),
-    Column("source_export", Text, nullable=False),
-    Column("image_width", Integer, nullable=False),
-    Column("image_height", Integer, nullable=False),
-    Column("inference_json", Text, nullable=False),
-    Column("depth_blob_key", Text),
-    Column("depth_format", Text, nullable=False),
-    Column("depth_unit", Text, nullable=False),
+    Column("storage_id", Text, primary_key=True),
+    Column("package_id", Text, primary_key=True, index=True),
+    Column("id", Text, primary_key=True),
+    Column("source_export", Text),
+    Column("image_width", Integer),
+    Column("image_height", Integer),
+    Column("inference_json", Text),
+    Column("depth_format", Text),
+    Column("depth_unit", Text),
     Column("depth_width", Integer),
     Column("depth_height", Integer),
-    Column("created_at", Text, nullable=False),
-    UniqueConstraint("package_id", "manifest_blob_key", name="uq_inf_pkg_key"),
+    Column("created_at", Text),
 )
 
 cow_inference_result_aggregated = Table(
@@ -193,6 +191,11 @@ cvat_link = Table(
 
 def _now() -> str:
     return timezone.now().isoformat()
+
+
+def _table_columns(project_id: str, table_name: str) -> set[str]:
+    engine = _engine_for_project(project_id)
+    return {column["name"] for column in inspect(engine).get_columns(table_name)}
 
 
 # --- Engine management -------------------------------------------------------
@@ -611,16 +614,62 @@ def insert_inference(
     image_size: dict[str, Any],
     inference: dict[str, Any],
 ) -> None:
+    columns = _table_columns(project_id, "cow_inference_result")
     with connect(project_id) as conn:
+        if "manifest_blob_key" in columns:
+            conn.execute(
+                """
+                INSERT INTO cow_inference_result (
+                    package_id, manifest_blob_key, source_export,
+                    image_width, image_height, inference_json,
+                    depth_blob_key, depth_format, depth_unit,
+                    depth_width, depth_height, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'npy', 'm', NULL, NULL, ?)
+                ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
+                    source_export = excluded.source_export,
+                    image_width = excluded.image_width,
+                    image_height = excluded.image_height,
+                    inference_json = excluded.inference_json
+                """,
+                (
+                    package_id,
+                    manifest_blob_key,
+                    source_export,
+                    int(image_size.get("width") or 0),
+                    int(image_size.get("height") or 0),
+                    json.dumps(inference, ensure_ascii=False),
+                    _now(),
+                ),
+            )
+            return
+
+        blob = conn.execute(
+            """
+            SELECT id FROM uploaded_blob
+            WHERE package_id = ?
+              AND (logical_path = ? OR storage_path = ?)
+            ORDER BY CASE WHEN logical_path = ? THEN 0 ELSE 1 END
+            LIMIT 1
+            """,
+            (
+                package_id,
+                manifest_blob_key,
+                manifest_blob_key,
+                manifest_blob_key,
+            ),
+        ).fetchone()
+        if blob is None:
+            raise ValueError(
+                f"Unknown package blob {package_id}/{manifest_blob_key}",
+            )
         conn.execute(
             """
             INSERT INTO cow_inference_result (
-                package_id, manifest_blob_key, source_export,
+                storage_id, package_id, id, source_export,
                 image_width, image_height, inference_json,
-                depth_blob_key, depth_format, depth_unit,
-                depth_width, depth_height, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, NULL, 'npy', 'm', NULL, NULL, ?)
-            ON CONFLICT(package_id, manifest_blob_key) DO UPDATE SET
+                depth_format, depth_unit, depth_width, depth_height, created_at
+            ) VALUES ('collector', ?, ?, ?, ?, ?, ?, 'npy', 'm', NULL, NULL, ?)
+            ON CONFLICT(storage_id, package_id, id) DO UPDATE SET
                 source_export = excluded.source_export,
                 image_width = excluded.image_width,
                 image_height = excluded.image_height,
@@ -628,7 +677,7 @@ def insert_inference(
             """,
             (
                 package_id,
-                manifest_blob_key,
+                str(blob["id"]),
                 source_export,
                 int(image_size.get("width") or 0),
                 int(image_size.get("height") or 0),
@@ -785,15 +834,32 @@ def list_cvat_link(project_id: str, package_id: str) -> list[dict[str, Any]]:
 
 
 def list_inference(project_id: str, package_id: str) -> list[dict[str, Any]]:
+    columns = _table_columns(project_id, "cow_inference_result")
     with connect(project_id) as conn:
-        rows = conn.execute(
-            """
-            SELECT * FROM cow_inference_result
-            WHERE package_id = ?
-            ORDER BY manifest_blob_key
-            """,
-            (package_id,),
-        ).fetchall()
+        if "manifest_blob_key" in columns:
+            rows = conn.execute(
+                """
+                SELECT * FROM cow_inference_result
+                WHERE package_id = ?
+                ORDER BY manifest_blob_key
+                """,
+                (package_id,),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """
+                SELECT r.*,
+                       COALESCE(b.logical_path, CAST(r.id AS TEXT))
+                           AS manifest_blob_key
+                FROM cow_inference_result AS r
+                LEFT JOIN uploaded_blob AS b
+                  ON b.package_id = r.package_id
+                 AND CAST(b.id AS TEXT) = CAST(r.id AS TEXT)
+                WHERE r.package_id = ? AND r.storage_id = 'collector'
+                ORDER BY manifest_blob_key
+                """,
+                (package_id,),
+            ).fetchall()
     return [_row_to_inference(row, project_id=project_id, package_id=package_id) for row in rows]
 
 

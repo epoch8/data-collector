@@ -119,18 +119,47 @@ def _row_to_change(row: sqlite3.Row) -> FieldChange:
     )
 
 
+def _uses_dedicated_database(project_id: str) -> bool:
+    """Return whether only this project is registered against its database.
+
+    A dedicated database is itself the project boundary, so stale project_id
+    values left by a rename or migration must not hide otherwise valid rows.
+    """
+    from .models import Project
+
+    try:
+        target_uri = psc.resolve_by_id(project_id).database_uri
+    except Exception:
+        return False
+
+    matching_projects: set[str] = set()
+    for candidate_id in Project.objects.values_list("project_id", flat=True):
+        try:
+            if psc.resolve_by_id(candidate_id).database_uri == target_uri:
+                matching_projects.add(candidate_id)
+        except Exception:
+            return False
+    return matching_projects == {project_id}
+
+
 def get_session(project_id: str, package_id: str) -> PackageSession | None:
     with pdb.connect(project_id) as conn:
-        # project_id-фильтр изолирует проекты в общей БД. Legacy-строки с пустым
-        # project_id остаются доступны по прямому package_id (UUID уникален).
-        row = conn.execute(
-            """
-            SELECT * FROM package_session
-            WHERE package_id = ?
-              AND (project_id = ? OR project_id IS NULL OR project_id = '')
-            """,
-            (package_id, project_id),
-        ).fetchone()
+        if _uses_dedicated_database(project_id):
+            row = conn.execute(
+                "SELECT * FROM package_session WHERE package_id = ?",
+                (package_id,),
+            ).fetchone()
+        else:
+            # project_id-фильтр изолирует проекты в общей БД. Legacy-строки с
+            # пустым project_id доступны по прямому package_id (UUID уникален).
+            row = conn.execute(
+                """
+                SELECT * FROM package_session
+                WHERE package_id = ?
+                  AND (project_id = ? OR project_id IS NULL OR project_id = '')
+                """,
+                (package_id, project_id),
+            ).fetchone()
     return _row_to_session(row) if row else None
 
 
@@ -190,8 +219,29 @@ def list_sessions(
     limit: int = 500,
 ) -> list[PackageSession]:
     with pdb.connect(project_id) as conn:
-        # Строгий фильтр по project_id — в общей БД проект видит только свои пакеты.
-        if phase:
+        dedicated = _uses_dedicated_database(project_id)
+        # В dedicated DB сама база является границей проекта. Это также
+        # сохраняет доступ к legacy-строкам со старым project_id после rename.
+        if dedicated and phase:
+            rows = conn.execute(
+                """
+                SELECT * FROM package_session
+                WHERE phase = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (phase, limit),
+            ).fetchall()
+        elif dedicated:
+            rows = conn.execute(
+                """
+                SELECT * FROM package_session
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+        elif phase:
             rows = conn.execute(
                 """
                 SELECT * FROM package_session

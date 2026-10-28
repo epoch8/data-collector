@@ -155,6 +155,12 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 API_BEARER_TOKEN = os.environ.get("API_BEARER_TOKEN", "").strip() or None
 
+# Если задан — все маршруты api/urls.py проксируются на этот сервер
+# (например https://cloud.datapipe.dev) с Authorization: Bearer DATAPIPE_API_TOKEN.
+DATAPIPE_PROXY_URL = os.environ.get("DATAPIPE_PROXY_URL", "").strip() or None
+DATAPIPE_API_TOKEN = os.environ.get("DATAPIPE_API_TOKEN", "").strip() or None
+DATAPIPE_PROXY_TIMEOUT_SEC = float(os.environ.get("DATAPIPE_PROXY_TIMEOUT_SEC", "60"))
+
 # Новому CollectorUser (первый запрос / sync Firebase) выдаётся доступ к этому project_id
 # в mobile_projects, если проект есть в БД. admin_projects назначаются вручную в админке.
 DEFAULT_COLLECTOR_PROJECT_ID = (
