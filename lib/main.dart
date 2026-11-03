@@ -33,6 +33,7 @@ import 'theme/epoch8_theme.dart';
 import 'theme/theme_controller.dart';
 import 'theme/epoch8_ui.dart';
 import 'theme/epoch8_loader.dart';
+import 'theme/kalmgu_brand.dart';
 import 'theme/epoch8_error_screen.dart';
 import 'theme/epoch8_app_bar_controls.dart';
 import 'l10n/app_localizations.dart';
@@ -159,14 +160,11 @@ Widget _epoch8AppBarTitle(String title) {
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
-      ClipRRect(
-        borderRadius: BorderRadius.circular(7),
-        child: Image.asset(
-          'e8-team-logo-1024.png',
-          width: 26,
-          height: 26,
-          fit: BoxFit.cover,
-        ),
+      Image.asset(
+        KalmguBrand.mark,
+        width: 32,
+        height: 32,
+        fit: BoxFit.contain,
       ),
       const SizedBox(width: 12),
       Flexible(
@@ -258,9 +256,9 @@ class _DataCollectorAppState extends State<DataCollectorApp>
   Widget build(BuildContext context) {
     return ValueListenableBuilder<ThemeMode>(
       valueListenable: appThemeModeNotifier,
-      builder: (context, themeMode, __) => ValueListenableBuilder<Brightness>(
+      builder: (context, themeMode, _) => ValueListenableBuilder<Brightness>(
         valueListenable: appBrightnessNotifier,
-        builder: (context, _, __) => ValueListenableBuilder<Locale>(
+        builder: (context, _, _) => ValueListenableBuilder<Locale>(
           valueListenable: appLocaleNotifier,
           builder: (context, locale, _) => MaterialApp.router(
             locale: locale,
@@ -364,39 +362,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 24),
-                          Container(
-                            width: 190,
-                            height: 190,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(32),
-                              color: Epoch8Theme.card.withValues(alpha: 0.9),
-                              border: Border.all(color: Epoch8Theme.border),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.45),
-                                  blurRadius: 32,
-                                  offset: const Offset(0, 16),
-                                ),
-                              ],
-                            ),
-                            clipBehavior: Clip.antiAlias,
-                            padding: const EdgeInsets.all(16),
-                            child: Image.asset(
-                              'e8-team-logo-1024.png',
-                              fit: BoxFit.contain,
-                            ),
-                          ),
+                          const KalmguWordmark(),
                           const SizedBox(height: 28),
-                          Text(
-                            'E8 team',
-                            style: t.labelLarge?.copyWith(
-                              color: Epoch8Theme.accent,
-                              letterSpacing: 5,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
                           Text(
                             loc.loginTitle,
                             style: t.headlineSmall,
@@ -652,7 +619,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       24,
                     ),
                     itemCount: projects.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final project = projects[index];
                       final primary = project.primaryForm?.project;
@@ -834,7 +801,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
               24,
             ),
             itemCount: filtered.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final pkg = filtered[index];
               final photoCount = _extractImagePaths(pkg).length;

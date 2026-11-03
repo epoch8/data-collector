@@ -17,8 +17,8 @@ msgstr "<i class=\"bi bi-lock-fill\"></i> “Review and submit” — the final 
 msgid "Client-admin"
 msgstr "Client-admin"
 
-msgid "Data Collector — админка"
-msgstr "Data Collector — Admin"
+msgid "КалмГУ Data Collector"
+msgstr "KalmSU Data Collector"
 
 msgid "Deploy key (public)"
 msgstr "Deploy key (public)"

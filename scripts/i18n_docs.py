@@ -16,7 +16,6 @@ DOC_PATHS = [
     "test_dev/README.md",
     "examples/README.md",
     "examples/cow-keypoints/README.md",
-    "legacy/README.md",
     "docs/admin-panel/README.md",
     "docs/mobile-app/README.md",
     "docs/deploy-flutter-web.md",

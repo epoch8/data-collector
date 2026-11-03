@@ -43,7 +43,7 @@ Future<void> showLocalDiskPhotoDialog(BuildContext context, String path) async {
                 child: Image.network(
                   path,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Center(
+                  errorBuilder: (_, _, _) => Center(
                     child: Text(
                       loc.fileNotFound,
                       style: const TextStyle(color: Colors.white70),

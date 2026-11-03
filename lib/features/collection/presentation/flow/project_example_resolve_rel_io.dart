@@ -18,7 +18,7 @@ Future<Widget?> buildProjectRelAssetPreview({
     return Image.file(
       file,
       fit: fit,
-      errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+      errorBuilder: (ctx, _, _) => errorPlaceholder(ctx),
     );
   }
 
@@ -39,14 +39,14 @@ Future<Widget?> buildProjectRelAssetPreview({
       return Image.file(
         file,
         fit: fit,
-        errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+        errorBuilder: (ctx, _, _) => errorPlaceholder(ctx),
       );
     }
     return Image.network(
       uri.toString(),
       fit: fit,
       headers: imageAuthHeadersForProjectExamples(),
-      errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+      errorBuilder: (ctx, _, _) => errorPlaceholder(ctx),
     );
   }
   return null;

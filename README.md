@@ -59,12 +59,11 @@ data-collector/
 ├── django_server/      # API + web admin (/ui/). Own manage.py, migrations, runserver
 ├── test_dev/           # Docker Compose: PostgreSQL + MinIO for prod-like local dev
 ├── specs/              # specifications, diagrams (.drawio), presentation, status
-├── docs/               # user guides and engineering notes
-└── legacy/             # unused in the main pipeline (see legacy/README.md)
+└── docs/               # user guides and engineering notes
 ```
 
 Subsystem details: [django_server/README.md](django_server/README.md),
-[test_dev/README.md](test_dev/README.md), [legacy/README.md](legacy/README.md).
+[test_dev/README.md](test_dev/README.md).
 
 ---
 

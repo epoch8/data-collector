@@ -30,8 +30,9 @@ abstract final class CapturedPhotoPaths {
           .where((s) => s.isNotEmpty)
           .toList();
     }
-    if (v is List)
+    if (v is List) {
       return v.map((e) => e.toString()).where((s) => s.isNotEmpty).toList();
+    }
     if (v is String) return v.isEmpty ? [] : [v];
     return [];
   }

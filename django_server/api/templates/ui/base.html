@@ -16,7 +16,8 @@
       } catch (e) {}
     })();
   </script>
-  <title>{% block title %}{% trans "Data Collector — админка" %}{% endblock %}</title>
+  <title>{% block title %}{% trans "КалмГУ Data Collector" %}{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'ui/favicon.png' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -51,11 +52,10 @@
   <nav class="navbar navbar-expand-md ui-topnav mb-0">
     <div class="container-fluid px-3 px-lg-4">
       <a class="navbar-brand d-flex align-items-center gap-2 gap-md-3 py-2 text-decoration-none" href="{% if ui_is_staff %}{% url 'ui_project_list' %}{% else %}{% url 'ui_package_list' %}{% endif %}">
-        <span class="ui-brand-logo-wrap" aria-hidden="true">
-          <img src="{% static 'ui/e8-team-logo-1024.png' %}" alt="" class="ui-brand-logo" decoding="async">
-        </span>
+        <img src="{% static 'ui/kalmgu-gerb.png' %}" alt="" class="ui-brand-logo" decoding="async">
         <span class="d-flex flex-column align-items-start lh-sm">
-          <span class="navbar-brand-text">Data Collector</span>
+          <span class="navbar-brand-text">КалмГУ</span>
+          <span class="ui-brand-product">Data Collector</span>
           {% if ui_is_staff %}
           <span class="ui-badge-admin align-self-start mt-1">ADMIN</span>
           {% elif ui_collector_user %}

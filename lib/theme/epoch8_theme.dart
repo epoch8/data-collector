@@ -33,15 +33,15 @@ class _Palette {
   final Color gradientBottom;
 }
 
-/// Тема E8 team: одинаковая структура, разные цвета между светлой/тёмной.
+/// Тема сборки КалмГУ: одинаковая структура, разные цвета между светлой/тёмной.
 abstract final class Epoch8Theme {
   static const _Palette _dark = _Palette(
     bgDeep: Color(0xFF060A0E),
     bgElevated: Color(0xFF0D1319),
     card: Color(0xFF111A24),
     border: Color(0xFF1E2A3A),
-    accent: Color(0xFF2DD4BF),
-    accentDim: Color(0xFF0D9488),
+    accent: Color(0xFF8FB0F5),
+    accentDim: Color(0xFF5C7FD4),
     textPrimary: Color(0xFFF1F5F9),
     textMuted: Color(0xFF94A3B8),
     danger: Color(0xFFF87171),
@@ -55,8 +55,8 @@ abstract final class Epoch8Theme {
     bgElevated: Color(0xFFFFFFFF),
     card: Color(0xFFFFFFFF),
     border: Color(0xFFD6DFEA),
-    accent: Color(0xFF0D9488),
-    accentDim: Color(0xFF14B8A6),
+    accent: Color(0xFF3E63B8),
+    accentDim: Color(0xFF2C4C96),
     textPrimary: Color(0xFF0F172A),
     textMuted: Color(0xFF475569),
     danger: Color(0xFFDC2626),

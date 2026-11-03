@@ -23,7 +23,7 @@ Future<Widget?> buildProjectRelAssetPreview({
       return Image.memory(
         bytes,
         fit: fit,
-        errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+        errorBuilder: (ctx, _, _) => errorPlaceholder(ctx),
       );
     }
     if (projectExampleUriSameApiOrigin(uri)) {
@@ -35,6 +35,6 @@ Future<Widget?> buildProjectRelAssetPreview({
     uri.toString(),
     fit: fit,
     headers: imageAuthHeadersForProjectExamples(),
-    errorBuilder: (ctx, _, __) => errorPlaceholder(ctx),
+    errorBuilder: (ctx, _, _) => errorPlaceholder(ctx),
   );
 }

@@ -16,7 +16,7 @@ class Epoch8LanguageSwitcher extends StatelessWidget {
     final loc = AppLocalizations.of(context);
     return ValueListenableBuilder<Brightness>(
       valueListenable: appBrightnessNotifier,
-      builder: (context, _, __) => Tooltip(
+      builder: (context, _, _) => Tooltip(
         message: loc.languageToggleTooltip,
         child: SizedBox(
           width: 62,

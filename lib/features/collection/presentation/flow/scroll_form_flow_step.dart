@@ -216,8 +216,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     final id = widget.step.cowIdFieldId;
     if (id != null && widget.step.fields.any((f) => f.fieldId == id)) return id;
     for (final f in widget.step.fields) {
-      if (f.type == 'text_input' && f.fieldId == 'cow_identifier')
+      if (f.type == 'text_input' && f.fieldId == 'cow_identifier') {
         return f.fieldId;
+      }
     }
     return widget.step.fields
         .where((f) => f.type == 'text_input')

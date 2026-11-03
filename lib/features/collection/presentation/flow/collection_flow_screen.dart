@@ -589,8 +589,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
 
   Widget _buildStep(BuildContext context) {
     final p = widget.project;
-    if (_step < 0 || _step >= _flow.steps.length)
+    if (_step < 0 || _step >= _flow.steps.length) {
       return const SizedBox.shrink();
+    }
     final cur = _flow.steps[_step];
 
     switch (cur.kind) {
@@ -937,18 +938,20 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   static Map<String, dynamic>? _shotDerivedMap(Map<dynamic, dynamic> sh) {
     final d = sh['derived'];
     if (d is Map<String, dynamic>) return d;
-    if (d is Map)
+    if (d is Map) {
       return Map<String, dynamic>.from(
         d.map((k, v) => MapEntry(k.toString(), v)),
       );
+    }
     final sup = sh['camera_supplement'];
     if (sup is Map) {
       final inner = sup['derived'];
       if (inner is Map<String, dynamic>) return inner;
-      if (inner is Map)
+      if (inner is Map) {
         return Map<String, dynamic>.from(
           inner.map((k, v) => MapEntry(k.toString(), v)),
         );
+      }
     }
     return null;
   }
@@ -956,18 +959,20 @@ class _CameraMetaReviewPanel extends StatelessWidget {
   static Map<String, dynamic>? _shotExifMap(Map<dynamic, dynamic> sh) {
     final x = sh['exif'];
     if (x is Map<String, dynamic>) return x;
-    if (x is Map)
+    if (x is Map) {
       return Map<String, dynamic>.from(
         x.map((k, v) => MapEntry(k.toString(), v)),
       );
+    }
     final sup = sh['camera_supplement'];
     if (sup is Map) {
       final inner = sup['exif'];
       if (inner is Map<String, dynamic>) return inner;
-      if (inner is Map)
+      if (inner is Map) {
         return Map<String, dynamic>.from(
           inner.map((k, v) => MapEntry(k.toString(), v)),
         );
+      }
     }
     return null;
   }

@@ -96,7 +96,7 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
             _image = Image.memory(
               bytes,
               fit: widget.fit,
-              errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+              errorBuilder: (ctx, _, _) => widget.errorPlaceholder(ctx),
             );
             _ready = true;
           });
@@ -118,7 +118,7 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
             u.toString(),
             fit: widget.fit,
             headers: imageAuthHeadersForProjectExamples(),
-            errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+            errorBuilder: (ctx, _, _) => widget.errorPlaceholder(ctx),
           );
           _ready = true;
         });
@@ -150,7 +150,7 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
         _image = Image.asset(
           trimmed,
           fit: widget.fit,
-          errorBuilder: (ctx, _, __) => widget.errorPlaceholder(ctx),
+          errorBuilder: (ctx, _, _) => widget.errorPlaceholder(ctx),
         );
         _ready = true;
       });

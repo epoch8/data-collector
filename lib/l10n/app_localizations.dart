@@ -18,7 +18,7 @@ class AppLocalizations {
   bool get _isRu => locale.languageCode.toLowerCase().startsWith('ru');
 
   String get appTitle =>
-      _isRu ? 'E8 team Сборщик данных' : 'E8 team Data Collector';
+      _isRu ? 'КалмГУ Сборщик данных' : 'KalmSU Data Collector';
   String get languageCodeLabel => _isRu ? 'RU' : 'EN';
   String get languageToggleTooltip =>
       _isRu ? 'Switch to English' : 'Переключить на русский';
@@ -52,7 +52,7 @@ class AppLocalizations {
       : 'An unexpected error occurred. Try going back or restarting the app.';
   String get errorScreenDetailsLabel =>
       _isRu ? 'Подробности (для разработчиков)' : 'Details (for developers)';
-  String get loginTitle => 'Data Collector';
+  String get loginTitle => appTitle;
   String get loginSubtitle => _isRu
       ? 'Сбор полевых данных и фото с офлайн-историей на устройстве'
       : 'Collect field data and photos with offline history on device';
@@ -102,7 +102,7 @@ class AppLocalizations {
   String clearUploadedCacheWithCount(int n) =>
       _isRu ? 'Очистить кэш загруженных ($n)' : 'Clear uploaded cache ($n)';
   String get packageWordShort => _isRu ? 'пак.' : 'pkg.';
-  String packageCountShort(int n) => '$n ${packageWordShort}';
+  String packageCountShort(int n) => '$n $packageWordShort';
   String get allPackagesOnServer =>
       _isRu ? 'Все пакеты на сервере' : 'All packages are on server';
   String get uploadFailed => _isRu ? 'Ошибка отправки' : 'Upload failed';

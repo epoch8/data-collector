@@ -14,10 +14,7 @@ Status: **current** (June 2026).
 | `test_dev/` | Docker Compose: Postgres + MinIO for local URI testing |
 | `specs/` | Product documentation and diagrams |
 | `docs/` | Engineering notes; `docs/business/` — commercial materials |
-| `legacy/` | Not used in the main pipeline (see `legacy/README.md`) |
 
-Reference Shelf server for specs 08–09 (`legacy/mock_server/`, not production) and
-the planned separate `client-admin` SPA (build artifacts only) are in `legacy/`.
 Admin UI is **Django templates** in `django_server/`, not a separate frontend.
 
 ## 2. Flutter client

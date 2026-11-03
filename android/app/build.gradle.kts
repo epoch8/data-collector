@@ -49,11 +49,11 @@ android {
     productFlavors {
         create("local") {
             dimension = "firebase"
-            resValue("string", "app_name", "Data Collector (local)")
+            resValue("string", "app_name", "КалмГУ")
         }
         create("prod") {
             dimension = "firebase"
-            resValue("string", "app_name", "Data Collector")
+            resValue("string", "app_name", "КалмГУ")
         }
     }
 

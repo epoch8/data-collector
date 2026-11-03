@@ -24,7 +24,7 @@ class Epoch8ScreenBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Brightness>(
       valueListenable: appBrightnessNotifier,
-      builder: (context, _, __) => Container(
+      builder: (context, _, _) => Container(
         width: double.infinity,
         height: double.infinity,
         decoration: Epoch8Theme.screenGradient(),
@@ -61,7 +61,7 @@ class Epoch8Card extends StatelessWidget {
   Widget build(BuildContext context) {
     return ValueListenableBuilder<Brightness>(
       valueListenable: appBrightnessNotifier,
-      builder: (context, _, __) {
+      builder: (context, _, _) {
         final content = Padding(
           padding: padding ?? const EdgeInsets.all(Epoch8Layout.cardPadding),
           child: child,

@@ -383,20 +383,20 @@ class CameraMetadataCollector {
     final orientation = _exifOrientationTag(exif);
 
     final out = <String, dynamic>{
-      if (imgW != null) 'image_width_px': imgW,
-      if (imgH != null) 'image_height_px': imgH,
-      if (fx != null) 'fx_px': fx,
-      if (fy != null) 'fy_px': fy,
-      if (cx != null) 'cx_px': cx,
-      if (cy != null) 'cy_px': cy,
-      if (focalMm != null) 'focal_length_mm': focalMm,
-      if (sensorWmm != null) 'sensor_width_mm': sensorWmm,
-      if (sensorHmm != null) 'sensor_height_mm': sensorHmm,
-      if (focal35 != null) 'focal_length_35mm_equiv': focal35,
+      'image_width_px': ?imgW,
+      'image_height_px': ?imgH,
+      'fx_px': ?fx,
+      'fy_px': ?fy,
+      'cx_px': ?cx,
+      'cy_px': ?cy,
+      'focal_length_mm': ?focalMm,
+      'sensor_width_mm': ?sensorWmm,
+      'sensor_height_mm': ?sensorHmm,
+      'focal_length_35mm_equiv': ?focal35,
       'intrinsics_source': source,
       if (principalPointFallback) 'principal_point_fallback_applied': true,
-      if (skew != null) 'skew': skew,
-      if (orientation != null) 'image_orientation_exif': orientation,
+      'skew': ?skew,
+      'image_orientation_exif': ?orientation,
     };
 
     final dist = native?['lens_distortion'];

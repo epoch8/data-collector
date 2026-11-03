@@ -59,12 +59,11 @@ data-collector/
 ├── django_server/      # API + веб-админка (/ui/). Свой manage.py, миграции, runserver
 ├── test_dev/           # Docker Compose: PostgreSQL + MinIO для прод-подобной локалки
 ├── specs/              # спецификации, схемы (.drawio), презентация, статус
-├── docs/               # руководства пользователя и инженерные заметки
-└── legacy/             # неиспользуемое в основном пайплайне (см. legacy/README.ru.md)
+└── docs/               # руководства пользователя и инженерные заметки
 ```
 
 Подробности по подсистемам: [django_server/README.ru.md](django_server/README.ru.md),
-[test_dev/README.ru.md](test_dev/README.ru.md), [legacy/README.ru.md](legacy/README.ru.md).
+[test_dev/README.ru.md](test_dev/README.ru.md).
 
 ---
 

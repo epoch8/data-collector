@@ -14,10 +14,7 @@
 | `test_dev/` | Docker Compose: Postgres + MinIO для локальной проверки URI |
 | `specs/` | Продуктовая документация и диаграммы |
 | `docs/` | Инженерные заметки; `docs/business/` — коммерческие материалы |
-| `legacy/` | Неиспользуемое в основном пайплайне (см. `legacy/README.md`) |
 
-Reference Shelf-сервер под спеки 08–09 (`legacy/mock_server/`, не production) и
-задумывавшийся отдельный SPA `client-admin` (только артефакты сборки) вынесены в `legacy/`.
 Админка — это **Django templates** в `django_server/`, не отдельный фронтенд.
 
 ## 2. Flutter-клиент

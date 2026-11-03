@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'epoch8_theme.dart';
+import 'kalmgu_brand.dart';
 import 'theme_controller.dart';
 
 /// Брендированный лоадер: логотип в кольце спиннера. Используется как замена
@@ -19,7 +20,7 @@ class Epoch8Loader extends StatelessWidget {
     final ringSize = size + 18;
     return ValueListenableBuilder<Brightness>(
       valueListenable: appBrightnessNotifier,
-      builder: (context, _, __) => SizedBox(
+      builder: (context, _, _) => SizedBox(
         width: ringSize,
         height: ringSize,
         child: Stack(
@@ -34,14 +35,11 @@ class Epoch8Loader extends StatelessWidget {
                 backgroundColor: Epoch8Theme.border.withValues(alpha: 0.35),
               ),
             ),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(size / 4),
-              child: Image.asset(
-                'e8-team-logo-1024.png',
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-              ),
+            Image.asset(
+              KalmguBrand.mark,
+              width: size,
+              height: size,
+              fit: BoxFit.contain,
             ),
           ],
         ),

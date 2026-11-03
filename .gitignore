@@ -105,8 +105,8 @@ docs/architecture/video/**/*.mp4
 docs/datapipe/Datapipe.pptx
 docs/datapipe/video/**/*.mp4
 
-# --- legacy/: вложенные внешние репозитории (своя git-история, локально) ---
-legacy/cowmetric/
-legacy/korovas/
-# client-admin: только сборочные бинарники/node_modules, исходников нет
-legacy/client-admin/
+# Локальная выгрузка пакетов (фото-экспорт), не часть исходников.
+manifests.jsonl
+
+# Локальные копии чужих репозиториев. В эту ветку не входят.
+legacy/

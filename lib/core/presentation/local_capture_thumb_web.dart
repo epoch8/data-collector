@@ -21,7 +21,7 @@ Widget localCaptureThumbnail(
         width: size,
         height: size,
         fit: fit,
-        errorBuilder: (_, __, ___) => SizedBox(
+        errorBuilder: (_, _, _) => SizedBox(
           width: size,
           height: size,
           child: ColoredBox(
@@ -57,7 +57,7 @@ Widget localCaptureImageBox(
         width: width,
         height: h,
         fit: fit,
-        errorBuilder: (_, __, ___) => SizedBox(
+        errorBuilder: (_, _, _) => SizedBox(
           width: width,
           height: h,
           child: Container(

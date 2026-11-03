@@ -5,9 +5,11 @@
 /// `flutter run --flavor local --dart-define=FIREBASE_PROFILE=local --dart-define=API_BASE_URL=http://10.0.2.2:8000`
 /// Опционально: `--dart-define=API_BEARER_TOKEN=...` если на Django не включён Firebase Auth.
 abstract final class ApiEnvironment {
+  /// Боевой сервер КалмГУ. Локальный стенд подменяется
+  /// `--dart-define=API_BASE_URL=http://10.0.2.2:8000`.
   static const String baseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: '',
+    defaultValue: 'https://data-collector-app.korovas.ml.epoch8.dev',
   );
   static const String bearerToken = String.fromEnvironment(
     'API_BEARER_TOKEN',
