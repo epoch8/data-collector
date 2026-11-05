@@ -19,7 +19,7 @@ from pptx.util import Inches, Pt
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent.parent
 BUSINESS = ROOT.parent / "business"
-LOGO = REPO / "e8-team-logo-1024.png"
+LOGO = REPO / "assets/brand/kalmgu-icon-1024.png"
 OUT = ROOT / "Architecture.pptx"
 VIDEO = ROOT / "video"
 POSTERS = VIDEO / "posters"
@@ -59,7 +59,7 @@ WHITE = C.white
 
 
 def footer(slide, n: int) -> None:
-    text(slide, Inches(0.55), Inches(7.15), Inches(5.5), Inches(0.22), "Epoch8 · Architecture", size=8, color=MUTED)
+    text(slide, Inches(0.55), Inches(7.15), Inches(5.5), Inches(0.22), "КалмГУ · Architecture", size=8, color=MUTED)
     text(slide, Inches(12.0), Inches(7.15), Inches(0.8), Inches(0.22), f"{n:02d}/{TOTAL:02d}", size=8, color=MUTED, align=PP_ALIGN.RIGHT)
 
 

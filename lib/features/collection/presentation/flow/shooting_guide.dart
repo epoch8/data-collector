@@ -1,8 +1,8 @@
 import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/models/project_config.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:data_collector/features/collection/presentation/flow/project_ui.dart';
 import 'package:flutter/material.dart';
 
@@ -154,7 +154,7 @@ class ShootingGuideBody extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Epoch8SectionHeader(
+          KalmguSectionHeader(
             overline: loc.shootingGuideSectionOverline,
             title: loc.shootingGuideSectionTitle,
             subtitle: ui.str(['shooting_guide', 'section_subtitle'], ''),
@@ -163,7 +163,7 @@ class ShootingGuideBody extends StatelessWidget {
           Text(
             loc.shootingGuideGeneralTipsHeading,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Epoch8Theme.accent,
+              color: KalmguTheme.accent,
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -174,7 +174,7 @@ class ShootingGuideBody extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ', style: TextStyle(color: Epoch8Theme.accent)),
+                  Text('• ', style: TextStyle(color: KalmguTheme.accent)),
                   Expanded(
                     child: Text(
                       t,
@@ -235,7 +235,7 @@ class _PoseGuideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Epoch8Card(
+    return KalmguCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -247,7 +247,7 @@ class _PoseGuideCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           ClipRRect(
-            borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
+            borderRadius: BorderRadius.circular(KalmguLayout.radiusSm),
             child: AspectRatio(
               aspectRatio: 4 / 3,
               child: projectExampleImage(
@@ -255,14 +255,14 @@ class _PoseGuideCard extends StatelessWidget {
                 assetPath: guide.exampleAssetPath,
                 fit: BoxFit.cover,
                 errorPlaceholder: (ctx) => Container(
-                  color: Epoch8Theme.bgElevated,
+                  color: KalmguTheme.bgElevated,
                   alignment: Alignment.center,
                   child: Text(
                     assetMissingHint.isNotEmpty
                         ? assetMissingHint
                         : emptyImagePlaceholder,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Epoch8Theme.textMuted),
+                    style: TextStyle(color: KalmguTheme.textMuted),
                   ),
                 ),
               ),
@@ -275,7 +275,7 @@ class _PoseGuideCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('– ', style: TextStyle(color: Epoch8Theme.textMuted)),
+                  Text('– ', style: TextStyle(color: KalmguTheme.textMuted)),
                   Expanded(
                     child: Text(
                       line,
@@ -315,7 +315,7 @@ Future<void> showShootingHelp(BuildContext context, Project project) {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: Epoch8Theme.border,
+                    color: KalmguTheme.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),

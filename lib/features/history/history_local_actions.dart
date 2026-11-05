@@ -2,7 +2,7 @@ import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/core/storage/database_provider.dart';
 import 'package:data_collector/features/collection/logic/local_package_cleanup.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,7 +19,7 @@ Future<void> confirmAndDeleteLocalPackage(
           title: Text(loc.confirmDeletePackageTitle),
           content: Text(
             loc.confirmDeletePackageBody(pkg.id),
-            style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
+            style: TextStyle(color: KalmguTheme.textMuted, height: 1.4),
           ),
           actions: [
             TextButton(
@@ -54,7 +54,7 @@ Future<int?> confirmAndClearUploadedPackagesCache(
           title: Text(loc.clearUploadedCacheConfirmTitle),
           content: Text(
             loc.clearUploadedCacheConfirmBody,
-            style: TextStyle(color: Epoch8Theme.textMuted, height: 1.4),
+            style: TextStyle(color: KalmguTheme.textMuted, height: 1.4),
           ),
           actions: [
             TextButton(

@@ -34,7 +34,7 @@ class _Palette {
 }
 
 /// Тема сборки КалмГУ: одинаковая структура, разные цвета между светлой/тёмной.
-abstract final class Epoch8Theme {
+abstract final class KalmguTheme {
   static const _Palette _dark = _Palette(
     bgDeep: Color(0xFF060A0E),
     bgElevated: Color(0xFF0D1319),

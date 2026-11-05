@@ -94,7 +94,7 @@ def _slide_chrome(slide, num, eyebrow=None, accent=ACCENT):
     _decor_orbs(slide)
     _rect(slide, Inches(0), Inches(0), SLIDE_W, Inches(0.06), accent)
     _rect(slide, Inches(0), Inches(7.18), SLIDE_W, Inches(0.32), BG_DEEP)
-    _text(slide, Inches(0.65), Inches(7.2), Inches(4), Inches(0.28), "Data Collector  ·  Epoch8", 9, color=TEXT_DIM)
+    _text(slide, Inches(0.65), Inches(7.2), Inches(4), Inches(0.28), "Data Collector  ·  КалмГУ", 9, color=TEXT_DIM)
     _text(slide, Inches(12.0), Inches(7.2), Inches(0.9), Inches(0.28), f"{num:02d} / {TOTAL_SLIDES}", 9, color=TEXT_DIM, align=PP_ALIGN.RIGHT)
     if eyebrow:
         pill = _round(slide, Inches(0.65), Inches(0.45), Inches(1.8), Inches(0.32), BG_CARD, accent)
@@ -271,7 +271,7 @@ def build() -> Path:
     _slide_chrome(slide, 3, "PRODUCT")
     _slide_title(slide, "Из чего состоит продукт", "Одна платформа — N проектов")
     _component_cards(slide, [
-        ("Staff Admin", "Epoch8", "конфиг · Git · пользователи"),
+        ("Staff Admin", "КалмГУ", "конфиг · Git · пользователи"),
         ("Client Admin", "Заказчик", "просмотр пакетов · viz"),
         ("Flutter App", "Сборщик", "сбор · офлайн · upload"),
         ("Django + storage", "Платформа", "API · БД · медиа"),
@@ -423,7 +423,7 @@ def build_v4() -> Path:
     _role_cards(slide, [
         (
             "Staff Admin",
-            "Epoch8 · управление проектами",
+            "КалмГУ · управление проектами",
             "Администратор заходит в веб-админку: создаёт проект сбора под конкретную задачу, "
             "привязывает Git-репозитории (там версионируются config.json и артефакты админки), "
             "настраивает доступ — какие пользователи видят какие проекты, назначает сборщиков.",

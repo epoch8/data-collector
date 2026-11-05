@@ -6,8 +6,8 @@ import 'package:data_collector/features/projects/providers/project_providers.dar
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
 import 'package:data_collector/models/project_config.dart';
-import 'package:data_collector/theme/epoch8_loader.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_loader.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:data_collector/theme/theme_controller.dart';
 import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
@@ -41,7 +41,7 @@ class ScrollFormCollectionScreen extends ConsumerWidget {
         }
         return _ScrollFormLoaded(projectId: projectId, project: project);
       },
-      loading: () => Scaffold(body: Epoch8Loader.center()),
+      loading: () => Scaffold(body: KalmguLoader.center()),
       error: (e, _) => Scaffold(
         body: Center(
           child: Text('${AppLocalizations.of(context).errorPrefix}: $e'),
@@ -139,7 +139,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
         ],
       ),
       body: Container(
-        decoration: Epoch8Theme.screenGradient(),
+        decoration: KalmguTheme.screenGradient(),
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -192,10 +192,10 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: hasFocus
-            ? Epoch8Theme.accent.withValues(alpha: 0.08)
-            : Epoch8Theme.card.withValues(alpha: 0.35),
+            ? KalmguTheme.accent.withValues(alpha: 0.08)
+            : KalmguTheme.card.withValues(alpha: 0.35),
         border: Border.all(
-          color: hasFocus ? Epoch8Theme.accent : Epoch8Theme.border,
+          color: hasFocus ? KalmguTheme.accent : KalmguTheme.border,
           width: hasFocus ? 2 : 1,
         ),
         borderRadius: BorderRadius.circular(16),
@@ -263,9 +263,9 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                 constraints: const BoxConstraints(minHeight: 200),
                 padding: const EdgeInsets.symmetric(vertical: 24),
                 decoration: BoxDecoration(
-                  color: Epoch8Theme.bgElevated,
+                  color: KalmguTheme.bgElevated,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Epoch8Theme.border, width: 1),
+                  border: Border.all(color: KalmguTheme.border, width: 1),
                 ),
                 child: Center(
                   child: Column(
@@ -320,7 +320,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                           Text(
                             '${(answers[field.fieldId] as List).length} ${loc.photosCaptured}',
                             style: TextStyle(
-                              color: Epoch8Theme.accent,
+                              color: KalmguTheme.accent,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -396,13 +396,13 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                           child: Container(
                                             padding: const EdgeInsets.all(2),
                                             decoration: BoxDecoration(
-                                              color: Epoch8Theme.danger,
+                                              color: KalmguTheme.danger,
                                               shape: BoxShape.circle,
                                             ),
                                             child: Icon(
                                               Icons.close,
                                               size: 16,
-                                              color: Epoch8Theme.bgDeep,
+                                              color: KalmguTheme.bgDeep,
                                             ),
                                           ),
                                         ),
@@ -416,7 +416,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                           Text(
                             '${loc.photoSaved} ✓',
                             style: TextStyle(
-                              color: Epoch8Theme.accent,
+                              color: KalmguTheme.accent,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -455,13 +455,13 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
                                   child: Container(
                                     padding: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: Epoch8Theme.danger,
+                                      color: KalmguTheme.danger,
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
                                       Icons.close,
                                       size: 16,
-                                      color: Epoch8Theme.bgDeep,
+                                      color: KalmguTheme.bgDeep,
                                     ),
                                   ),
                                 ),
@@ -478,7 +478,7 @@ class _ScrollFormLoadedState extends ConsumerState<_ScrollFormLoaded> {
           else
             Text(
               '${loc.unsupportedFieldType} ${loc.supportedFieldTypes} (${field.type})',
-              style: TextStyle(color: Epoch8Theme.danger),
+              style: TextStyle(color: KalmguTheme.danger),
             ),
 
           if (hasFocus)

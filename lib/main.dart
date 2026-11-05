@@ -29,13 +29,13 @@ import 'features/history/history_local_actions.dart';
 import 'features/history/package_delivery_style.dart';
 import 'features/history/package_manifest_export.dart';
 import 'features/help/presentation/help_screen.dart';
-import 'theme/epoch8_theme.dart';
+import 'theme/kalmgu_theme.dart';
 import 'theme/theme_controller.dart';
-import 'theme/epoch8_ui.dart';
-import 'theme/epoch8_loader.dart';
+import 'theme/kalmgu_ui.dart';
+import 'theme/kalmgu_loader.dart';
 import 'theme/kalmgu_brand.dart';
-import 'theme/epoch8_error_screen.dart';
-import 'theme/epoch8_app_bar_controls.dart';
+import 'theme/kalmgu_error_screen.dart';
+import 'theme/kalmgu_app_bar_controls.dart';
 import 'l10n/app_localizations.dart';
 import 'l10n/locale_controller.dart';
 
@@ -44,7 +44,7 @@ Future<void> main() async {
   await AppPreferences.ensureInitialized();
   initAppLocale();
   initAppThemeMode();
-  ErrorWidget.builder = (details) => Epoch8ErrorScreen(details: details);
+  ErrorWidget.builder = (details) => KalmguErrorScreen(details: details);
   try {
     debugPrint(
       'Firebase profile=${DefaultFirebaseOptions.profile.name} '
@@ -112,13 +112,13 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
                   final catalog = projects.byId(id);
                   if (catalog == null || catalog.formById(formId) == null) {
                     return Scaffold(
-                      appBar: AppBar(title: _epoch8AppBarTitle(loc.project)),
+                      appBar: AppBar(title: _kalmguAppBarTitle(loc.project)),
                       body: Center(child: Text(loc.projectNotFound)),
                     );
                   }
                   return CollectionFlowScreen(projectId: id, formId: formId);
                 },
-                loading: () => Scaffold(body: Epoch8Loader.center()),
+                loading: () => Scaffold(body: KalmguLoader.center()),
                 error: (e, _) => Scaffold(
                   body: Center(
                     child: Text(
@@ -156,7 +156,7 @@ GoRouter _buildAppRouter(Listenable? authRefresh) {
   );
 }
 
-Widget _epoch8AppBarTitle(String title) {
+Widget _kalmguAppBarTitle(String title) {
   return Row(
     mainAxisSize: MainAxisSize.min,
     children: [
@@ -264,8 +264,8 @@ class _DataCollectorAppState extends State<DataCollectorApp>
             locale: locale,
             scaffoldMessengerKey: rootScaffoldMessengerKey,
             onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-            theme: Epoch8Theme.light,
-            darkTheme: Epoch8Theme.dark,
+            theme: KalmguTheme.light,
+            darkTheme: KalmguTheme.dark,
             themeMode: themeMode,
             themeAnimationDuration: Duration.zero,
             themeAnimationCurve: Curves.linear,
@@ -341,7 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final t = Theme.of(context).textTheme;
     final loc = AppLocalizations.of(context);
     return Scaffold(
-      body: Epoch8ScreenBody(
+      body: KalmguScreenBody(
         child: SafeArea(
           child: LayoutBuilder(
             builder: (context, constraints) {
@@ -349,9 +349,9 @@ class _LoginScreenState extends State<LoginScreen> {
                 children: [
                   SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(
-                      Epoch8Layout.pagePadding,
+                      KalmguLayout.pagePadding,
                       56,
-                      Epoch8Layout.pagePadding,
+                      KalmguLayout.pagePadding,
                       0,
                     ),
                     child: ConstrainedBox(
@@ -377,7 +377,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                           const SizedBox(height: 32),
                           if (firebaseInitialized) ...[
-                            Epoch8Card(
+                            KalmguCard(
                               child: Column(
                                 children: [
                                   TextField(
@@ -409,7 +409,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     Text(
                                       _error!,
                                       style: t.bodySmall?.copyWith(
-                                        color: Epoch8Theme.danger,
+                                        color: KalmguTheme.danger,
                                       ),
                                       textAlign: TextAlign.center,
                                     ),
@@ -439,7 +439,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             Text(
                               loc.firebaseNotInitialized,
                               style: t.bodySmall?.copyWith(
-                                color: Epoch8Theme.textMuted,
+                                color: KalmguTheme.textMuted,
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -470,8 +470,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Epoch8ThemeSwitcher(),
-                            const Epoch8LanguageSwitcher(),
+                            const KalmguThemeSwitcher(),
+                            const KalmguLanguageSwitcher(),
                           ],
                         ),
                       ),
@@ -501,7 +501,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     // Кастомные элементы внутри Dashboard (TabBar surface/border, FAB-цвета)
-    // используют глобальные токены Epoch8Theme.* и не подписаны на Theme.of.
+    // используют глобальные токены KalmguTheme.* и не подписаны на Theme.of.
     // Триггерим ребилд при смене темы вручную.
     appBrightnessNotifier.addListener(_onBrightnessChanged);
   }
@@ -539,27 +539,27 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       length: 3,
       child: Scaffold(
         appBar: AppBar(
-          leading: const Epoch8ThemeSwitcher(),
-          title: _epoch8AppBarTitle(loc.workspaceTitle),
+          leading: const KalmguThemeSwitcher(),
+          title: _kalmguAppBarTitle(loc.workspaceTitle),
           bottom: PreferredSize(
             preferredSize: const Size.fromHeight(66),
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 4, 12, 8),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Epoch8Theme.tabBarSurface,
-                  borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
-                  border: Border.all(color: Epoch8Theme.tabBarBorder),
+                  color: KalmguTheme.tabBarSurface,
+                  borderRadius: BorderRadius.circular(KalmguLayout.radiusMd),
+                  border: Border.all(color: KalmguTheme.tabBarBorder),
                 ),
                 child: TabBar(
                   padding: const EdgeInsets.all(4),
                   indicator: BoxDecoration(
                     borderRadius: BorderRadius.circular(
-                      Epoch8Layout.radiusSm + 2,
+                      KalmguLayout.radiusSm + 2,
                     ),
-                    color: Epoch8Theme.accent.withValues(alpha: 0.18),
+                    color: KalmguTheme.accent.withValues(alpha: 0.18),
                     border: Border.all(
-                      color: Epoch8Theme.accent.withValues(alpha: 0.35),
+                      color: KalmguTheme.accent.withValues(alpha: 0.35),
                     ),
                   ),
                   indicatorSize: TabBarIndicatorSize.tab,
@@ -583,7 +583,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
             ),
           ),
           actions: [
-            const Epoch8LanguageSwitcher(),
+            const KalmguLanguageSwitcher(),
             const SizedBox(width: 2),
             IconButton(
               icon: const Icon(Icons.logout_outlined),
@@ -602,7 +602,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           tooltip: loc.helpTitle,
           child: const Icon(Icons.help_outline),
         ),
-        body: Epoch8ScreenBody(
+        body: KalmguScreenBody(
           child: TabBarView(
             children: [
               projectsAsync.when(
@@ -613,9 +613,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                   final list = ListView.separated(
                     physics: const AlwaysScrollableScrollPhysics(),
                     padding: const EdgeInsets.fromLTRB(
-                      Epoch8Layout.pagePadding,
+                      KalmguLayout.pagePadding,
                       12,
-                      Epoch8Layout.pagePadding,
+                      KalmguLayout.pagePadding,
                       24,
                     ),
                     itemCount: projects.length,
@@ -626,7 +626,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                       final flow = primary != null
                           ? resolveCollectionFlow(primary)
                           : null;
-                      return Epoch8Card(
+                      return KalmguCard(
                         accentBorder:
                             flow?.shouldGroupHistoryBySubject ?? false,
                         child: ListTile(
@@ -639,16 +639,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                             height: 52,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(14),
-                              color: Epoch8Theme.accent.withValues(alpha: 0.12),
+                              color: KalmguTheme.accent.withValues(alpha: 0.12),
                               border: Border.all(
-                                color: Epoch8Theme.accent.withValues(
+                                color: KalmguTheme.accent.withValues(
                                   alpha: 0.25,
                                 ),
                               ),
                             ),
                             child: Icon(
                               Icons.folder_special_outlined,
-                              color: Epoch8Theme.accent,
+                              color: KalmguTheme.accent,
                               size: 26,
                             ),
                           ),
@@ -705,13 +705,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                           trailing: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Epoch8Theme.bgElevated,
+                              color: KalmguTheme.bgElevated,
                               borderRadius: BorderRadius.circular(10),
                             ),
                             child: Icon(
                               Icons.arrow_forward_ios_rounded,
                               size: 16,
-                              color: Epoch8Theme.textMuted,
+                              color: KalmguTheme.textMuted,
                             ),
                           ),
                           onTap: () =>
@@ -728,7 +728,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                         children: [
                           SizedBox(
                             height: MediaQuery.sizeOf(context).height * 0.5,
-                            child: Epoch8EmptyState(
+                            child: KalmguEmptyState(
                               icon: Icons.folder_open_outlined,
                               title: loc.noProjectsTitle,
                               subtitle: emptySubtitle,
@@ -743,7 +743,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                     child: list,
                   );
                 },
-                loading: () => Epoch8Loader.center(),
+                loading: () => KalmguLoader.center(),
                 error: (e, _) => Center(child: Text('${loc.configError}: $e')),
               ),
               const ServerSyncTab(),
@@ -772,7 +772,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
     final packagesAsync = ref.watch(packagesStreamProvider);
     return Scaffold(
       appBar: AppBar(
-        title: _epoch8AppBarTitle('${loc.objectLabel} $subjectId'),
+        title: _kalmguAppBarTitle('${loc.objectLabel} $subjectId'),
       ),
       body: packagesAsync.when(
         data: (packages) {
@@ -787,7 +787,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
                   .toList()
                 ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
           if (filtered.isEmpty) {
-            return Epoch8EmptyState(
+            return KalmguEmptyState(
               icon: Icons.cloud_off_outlined,
               title: loc.packageNotFoundShort,
               subtitle: loc.noPackagesForSubject,
@@ -795,9 +795,9 @@ class SubjectHistoryScreen extends ConsumerWidget {
           }
           return ListView.separated(
             padding: const EdgeInsets.fromLTRB(
-              Epoch8Layout.pagePadding,
+              KalmguLayout.pagePadding,
               12,
-              Epoch8Layout.pagePadding,
+              KalmguLayout.pagePadding,
               24,
             ),
             itemCount: filtered.length,
@@ -805,7 +805,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
             itemBuilder: (context, index) {
               final pkg = filtered[index];
               final photoCount = _extractImagePaths(pkg).length;
-              return Epoch8Card(
+              return KalmguCard(
                 highlightBorderColor: historyPackageBorderColor(
                   pkg.serverDeliveryState,
                 ),
@@ -826,7 +826,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
                         icon: Icon(
                           Icons.download_outlined,
                           size: 22,
-                          color: Epoch8Theme.accent,
+                          color: KalmguTheme.accent,
                         ),
                         onPressed: () => sharePackageServerManifestWithSnackBar(
                           context,
@@ -838,7 +838,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
                         icon: Icon(
                           Icons.delete_outline,
                           size: 22,
-                          color: Epoch8Theme.danger,
+                          color: KalmguTheme.danger,
                         ),
                         onPressed: () async {
                           await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -847,7 +847,7 @@ class SubjectHistoryScreen extends ConsumerWidget {
                       Icon(
                         Icons.arrow_forward_ios_rounded,
                         size: 16,
-                        color: Epoch8Theme.textMuted,
+                        color: KalmguTheme.textMuted,
                       ),
                     ],
                   ),
@@ -857,13 +857,13 @@ class SubjectHistoryScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => Epoch8Loader.center(),
+        loading: () => KalmguLoader.center(),
         error: (e, st) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
               '${loc.errorPrefix}: $e',
-              style: TextStyle(color: Epoch8Theme.danger),
+              style: TextStyle(color: KalmguTheme.danger),
             ),
           ),
         ),
@@ -892,9 +892,9 @@ class PackageHistoryScreen extends ConsumerWidget {
         }
         return Scaffold(
           appBar: AppBar(
-            title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
+            title: _kalmguAppBarTitle('${loc.packageWord} $packageId'),
             actions: [
-              const Epoch8LanguageSwitcher(),
+              const KalmguLanguageSwitcher(),
               const SizedBox(width: 2),
               if (pkg != null) ...[
                 IconButton(
@@ -920,7 +920,7 @@ class PackageHistoryScreen extends ConsumerWidget {
             ],
           ),
           body: pkg == null
-              ? Epoch8EmptyState(
+              ? KalmguEmptyState(
                   icon: Icons.error_outline,
                   title: loc.packageNotFoundTitle,
                   subtitle: loc.packageNotFoundSubtitle,
@@ -930,20 +930,20 @@ class PackageHistoryScreen extends ConsumerWidget {
       },
       loading: () => Scaffold(
         appBar: AppBar(
-          title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
+          title: _kalmguAppBarTitle('${loc.packageWord} $packageId'),
         ),
-        body: Epoch8Loader.center(),
+        body: KalmguLoader.center(),
       ),
       error: (e, st) => Scaffold(
         appBar: AppBar(
-          title: _epoch8AppBarTitle('${loc.packageWord} $packageId'),
+          title: _kalmguAppBarTitle('${loc.packageWord} $packageId'),
         ),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
               '${loc.errorPrefix}: $e',
-              style: TextStyle(color: Epoch8Theme.danger),
+              style: TextStyle(color: KalmguTheme.danger),
             ),
           ),
         ),
@@ -972,13 +972,13 @@ Widget _packageHistoryDetailBody(
   final subjectLabel = _extractSubjectId(raw);
   return ListView(
     padding: const EdgeInsets.fromLTRB(
-      Epoch8Layout.pagePadding,
+      KalmguLayout.pagePadding,
       12,
-      Epoch8Layout.pagePadding,
+      KalmguLayout.pagePadding,
       24,
     ),
     children: [
-      Epoch8Card(
+      KalmguCard(
         highlightBorderColor: historyPackageBorderColor(
           pkg.serverDeliveryState,
         ),
@@ -1011,7 +1011,7 @@ Widget _packageHistoryDetailBody(
               '${loc.identifier}: ${pkg.projectId}',
               style: Theme.of(
                 context,
-              ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+              ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
             ),
             Text(
               '${loc.createdAt}: ${pkg.createdAt.toString().split('.').first}',
@@ -1025,7 +1025,7 @@ Widget _packageHistoryDetailBody(
         ),
       ),
       const SizedBox(height: 12),
-      Epoch8Card(
+      KalmguCard(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1042,7 +1042,7 @@ Widget _packageHistoryDetailBody(
       ),
       const SizedBox(height: 12),
       if (photos.isEmpty)
-        Epoch8EmptyState(
+        KalmguEmptyState(
           icon: Icons.photo_library_outlined,
           title: loc.packageNoPhotosTitle,
           subtitle: loc.packageNoPhotosSubtitle,
@@ -1052,7 +1052,7 @@ Widget _packageHistoryDetailBody(
           final meta = metadataByPath[path];
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
-            child: Epoch8Card(
+            child: KalmguCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -1101,7 +1101,7 @@ Widget _packageHistoryDetailBody(
                   Text(
                     '${loc.pathLabel}: $path',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Epoch8Theme.textMuted,
+                      color: KalmguTheme.textMuted,
                     ),
                   ),
                   if (meta != null) ...[
@@ -1113,8 +1113,8 @@ Widget _packageHistoryDetailBody(
                       child: ExpansionTile(
                         tilePadding: EdgeInsets.zero,
                         childrenPadding: EdgeInsets.zero,
-                        iconColor: Epoch8Theme.textMuted,
-                        collapsedIconColor: Epoch8Theme.textMuted,
+                        iconColor: KalmguTheme.textMuted,
+                        collapsedIconColor: KalmguTheme.textMuted,
                         title: Text(
                           loc.frameCameraParams,
                           style: Theme.of(context).textTheme.bodyMedium
@@ -1161,7 +1161,7 @@ Widget _historyTabBody(
         data: (packages) {
           final visible = packages.where((p) => p.status != 'draft').toList();
           if (visible.isEmpty) {
-            return Epoch8EmptyState(
+            return KalmguEmptyState(
               icon: Icons.cloud_outlined,
               title: AppLocalizations.of(context).historyEmptyTitle,
               subtitle: AppLocalizations.of(context).historyEmptySubtitle,
@@ -1198,9 +1198,9 @@ Widget _historyTabBody(
               if (completedCount > 0)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(
-                    Epoch8Layout.pagePadding,
+                    KalmguLayout.pagePadding,
                     4,
-                    Epoch8Layout.pagePadding,
+                    KalmguLayout.pagePadding,
                     0,
                   ),
                   child: Align(
@@ -1223,9 +1223,9 @@ Widget _historyTabBody(
               Expanded(
                 child: ListView(
                   padding: EdgeInsets.fromLTRB(
-                    Epoch8Layout.pagePadding,
+                    KalmguLayout.pagePadding,
                     completedCount > 0 ? 4 : 12,
-                    Epoch8Layout.pagePadding,
+                    KalmguLayout.pagePadding,
                     24,
                   ),
                   children: sections,
@@ -1234,13 +1234,13 @@ Widget _historyTabBody(
             ],
           );
         },
-        loading: () => Epoch8Loader.center(),
+        loading: () => KalmguLoader.center(),
         error: (e, _) => Center(
           child: Text('${AppLocalizations.of(context).errorPrefix}: $e'),
         ),
       );
     },
-    loading: () => Epoch8Loader.center(),
+    loading: () => KalmguLoader.center(),
     error: (e, _) =>
         Center(child: Text('${AppLocalizations.of(context).configError}: $e')),
   );
@@ -1265,7 +1265,7 @@ Widget _historyProjectSection(
             Icon(
               bySubject ? Icons.pets_outlined : Icons.folder_outlined,
               size: 20,
-              color: Epoch8Theme.accent,
+              color: KalmguTheme.accent,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -1273,7 +1273,7 @@ Widget _historyProjectSection(
                 proj.name,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
                   fontWeight: FontWeight.w700,
-                  color: Epoch8Theme.accent,
+                  color: KalmguTheme.accent,
                 ),
               ),
             ),
@@ -1281,14 +1281,14 @@ Widget _historyProjectSection(
               AppLocalizations.of(context).packageCountShort(packages.length),
               style: Theme.of(
                 context,
-              ).textTheme.labelSmall?.copyWith(color: Epoch8Theme.textMuted),
+              ).textTheme.labelSmall?.copyWith(color: KalmguTheme.textMuted),
             ),
           ],
         ),
       ),
       if (bySubject) ...[
         for (final g in _groupPackagesBySubject(packages)) ...[
-          Epoch8Card(
+          KalmguCard(
             highlightBorderColor: historyGroupBorderColor(g.packages),
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
@@ -1300,14 +1300,14 @@ Widget _historyProjectSection(
                 height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Epoch8Theme.accent.withValues(alpha: 0.12),
+                  color: KalmguTheme.accent.withValues(alpha: 0.12),
                   border: Border.all(
-                    color: Epoch8Theme.accent.withValues(alpha: 0.25),
+                    color: KalmguTheme.accent.withValues(alpha: 0.25),
                   ),
                 ),
                 child: Icon(
                   Icons.badge_outlined,
-                  color: Epoch8Theme.accent,
+                  color: KalmguTheme.accent,
                   size: 24,
                 ),
               ),
@@ -1326,7 +1326,7 @@ Widget _historyProjectSection(
               trailing: Icon(
                 Icons.arrow_forward_ios_rounded,
                 size: 16,
-                color: Epoch8Theme.textMuted,
+                color: KalmguTheme.textMuted,
               ),
               onTap: () => context.push(
                 '/history/project/${proj.id}/subject/${Uri.encodeComponent(g.subjectId)}',
@@ -1339,7 +1339,7 @@ Widget _historyProjectSection(
         for (final pkg
             in (packages.toList()
               ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))) ...[
-          Epoch8Card(
+          KalmguCard(
             highlightBorderColor: historyPackageBorderColor(
               pkg.serverDeliveryState,
             ),
@@ -1353,7 +1353,7 @@ Widget _historyProjectSection(
                 height: 48,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: Epoch8Theme.card,
+                  color: KalmguTheme.card,
                   border: Border.all(
                     color: historyPackageBorderColor(
                       pkg.serverDeliveryState,
@@ -1391,7 +1391,7 @@ Widget _historyProjectSection(
                     icon: Icon(
                       Icons.download_outlined,
                       size: 22,
-                      color: Epoch8Theme.accent,
+                      color: KalmguTheme.accent,
                     ),
                     onPressed: () =>
                         sharePackageServerManifestWithSnackBar(context, pkg),
@@ -1401,7 +1401,7 @@ Widget _historyProjectSection(
                     icon: Icon(
                       Icons.delete_outline,
                       size: 22,
-                      color: Epoch8Theme.danger,
+                      color: KalmguTheme.danger,
                     ),
                     onPressed: () async {
                       await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -1410,7 +1410,7 @@ Widget _historyProjectSection(
                   Icon(
                     Icons.arrow_forward_ios_rounded,
                     size: 16,
-                    color: Epoch8Theme.textMuted,
+                    color: KalmguTheme.textMuted,
                   ),
                 ],
               ),
@@ -1477,13 +1477,13 @@ Widget _historyOrphanProjectSection(
         child: Text(
           '${AppLocalizations.of(context).project} $projectId (${AppLocalizations.of(context).projectMissingInConfig})',
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            color: Epoch8Theme.textMuted,
+            color: KalmguTheme.textMuted,
             fontWeight: FontWeight.w600,
           ),
         ),
       ),
       for (final pkg in sorted) ...[
-        Epoch8Card(
+        KalmguCard(
           highlightBorderColor: historyPackageBorderColor(
             pkg.serverDeliveryState,
           ),
@@ -1504,7 +1504,7 @@ Widget _historyOrphanProjectSection(
                   icon: Icon(
                     Icons.download_outlined,
                     size: 22,
-                    color: Epoch8Theme.accent,
+                    color: KalmguTheme.accent,
                   ),
                   onPressed: () =>
                       sharePackageServerManifestWithSnackBar(context, pkg),
@@ -1514,7 +1514,7 @@ Widget _historyOrphanProjectSection(
                   icon: Icon(
                     Icons.delete_outline,
                     size: 22,
-                    color: Epoch8Theme.danger,
+                    color: KalmguTheme.danger,
                   ),
                   onPressed: () async {
                     await confirmAndDeleteLocalPackage(context, ref, pkg);
@@ -1523,7 +1523,7 @@ Widget _historyOrphanProjectSection(
                 Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 16,
-                  color: Epoch8Theme.textMuted,
+                  color: KalmguTheme.textMuted,
                 ),
               ],
             ),
@@ -1702,7 +1702,7 @@ Widget _packageHistoryFieldRow(
           width: 120,
           child: Text(
             label,
-            style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
+            style: TextStyle(color: KalmguTheme.textMuted, fontSize: 13),
           ),
         ),
         Expanded(child: Text(v, style: Theme.of(context).textTheme.bodyMedium)),

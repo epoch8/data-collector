@@ -6,7 +6,7 @@ import 'project_example_resolve_rel_io.dart'
     if (dart.library.html) 'project_example_resolve_rel_web.dart'
     as rel_preview;
 import 'package:data_collector/models/project_config.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -171,7 +171,7 @@ class _ProjectExampleImageState extends ConsumerState<ProjectExampleImage> {
       return Container(
         constraints: const BoxConstraints(minHeight: 80),
         alignment: Alignment.center,
-        color: Epoch8Theme.bgElevated,
+        color: KalmguTheme.bgElevated,
         child: const SizedBox(
           width: 28,
           height: 28,

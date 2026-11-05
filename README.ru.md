@@ -1,8 +1,8 @@
 <div align="center">
 
-<a href="https://e8.team/portfolio/data-collector/"><img src="e8_data_collector_logo.png" alt="E8 Data Collector" width="460"></a>
+<img src="assets/brand/kalmgu-logo.png" alt="Калмыцкий государственный университет имени Б. Б. Городовикова" width="460">
 
-<p><b>Фреймворк для сбора размеченных данных.</b><br>
+<p><b>Сборщик данных Калмыцкого государственного университета.</b><br>
 Flutter-клиент (на устройстве, offline-first) + Django-бэкенд с веб-админкой и мобильным API.</p>
 
 <p>
@@ -38,9 +38,7 @@ Flutter-клиент (на устройстве, offline-first) + Django-бэк�
 
 ![Админка: создание проекта, конфиг, доступы](specs/presentation/img/config-steps-admin.gif)
 
-**2. Сбор в поле.** Flutter: вход, конфиг с сервера, заполнение формы, очередь отправки на сервер (offline-first).
-
-![Мобильное приложение: форма и отправка пакета](specs/presentation/img/flutter-steps-app.gif)
+**2. Сбор в поле.** Приложение КалмГУ: вход, конфиг с сервера, заполнение формы, очередь отправки на сервер (offline-first).
 
 **3. Пакеты и проверка.** Список принятых пакетов, фильтры, просмотр медиа и данных, правки, визуализация pipeline.
 

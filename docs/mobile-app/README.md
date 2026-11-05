@@ -4,13 +4,9 @@
 
 Operator workflow in the data_collector mobile client: sign-in → project selection → filling the form per config → sending a package to the server. Fields and steps depend on the project config set in the [admin panel](../admin-panel/README.md).
 
-Screenshots below are from the product presentation ([`specs/presentation/img/Flutter_en/`](../../specs/presentation/img/Flutter_en/)), assembled as an animated walkthrough.
-
 ## **Main workflow**
 
 Sign in → configs from server → fill the form (multiple steps) → project cache and upload.
-
-![Mobile app: sign-in, config, form, upload](../../specs/presentation/img/flutter-steps-app-en.gif)
 
 ### **1. Signing in**
 

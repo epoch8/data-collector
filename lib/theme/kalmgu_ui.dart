@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'epoch8_theme.dart';
+import 'kalmgu_theme.dart';
 import 'theme_controller.dart';
 
 /// Отступы и радиусы единообразно по всему приложению.
-abstract final class Epoch8Layout {
+abstract final class KalmguLayout {
   static const double pagePadding = 20;
   static const double sectionGap = 20;
   static const double cardPadding = 18;
@@ -14,8 +14,8 @@ abstract final class Epoch8Layout {
 
 /// Обёртка экрана: градиент + опциональный безопасный отступ.
 /// Подписан на смену темы — пересоздаёт фон при переключении light/dark.
-class Epoch8ScreenBody extends StatelessWidget {
-  const Epoch8ScreenBody({super.key, required this.child, this.padding});
+class KalmguScreenBody extends StatelessWidget {
+  const KalmguScreenBody({super.key, required this.child, this.padding});
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
@@ -27,7 +27,7 @@ class Epoch8ScreenBody extends StatelessWidget {
       builder: (context, _, _) => Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: Epoch8Theme.screenGradient(),
+        decoration: KalmguTheme.screenGradient(),
         child: padding != null
             ? Padding(padding: padding!, child: child)
             : child,
@@ -37,8 +37,8 @@ class Epoch8ScreenBody extends StatelessWidget {
 }
 
 /// Карточка с мягкой «подсветкой» границы и скруглением.
-class Epoch8Card extends StatelessWidget {
-  const Epoch8Card({
+class KalmguCard extends StatelessWidget {
+  const KalmguCard({
     super.key,
     required this.child,
     this.padding,
@@ -63,7 +63,7 @@ class Epoch8Card extends StatelessWidget {
       valueListenable: appBrightnessNotifier,
       builder: (context, _, _) {
         final content = Padding(
-          padding: padding ?? const EdgeInsets.all(Epoch8Layout.cardPadding),
+          padding: padding ?? const EdgeInsets.all(KalmguLayout.cardPadding),
           child: child,
         );
 
@@ -73,21 +73,21 @@ class Epoch8Card extends StatelessWidget {
           borderColor = highlightBorderColor!;
           borderW = highlightBorderWidth;
         } else if (accentBorder) {
-          borderColor = Epoch8Theme.accent.withValues(alpha: 0.35);
+          borderColor = KalmguTheme.accent.withValues(alpha: 0.35);
           borderW = 1.25;
         } else {
-          borderColor = Epoch8Theme.border.withValues(alpha: 0.85);
+          borderColor = KalmguTheme.border.withValues(alpha: 0.85);
           borderW = 1;
         }
 
         final deco = BoxDecoration(
-          borderRadius: BorderRadius.circular(Epoch8Layout.radiusMd),
+          borderRadius: BorderRadius.circular(KalmguLayout.radiusMd),
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Epoch8Theme.card.withValues(alpha: 0.92),
-              Epoch8Theme.card.withValues(alpha: 0.65),
+              KalmguTheme.card.withValues(alpha: 0.92),
+              KalmguTheme.card.withValues(alpha: 0.65),
             ],
           ),
           border: Border.all(color: borderColor, width: borderW),
@@ -114,8 +114,8 @@ class Epoch8Card extends StatelessWidget {
 }
 
 /// Заголовок секции: мелкий лейбл + крупный заголовок.
-class Epoch8SectionHeader extends StatelessWidget {
-  const Epoch8SectionHeader({
+class KalmguSectionHeader extends StatelessWidget {
+  const KalmguSectionHeader({
     super.key,
     required this.title,
     this.overline,
@@ -136,7 +136,7 @@ class Epoch8SectionHeader extends StatelessWidget {
           Text(
             overline!.toUpperCase(),
             style: t.labelSmall?.copyWith(
-              color: Epoch8Theme.accent.withValues(alpha: 0.9),
+              color: KalmguTheme.accent.withValues(alpha: 0.9),
               letterSpacing: 1.4,
               fontWeight: FontWeight.w600,
             ),
@@ -156,7 +156,7 @@ class Epoch8SectionHeader extends StatelessWidget {
           Text(
             subtitle!,
             style: t.bodyMedium?.copyWith(
-              color: Epoch8Theme.textMuted,
+              color: KalmguTheme.textMuted,
               height: 1.45,
             ),
           ),
@@ -167,8 +167,8 @@ class Epoch8SectionHeader extends StatelessWidget {
 }
 
 /// Пустое состояние для списков.
-class Epoch8EmptyState extends StatelessWidget {
-  const Epoch8EmptyState({
+class KalmguEmptyState extends StatelessWidget {
+  const KalmguEmptyState({
     super.key,
     required this.icon,
     required this.title,
@@ -191,13 +191,13 @@ class Epoch8EmptyState extends StatelessWidget {
               padding: const EdgeInsets.all(22),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Epoch8Theme.accent.withValues(alpha: 0.08),
-                border: Border.all(color: Epoch8Theme.border),
+                color: KalmguTheme.accent.withValues(alpha: 0.08),
+                border: Border.all(color: KalmguTheme.border),
               ),
               child: Icon(
                 icon,
                 size: 40,
-                color: Epoch8Theme.accent.withValues(alpha: 0.85),
+                color: KalmguTheme.accent.withValues(alpha: 0.85),
               ),
             ),
             const SizedBox(height: 20),
@@ -224,8 +224,8 @@ class Epoch8EmptyState extends StatelessWidget {
 }
 
 /// Индикатор шага для мастера (точки).
-class Epoch8StepDots extends StatelessWidget {
-  const Epoch8StepDots({super.key, required this.current, required this.total});
+class KalmguStepDots extends StatelessWidget {
+  const KalmguStepDots({super.key, required this.current, required this.total});
 
   final int current;
   final int total;
@@ -245,8 +245,8 @@ class Epoch8StepDots extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(4),
             color: active
-                ? Epoch8Theme.accent
-                : Epoch8Theme.border.withValues(alpha: 0.7),
+                ? KalmguTheme.accent
+                : KalmguTheme.border.withValues(alpha: 0.7),
           ),
         );
       }),

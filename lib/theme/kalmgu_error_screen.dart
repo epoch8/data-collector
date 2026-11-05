@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
-import 'epoch8_theme.dart';
-import 'epoch8_ui.dart';
+import 'kalmgu_theme.dart';
+import 'kalmgu_ui.dart';
 
 /// Замена дефолтному «красному квадрату» Flutter'а: дружелюбный экран ошибки
 /// с логотипом и сворачиваемыми техническими деталями.
-class Epoch8ErrorScreen extends StatelessWidget {
-  const Epoch8ErrorScreen({super.key, required this.details});
+class KalmguErrorScreen extends StatelessWidget {
+  const KalmguErrorScreen({super.key, required this.details});
 
   final FlutterErrorDetails details;
 
@@ -15,10 +15,10 @@ class Epoch8ErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final loc = _safeLoc(context);
     return Material(
-      color: Epoch8Theme.bgDeep,
-      child: Epoch8ScreenBody(
+      color: KalmguTheme.bgDeep,
+      child: KalmguScreenBody(
         padding: const EdgeInsets.symmetric(
-          horizontal: Epoch8Layout.pagePadding,
+          horizontal: KalmguLayout.pagePadding,
           vertical: 24,
         ),
         child: SafeArea(
@@ -34,16 +34,16 @@ class Epoch8ErrorScreen extends StatelessWidget {
                       height: 96,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
-                        color: Epoch8Theme.danger.withValues(alpha: 0.12),
+                        color: KalmguTheme.danger.withValues(alpha: 0.12),
                         border: Border.all(
-                          color: Epoch8Theme.danger.withValues(alpha: 0.35),
+                          color: KalmguTheme.danger.withValues(alpha: 0.35),
                         ),
                       ),
                       alignment: Alignment.center,
                       child: Icon(
                         Icons.error_outline,
                         size: 48,
-                        color: Epoch8Theme.danger,
+                        color: KalmguTheme.danger,
                       ),
                     ),
                     const SizedBox(height: 22),
@@ -58,12 +58,12 @@ class Epoch8ErrorScreen extends StatelessWidget {
                           'An unexpected error occurred. Try going back or restarting the app.',
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Epoch8Theme.textMuted,
+                        color: KalmguTheme.textMuted,
                         height: 1.45,
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Epoch8Card(
+                    KalmguCard(
                       child: Theme(
                         data: Theme.of(
                           context,

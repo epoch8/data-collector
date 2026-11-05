@@ -324,7 +324,7 @@ def build() -> Path:
         "Понятные критерии приемки по ролям Full-stack и ML Engineer",
     ], Inches(0.95), Inches(2.65), Inches(7.5), ACCENT_GREEN)
     _text(slide, Inches(0.95), Inches(6.35), Inches(8), Inches(0.4),
-          "Epoch8  ·  Training Program  ·  2026", 11, color=TEXT_DIM)
+          "КалмГУ  ·  Training Program  ·  2026", 11, color=TEXT_DIM)
     _text(slide, Inches(11.2), Inches(7.2), Inches(1.5), Inches(0.28), f"{TOTAL_SLIDES:02d} / {TOTAL_SLIDES}", 9, color=TEXT_DIM, align=PP_ALIGN.RIGHT)
 
     prs.save(OUT_PATH)

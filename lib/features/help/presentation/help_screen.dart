@@ -1,7 +1,7 @@
 import 'package:data_collector/l10n/app_localizations.dart';
-import 'package:data_collector/theme/epoch8_app_bar_controls.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_app_bar_controls.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
@@ -15,21 +15,21 @@ class HelpScreen extends StatelessWidget {
       appBar: AppBar(
         title: Text(loc.helpTitle),
         actions: const [
-          Epoch8ThemeSwitcher(),
-          Epoch8LanguageSwitcher(),
+          KalmguThemeSwitcher(),
+          KalmguLanguageSwitcher(),
           SizedBox(width: 4),
         ],
       ),
-      body: Epoch8ScreenBody(
+      body: KalmguScreenBody(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             12,
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             24,
           ),
           children: [
-            Epoch8Card(
+            KalmguCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -54,17 +54,17 @@ class HelpScreen extends StatelessWidget {
                       vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Epoch8Theme.bgElevated,
+                      color: KalmguTheme.bgElevated,
                       borderRadius: BorderRadius.circular(
-                        Epoch8Layout.radiusSm,
+                        KalmguLayout.radiusSm,
                       ),
-                      border: Border.all(color: Epoch8Theme.border),
+                      border: Border.all(color: KalmguTheme.border),
                     ),
                     child: Text(
                       loc.helpFlowLine,
                       textAlign: TextAlign.center,
                       style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        color: Epoch8Theme.accent,
+                        color: KalmguTheme.accent,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.3,
                       ),
@@ -102,7 +102,7 @@ class HelpScreen extends StatelessWidget {
               icon: Icons.history_outlined,
             ),
             const SizedBox(height: 12),
-            Epoch8Card(
+            KalmguCard(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -160,7 +160,7 @@ class _AppVersionFooterState extends State<_AppVersionFooter> {
       child: Text(
         text,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Epoch8Theme.textMuted,
+          color: KalmguTheme.textMuted,
           letterSpacing: 0.4,
         ),
       ),
@@ -183,7 +183,7 @@ class _HelpStepCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Epoch8Card(
+    return KalmguCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -193,18 +193,18 @@ class _HelpStepCard extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: Epoch8Theme.accent.withValues(alpha: 0.16),
+                  color: KalmguTheme.accent.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, size: 18, color: Epoch8Theme.accent),
+                child: Icon(icon, size: 18, color: KalmguTheme.accent),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   '$number. $title',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    color: Epoch8Theme.accent,
+                    color: KalmguTheme.accent,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

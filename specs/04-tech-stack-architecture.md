@@ -49,7 +49,7 @@ lib/
 │   ├── history/       # Local history
 │   └── help/
 ├── models/            # project_config.dart, package.dart
-├── theme/             # Epoch8 design system
+├── theme/             # KalmGU design system
 └── l10n/              # RU/EN
 ```
 

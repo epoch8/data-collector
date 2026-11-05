@@ -124,7 +124,7 @@ non-localhost (нужен явный `--allow-remote`).
 
 ```powershell
 # 1. Поднять локальные хранилища
-cd c:\Users\admin\Desktop\epoch8\data_collector\data-collector
+cd path\to\data-collector
 docker compose -f test_dev/docker-compose.yml up -d
 
 # 2. Залить бэкап

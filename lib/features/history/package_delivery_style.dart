@@ -1,17 +1,17 @@
 import 'package:data_collector/core/storage/database.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:flutter/material.dart';
 
 /// Цвет рамки карточки по статусу доставки на сервер.
 Color historyPackageBorderColor(String serverDeliveryState) {
   switch (serverDeliveryState) {
     case 'completed':
-      return Epoch8Theme.success.withValues(alpha: 0.82);
+      return KalmguTheme.success.withValues(alpha: 0.82);
     case 'failed':
-      return Epoch8Theme.danger.withValues(alpha: 0.88);
+      return KalmguTheme.danger.withValues(alpha: 0.88);
     case 'uploading':
-      return Epoch8Theme.accent.withValues(alpha: 0.9);
+      return KalmguTheme.accent.withValues(alpha: 0.9);
     case 'pending':
     default:
       return const Color(0xFFF59E0B).withValues(alpha: 0.88);
@@ -20,14 +20,14 @@ Color historyPackageBorderColor(String serverDeliveryState) {
 
 /// Рамка для группы пакетов (по субъекту): приоритет ошибка → есть незагруженные → все на сервере.
 Color historyGroupBorderColor(List<Package> packages) {
-  if (packages.isEmpty) return Epoch8Theme.border.withValues(alpha: 0.85);
+  if (packages.isEmpty) return KalmguTheme.border.withValues(alpha: 0.85);
   if (packages.any((p) => p.serverDeliveryState == 'failed')) {
-    return Epoch8Theme.danger.withValues(alpha: 0.82);
+    return KalmguTheme.danger.withValues(alpha: 0.82);
   }
   if (packages.any((p) => p.serverDeliveryState != 'completed')) {
     return const Color(0xFFF59E0B).withValues(alpha: 0.85);
   }
-  return Epoch8Theme.success.withValues(alpha: 0.78);
+  return KalmguTheme.success.withValues(alpha: 0.78);
 }
 
 String deliveryStateShort(BuildContext context, String serverDeliveryState) {

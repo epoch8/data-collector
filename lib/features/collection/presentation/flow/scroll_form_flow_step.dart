@@ -8,9 +8,9 @@ import 'package:data_collector/features/collection/presentation/flow/package_pay
 import 'package:data_collector/features/collection/presentation/flow/project_example_image.dart';
 import 'package:data_collector/features/collection/providers/wizard_state_provider.dart';
 import 'package:data_collector/models/project_config.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:data_collector/theme/theme_controller.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -122,7 +122,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
     final cameras = _cameraFields;
     if (cameras.length < 2) return const SizedBox.shrink();
     return Material(
-      color: Epoch8Theme.bgElevated,
+      color: KalmguTheme.bgElevated,
       elevation: 0.5,
       child: SizedBox(
         height: 52,
@@ -139,7 +139,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
               avatar: Icon(
                 filled ? Icons.check_circle : Icons.photo_camera_outlined,
                 size: 16,
-                color: filled ? Epoch8Theme.success : Epoch8Theme.textMuted,
+                color: filled ? KalmguTheme.success : KalmguTheme.textMuted,
               ),
               label: Text(
                 n > 0 ? '${f.title} ($n)' : f.title,
@@ -147,18 +147,18 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                   color: filled
-                      ? Epoch8Theme.textPrimary
-                      : Epoch8Theme.textMuted,
+                      ? KalmguTheme.textPrimary
+                      : KalmguTheme.textMuted,
                 ),
               ),
               onPressed: () => _jumpToField(f.fieldId),
               backgroundColor: filled
-                  ? Epoch8Theme.success.withValues(alpha: 0.12)
-                  : Epoch8Theme.card,
+                  ? KalmguTheme.success.withValues(alpha: 0.12)
+                  : KalmguTheme.card,
               side: BorderSide(
                 color: filled
-                    ? Epoch8Theme.success.withValues(alpha: 0.35)
-                    : Epoch8Theme.border,
+                    ? KalmguTheme.success.withValues(alpha: 0.35)
+                    : KalmguTheme.border,
               ),
               visualDensity: VisualDensity.compact,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -288,9 +288,9 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
           child: SingleChildScrollView(
             controller: _scrollController,
             padding: const EdgeInsets.fromLTRB(
-              Epoch8Layout.pagePadding,
+              KalmguLayout.pagePadding,
               8,
-              Epoch8Layout.pagePadding,
+              KalmguLayout.pagePadding,
               28,
             ),
             child: Column(
@@ -391,10 +391,10 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                       : loc.flowFormSubjectHintNew,
                   helperStyle: TextStyle(
                     color: hasExactMatch
-                        ? Epoch8Theme.success
+                        ? KalmguTheme.success
                         : hasAnyMatches
-                        ? Epoch8Theme.accent
-                        : Epoch8Theme.textMuted,
+                        ? KalmguTheme.accent
+                        : KalmguTheme.textMuted,
                   ),
                 ),
                 onChanged: (_) {
@@ -412,12 +412,12 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                     return ActionChip(
                       label: Text(id),
                       backgroundColor: isExact
-                          ? Epoch8Theme.success.withValues(alpha: 0.18)
-                          : Epoch8Theme.bgElevated,
+                          ? KalmguTheme.success.withValues(alpha: 0.18)
+                          : KalmguTheme.bgElevated,
                       side: BorderSide(
                         color: isExact
-                            ? Epoch8Theme.success.withValues(alpha: 0.6)
-                            : Epoch8Theme.border,
+                            ? KalmguTheme.success.withValues(alpha: 0.6)
+                            : KalmguTheme.border,
                       ),
                       onPressed: () {
                         final cc = cowCtrl;
@@ -484,7 +484,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                 f.instructions,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
               ),
             ],
             const SizedBox(height: 8),
@@ -583,20 +583,20 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(
-                        Epoch8Layout.radiusMd,
+                        KalmguLayout.radiusMd,
                       ),
                       child: projectExampleImage(
                         project: widget.project,
                         assetPath: ref,
                         fit: BoxFit.contain,
                         errorPlaceholder: (_) => Container(
-                          color: Epoch8Theme.bgElevated,
+                          color: KalmguTheme.bgElevated,
                           alignment: Alignment.center,
                           padding: const EdgeInsets.all(16),
                           child: Text(
                             loc.flowCameraPoseExampleAssetMissing,
                             textAlign: TextAlign.center,
-                            style: TextStyle(color: Epoch8Theme.textMuted),
+                            style: TextStyle(color: KalmguTheme.textMuted),
                           ),
                         ),
                       ),
@@ -609,7 +609,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
                 loc.flowFormInstructionEmpty,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
               ),
           ],
         );
@@ -628,7 +628,7 @@ class _ScrollFormFlowStepState extends ConsumerState<ScrollFormFlowStep> {
       default:
         return Text(
           '${loc.unsupportedFieldType} (${f.type})',
-          style: TextStyle(color: Epoch8Theme.danger),
+          style: TextStyle(color: KalmguTheme.danger),
         );
     }
   }
@@ -645,8 +645,8 @@ class _FieldCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Epoch8Theme.card.withValues(alpha: 0.35),
-        border: Border.all(color: Epoch8Theme.border),
+        color: KalmguTheme.card.withValues(alpha: 0.35),
+        border: Border.all(color: KalmguTheme.border),
         borderRadius: BorderRadius.circular(16),
       ),
       child: child,
@@ -772,7 +772,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
             Text(
               '${widget.poseIndex1Based}$sep${widget.totalPoses}',
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: Epoch8Theme.accent,
+                color: KalmguTheme.accent,
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -798,7 +798,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
             loc.flowCameraPoseEmptyHint,
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
           )
         else
           Wrap(
@@ -836,7 +836,7 @@ class _ScrollCameraBlockState extends ConsumerState<_ScrollCameraBlock> {
         if (paths.isNotEmpty)
           TextButton.icon(
             onPressed: _clear,
-            icon: Icon(Icons.delete_sweep_outlined, color: Epoch8Theme.danger),
+            icon: Icon(Icons.delete_sweep_outlined, color: KalmguTheme.danger),
             label: Text(loc.flowCameraPoseClearAll),
           ),
       ],
@@ -870,7 +870,7 @@ class _Thumb extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: Epoch8Theme.bgDeep.withValues(alpha: 0.75),
+              color: KalmguTheme.bgDeep.withValues(alpha: 0.75),
               borderRadius: BorderRadius.circular(6),
             ),
             child: Text(
@@ -883,14 +883,14 @@ class _Thumb extends StatelessWidget {
           right: -4,
           top: -4,
           child: Material(
-            color: Epoch8Theme.danger,
+            color: KalmguTheme.danger,
             shape: const CircleBorder(),
             child: InkWell(
               onTap: onRemove,
               customBorder: const CircleBorder(),
               child: Padding(
                 padding: const EdgeInsets.all(4),
-                child: Icon(Icons.close, size: 16, color: Epoch8Theme.bgDeep),
+                child: Icon(Icons.close, size: 16, color: KalmguTheme.bgDeep),
               ),
             ),
           ),

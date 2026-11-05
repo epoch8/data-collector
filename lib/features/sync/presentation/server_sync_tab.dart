@@ -7,10 +7,10 @@ import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/features/projects/server_project_catalog.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
-import 'package:data_collector/theme/epoch8_loader.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_loader.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:data_collector/theme/theme_controller.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -110,12 +110,12 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
     final dio = ref.watch(dioProvider);
     final packagesAsync = ref.watch(packagesStreamProvider);
 
-    return Epoch8ScreenBody(
+    return KalmguScreenBody(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-          Epoch8Layout.pagePadding,
+          KalmguLayout.pagePadding,
           12,
-          Epoch8Layout.pagePadding,
+          KalmguLayout.pagePadding,
           24,
         ),
         children: [
@@ -123,7 +123,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
             loc.baseUrlLabel(ApiEnvironment.normalizedBaseUrl()),
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
           ),
           const SizedBox(height: 16),
           FilledButton.icon(
@@ -159,7 +159,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
               if (queue.isEmpty) {
                 return Padding(
                   padding: EdgeInsets.only(top: 16),
-                  child: Epoch8EmptyState(
+                  child: KalmguEmptyState(
                     icon: Icons.cloud_done_outlined,
                     title: loc.noQueuePackages,
                     subtitle: loc.noQueuePackagesSubtitle,
@@ -172,7 +172,7 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
                   for (final pkg in queue)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 12),
-                      child: Epoch8Card(
+                      child: KalmguCard(
                         child: ListTile(
                           title: Text(
                             pkg.id,
@@ -205,11 +205,11 @@ class _ServerSyncTabState extends ConsumerState<ServerSyncTab> {
             },
             loading: () => Padding(
               padding: const EdgeInsets.all(24),
-              child: Epoch8Loader.center(),
+              child: KalmguLoader.center(),
             ),
             error: (e, _) => Text(
               '${loc.dbError}: $e',
-              style: TextStyle(color: Epoch8Theme.danger),
+              style: TextStyle(color: KalmguTheme.danger),
             ),
           ),
         ],
@@ -228,12 +228,12 @@ class _ServerNotConfiguredView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Epoch8ScreenBody(
+    return KalmguScreenBody(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(
-          Epoch8Layout.pagePadding,
+          KalmguLayout.pagePadding,
           24,
-          Epoch8Layout.pagePadding,
+          KalmguLayout.pagePadding,
           24,
         ),
         children: [
@@ -243,14 +243,14 @@ class _ServerNotConfiguredView extends StatelessWidget {
               height: 92,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Epoch8Theme.accent.withValues(alpha: 0.1),
-                border: Border.all(color: Epoch8Theme.border),
+                color: KalmguTheme.accent.withValues(alpha: 0.1),
+                border: Border.all(color: KalmguTheme.border),
               ),
               alignment: Alignment.center,
               child: Icon(
                 Icons.cloud_off_outlined,
                 size: 46,
-                color: Epoch8Theme.accent.withValues(alpha: 0.85),
+                color: KalmguTheme.accent.withValues(alpha: 0.85),
               ),
             ),
           ),
@@ -265,19 +265,19 @@ class _ServerNotConfiguredView extends StatelessWidget {
             loc.serverSetupSubtitle,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: Epoch8Theme.textMuted,
+              color: KalmguTheme.textMuted,
               height: 1.45,
             ),
           ),
           const SizedBox(height: 20),
-          Epoch8Card(
+          KalmguCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   loc.serverSetupCommandLabel,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Epoch8Theme.accent,
+                    color: KalmguTheme.accent,
                     letterSpacing: 1.2,
                     fontWeight: FontWeight.w700,
                   ),
@@ -287,9 +287,9 @@ class _ServerNotConfiguredView extends StatelessWidget {
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Epoch8Theme.bgElevated,
-                    borderRadius: BorderRadius.circular(Epoch8Layout.radiusSm),
-                    border: Border.all(color: Epoch8Theme.border),
+                    color: KalmguTheme.bgElevated,
+                    borderRadius: BorderRadius.circular(KalmguLayout.radiusSm),
+                    border: Border.all(color: KalmguTheme.border),
                   ),
                   child: SelectableText(
                     _command,
@@ -320,11 +320,11 @@ class _ServerNotConfiguredView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          Epoch8Card(
+          KalmguCard(
             child: Text(
               loc.serverSetupHintNote,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Epoch8Theme.textMuted,
+                color: KalmguTheme.textMuted,
                 height: 1.45,
               ),
             ),

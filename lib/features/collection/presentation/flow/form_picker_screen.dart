@@ -1,9 +1,9 @@
 import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
-import 'package:data_collector/theme/epoch8_loader.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_loader.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,7 +20,7 @@ class FormPickerScreen extends ConsumerWidget {
     final async = ref.watch(projectsProvider);
     return async.when(
       skipLoadingOnReload: true,
-      loading: () => Scaffold(body: Epoch8Loader.center()),
+      loading: () => Scaffold(body: KalmguLoader.center()),
       error: (e, _) => Scaffold(
         appBar: AppBar(title: Text(loc.project)),
         body: Center(child: Text('${loc.errorPrefix}: $e')),
@@ -40,7 +40,7 @@ class FormPickerScreen extends ConsumerWidget {
               '/project/$projectId/form/${catalog.forms.first.formId}/wizard',
             );
           });
-          return Scaffold(body: Epoch8Loader.center());
+          return Scaffold(body: KalmguLoader.center());
         }
         return Scaffold(
           appBar: AppBar(
@@ -50,7 +50,7 @@ class FormPickerScreen extends ConsumerWidget {
               onPressed: () => context.go('/dashboard'),
             ),
           ),
-          body: Epoch8ScreenBody(
+          body: KalmguScreenBody(
             child: ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: catalog.forms.length,
@@ -58,7 +58,7 @@ class FormPickerScreen extends ConsumerWidget {
               itemBuilder: (context, i) {
                 final form = catalog.forms[i];
                 return Material(
-                  color: Epoch8Theme.bgElevated,
+                  color: KalmguTheme.bgElevated,
                   borderRadius: BorderRadius.circular(14),
                   child: ListTile(
                     contentPadding: const EdgeInsets.symmetric(
@@ -74,7 +74,7 @@ class FormPickerScreen extends ConsumerWidget {
                     trailing: Icon(
                       Icons.arrow_forward_ios_rounded,
                       size: 16,
-                      color: Epoch8Theme.textMuted,
+                      color: KalmguTheme.textMuted,
                     ),
                     onTap: () => context.go(
                       '/project/$projectId/form/${form.formId}/wizard',

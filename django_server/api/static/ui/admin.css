@@ -48,7 +48,7 @@
   --ui-scrollbar-thumb-active: rgba(143, 176, 245, 0.42);
 }
 
-/* ——— Светлая тема (палитра из Flutter Epoch8Theme._light) ——— */
+/* ——— Светлая тема (палитра из Flutter KalmguTheme._light) ——— */
 :root[data-ui-theme="light"] {
   --ui-bg-deep: #eef3f9;
   --ui-bg: #e4ebf3;

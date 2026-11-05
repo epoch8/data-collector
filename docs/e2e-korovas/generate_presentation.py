@@ -20,7 +20,7 @@ E2E_IMG = ROOT / "img"
 DATAPIPE_IMG = E2E_IMG / "datapipe"
 VIDEO = ROOT / "video"
 POSTERS = VIDEO / "posters"
-LOGO = REPO / "e8-team-logo-1024.png"
+LOGO = REPO / "assets/brand/kalmgu-icon-1024.png"
 OUT = ROOT / "Korovas-E2E.pptx"
 
 spec = importlib.util.spec_from_file_location("gen_training", BUSINESS / "generate_training_presentation.py")
@@ -47,7 +47,7 @@ new_deck = gen.new_deck
 def footer_e2e(slide, n: int, dark: bool = False) -> None:
     from pptx.dml.color import RGBColor
     color = RGBColor(0x7C, 0x83, 0x90) if dark else C.faint
-    text(slide, Inches(0.65), Inches(7.1), Inches(5.0), Inches(0.22), "Epoch8 · Korovas E2E", size=8, color=color)
+    text(slide, Inches(0.65), Inches(7.1), Inches(5.0), Inches(0.22), "КалмГУ · Korovas E2E", size=8, color=color)
     text(slide, Inches(12.15), Inches(7.1), Inches(0.7), Inches(0.22), f"{n:02d}/{TOTAL:02d}", size=8, color=color, align=PP_ALIGN.RIGHT)
 
 

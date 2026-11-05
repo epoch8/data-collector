@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 
-import 'epoch8_theme.dart';
+import 'kalmgu_theme.dart';
 import 'kalmgu_brand.dart';
 import 'theme_controller.dart';
 
 /// Брендированный лоадер: логотип в кольце спиннера. Используется как замена
 /// «голому» CircularProgressIndicator в местах загрузки данных приложения.
-class Epoch8Loader extends StatelessWidget {
-  const Epoch8Loader({super.key, this.size = 56});
+class KalmguLoader extends StatelessWidget {
+  const KalmguLoader({super.key, this.size = 56});
 
   final double size;
 
   /// Удобный конструктор: лоадер по центру (для `loading:` веток AsyncValue).
   static Widget center({double size = 56, String? label}) =>
-      _Epoch8LoaderCentered(size: size, label: label);
+      _KalmguLoaderCentered(size: size, label: label);
 
   @override
   Widget build(BuildContext context) {
@@ -31,8 +31,8 @@ class Epoch8Loader extends StatelessWidget {
               height: ringSize,
               child: CircularProgressIndicator(
                 strokeWidth: 2.4,
-                color: Epoch8Theme.accent,
-                backgroundColor: Epoch8Theme.border.withValues(alpha: 0.35),
+                color: KalmguTheme.accent,
+                backgroundColor: KalmguTheme.border.withValues(alpha: 0.35),
               ),
             ),
             Image.asset(
@@ -48,8 +48,8 @@ class Epoch8Loader extends StatelessWidget {
   }
 }
 
-class _Epoch8LoaderCentered extends StatelessWidget {
-  const _Epoch8LoaderCentered({required this.size, required this.label});
+class _KalmguLoaderCentered extends StatelessWidget {
+  const _KalmguLoaderCentered({required this.size, required this.label});
 
   final double size;
   final String? label;
@@ -60,14 +60,14 @@ class _Epoch8LoaderCentered extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Epoch8Loader(size: size),
+          KalmguLoader(size: size),
           if (label != null) ...[
             const SizedBox(height: 14),
             Text(
               label!,
               style: Theme.of(
                 context,
-              ).textTheme.bodyMedium?.copyWith(color: Epoch8Theme.textMuted),
+              ).textTheme.bodyMedium?.copyWith(color: KalmguTheme.textMuted),
             ),
           ],
         ],

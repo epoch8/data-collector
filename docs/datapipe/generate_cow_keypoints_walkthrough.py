@@ -28,7 +28,7 @@ UI = IMG / "ui"
 GT = IMG / "gt"
 TRAIN = IMG / "train"
 CVAT = IMG / "cvat"
-LOGO = REPO / "e8-team-logo-1024.png"
+LOGO = REPO / "assets/brand/kalmgu-icon-1024.png"
 OUT = ROOT / "Datapipe-Cow-Keypoints-Walkthrough.pptx"
 
 spec = importlib.util.spec_from_file_location(
@@ -72,7 +72,7 @@ def footer(slide, n: int, *, dark: bool = False) -> None:
         FOOTER_Y,
         Inches(8.0),
         Inches(0.22),
-        "Epoch8 · Datapipe UI · ключевые точки",
+        "КалмГУ · Datapipe UI · ключевые точки",
         size=8,
         color=color,
     )
@@ -286,7 +286,7 @@ def slide_cover(prs, n):
         Inches(6.58),
         Inches(12.0),
         Inches(0.4),
-        "Учебный стенд Korovas · Epoch8",
+        "Учебный стенд Korovas · КалмГУ",
         size=17,
         bold=True,
         color=C.e8_black,

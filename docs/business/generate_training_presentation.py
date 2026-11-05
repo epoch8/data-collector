@@ -30,7 +30,7 @@ except ImportError:  # pragma: no cover - fallback for minimal envs
 ROOT = Path(__file__).resolve().parent
 REPO = ROOT.parent.parent
 IMG = REPO / "specs" / "presentation" / "img"
-LOGO = REPO / "e8-team-logo-1024.png"
+LOGO = REPO / "assets/brand/kalmgu-icon-1024.png"
 OUT = ROOT / "Training-Program.pptx"
 
 W = Inches(13.333)
@@ -134,7 +134,7 @@ def bg(slide, color: RGBColor = C.paper) -> None:
 
 def footer(slide, n: int, dark: bool = False) -> None:
     color = RGBColor(0x7C, 0x83, 0x90) if dark else C.faint
-    text(slide, Inches(0.65), Inches(7.1), Inches(4.5), Inches(0.22), "Epoch8 · обучение Korovas", size=8, color=color)
+    text(slide, Inches(0.65), Inches(7.1), Inches(4.5), Inches(0.22), "КалмГУ · обучение Korovas", size=8, color=color)
     text(
         slide,
         Inches(12.15),
@@ -543,7 +543,7 @@ def slide_cover(prs):
         color=C.e8_black,
         align=PP_ALIGN.CENTER,
     )
-    text(s, Inches(0.65), Inches(7.08), Inches(4.5), Inches(0.22), "Epoch8 · обучение Korovas", size=8, color=RGBColor(0x55, 0x55, 0x55))
+    text(s, Inches(0.65), Inches(7.08), Inches(4.5), Inches(0.22), "КалмГУ · обучение Korovas", size=8, color=RGBColor(0x55, 0x55, 0x55))
     text(s, Inches(12.15), Inches(7.08), Inches(0.7), Inches(0.22), "01/07", size=8, color=RGBColor(0x55, 0x55, 0x55), align=PP_ALIGN.RIGHT)
 
 

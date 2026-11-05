@@ -1,8 +1,8 @@
 <div align="center">
 
-<a href="https://e8.team/portfolio/data-collector/"><img src="e8_data_collector_logo.png" alt="E8 Data Collector" width="460"></a>
+<img src="assets/brand/kalmgu-logo.png" alt="Kalmyk State University named after B. B. Gorodovikov" width="460">
 
-<p><b>A framework for collecting labeled data.</b><br>
+<p><b>Data collection app for Kalmyk State University.</b><br>
 Flutter client (on-device, offline-first) + Django backend with a web admin panel and mobile API.</p>
 
 <p>
@@ -38,9 +38,7 @@ Three parts of the product in one flow: **configure the project → collect data
 
 ![Admin: project creation, config, access](specs/presentation/img/config-steps-admin-en.gif)
 
-**2. Field collection.** Flutter: sign-in, config from server, fill the form, upload queue (offline-first).
-
-![Mobile app: form and package upload](specs/presentation/img/flutter-steps-app-en.gif)
+**2. Field collection.** KalmSU app: sign-in, config from server, fill the form, upload queue (offline-first).
 
 **3. Packages and review.** List of accepted packages, filters, media and data viewer, edits, pipeline visualization.
 

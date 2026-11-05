@@ -14,10 +14,10 @@ import 'package:data_collector/features/collection/providers/wizard_state_provid
 import 'package:data_collector/features/projects/catalog_project.dart';
 import 'package:data_collector/features/projects/providers/project_providers.dart';
 import 'package:data_collector/models/project_config.dart';
-import 'package:data_collector/theme/epoch8_theme.dart';
+import 'package:data_collector/theme/kalmgu_theme.dart';
 import 'package:data_collector/theme/theme_controller.dart';
-import 'package:data_collector/theme/epoch8_loader.dart';
-import 'package:data_collector/theme/epoch8_ui.dart';
+import 'package:data_collector/theme/kalmgu_loader.dart';
+import 'package:data_collector/theme/kalmgu_ui.dart';
 import 'package:data_collector/l10n/app_localizations.dart';
 import 'package:data_collector/l10n/locale_controller.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -168,7 +168,7 @@ class _CollectionFlowScreenState extends ConsumerState<CollectionFlowScreen> {
           resolvedFlow: flow,
         );
       },
-      loading: () => Scaffold(body: Epoch8Loader.center()),
+      loading: () => Scaffold(body: KalmguLoader.center()),
       error: (e, _) => Scaffold(
         body: Center(
           child: Text('${AppLocalizations.of(context).loadingConfigError}: $e'),
@@ -318,7 +318,7 @@ class _CollectionDraftGateState extends ConsumerState<_CollectionDraftGate> {
               ),
             ],
           ),
-          body: Epoch8Loader.center(),
+          body: KalmguLoader.center(),
         ),
       );
     }
@@ -497,7 +497,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
           ],
         ),
         body: Container(
-          decoration: Epoch8Theme.screenGradient(),
+          decoration: KalmguTheme.screenGradient(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -527,15 +527,15 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
       return [
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             10,
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             4,
           ),
           child: Text(
             loc.flowRibbonReview,
             style: t.labelMedium?.copyWith(
-              color: Epoch8Theme.textMuted,
+              color: KalmguTheme.textMuted,
               letterSpacing: 0.4,
             ),
           ),
@@ -548,9 +548,9 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
       return [
         Padding(
           padding: const EdgeInsets.fromLTRB(
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             10,
-            Epoch8Layout.pagePadding,
+            KalmguLayout.pagePadding,
             6,
           ),
           child: Column(
@@ -562,14 +562,14 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
                   Text(
                     loc.flowRibbonScrollForm,
                     style: t.labelSmall?.copyWith(
-                      color: Epoch8Theme.textMuted,
+                      color: KalmguTheme.textMuted,
                       letterSpacing: 1.1,
                     ),
                   ),
                   Text(
                     loc.flowScrollCounter(ord, totalScroll),
                     style: t.labelLarge?.copyWith(
-                      color: Epoch8Theme.accent,
+                      color: KalmguTheme.accent,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -577,7 +577,7 @@ class _FlowStepShellState extends ConsumerState<_FlowStepShell>
               ),
               if (totalScroll > 1) ...[
                 const SizedBox(height: 10),
-                Epoch8StepDots(current: ord - 1, total: totalScroll),
+                KalmguStepDots(current: ord - 1, total: totalScroll),
               ],
             ],
           ),
@@ -745,7 +745,7 @@ class _FlowReviewStep extends ConsumerWidget {
                   child: Text(
                     loc.flowReviewInstructionOnlyHint,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Epoch8Theme.textMuted,
+                      color: KalmguTheme.textMuted,
                     ),
                   ),
                 ),
@@ -784,7 +784,7 @@ class _FlowReviewStep extends ConsumerWidget {
                         child: Text(
                           loc.flowReviewNoFrames,
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: Epoch8Theme.textMuted),
+                              ?.copyWith(color: KalmguTheme.textMuted),
                         ),
                       ),
                     const SizedBox(height: 8),
@@ -800,20 +800,20 @@ class _FlowReviewStep extends ConsumerWidget {
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
-        Epoch8Layout.pagePadding,
+        KalmguLayout.pagePadding,
         8,
-        Epoch8Layout.pagePadding,
+        KalmguLayout.pagePadding,
         32,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Epoch8SectionHeader(
+          KalmguSectionHeader(
             overline: loc.flowReviewHeaderOverline,
             title: loc.flowReviewHeaderTitle,
             subtitle: loc.flowReviewHeaderSubtitle,
           ),
-          const SizedBox(height: Epoch8Layout.sectionGap),
+          const SizedBox(height: KalmguLayout.sectionGap),
           ...stepCards,
           const SizedBox(height: 8),
           _CameraMetaReviewPanel(cameraContext: cameraCtx),
@@ -848,7 +848,7 @@ class _FlowReviewStep extends ConsumerWidget {
         children: [
           SizedBox(
             width: 110,
-            child: Text(label, style: TextStyle(color: Epoch8Theme.textMuted)),
+            child: Text(label, style: TextStyle(color: KalmguTheme.textMuted)),
           ),
           Expanded(child: Text(value)),
         ],
@@ -988,7 +988,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             Icon(
               Icons.info_outline,
               size: 20,
-              color: Epoch8Theme.textMuted.withValues(alpha: 0.9),
+              color: KalmguTheme.textMuted.withValues(alpha: 0.9),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -996,7 +996,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                 loc.flowCameraMetaEmptyNotice,
                 style: Theme.of(
                   context,
-                ).textTheme.bodySmall?.copyWith(color: Epoch8Theme.textMuted),
+                ).textTheme.bodySmall?.copyWith(color: KalmguTheme.textMuted),
               ),
             ),
           ],
@@ -1012,14 +1012,14 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           tilePadding: EdgeInsets.zero,
           expandedAlignment: Alignment.topLeft,
           expandedCrossAxisAlignment: CrossAxisAlignment.start,
-          iconColor: Epoch8Theme.accent,
-          collapsedIconColor: Epoch8Theme.textMuted,
+          iconColor: KalmguTheme.accent,
+          collapsedIconColor: KalmguTheme.textMuted,
           title: Row(
             children: [
               Icon(
                 Icons.tune,
                 size: 22,
-                color: Epoch8Theme.accent.withValues(alpha: 0.95),
+                color: KalmguTheme.accent.withValues(alpha: 0.95),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -1036,7 +1036,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                     Text(
                       _subtitle(loc, Map<String, dynamic>.from(ctx)) ?? '',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Epoch8Theme.textMuted,
+                        color: KalmguTheme.textMuted,
                       ),
                     ),
                   ],
@@ -1060,13 +1060,13 @@ class _CameraMetaReviewPanel extends StatelessWidget {
             Theme(
               data: Theme.of(
                 context,
-              ).copyWith(dividerColor: Epoch8Theme.border),
+              ).copyWith(dividerColor: KalmguTheme.border),
               child: ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text(
                   loc.flowCameraMetaJsonSection,
                   style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    color: Epoch8Theme.textMuted,
+                    color: KalmguTheme.textMuted,
                   ),
                 ),
                 children: [
@@ -1077,7 +1077,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
                       fontFamily: 'monospace',
                       fontSize: 11,
                       height: 1.35,
-                      color: Epoch8Theme.textMuted,
+                      color: KalmguTheme.textMuted,
                     ),
                   ),
                 ],
@@ -1094,7 +1094,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       return [
         Text(
           loc.flowReviewEmptyValue,
-          style: TextStyle(color: Epoch8Theme.textMuted),
+          style: TextStyle(color: KalmguTheme.textMuted),
         ),
       ];
     }
@@ -1137,7 +1137,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       return [
         Text(
           loc.flowCameraMetaNativeEmpty,
-          style: TextStyle(color: Epoch8Theme.textMuted, fontSize: 13),
+          style: TextStyle(color: KalmguTheme.textMuted, fontSize: 13),
         ),
       ];
     }
@@ -1257,7 +1257,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: Epoch8Theme.accent,
+            color: KalmguTheme.accent,
           ),
         ),
         const SizedBox(height: 4),
@@ -1278,7 +1278,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (derived != null) ...[
         Text(
           loc.flowCameraMetaDerivedHeading,
-          style: TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
+          style: TextStyle(fontSize: 12, color: KalmguTheme.textMuted),
         ),
         const SizedBox(height: 4),
         if (derived['preferred_fx_px_estimate'] != null)
@@ -1306,7 +1306,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
       if (exif != null && exif.isNotEmpty) ...[
         Text(
           loc.flowCameraMetaExifHeading,
-          style: TextStyle(fontSize: 12, color: Epoch8Theme.textMuted),
+          style: TextStyle(fontSize: 12, color: KalmguTheme.textMuted),
         ),
         const SizedBox(height: 4),
         ...exif.entries
@@ -1323,7 +1323,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
         if (exif.length > 12)
           Text(
             loc.flowCameraMetaExifMore(exif.length - 12),
-            style: TextStyle(fontSize: 11, color: Epoch8Theme.textMuted),
+            style: TextStyle(fontSize: 11, color: KalmguTheme.textMuted),
           ),
       ],
     ];
@@ -1351,7 +1351,7 @@ class _CameraMetaReviewPanel extends StatelessWidget {
           title,
           style: Theme.of(
             context,
-          ).textTheme.titleSmall?.copyWith(color: Epoch8Theme.accent),
+          ).textTheme.titleSmall?.copyWith(color: KalmguTheme.accent),
         ),
         const SizedBox(height: 8),
         ...children,
@@ -1367,6 +1367,6 @@ class _Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Epoch8Card(child: child);
+    return KalmguCard(child: child);
   }
 }
