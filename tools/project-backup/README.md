@@ -58,7 +58,7 @@ $env:GIT_REMOTE = "git@github.com:org/my-project.git"
 
 ```powershell
 python backup_project.py backup `
-  --bucket dc-project-korovas `
+  --bucket korovas-storage `
   --endpoint-url https://storage.yandexcloud.net `
   --output $env:USERPROFILE\Desktop\backup\korovas `
   --dry-run
@@ -68,7 +68,7 @@ python backup_project.py backup `
 
 ```powershell
 python backup_project.py backup `
-  --bucket dc-project-korovas `
+  --bucket korovas-storage `
   --endpoint-url https://storage.yandexcloud.net `
   --git-remote git@github.com:org/my-project.git `
   --output $env:USERPROFILE\Desktop\backup\korovas `

@@ -27,9 +27,19 @@ Standalone-набор скриптов (без Django). Скачивает фо�
 | Параметр | Значение |
 |----------|----------|
 | S3 endpoint | `https://storage.yandexcloud.net` |
-| Bucket | `dc-project-korovas` |
+| Bucket | `korovas-storage` (раньше `dc-project-korovas`; packages синхронизированы) |
 | Prefix | *(пустой)* |
-| AWS profile | `yandex` (если настроен `aws configure`) |
+| AWS profile | `yandex` / `korovas_admin_old` (если настроен `aws configure`) |
+
+Корень blobs на сервере — `Project.storage_uri` (ожидается `s3://korovas-storage/`).
+Переназначить URI без копирования файлов:
+
+```bash
+python manage.py repoint_project_storage \
+  --project-id=korovas-2026 \
+  --from-uri=s3://dc-project-korovas/ \
+  --to-uri=s3://korovas-storage/
+```
 
 ---
 
@@ -67,7 +77,7 @@ $env:AWS_SECRET_ACCESS_KEY = "..."
 ```powershell
 python download_photos_from_s3.py list `
   --endpoint-url https://storage.yandexcloud.net `
-  --bucket dc-project-korovas
+  --bucket korovas-storage
 ```
 
 ### 2. Выгрузить манифесты из Postgres
@@ -85,7 +95,7 @@ python export_manifests.py -o manifests.jsonl --all-phases
 ```powershell
 python download_photos_from_s3.py download `
   --endpoint-url https://storage.yandexcloud.net `
-  --bucket dc-project-korovas `
+  --bucket korovas-storage `
   --manifests manifests.jsonl `
   --output $env:USERPROFILE\Desktop\export\korovas `
   --animal-field cow_name `
@@ -100,7 +110,7 @@ Config проекта **не нужен** — ракурсы (`photo_top`, `phot
 ```powershell
 python download_photos_from_s3.py download `
   --endpoint-url https://storage.yandexcloud.net `
-  --bucket dc-project-korovas `
+  --bucket korovas-storage `
   --manifests manifests.jsonl `
   --output $env:USERPROFILE\Desktop\export\korovas `
   --animal-field cow_name `

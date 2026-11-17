@@ -14,11 +14,11 @@
 Примеры:
   # Шаг 1: разведка бакета
   cd tools/photo-export
-  python download_photos_from_s3.py list --bucket dc-project-korovas
+  python download_photos_from_s3.py list --bucket korovas-storage
 
   # Шаг 3: скачивание (нужен manifests.jsonl — см. export_manifests.py)
   python download_photos_from_s3.py download \\
-    --bucket dc-project-korovas \\
+    --bucket korovas-storage \\
     --manifests manifests.jsonl \\
     --output %USERPROFILE%\\Desktop\\export\\korovas \\
     --dry-run

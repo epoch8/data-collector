@@ -17,7 +17,7 @@
   $env:DATABASE_URL = "postgresql+psycopg2://..."
   $env:AWS_PROFILE = "yandex"
   python backup_project.py backup \\
-    --bucket dc-project-korovas \\
+    --bucket korovas-storage \\
     --endpoint-url https://storage.yandexcloud.net \\
     --git-remote git@github.com:org/repo.git \\
     --output $env:USERPROFILE\\Desktop\\backup\\korovas
